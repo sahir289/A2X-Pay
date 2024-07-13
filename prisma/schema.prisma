@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER_SERVICE
+  TRANSACTIONS
+  OPERATIONS
+  MERCHANT
+}
+
+model Permission {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  id           Int        @id @default(autoincrement())
+  role         Role
+  permissionId Int
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([role, permissionId])
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  fullName    String
+  userName    String    @unique
+  password    String
+  isEnabled   Boolean   @default(true)
+  tg_handle   String?
+  tg_id       String?
+  last_login  DateTime?
+  last_logout DateTime?
+  role        Role
+  code        String? // Add a field to store the merchant code
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([role]) // Add an index on role for better query performance
+}
+
+model Merchant {
+  id                Int      @id @default(autoincrement())
+  code              String
+  parent_id         Int?
+  payin_theme       String?
+  notes             String?
+  site_url          String
+  api_key           String
+  secret_key        String
+  notify_url        String
+  return_url        String
+  min_payin         String
+  max_payin         String
+  payin_commission  Decimal
+  min_payout        String
+  max_payout        String
+  payout_commission Decimal
+  payout_notify_url String
+  balance           String
+  is_test_mode      Boolean  @default(false)
+  is_enabled        Boolean  @default(true)
+  is_demo           Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
