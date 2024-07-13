@@ -23,18 +23,19 @@ class UserController {
                 password:hashedPassword
             }
 
-            const userRes = await userRepo.createUserRepo(data)
+            const userRes = await userRepo.createUserRepo(updatedData)
             
             return DefaultResponse(
                 res,
                 201,
                 "User is created successfully",
-                userRes
+                // userRes
             );
         } catch (error) {
             next(error)
         }
     }
+
 
     // async getUser(req, res, next) {
     //     try {

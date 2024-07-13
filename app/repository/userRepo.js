@@ -14,7 +14,7 @@ class UserRepo {
                 userName : userName
             }
         })
-        console.log("🚀 ~ UserRepo ~ getUserByUsernameRepo ~ userRes:", userRes)
+
         return userRes;
     }
 }
