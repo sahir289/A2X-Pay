@@ -27,6 +27,8 @@ class LogInService {
     const newAccessToken = generateAccessToken({ id: user.id, userName: user?.userName, role: user?.role })
     await tokenRepo.createUserToken(newAccessToken, user?.id)
 
+    
+
     return newAccessToken
   }
 }

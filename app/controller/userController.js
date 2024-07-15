@@ -3,6 +3,7 @@ import { checkValidation } from "../helper/validationHelper.js";
 import { CustomError, customError } from "../middlewares/errorHandler.js";
 import { DefaultResponse } from "../helper/customResponse.js"
 import userRepo from "../repository/userRepo.js";
+import userService from "../services/userService.js";
 
 class UserController {
     async createUser(req, res, next) {
@@ -12,19 +13,19 @@ class UserController {
 
             const isUserExist = await userRepo.getUserByUsernameRepo(data?.userName)
 
-            if (isUserExist){
-               throw new CustomError(409,'User with this username already exist')
+            if (isUserExist) {
+                throw new CustomError(409, 'User with this username already exist')
             }
 
-            const hashedPassword =await hashPassword(req.body?.password)
+            const hashedPassword = await hashPassword(req.body?.password)
 
-            const updatedData ={
+            const updatedData = {
                 ...data,
-                password:hashedPassword
+                password: hashedPassword
             }
 
             const userRes = await userRepo.createUserRepo(updatedData)
-            
+
             return DefaultResponse(
                 res,
                 201,
@@ -37,22 +38,37 @@ class UserController {
     }
 
 
-    // async getUser(req, res, next) {
-    //     try {
-    //         checkValidation(req)
-            
-          
-            
-    //         return DefaultResponse(
-    //             res,
-    //             201,
-    //             "User is created successfully",
-    //             userRes
-    //         );
-    //     } catch (error) {
-    //         next(error)
-    //     }
-    // }
+    async getAllUser(req, res, next) {
+        try {
+            checkValidation(req)
+            const { id: userId } = req.user
+
+            const page = parseInt(req.query.page) || 1;
+            const pageSize = parseInt(req.query.pageSize) || 15
+
+            const fullName = req.query.name;
+
+            const userName = req.query.userName;
+
+            const role = req.query.role;
+
+            const skip = (page - 1) * pageSize
+            const take = pageSize
+
+            await userRepo.validateUserId(userId)
+
+            const users = await userService.getAllUsers(skip, take, fullName, userName, role)
+
+            return DefaultResponse(
+                res,
+                201,
+                "Users fetched successfully",
+                users
+            );
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export default new UserController()
