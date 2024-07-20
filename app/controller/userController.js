@@ -17,6 +17,12 @@ class UserController {
                 throw new CustomError(409, 'User with this username already exist')
             }
 
+            if (req.body.role ==="MERCHANT"){
+                if(!req?.body?.code){
+                    throw new CustomError(409, 'merchant code is required')
+                }
+            }
+
             const hashedPassword = await hashPassword(req.body?.password)
 
             const updatedData = {
