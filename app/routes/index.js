@@ -1,15 +1,11 @@
 import express from 'express';
-import userRouter from './userRoute.js';
 import { customError, notFound } from '../middlewares/errorHandler.js';
-import permissionRouter from './permissionRoute.js';
-import rolePermissionRouter from './rolePermissionRoute.js';
 import loginRouter from './loginRoute.js';
+import userRouter from './userRoute.js';
 
 const router = express();
 
 router.use('/v1',userRouter)
-router.use('/v1',permissionRouter)
-router.use('/v1',rolePermissionRouter)
 router.use('/v1',loginRouter)
 
 

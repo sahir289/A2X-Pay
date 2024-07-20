@@ -7,7 +7,7 @@ function config(Env) {
 
     return {
         port: Env?.PORT,
-        reactAppBaseUrl: Env?.REACT_APP_BASE_URL,
+        // reactAppBaseUrl: Env?.REACT_APP_BASE_URL,
         databaseUrl: Env?.DATABASE_URL,
         accessTokenSecretKey: Env?.ACCESS_TOKEN_SECRET_KEY,
         accessTokenExpireTime: 24 * 60 * 60, // in seconds
