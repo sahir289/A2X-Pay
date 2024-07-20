@@ -7,6 +7,7 @@ class PermissionController {
         try {
             checkValidation(req)
             const data = req.body
+            console.log("🚀 ~ PermissionController ~ createPermission ~ data:", data)
 
             const permissionResult = await permissionRepo.createPermissionRepo(data)
             console.log("🚀 ~ PermissionController ~ createPermission ~ permissionResult:", permissionResult)

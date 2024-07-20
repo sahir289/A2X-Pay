@@ -21,7 +21,7 @@ class TokenRepo {
         return userRes;
     }
 
-    async deleteokenByUserId(userId) {
+    async deleteTokenByUserId(userId) {
         const userRes = await prisma.accessToken.deleteMany({
             where: {
                 userId:userId

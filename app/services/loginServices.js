@@ -20,9 +20,9 @@ class LogInService {
       throw new CustomError(401, "Invalid credentials"); // 401 Unauthorized - The provided credentials (password) are invalid.
     }
 
-    const isAccessTokemExtits = await tokenRepo.getTokenByUserId(user?.id)
-    if (isAccessTokemExtits) {
-      await tokenRepo.deleteokenByUserId(user?.id)
+    const isAccessTokenExists = await tokenRepo.getTokenByUserId(user?.id)
+    if (isAccessTokenExists) {
+      await tokenRepo.deleteTokenByUserId(user?.id)
     }
     const newAccessToken = generateAccessToken({ id: user.id, userName: user?.userName, role: user?.role })
     await tokenRepo.createUserToken(newAccessToken, user?.id)

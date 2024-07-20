@@ -1,5 +1,5 @@
 
-import { verifyAccessToken } from "../helpers/tokenHelper";
+import { verifyAccessToken } from "../helper/tokenHelper.js";
 import { CustomError } from "../models/customError.js";
 import tokenRepo from "../repository/tokenRepo.js";
 import userRepo from "../repository/userRepo.js";

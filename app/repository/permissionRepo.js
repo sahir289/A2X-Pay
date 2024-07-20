@@ -8,6 +8,7 @@ class PermissionRepo{
                 description : data?.description
             }
         })
+        console.log("🚀 ~ PermissionRepo ~ createPermissionRepo ~ permissions:", permissions)
         return permissions;
     }
 }
