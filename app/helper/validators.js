@@ -46,3 +46,66 @@ export const userCreateValidator =[
       .optional()
       .isString().withMessage('Code must be a string')
   ];
+
+export const merchantCreateValidator = [
+  body('code')
+    .notEmpty().withMessage('Code is required')
+    .isString().withMessage('Code must be a string'),
+  body('parent_id')
+    .optional()
+    .isInt().withMessage('Parent ID must be an integer'),
+  body('payin_theme')
+    .optional()
+    .isString().withMessage('Payin theme must be a string'),
+  body('notes')
+    .optional()
+    .isString().withMessage('Notes must be a string'),
+  body('site_url')
+    .notEmpty().withMessage('Site URL is required')
+    .isURL().withMessage('Site URL must be a valid URL'),
+  body('api_key')
+    .notEmpty().withMessage('API key is required')
+    .isString().withMessage('API key must be a string'),
+  body('secret_key')
+    .notEmpty().withMessage('Secret key is required')
+    .isString().withMessage('Secret key must be a string'),
+  body('notify_url')
+    .notEmpty().withMessage('Notify URL is required')
+    .isURL().withMessage('Notify URL must be a valid URL'),
+  body('return_url')
+    .notEmpty().withMessage('Return URL is required')
+    .isURL().withMessage('Return URL must be a valid URL'),
+  body('min_payin')
+    .notEmpty().withMessage('Min payin is required')
+    .isString().withMessage('Min payin must be a string'),
+  body('max_payin')
+    .notEmpty().withMessage('Max payin is required')
+    .isString().withMessage('Max payin must be a string'),
+  body('payin_commission')
+    .notEmpty().withMessage('Payin commission is required')
+    .isDecimal().withMessage('Payin commission must be a decimal'),
+  body('min_payout')
+    .notEmpty().withMessage('Min payout is required')
+    .isString().withMessage('Min payout must be a string'),
+  body('max_payout')
+    .notEmpty().withMessage('Max payout is required')
+    .isString().withMessage('Max payout must be a string'),
+  body('payout_commission')
+    .notEmpty().withMessage('Payout commission is required')
+    .isDecimal().withMessage('Payout commission must be a decimal'),
+  body('payout_notify_url')
+    .optional()
+    .isURL().withMessage('Payout notify URL must be a valid URL'),
+  body('balance')
+    .notEmpty().withMessage('Balance is required')
+    .isString().withMessage('Balance must be a string'),
+  body('is_test_mode')
+    .optional()
+    .isBoolean().withMessage('Is test mode must be a boolean'),
+  body('is_enabled')
+    .optional()
+    .isBoolean().withMessage('Is enabled must be a boolean'),
+  body('is_demo')
+    .optional()
+    .isBoolean().withMessage('Is demo must be a boolean')
+];

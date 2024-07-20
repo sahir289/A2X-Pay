@@ -44,7 +44,7 @@ model AccessToken {
 
 model Merchant {
   id                String     @id @default(uuid())
-  code              String
+  code              String     @unique
   parent_id         Int?
   payin_theme       String?
   notes             String?
