@@ -24,7 +24,7 @@ class MerchantController {
                 res,
                 201,
                 "Merchant is created successfully",
-                // userRes
+                
             );
         } catch (error) {
             next(error)
