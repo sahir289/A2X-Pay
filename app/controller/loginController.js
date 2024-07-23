@@ -9,6 +9,7 @@ class LogInController {
  
 
             const newAccessToken = await loginServices.login(userName,password)
+            console.log("🚀 ~ LogInController ~ login ~ newAccessToken:", newAccessToken)
 
             return DefaultResponse(
                 res,

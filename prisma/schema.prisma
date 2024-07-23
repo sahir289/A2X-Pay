@@ -121,12 +121,13 @@ model Merchant_Bank {
 
 model Payin {
   id                   String    @id @default(uuid())
-  upi_short_code       String
+  upi_short_code       String         // code added by us
   qr_params            String?
   amount               Decimal
   status               Status
   is_notified          Boolean   @default(false)
-  user_submitted_utr   String
+  user_submitted_utr   String?   
+  utr                  String?    // utr added by the bot.
   currency             Currency
   merchant_order_id    String
   user_id              String
