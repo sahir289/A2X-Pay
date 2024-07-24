@@ -102,8 +102,8 @@ model BankAccount {
   min_payin     Decimal
   max_payin     Decimal
   is_enabled    Boolean         @default(true)
-  payin_count   Int
-  balance       Decimal
+  payin_count   Int //
+  balance       Decimal // this is the amount which has been deposited we have to consider it on per day basis
   Merchant_Bank Merchant_Bank[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -121,13 +121,13 @@ model Merchant_Bank {
 
 model Payin {
   id                   String    @id @default(uuid())
-  upi_short_code       String         // code added by us
+  upi_short_code       String // code added by us
   qr_params            String?
   amount               Decimal
   status               Status
   is_notified          Boolean   @default(false)
-  user_submitted_utr   String?   
-  utr                  String?    // utr added by the bot.
+  user_submitted_utr   String?
+  utr                  String? // utr added by the bot.
   currency             Currency
   merchant_order_id    String
   user_id              String
@@ -138,6 +138,8 @@ model Payin {
   user_submitted_image String?
   approved_at          DateTime?
   merchant_id          String
+  duration             String?
+  is_url_expires       Boolean   @default(false)
   Merchant             Merchant  @relation(fields: [merchant_id], references: [id])
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt

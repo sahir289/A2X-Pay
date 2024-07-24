@@ -63,6 +63,9 @@ class MerchantController {
             next(error)
         }
     }
+
+
+    
 }
 
 export default new MerchantController()

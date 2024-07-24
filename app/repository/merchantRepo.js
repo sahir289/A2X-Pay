@@ -12,12 +12,14 @@ class MerchantRepo {
     async getMerchantByCode(code) {
         const merchantRes = await prisma.merchant.findFirst({
             where: {
-                code:code
+                code: code
             }
         })
 
         return merchantRes;
     }
+
+   
 
     // async updateLastLoginByUserId(userId) {
     //     const userRes = await prisma.user.update({
@@ -78,6 +80,7 @@ class MerchantRepo {
         });
         return { merchants, totalRecords }
     }
+
 
 }
 
