@@ -1,3 +1,4 @@
+import botResponseRepo from "../repository/botResponseRepo.js";
 import payInRepo from "../repository/payInRepo.js"
 import { nanoid } from 'nanoid'
 
@@ -8,7 +9,7 @@ class PayInService {
     async generatePayInUrl(getMerchantRes, bankAccountLinkRes, payInData) {
 
         const _10_MINUTES = 1000 * 60 * 10;
-        const expirationDate = new Date(new Date().getTime() + _10_MINUTES);
+        const expirationDate = new Date().getTime() + _10_MINUTES;
 
         const data = {
             upi_short_code: nanoid(5),       // code added by us
@@ -22,15 +23,160 @@ class PayInService {
             return_url: getMerchantRes?.return_url,
             notify_url: getMerchantRes?.notify_url,
             merchant_id: getMerchantRes?.id,
+            expirationDate: Math.floor(expirationDate / 1000)
         }
         const payInUrlRes = await payInRepo.generatePayInUrl(data)
-        const updatePayInUrlRes ={
+        const updatePayInUrlRes = {
             ...payInUrlRes,
-            expirationDate
+            expirationDate: Math.floor(expirationDate / 1000)
         }
         return updatePayInUrlRes
 
     }
+
+
+
+    // async payInProcess(payInId, data) {
+
+       
+
+    //     // const matchDataFromBotRes = botResponseRepo.getBotResByUtrAndAmount(usrSubmittedUtr,amount)
+
+    //     // if(!matchDataFromBotRes){
+    //     //     const payInData = {
+    //     //         amount: amount,
+    //     //         usrSubmittedUtr:usrSubmittedUtr,
+    //     //         is_url_expires:true
+    //     //     }
+
+
+    //     //     const updatePayinRes = payInRepo.updatePayInData(payInId,payInData)
+
+    //     //     const response = {
+    //     //         status: "Not Found",
+    //     //         amount: amount,
+    //     //         transactionId: updatePayinRes?.merchant_order_id,
+    //     //         return_url:updatePayinRes?.return_url
+    //     //     }
+
+    //     //     return DefaultResponse(
+    //     //         res,
+    //     //         200,
+    //     //         "Payment Not Found",
+    //     //         response
+    //     //     );
+    //     // }
+
+
+    //     // if (matchDataFromBotRes?.is_used === true){
+
+    //     //     const payInData = {
+    //     //         amount: amount,
+    //     //         status: "DUPLICATE",
+    //     //         is_notified: true,
+    //     //         usrSubmittedUtr:usrSubmittedUtr,
+    //     //         is_url_expires:true
+    //     //     }
+
+
+    //     //     const updatePayinRes = payInRepo.updatePayInData(payInId,payInData)
+
+    //     //     const response = {
+    //     //         status: "Duplicate",
+    //     //         amount: amount,
+    //     //         transactionId: updatePayinRes?.merchant_order_id,
+    //     //         return_url:updatePayinRes?.return_url
+    //     //     }
+
+    //     //     return DefaultResponse(
+    //     //         res,
+    //     //         200,
+    //     //         "Duplicate Payment Found",
+    //     //         response
+    //     //     );
+    //     // }
+    //     // else{
+    //     //     const payInData = {
+    //     //         amount: amount,
+    //     //         status: "Success",
+    //     //         is_notified: true,
+    //     //         usrSubmittedUtr:usrSubmittedUtr,
+    //     //         utr:matchDataFromBotRes?.utr,
+    //     //         approved_at: new Date(),
+    //     //         is_url_expires:true
+    //     //     }
+    //     //     console.log("🚀 ~ PayInService ~ payInProcess ~ payInData:", payInData)
+
+
+    //     //     const updatePayinRes = payInRepo.updatePayInData(payInId,payInData)
+
+    //     //     const response = {
+    //     //         status: "Success",
+    //     //         amount: amount,
+    //     //         transactionId: updatePayinRes?.merchant_order_id,
+    //     //         return_url:updatePayinRes?.return_url
+    //     //     }
+    //     //     return DefaultResponse(
+    //     //         res,
+    //     //         200,
+    //     //         "Payment Done successfully",
+    //     //         response
+    //     //     );
+    //     // }
+    //     const { usrSubmittedUtr, code, amount } = data;
+    //     const matchDataFromBotRes = await botResponseRepo.getBotResByUtrAndAmount(usrSubmittedUtr, amount);
+
+    //     let payInData;
+    //     let responseMessage;
+
+    //     if (!matchDataFromBotRes) {
+    //         payInData = {
+    //             amount,
+    //             usrSubmittedUtr,
+    //             is_url_expires: true
+    //         };
+
+    //         responseMessage = "Payment Not Found";
+    //     } else if (matchDataFromBotRes.is_used === true) {
+    //         payInData = {
+    //             amount,
+    //             status: "DUPLICATE",
+    //             is_notified: true,
+    //             usrSubmittedUtr,
+    //             is_url_expires: true
+    //         };
+
+    //         responseMessage = "Duplicate Payment Found";
+    //     } else {
+    //         payInData = {
+    //             amount,
+    //             status: "Success",
+    //             is_notified: true,
+    //             usrSubmittedUtr,
+    //             utr: matchDataFromBotRes.utr,
+    //             approved_at: new Date(),
+    //             is_url_expires: true
+    //         };
+
+    //         responseMessage = "Payment Done successfully";
+    //     }
+
+    //     const updatePayinRes = await payInRepo.updatePayInData(payInId, payInData);
+
+    //     const response = {
+    //         status: payInData.status || "Not Found",
+    //         amount,
+    //         transactionId: updatePayinRes?.merchant_order_id,
+    //         return_url: updatePayinRes?.return_url
+    //     };
+
+    //     return DefaultResponse(
+    //         res,
+    //         200,
+    //         responseMessage,
+    //         response
+    //     );
+    // }
 }
 
 export default new PayInService()

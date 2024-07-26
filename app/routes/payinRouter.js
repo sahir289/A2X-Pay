@@ -7,11 +7,13 @@ const payInRouter = express()
 
 payInRouter.post('/payIn',payInAssignValidator, payInController.generatePayInUrl)
 
-payInRouter.get('/validate-payIn-url/:payInId',payInAssignValidator, payInController.validatePayInUrl)
+payInRouter.get('/validate-payIn-url/:payInId', payInController.validatePayInUrl)
 
-payInRouter.get('/expire-payIn-url/:payInId',payInAssignValidator, payInController.expirePayInUrl)
+payInRouter.get('/expire-payIn-url/:payInId', payInController.expirePayInUrl)
 
+payInRouter.get('/check-payment-status/:payInId', payInController.checkPaymentStatus)
 
+payInRouter.post('/process/:payInId',payInController.payInProcess)
 
 
 

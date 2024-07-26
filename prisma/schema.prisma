@@ -19,6 +19,7 @@ enum Status {
   ASSIGNED
   SUCCESS
   DROPPED
+  DUPLICATE
 }
 
 enum Currency {
@@ -139,6 +140,7 @@ model Payin {
   approved_at          DateTime?
   merchant_id          String
   duration             String?
+  expirationDate       BigInt?
   is_url_expires       Boolean   @default(false)
   Merchant             Merchant  @relation(fields: [merchant_id], references: [id])
   createdAt            DateTime  @default(now())
@@ -183,4 +185,15 @@ model Settlement {
   rejected_reason String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model TelegramResponse {
+  id          String   @id @default(uuid())
+  status      String?
+  amount      Decimal?
+  amount_code String? @unique
+  utr         String?
+  is_used     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

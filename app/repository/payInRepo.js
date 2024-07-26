@@ -3,8 +3,6 @@ import { prisma } from '../client/prisma.js';
 class PayInRepo {
 
     async generatePayInUrl(data) {
-        console.log("🚀 ~ PayInRepo ~ payInAssign ~ data:", data)
-
         const payInUrlRes = await prisma.payin.create({
             data: data
         })
@@ -24,8 +22,8 @@ class PayInRepo {
         const expirePayInUrlRes = await prisma.payin.update({
             where: {
                 id: payInId
-            },data:{
-                is_url_expires:true
+            }, data: {
+                is_url_expires: true
             }
         })
         return expirePayInUrlRes
@@ -46,8 +44,24 @@ class PayInRepo {
 
 
 
+    async getPayInData(payInId) {
+        const paymentRes = await prisma.payin.findFirst({
+            where: {
+                id: payInId
+            }
+        })
+        return paymentRes
+    }
 
-
+    async updatePayInData(payInId, data) {
+        const payInUrlRes = await prisma.payin.update({
+            where: {
+                id: payInId
+            },
+            data: data
+        })
+        return payInUrlRes
+    }
 
 }
 

@@ -5,6 +5,7 @@ import userRouter from './userRoute.js';
 import merchantRouter from './merchatRoutes.js';
 import bankAccountRouter from './bankAccountRoute.js';
 import payInRouter from './payinRouter.js';
+import botResRouter from './botResponseRouter.js';
 
 const router = express();
 
@@ -13,6 +14,7 @@ router.use('/v1',loginRouter)
 router.use('/v1',merchantRouter)
 router.use('/v1',bankAccountRouter)
 router.use('/v1',payInRouter)
+router.use('/v1',botResRouter)
 
 
 
