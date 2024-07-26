@@ -15,7 +15,7 @@ payInRouter.get('/check-payment-status/:payInId', payInController.checkPaymentSt
 
 payInRouter.post('/process/:payInId',payInController.payInProcess)
 
-
+payInRouter.get('/get-payInData',payInController.getAllPayInData)
 
 // payInRouter.get('/getall-merchant',isAuthenticated, merchantController.getAllMerchants)
 

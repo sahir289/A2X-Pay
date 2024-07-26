@@ -44,40 +44,25 @@ class UserRepo {
     }
 
     async getAllUsers(skip, take, fullName, userName, role) {
-        const user = await prisma.user.findMany({
-            where: {
-                fullName: {
-                    contains: fullName,
-                    mode: 'insensitive'
-                },
-                userName: {
-                    contains: userName,
-                    mode: 'insensitive'
-                },
-                role: {
-                    equals: role,
-                }
-            },
+        const filters = {
+            ...(fullName && { fullName: { contains: fullName, mode: 'insensitive' } }),
+            ...(userName && { userName: { contains: userName, mode: 'insensitive' } }),
+            ...(role && { role: { equals: role } }),
+        };
+    
+        const users = await prisma.user.findMany({
+            where: filters,
             skip: skip,
             take: take
-        })
-        const totalRecords = await prisma.user.count({
-            where: {
-                fullName: {
-                    contains: fullName,
-                    mode: 'insensitive',
-                },
-                userName: {
-                    contains: userName,
-                    mode: 'insensitive',
-                },
-                role: {
-                    equals: role,
-                },
-            },
         });
-        return { user, totalRecords }
+    
+        const totalRecords = await prisma.user.count({
+            where: filters,
+        });
+    
+        return { users, totalRecords };
     }
+    
 }
 
 export default new UserRepo()

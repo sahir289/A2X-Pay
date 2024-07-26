@@ -173,7 +173,6 @@ class PayInController {
                 );
             }
         } catch (error) {
-            console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ error:", error)
             next(error);
         }
     }
@@ -184,9 +183,6 @@ class PayInController {
             const { payInId } = req.params;
             const data = req.body;
             const { usrSubmittedUtr, code, amount } = data;
-            console.log("🚀 ~ PayInController ~ payInProcess ~ amount:", amount)
-            console.log("🚀 ~ PayInController ~ payInProcess ~ usrSubmittedUtr:", usrSubmittedUtr)
-
             const urlValidationRes = await payInRepo.validatePayInUrl(payInId)
 
             if (urlValidationRes?.is_url_expires === true) {
@@ -194,8 +190,6 @@ class PayInController {
             }
 
             const matchDataFromBotRes = await botResponseRepo.getBotResByUtrAndAmount(usrSubmittedUtr, amount);
-            console.log("🚀 ~ PayInController ~ payInProcess ~ matchDataFromBotRes:", matchDataFromBotRes)
-
             let payInData;
             let responseMessage;
 
@@ -216,14 +210,10 @@ class PayInController {
                     is_url_expires: true
                 };
                 const updatePayinRes = await payInRepo.updatePayInData(payInId, payInData);
-                console.log("🚀 ~ PayInController ~ payInProcess ~ updatePayinRes:", updatePayinRes)
-
                 responseMessage = "Duplicate Payment Found";
             } else {
 
                 const updateBotByUtrAndAmountRes = await botResponseRepo.updateBotResponseByUtrAndAmount(matchDataFromBotRes?.id, usrSubmittedUtr,amount)
-                console.log("🚀 ~ PayInController ~ payInProcess ~ updateBotByUtrAndAmountRes:", updateBotByUtrAndAmountRes)
-
                 payInData = {
                     amount,
                     status: "SUCCESS",
@@ -248,8 +238,6 @@ class PayInController {
             if (payInData.status === "SUCCESS") {
                 response.utr = updatePayinRes?.utr;
             }
-            console.log("🚀 ~ PayInController ~ payInProcess ~ response:", response)
-
             return DefaultResponse(
                 res,
                 200,
@@ -258,10 +246,38 @@ class PayInController {
             );
 
         } catch (error) {
-            console.log("🚀 ~ PayInController ~ payInProcess ~ error:", error)
             next(error)
         }
     }
+
+    async  getAllPayInData(req, res, next) {
+        try {
+            // checkValidation(req);
+            // const { id: userId } = req.user;
+    
+            const page = parseInt(req.query.page) || 1;
+            const pageSize = parseInt(req.query.pageSize) || 15;
+    
+            const { merchantOrderId, utr, payinId, upiShortCode, merchantCode ,userId} = req.query;
+    
+            const skip = (page - 1) * pageSize;
+            const take = pageSize;
+    
+            // await userRepo.validateUserId(userId);
+    
+            const payInDataRes = await payInServices.getAllPayInData(skip, take, merchantOrderId, utr, userId, payinId, upiShortCode, merchantCode);
+    
+            return DefaultResponse(
+                res,
+                200,
+                "PayIn data fetched successfully",
+                payInDataRes
+            );
+        } catch (error) {
+            next(error);
+        }
+    }
+    
 }
 
 export default new PayInController()

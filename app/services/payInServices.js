@@ -1,3 +1,4 @@
+import { prisma } from "../client/prisma.js";
 import botResponseRepo from "../repository/botResponseRepo.js";
 import payInRepo from "../repository/payInRepo.js"
 import { nanoid } from 'nanoid'
@@ -105,8 +106,6 @@ class PayInService {
     //     //         approved_at: new Date(),
     //     //         is_url_expires:true
     //     //     }
-    //     //     console.log("🚀 ~ PayInService ~ payInProcess ~ payInData:", payInData)
-
 
     //     //     const updatePayinRes = payInRepo.updatePayInData(payInId,payInData)
 
@@ -177,6 +176,40 @@ class PayInService {
     //         response
     //     );
     // }
+
+    async getAllPayInData(skip, take, merchantOrderId, utr, userId, payinId, upiShortCode, merchantCode) {
+        const filters = {
+            ...(merchantOrderId && { merchant_order_id: { contains: merchantOrderId, mode: 'insensitive' } }),
+            ...(utr && { utr: { contains: utr, mode: 'insensitive' } }),
+            ...(userId && { user_id: { equals: userId } }),
+            ...(payinId && { id: { equals: payinId } }),
+            ...(upiShortCode && { upi_short_code: { contains: upiShortCode, mode: 'insensitive' } }),
+            ...(merchantCode && {
+                Merchant: {
+                    code: { contains: merchantCode, mode: 'insensitive' }
+                }
+            }),
+        };
+    
+        const payInData = await prisma.payin.findMany({
+            where: filters,
+            skip: skip,
+            take: take,
+            include: {
+                Merchant: true
+            }
+        });
+    
+        const totalRecords = await prisma.payin.count({
+            where: filters,
+        });
+        const serializedPayinData = payInData.map(payInData => ({
+            ...payInData,
+            expirationDate: payInData.expirationDate ? payInData.expirationDate.toString() : null,
+        }));
+        return { payInData:serializedPayinData, totalRecords };
+    }
+    
 }
 
 export default new PayInService()

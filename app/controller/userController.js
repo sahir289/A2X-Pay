@@ -52,11 +52,7 @@ class UserController {
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 15
 
-            const fullName = req.query.name;
-
-            const userName = req.query.userName;
-
-            const role = req.query.role;
+            const { name: fullName, userName, role } = req.query;
 
             const skip = (page - 1) * pageSize
             const take = pageSize

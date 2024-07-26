@@ -140,7 +140,7 @@ model Payin {
   approved_at          DateTime?
   merchant_id          String
   duration             String?
-  expirationDate       BigInt?
+  expirationDate       Int?
   is_url_expires       Boolean   @default(false)
   Merchant             Merchant  @relation(fields: [merchant_id], references: [id])
   createdAt            DateTime  @default(now())
