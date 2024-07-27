@@ -177,7 +177,12 @@ class PayInService {
     //     );
     // }
 
-    async getAllPayInData(skip, take, merchantOrderId, utr, userId, payinId, upiShortCode, merchantCode) {
+    async getAllPayInData(skip, take, merchantOrderId, utr, userId, payinId, upiShortCode, merchantCode,filterToday) {
+        const now = new Date();
+        const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString(); // Start of today
+        console.log("🚀 ~ PayInService ~ getAllPayInData ~ startOfDay:", startOfDay)
+        const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString(); // End of today
+        console.log("🚀 ~ PayInService ~ getAllPayInData ~ endOfDay:", endOfDay)
         const filters = {
             ...(merchantOrderId && { merchant_order_id: { contains: merchantOrderId, mode: 'insensitive' } }),
             ...(utr && { utr: { contains: utr, mode: 'insensitive' } }),
@@ -187,6 +192,12 @@ class PayInService {
             ...(merchantCode && {
                 Merchant: {
                     code: { contains: merchantCode, mode: 'insensitive' }
+                }
+            }),
+            ...(filterToday && {
+                createdAt: {
+                    gte: startOfDay,
+                    lte: endOfDay
                 }
             }),
         };

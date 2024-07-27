@@ -258,14 +258,15 @@ class PayInController {
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 15;
     
-            const { merchantOrderId, utr, payinId, upiShortCode, merchantCode ,userId} = req.query;
+            const { merchantOrderId, utr, payinId, upiShortCode, merchantCode ,userId,filterToday} = req.query;
     
             const skip = (page - 1) * pageSize;
             const take = pageSize;
     
             // await userRepo.validateUserId(userId);
+            const filterTodayBool = filterToday === 'false';  // to check the today entry
     
-            const payInDataRes = await payInServices.getAllPayInData(skip, take, merchantOrderId, utr, userId, payinId, upiShortCode, merchantCode);
+            const payInDataRes = await payInServices.getAllPayInData(skip, take, merchantOrderId, utr, userId, payinId, upiShortCode, merchantCode,filterTodayBool);
     
             return DefaultResponse(
                 res,
@@ -274,6 +275,7 @@ class PayInController {
                 payInDataRes
             );
         } catch (error) {
+            console.log("🚀 ~ PayInController ~ getAllPayInData ~ error:", error)
             next(error);
         }
     }
