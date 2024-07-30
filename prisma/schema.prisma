@@ -16,6 +16,7 @@ enum Role {
 }
 
 enum Status {
+  INITIATED
   ASSIGNED
   SUCCESS
   DROPPED

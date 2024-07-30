@@ -30,18 +30,17 @@ class BotResponseRepo {
         return updateBotRes;
     }
 
-    async getBotResByUtrAndAmount(usrSubmittedUtr,amount){
+    async getBotResByUtr(usrSubmittedUtr){
         const botRes = await prisma.telegramResponse.findFirst({
             where:{
                 utr:usrSubmittedUtr,
-                amount:amount,
             }
         })
 
         return botRes;
     }
 
-    async updateBotResponseByUtrAndAmount(id,utr,amount) {
+    async updateBotResponseByUtr(id,utr) {
         console.log("🚀 ~ BotResponseRepo ~ updateBotResponseByUtrAndAmount ~ id:", id)
         console.log("🚀 ~ BotResponseRepo ~ updateBotResponseByUtrAndAmount ~ amount:", amount)
         console.log("🚀 ~ BotResponseRepo ~ updateBotResponseByUtrAndAmount ~ utr:", utr)
@@ -49,7 +48,6 @@ class BotResponseRepo {
             where: {
                 id:id,
                 utr:utr,
-                amount:amount,
             }, data: {
                 is_used: true
             }

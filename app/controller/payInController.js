@@ -3,6 +3,7 @@ import { checkValidation } from '../helper/validationHelper.js';
 import { CustomError } from '../middlewares/errorHandler.js';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import botResponseRepo from '../repository/botResponseRepo.js';
+import merchantRepo from '../repository/merchantRepo.js';
 import payInRepo from '../repository/payInRepo.js';
 import payInServices from '../services/payInServices.js';
 
@@ -114,57 +115,154 @@ class PayInController {
         }
     }
 
+    // async checkPaymentStatus(req, res, next) {
+    //     try {
+    //         const { payInId } = req.params;
+
+    //         const getPayInData = await payInRepo.getPayInData(payInId);
+
+    //         if (!getPayInData) {
+    //             throw new CustomError(404, 'Payment does not exist')
+    //         }
+
+    //         const getBotDataRes = await botResponseRepo.getBotData(getPayInData?.upi_short_code);
+    //         console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ getBotDataRes.is_used:", getBotDataRes.is_used)
+
+    //         if(getBotDataRes){
+    //             if (getBotDataRes?.is_used===false) {
+    //                 // add dispute condition here
+    
+    //                 const updateBotIsUsedRes = await botResponseRepo.updateBotResponse(getBotDataRes?.amount_code);
+    
+    //                 const updateMerchantDataRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id,parseFloat(getBotDataRes?.amount))
+    //                 console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ updateMerchantDataRes:", updateMerchantDataRes)
+    
+    //                 const  updateBankAccRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id,parseFloat(getBotDataRes?.amount))
+    //                 console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ updateBankAccRes:", updateBankAccRes)
+    
+    
+    //                 const updatePayInData = {
+    //                     amount: getBotDataRes?.amount,
+    //                     status: "SUCCESS",
+    //                     is_notified: true,
+    //                     utr: getBotDataRes?.utr,
+    //                     approved_at: new Date(),
+    //                     is_url_expires: true
+    
+    //                 };
+    
+    //                 const updatePayInRes = await payInRepo.updatePayInData(payInId, updatePayInData);
+    
+    //                 const response = {
+    //                     status: "Success",
+    //                     amount: getBotDataRes?.amount,
+    //                     utr: getBotDataRes?.utr,
+    //                     transactionId: getPayInData?.merchant_order_id,
+    //                     return_url: getPayInData?.return_url
+    //                 }
+    
+    //                 return DefaultResponse(
+    //                     res,
+    //                     200,
+    //                     "Payment status updated successfully",
+    //                     response
+    //                 );
+    //             } 
+    //             else if(getBotDataRes?.is_used===true){
+    //                 return DefaultResponse(
+    //                     res,
+    //                     200,
+    //                     "Payment is added for this transaction",
+    //                 );
+    //             }
+    //         }
+    //         else {
+
+    //             const elseResponse = {
+    //                 status: "Pending",
+    //                 amount: 0,
+    //                 payInId: payInId,
+    //                 transactionId: getPayInData?.merchant_order_id
+    //             }
+
+    //             return DefaultResponse(
+    //                 res,
+    //                 200,
+    //                 "Status Pending",
+    //                 elseResponse
+    //             );
+    //         }
+    //     } catch (error) {
+    //         console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ error:", error)
+    //         next(error);
+    //     }
+    // }
+
     async checkPaymentStatus(req, res, next) {
         try {
             const { payInId } = req.params;
-
+    
             const getPayInData = await payInRepo.getPayInData(payInId);
-
+    
             if (!getPayInData) {
-                throw new CustomError(404, 'Payment does not exist')
+                throw new CustomError(404, 'Payment does not exist');
             }
-
+    
             const getBotDataRes = await botResponseRepo.getBotData(getPayInData?.upi_short_code);
-
+    
             if (getBotDataRes) {
-
-                const updateBotIsUsedRes = await botResponseRepo.updateBotResponse(getBotDataRes?.amount_code);
-
-                const updatePayInData = {
-                    amount: getBotDataRes?.amount,
-                    status: "SUCCESS",
-                    is_notified: true,
-                    utr: getBotDataRes?.utr,
-                    approved_at: new Date(),
-                    is_url_expires: true
-
-                };
-
-                const updatePayInRes = await payInRepo.updatePayInData(payInId, updatePayInData);
-
-                const response = {
-                    status: "Success",
-                    amount: getBotDataRes?.amount,
-                    utr: getBotDataRes?.utr,
-                    transactionId: getPayInData?.merchant_order_id,
-                    return_url: getPayInData?.return_url
+                console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ getBotDataRes.is_used:", getBotDataRes.is_used);
+    
+                if (getBotDataRes.is_used === false) {
+                    // add dispute condition here
+                    const updateBotIsUsedRes = await botResponseRepo.updateBotResponse(getBotDataRes?.amount_code);
+    
+                    const updateMerchantDataRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(getBotDataRes?.amount));
+                    console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ updateMerchantDataRes:", updateMerchantDataRes);
+    
+                    const updateBankAccRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(getBotDataRes?.amount));
+                    console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ updateBankAccRes:", updateBankAccRes);
+    
+                    const updatePayInData = {
+                        amount: getBotDataRes?.amount,
+                        status: "SUCCESS",
+                        is_notified: true,
+                        utr: getBotDataRes?.utr,
+                        approved_at: new Date(),
+                        is_url_expires: true
+                    };
+    
+                    const updatePayInRes = await payInRepo.updatePayInData(payInId, updatePayInData);
+    
+                    const response = {
+                        status: "Success",
+                        amount: getBotDataRes?.amount,
+                        utr: getBotDataRes?.utr,
+                        transactionId: getPayInData?.merchant_order_id,
+                        return_url: getPayInData?.return_url
+                    };
+    
+                    return DefaultResponse(
+                        res,
+                        200,
+                        "Payment status updated successfully",
+                        response
+                    );
+                } else if (getBotDataRes.is_used === true) {
+                    return DefaultResponse(
+                        res,
+                        200,
+                        "Payment is added for this transaction"
+                    );
                 }
-
-                return DefaultResponse(
-                    res,
-                    200,
-                    "Payment status updated successfully",
-                    response
-                );
             } else {
-
                 const elseResponse = {
                     status: "Pending",
                     amount: 0,
                     payInId: payInId,
                     transactionId: getPayInData?.merchant_order_id
-                }
-
+                };
+    
                 return DefaultResponse(
                     res,
                     200,
@@ -173,23 +271,31 @@ class PayInController {
                 );
             }
         } catch (error) {
+            console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ error:", error);
             next(error);
         }
     }
-
+    
     async payInProcess(req, res, next) {
         try {
 
             const { payInId } = req.params;
             const data = req.body;
             const { usrSubmittedUtr, code, amount } = data;
+
+            const getPayInData = await payInRepo.getPayInData(payInId);
+
+            if (!getPayInData) {
+                throw new CustomError(404, 'Payment does not exist')
+            }
+
             const urlValidationRes = await payInRepo.validatePayInUrl(payInId)
 
             if (urlValidationRes?.is_url_expires === true) {
                 throw new CustomError(403, 'Url is expired')
             }
 
-            const matchDataFromBotRes = await botResponseRepo.getBotResByUtrAndAmount(usrSubmittedUtr, amount);
+            const matchDataFromBotRes = await botResponseRepo.getBotResByUtr(usrSubmittedUtr);
             let payInData;
             let responseMessage;
 
@@ -213,7 +319,14 @@ class PayInController {
                 responseMessage = "Duplicate Payment Found";
             } else {
 
-                const updateBotByUtrAndAmountRes = await botResponseRepo.updateBotResponseByUtrAndAmount(matchDataFromBotRes?.id, usrSubmittedUtr,amount)
+                const updateBotByUtrAndAmountRes = await botResponseRepo.updateBotResponseByUtr(matchDataFromBotRes?.id, usrSubmittedUtr)
+
+                const updateMerchantDataRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id,parseFloat(matchDataFromBotRes?.amount))
+                console.log("🚀 ~ PayInController ~ payInProcess ~ updateMerchantDataRes:", updateMerchantDataRes)
+
+                const  updateBankAccRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id,parseFloat(matchDataFromBotRes?.amount))
+                console.log("🚀 ~ PayInController ~ payInProcess ~ updateBankAccRes:", updateBankAccRes)
+
                 payInData = {
                     amount,
                     status: "SUCCESS",
@@ -258,7 +371,9 @@ class PayInController {
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 15;
     
-            const { merchantOrderId, utr, payinId, upiShortCode, merchantCode ,userId,filterToday} = req.query;
+            const { upiShortCode,amount,merchantOrderId, merchantCode,userId,utr, payInId,dur,status,bank,filterToday} = req.query;
+            console.log("🚀 ~ PayInController ~ getAllPayInData ~ merchantCode:", merchantCode)
+            console.log("🚀 ~ PayInController ~ getAllPayInData ~ payinId:", payInId)
     
             const skip = (page - 1) * pageSize;
             const take = pageSize;
@@ -266,7 +381,7 @@ class PayInController {
             // await userRepo.validateUserId(userId);
             const filterTodayBool = filterToday === 'false';  // to check the today entry
     
-            const payInDataRes = await payInServices.getAllPayInData(skip, take, merchantOrderId, utr, userId, payinId, upiShortCode, merchantCode,filterTodayBool);
+            const payInDataRes = await payInServices.getAllPayInData(skip, take, upiShortCode,amount,merchantOrderId, merchantCode,userId,utr, payInId,dur,status,bank,filterTodayBool);
     
             return DefaultResponse(
                 res,

@@ -22,7 +22,7 @@ class BankAccountRepo {
                 merchantId: id
             },
             include: {
-                bankAccount:true
+                bankAccount: true
 
             }
         })
@@ -39,65 +39,43 @@ class BankAccountRepo {
         return bankAccRes;
     }
 
-    // async updateLastLoginByUserId(userId) {
-    //     const userRes = await prisma.user.update({
-    //         where: {
-    //             id: userId
-    //         },
-    //         data: {
-    //             last_login: new Date()
-    //         }
-    //     })
+    async updateBankAccountBalance(bankAccId, amount) {
+        const bankAccRes = await prisma.bankAccount.findUnique({
+            where: {
+                id: bankAccId
+            },
+            select: {
+                balance: true
+            }
+        })
 
-    //     return userRes;
-    // }
+        if (!bankAccRes) {
+            throw new Error('Bank not found');
+        }
 
-    // async validateUserId(userId) {
-    //     const user = await prisma.user.findFirst({
-    //         where: {
-    //             id: userId
-    //         }
-    //     })
-    //     if (!user) {
-    //         throw new CustomError("Invalid user id", 404)
-    //     }
-    // }
+        // Ensure the balance is a number, even if it's 0
+        const currentBalance = parseFloat(bankAccRes.balance) || 0;
 
-    // async getAllMerchants(skip, take) {
-    //     const merchants = await prisma.merchant.findMany({
-    //         // where: {
-    //         //     fullName: {
-    //         //         contains: fullName,
-    //         //         mode: 'insensitive'
-    //         //     },
-    //         //     userName: {
-    //         //         contains: userName,
-    //         //         mode: 'insensitive'
-    //         //     },
-    //         //     role: {
-    //         //         equals: role,
-    //         //     }
-    //         // },
-    //         skip: skip,
-    //         take: take
-    //     })
-    //     const totalRecords = await prisma.merchant.count({
-    //         // where: {
-    //         //     fullName: {
-    //         //         contains: fullName,
-    //         //         mode: 'insensitive',
-    //         //     },
-    //         //     userName: {
-    //         //         contains: userName,
-    //         //         mode: 'insensitive',
-    //         //     },
-    //         //     role: {
-    //         //         equals: role,
-    //         //     },
-    //         // },
-    //     });
-    //     return { merchants, totalRecords }
-    // }
+        // Calculate the new balance
+        const newBalance = currentBalance + parseFloat(amount);
+
+        // Calculate the new balance
+      
+        console.log("🚀 ~ BankAccountRepo ~ updateBankAccountBalance ~ newBalance:", newBalance)
+
+        // Update the balance with the new total
+        const updateBankAccRes = await prisma.bankAccount.update({
+            where: {
+                id: bankAccId
+            },
+            data: {
+                balance: newBalance
+            }
+        });
+
+        return updateBankAccRes;
+
+    }
 
 }
 

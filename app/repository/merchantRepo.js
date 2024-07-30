@@ -19,7 +19,7 @@ class MerchantRepo {
         return merchantRes;
     }
 
-   
+
 
     // async updateLastLoginByUserId(userId) {
     //     const userRes = await prisma.user.update({
@@ -81,6 +81,37 @@ class MerchantRepo {
         return { merchants, totalRecords }
     }
 
+    async updateMerchant(merchant_id, amount) {
+        // Fetch the current balance
+        const currentMerchant = await prisma.merchant.findUnique({
+            where: { id: merchant_id },
+            select: { balance: true }
+        });
+
+        if (!currentMerchant) {
+            throw new Error('Merchant not found');
+        }
+
+        // Ensure the balance is a number, even if it's 0
+        const currentBalance = parseFloat(currentMerchant.balance) || 0;
+        console.log("🚀 ~ MerchantRepo ~ updateMerchant ~ currentBalance:", currentBalance)
+
+        // Calculate the new balance
+        const newBalance = currentBalance + parseFloat(amount);
+        console.log("🚀 ~ MerchantRepo ~ updateMerchant ~ newBalance:", newBalance)
+
+        // Update the balance with the new total
+        const updateMerchantRes = await prisma.merchant.update({
+            where: {
+                id: merchant_id
+            },
+            data: {
+                balance: newBalance
+            }
+        });
+
+        return updateMerchantRes;
+    }
 
 }
 

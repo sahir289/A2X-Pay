@@ -177,18 +177,76 @@ class PayInService {
     //     );
     // }
 
-    async getAllPayInData(skip, take, merchantOrderId, utr, userId, payinId, upiShortCode, merchantCode,filterToday) {
+    // async getAllPayInData(skip, take, upiShortCode,amount,merchantOrderId, merchantCode,userId,utr, payinId,dur,status,bank,filterToday) {
+    //     const now = new Date();
+    //     const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString(); // Start of today
+    //     console.log("🚀 ~ PayInService ~ getAllPayInData ~ startOfDay:", startOfDay)
+    //     const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString(); // End of today
+    //     console.log("🚀 ~ PayInService ~ getAllPayInData ~ endOfDay:", endOfDay)
+    //     const filters = {
+    //         ...(merchantOrderId && { merchant_order_id: { contains: merchantOrderId, mode: 'insensitive' } }),
+    //         ...(utr && { utr: { contains: utr, mode: 'insensitive' } }),
+    //         ...(userId && { user_id: { equals: userId } }),
+    //         ...(payinId && { id: { equals: payinId } }),
+    //         ...(upiShortCode && { upi_short_code: { contains: upiShortCode, mode: 'insensitive' } }),
+    //         ...(amount && { amount: { equals: amount } }),
+    //         ...(utr && { utr: { equals: utr } }),
+    //         ...(dur && { duration: { contains: dur, mode: 'insensitive' } }),
+    //         ...(status && { status: { contains: status, mode: 'insensitive' } }),
+    //         ...(merchantCode && {
+    //             Merchant: {
+    //                 code: { contains: merchantCode, mode: 'insensitive' }
+    //             }
+    //         }),
+    //         // ...(merchantCode && {
+    //         //     Merchant: {
+    //         //         code: { contains: merchantCode, mode: 'insensitive' }
+    //         //     }
+    //         // }),
+    //         ...(filterToday && {
+    //             createdAt: {
+    //                 gte: startOfDay,
+    //                 lte: endOfDay
+    //             }
+    //         }),
+    //     };
+    
+    //     const payInData = await prisma.payin.findMany({
+    //         where: filters,
+    //         skip: skip,
+    //         take: take,
+    //         include: {
+    //             Merchant: true,
+                
+    //         }
+    //     });
+    
+    //     const totalRecords = await prisma.payin.count({
+    //         where: filters,
+    //     });
+    //     const serializedPayinData = payInData.map(payInData => ({
+    //         ...payInData,
+    //         expirationDate: payInData.expirationDate ? payInData.expirationDate.toString() : null,
+    //     }));
+    //     return { payInData:serializedPayinData, totalRecords };
+    // }
+    
+
+    async getAllPayInData(skip, take, upiShortCode, amount, merchantOrderId, merchantCode, userId, utr, payInId, dur, status, bankName, filterToday) {
         const now = new Date();
         const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString(); // Start of today
-        console.log("🚀 ~ PayInService ~ getAllPayInData ~ startOfDay:", startOfDay)
         const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString(); // End of today
-        console.log("🚀 ~ PayInService ~ getAllPayInData ~ endOfDay:", endOfDay)
+    
         const filters = {
             ...(merchantOrderId && { merchant_order_id: { contains: merchantOrderId, mode: 'insensitive' } }),
             ...(utr && { utr: { contains: utr, mode: 'insensitive' } }),
             ...(userId && { user_id: { equals: userId } }),
-            ...(payinId && { id: { equals: payinId } }),
+            ...(payInId && { id: { equals: payInId } }),
             ...(upiShortCode && { upi_short_code: { contains: upiShortCode, mode: 'insensitive' } }),
+            ...(amount && { amount: { equals: amount } }),
+            ...(utr && { utr: { equals: utr } }),
+            ...(dur && { duration: { contains: dur, mode: 'insensitive' } }),
+            ...(status && { status: { equals: status } }),
             ...(merchantCode && {
                 Merchant: {
                     code: { contains: merchantCode, mode: 'insensitive' }
@@ -200,6 +258,17 @@ class PayInService {
                     lte: endOfDay
                 }
             }),
+            ...(bankName && {
+                Merchant: {
+                    Merchant_Bank: {
+                        some: {
+                            bankAccount: {
+                                bank_name: { contains: bankName, mode: 'insensitive' }
+                            }
+                        }
+                    }
+                }
+            })
         };
     
         const payInData = await prisma.payin.findMany({
@@ -207,18 +276,29 @@ class PayInService {
             skip: skip,
             take: take,
             include: {
-                Merchant: true
+                Merchant: {
+                    include: {
+                        Merchant_Bank: {
+                            include: {
+                                bankAccount: true
+                            }
+                        }
+                    }
+                }
             }
         });
     
         const totalRecords = await prisma.payin.count({
             where: filters,
         });
-        const serializedPayinData = payInData.map(payInData => ({
-            ...payInData,
-            expirationDate: payInData.expirationDate ? payInData.expirationDate.toString() : null,
+    
+        // Handle BigInt serialization issue
+        const serializedPayinData = payInData.map(payIn => ({
+            ...payIn,
+            expirationDate: payIn.expirationDate ? payIn.expirationDate.toString() : null,
         }));
-        return { payInData:serializedPayinData, totalRecords };
+    
+        return { payInData: serializedPayinData, totalRecords };
     }
     
 }
