@@ -41,9 +41,7 @@ class BotResponseRepo {
     }
 
     async updateBotResponseByUtr(id,utr) {
-        console.log("🚀 ~ BotResponseRepo ~ updateBotResponseByUtrAndAmount ~ id:", id)
-        console.log("🚀 ~ BotResponseRepo ~ updateBotResponseByUtrAndAmount ~ amount:", amount)
-        console.log("🚀 ~ BotResponseRepo ~ updateBotResponseByUtrAndAmount ~ utr:", utr)
+       
         const updateBotRes = await prisma.telegramResponse.update({
             where: {
                 id:id,

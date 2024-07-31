@@ -29,7 +29,6 @@ class PayInRepo {
         return expirePayInUrlRes
     }
 
-
     async getMerchantByCodeAndApiKey(code, api_key) {
 
         const merchantRes = await prisma.merchant.findFirst({
@@ -41,8 +40,6 @@ class PayInRepo {
 
         return merchantRes;
     }
-
-
 
     async getPayInData(payInId) {
         const paymentRes = await prisma.payin.findFirst({
@@ -63,6 +60,15 @@ class PayInRepo {
         return payInUrlRes
     }
 
+    async getPayInDataByUtr(utr){
+        console.log("🚀 ~ PayInRepo ~ getPayInDataByUtr ~ utr:", utr)
+        const payInRes = await prisma.payin.findMany({
+            where:{
+                user_submitted_utr:utr
+            }
+        })
+        return payInRes
+    }
 }
 
 export default new PayInRepo()

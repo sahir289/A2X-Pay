@@ -68,8 +68,8 @@ model Merchant {
   payin_theme       String?
   notes             String?
   site_url          String
-  api_key           String
-  secret_key        String
+  api_key           String          @unique
+  secret_key        String          @unique
   notify_url        String
   return_url        String
   min_payin         String
@@ -177,7 +177,7 @@ model Payout {
 }
 
 model Settlement {
-  id              Int   @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   merchant_id     String
   Merchant        Merchant @relation(fields: [merchant_id], references: [id])
   status          Status

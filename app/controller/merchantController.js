@@ -1,16 +1,19 @@
-import { hashPassword } from "../helper/passwordHelper.js";
+import { DefaultResponse } from "../helper/customResponse.js";
 import { checkValidation } from "../helper/validationHelper.js";
-import { CustomError, customError } from "../middlewares/errorHandler.js";
-import { DefaultResponse } from "../helper/customResponse.js"
-import userRepo from "../repository/userRepo.js";
-import userService from "../services/userService.js";
+import { CustomError } from "../middlewares/errorHandler.js";
 import merchantRepo from "../repository/merchantRepo.js";
+import userRepo from "../repository/userRepo.js";
+import { v4 as uuidv4 } from 'uuid';
 
 class MerchantController {
     async createMerchant(req, res, next) {
         try {
             checkValidation(req)
             const data = req.body;
+            const api_key = uuidv4()
+            console.log("🚀 ~ MerchantController ~ createMerchant ~ api_key:", api_key)
+            const secret_key = uuidv4()
+            console.log("🚀 ~ MerchantController ~ createMerchant ~ secret_key:", secret_key)
 
             const isMerchantExist = await merchantRepo.getMerchantByCode(data?.code)
 
@@ -18,13 +21,18 @@ class MerchantController {
                 throw new CustomError(409, 'Merchant with this code already exist')
             }
 
-            const merchantRes = await merchantRepo.createMerchant(data)
+            const updateData = {
+                ...data,
+                api_key,
+                secret_key
+            }
+            const merchantRes = await merchantRepo.createMerchant(updateData)
 
             return DefaultResponse(
                 res,
                 201,
                 "Merchant is created successfully",
-                
+
             );
         } catch (error) {
             next(error)
@@ -65,7 +73,7 @@ class MerchantController {
     }
 
 
-    
+
 }
 
 export default new MerchantController()

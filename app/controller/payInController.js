@@ -24,7 +24,7 @@ class PayInController {
             }
 
             const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(getMerchantRes?.id)
-            if (!bankAccountLinkRes) {
+            if (!bankAccountLinkRes || bankAccountLinkRes.length === 0) {
                 throw new CustomError(404, 'Bank Account has bot been linked with Merchant')
             }
 
@@ -71,20 +71,30 @@ class PayInController {
 
             const bankDetails = await bankAccountRepo?.getMerchantBankById(urlValidationRes?.merchant_id)
 
+            if (!bankDetails || bankDetails.length === 0) {
+                throw new CustomError(404, 'Bank is not assigned');
+            }
+
+            // Filter for the enabled bank accounts
+            const enabledBanks = bankDetails.filter(bank => bank?.bankAccount?.is_enabled);
+
+            if (enabledBanks.length === 0) {
+                throw new CustomError(404, 'No enabled bank account found');
+            }
+
             const updatedRes = {
                 code: urlValidationRes?.upi_short_code,
                 return_url: urlValidationRes?.return_url,
                 notify_url: urlValidationRes?.notify_url,
-                upi_id: bankDetails?.bankAccount?.upi_id,
-                ac_name: bankDetails?.bankAccount?.ac_name,
-                ac_no: bankDetails?.bankAccount?.ac_no,
-                ifsc: bankDetails?.bankAccount?.ifsc,
-                bank_name: bankDetails?.bankAccount?.bank_name,
-                is_qr: bankDetails?.bankAccount?.is_qr,
-                is_bank: bankDetails?.bankAccount?.is_bank,
+                // upi_id: bankDetails?.bankAccount?.upi_id,
+                // ac_name: bankDetails?.bankAccount?.ac_name,
+                // ac_no: bankDetails?.bankAccount?.ac_no,
+                // ifsc: bankDetails?.bankAccount?.ifsc,
+                // bank_name: bankDetails?.bankAccount?.bank_name,
+                // is_qr: bankDetails?.bankAccount?.is_qr,
+                // is_bank: bankDetails?.bankAccount?.is_bank,
                 expiryTime: Number(urlValidationRes?.expirationDate)
             }
-
             return DefaultResponse(
                 res,
                 200,
@@ -178,9 +188,7 @@ class PayInController {
         try {
             checkValidation(req)
             const { payInId } = req.params;
-
             const getPayInData = await payInRepo.getPayInData(payInId);
-
             if (!getPayInData) {
                 throw new CustomError(404, 'Payment does not exist');
             }
@@ -189,36 +197,66 @@ class PayInController {
 
             if (getBotDataRes) {
                 if (getBotDataRes.is_used === false) {
-                    // add dispute condition here
                     const updateBotIsUsedRes = await botResponseRepo.updateBotResponse(getBotDataRes?.amount_code);
 
                     const updateMerchantDataRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(getBotDataRes?.amount));
+
                     const updateBankAccRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(getBotDataRes?.amount));
-                    const updatePayInData = {
-                        amount: getBotDataRes?.amount,
-                        status: "SUCCESS",
-                        is_notified: true,
-                        utr: getBotDataRes?.utr,
-                        approved_at: new Date(),
-                        is_url_expires: true
-                    };
+                    
+                    if (parseFloat(getBotDataRes?.amount) === parseFloat(getPayInData?.amount)) {
+                        const updatePayInData = {
+                            confirmed: getBotDataRes?.amount,
+                            status: "SUCCESS",
+                            is_notified: true,
+                            utr: getBotDataRes?.utr,
+                            approved_at: new Date(),
+                            is_url_expires: true
+                        };
 
-                    const updatePayInRes = await payInRepo.updatePayInData(payInId, updatePayInData);
+                        const updatePayInRes = await payInRepo.updatePayInData(payInId, updatePayInData);
 
-                    const response = {
-                        status: "Success",
-                        amount: getBotDataRes?.amount,
-                        utr: getBotDataRes?.utr,
-                        transactionId: getPayInData?.merchant_order_id,
-                        return_url: getPayInData?.return_url
-                    };
+                        const response = {
+                            status: "Success",
+                            amount: getBotDataRes?.amount,
+                            utr: getBotDataRes?.utr,
+                            transactionId: getPayInData?.merchant_order_id,
+                            return_url: getPayInData?.return_url
+                        };
 
-                    return DefaultResponse(
-                        res,
-                        200,
-                        "Payment status updated successfully",
-                        response
-                    );
+                        return DefaultResponse(
+                            res,
+                            200,
+                            "Payment status updated successfully",
+                            response
+                        );
+                    }
+                    else {
+                        const updatePayInData = {
+                            confirmed: getBotDataRes?.amount,
+                            status: "DISPUTE",
+                            is_notified: true,
+                            utr: getBotDataRes?.utr,
+                            approved_at: new Date(),
+                            is_url_expires: true
+                        };
+
+                        const updatePayInRes = await payInRepo.updatePayInData(payInId, updatePayInData);
+
+                        const response = {
+                            status: "DISPUTE",
+                            amount: getBotDataRes?.amount,
+                            utr: getBotDataRes?.utr,
+                            transactionId: getPayInData?.merchant_order_id,
+                            return_url: getPayInData?.return_url
+                        };
+
+                        return DefaultResponse(
+                            res,
+                            200,
+                            "Payment status updated successfully as Dispute",
+                            response
+                        );
+                    }
                 } else if (getBotDataRes.is_used === true) {
                     return DefaultResponse(
                         res,
@@ -290,21 +328,39 @@ class PayInController {
                 responseMessage = "Duplicate Payment Found";
             } else {
 
+               
                 const updateBotByUtrAndAmountRes = await botResponseRepo.updateBotResponseByUtr(matchDataFromBotRes?.id, usrSubmittedUtr)
 
                 const updateMerchantDataRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(matchDataFromBotRes?.amount))
                 const updateBankAccRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(matchDataFromBotRes?.amount))
-                payInData = {
-                    amount,
-                    status: "SUCCESS",
-                    is_notified: true,
-                    user_submitted_utr: usrSubmittedUtr,
-                    utr: matchDataFromBotRes.utr,
-                    approved_at: new Date(),
-                    is_url_expires: true
-                };
 
-                responseMessage = "Payment Done successfully";
+
+                if (amount === matchDataFromBotRes?.amount){
+                    payInData = {
+                        confirmed:matchDataFromBotRes?.amount,
+                        status: "SUCCESS",
+                        is_notified: true,
+                        user_submitted_utr: usrSubmittedUtr,
+                        utr: matchDataFromBotRes.utr,
+                        approved_at: new Date(),
+                        is_url_expires: true
+                    };
+    
+                    responseMessage = "Payment Done successfully";
+                }else{
+                    payInData = {
+                        confirmed:matchDataFromBotRes?.amount,
+                        status: "DISPUTE",
+                        is_notified: true,
+                        user_submitted_utr: usrSubmittedUtr,
+                        utr: matchDataFromBotRes.utr,
+                        approved_at: new Date(),
+                        is_url_expires: true
+                    };
+    
+                    responseMessage = "Dispute in Payment";
+                }
+                
             }
 
             const updatePayinRes = await payInRepo.updatePayInData(payInId, payInData);
@@ -326,6 +382,7 @@ class PayInController {
             );
 
         } catch (error) {
+            console.log("🚀 ~ PayInController ~ payInProcess ~ error:", error)
             next(error)
         }
     }

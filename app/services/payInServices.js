@@ -1,4 +1,5 @@
 import { prisma } from "../client/prisma.js";
+import bankAccountRepo from "../repository/bankAccountRepo.js";
 import botResponseRepo from "../repository/botResponseRepo.js";
 import payInRepo from "../repository/payInRepo.js"
 import { nanoid } from 'nanoid'
@@ -35,22 +36,27 @@ class PayInService {
 
     }
 
-    async assignedBankToPayInUrl(payInId,bankDetails,amount){
+    async assignedBankToPayInUrl(payInId, bankDetails, amount) {
         const data = {
             amount: amount,   // this amount is given by the user
             status: "ASSIGNED",
-            bank_acc_id: bankDetails?.bankAccountId,   
+            bank_acc_id: bankDetails?.bankAccountId,
         }
-        const payInUrlUpdateRes = await payInRepo.updatePayInData(payInId,data)
+        const payInUrlUpdateRes = await payInRepo.updatePayInData(payInId, data)
+        const getBankRes = await bankAccountRepo.getBankByBankAccId(payInUrlUpdateRes?.bank_acc_id)
 
-        return payInUrlUpdateRes
+        const updatedResData = {
+            ...getBankRes,
+            code: payInUrlUpdateRes?.upi_short_code
+        }
+        return updatedResData
     }
 
     async getAllPayInData(skip, take, upiShortCode, amount, merchantOrderId, merchantCode, userId, utr, payInId, dur, status, bankName, filterToday) {
         const now = new Date();
         const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString(); // Start of today
         const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString(); // End of today
-    
+
         const filters = {
             ...(merchantOrderId && { merchant_order_id: { contains: merchantOrderId, mode: 'insensitive' } }),
             ...(utr && { utr: { contains: utr, mode: 'insensitive' } }),
@@ -84,7 +90,7 @@ class PayInService {
                 }
             })
         };
-    
+
         const payInData = await prisma.payin.findMany({
             where: filters,
             skip: skip,
@@ -101,20 +107,20 @@ class PayInService {
                 }
             }
         });
-    
+
         const totalRecords = await prisma.payin.count({
             where: filters,
         });
-    
+
         // Handle BigInt serialization issue
         const serializedPayinData = payInData.map(payIn => ({
             ...payIn,
             expirationDate: payIn.expirationDate ? payIn.expirationDate.toString() : null,
         }));
-    
+
         return { payInData: serializedPayinData, totalRecords };
     }
-    
+
 }
 
 export default new PayInService()

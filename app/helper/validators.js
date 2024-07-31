@@ -74,12 +74,6 @@ export const merchantCreateValidator = [
   body('site_url')
     .notEmpty().withMessage('Site URL is required')
     .isURL().withMessage('Site URL must be a valid URL'),
-  body('api_key')
-    .notEmpty().withMessage('API key is required')
-    .isString().withMessage('API key must be a string'),
-  body('secret_key')
-    .notEmpty().withMessage('Secret key is required')
-    .isString().withMessage('Secret key must be a string'),
   body('notify_url')
     .notEmpty().withMessage('Notify URL is required')
     .isURL().withMessage('Notify URL must be a valid URL'),
