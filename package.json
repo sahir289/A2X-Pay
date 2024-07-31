@@ -20,6 +20,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-validator": "^7.1.0",
+    "ifsc": "^2.0.29",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.0.7",
     "nodemon": "^3.1.4",
