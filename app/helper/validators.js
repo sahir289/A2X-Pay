@@ -184,3 +184,49 @@ export const payInAssignValidator = [
     .notEmpty().withMessage('User ID is required')
     .isString().withMessage('User ID must be a string'),
 ];
+
+export const validatePayInIdUrl = [
+  param('payInId')
+  .notEmpty()
+  .withMessage('payInId must not be empty')
+  .isUUID()
+  .withMessage('payInId must be a valid UUID')
+];
+
+export const validatePayInIdAndAmountAssigned = [
+  param('payInId')
+    .notEmpty()
+    .withMessage('payInId must not be empty')
+    .isUUID()
+    .withMessage('payInId must be a valid UUID'),
+
+  body('amount')
+    .notEmpty()
+    .withMessage('amount must not be empty')
+    .isFloat({ min: 0 })
+    .withMessage('amount must be a valid number greater than or equal to 0')
+];
+
+export const validatePayInProcess = [
+  param('payInId')
+    .notEmpty()
+    .withMessage('payInId must not be empty')
+    .isUUID()
+    .withMessage('payInId must be a valid UUID'),
+
+  body('usrSubmittedUtr')
+    .notEmpty()
+    .withMessage('usrSubmittedUtr must not be empty'),
+
+  body('code')
+    .notEmpty()
+    .withMessage('code must not be empty')
+    .isLength({ min: 5, max: 5 })
+    .withMessage('code must be 5 digits long'),
+
+  body('amount')
+    .notEmpty()
+    .withMessage('amount must not be empty')
+    .isFloat({ min: 0})
+    .withMessage('amount must be a valid number between 0 and 100000')
+];

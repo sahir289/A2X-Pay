@@ -17,7 +17,7 @@ class BankAccountRepo {
     }
 
     async getMerchantBankById(id) {
-        const bankRes = await prisma.merchant_Bank.findFirst({
+        const bankRes = await prisma.merchant_Bank.findMany({
             where: {
                 merchantId: id
             },

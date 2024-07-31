@@ -21,6 +21,7 @@ enum Status {
   SUCCESS
   DROPPED
   DUPLICATE
+  DISPUTE
 }
 
 enum Currency {
@@ -123,9 +124,11 @@ model Merchant_Bank {
 
 model Payin {
   id                   String    @id @default(uuid())
+  sno                  Int       @default(autoincrement())
   upi_short_code       String // code added by us
   qr_params            String?
   amount               Decimal
+  confirmed            Decimal? // data coming from bot.
   status               Status
   is_notified          Boolean   @default(false)
   user_submitted_utr   String?
@@ -133,7 +136,7 @@ model Payin {
   currency             Currency
   merchant_order_id    String
   user_id              String
-  bank_acc_id          String
+  bank_acc_id          String?
   payin_commission     Decimal
   return_url           String
   notify_url           String
@@ -150,6 +153,7 @@ model Payin {
 
 model Payout {
   id                String   @id @default(uuid())
+  sno               Int      @default(autoincrement())
   user_id           String
   amount            Decimal
   status            Status
@@ -192,7 +196,7 @@ model TelegramResponse {
   id          String   @id @default(uuid())
   status      String?
   amount      Decimal?
-  amount_code String? @unique
+  amount_code String?  @unique
   utr         String?
   is_used     Boolean  @default(false)
   createdAt   DateTime @default(now())
