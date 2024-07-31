@@ -11,4 +11,5 @@ const settlementRouter = express();
 settlementRouter.use(isAuthenticated);
 settlementRouter.post('/create-settlement', settlementCreateValidator, settlementController.createSettlement);
 settlementRouter.get('/getall-settlement', settlementsGetValidator, settlementController.getSettlement);
+settlementRouter.put('/update-settlement/:id', settlementController.updateSettlement);
 export default settlementRouter;

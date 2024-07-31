@@ -55,6 +55,15 @@ class Settlement {
             totalRecords,
         }
     }
+
+    async updateSettlement(id, body) {
+        return await prisma.settlement.update({
+            where: {
+                id: Number(id),
+            },
+            data: body
+        })
+    }
 }
 
 export default new Settlement();
