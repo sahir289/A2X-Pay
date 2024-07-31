@@ -1,17 +1,22 @@
 import express from 'express';
-import userRouter from './userRoute.js';
 import { customError, notFound } from '../middlewares/errorHandler.js';
-import permissionRouter from './permissionRoute.js';
-import rolePermissionRouter from './rolePermissionRoute.js';
 import loginRouter from './loginRoute.js';
+import userRouter from './userRoute.js';
+import merchantRouter from './merchatRoutes.js';
+import bankAccountRouter from './bankAccountRoute.js';
+import payInRouter from './payinRouter.js';
+import botResRouter from './botResponseRouter.js';
+import settlementRouter from './settlementRoute.js';
 
 const router = express();
 
 router.use('/v1',userRouter)
-router.use('/v1',permissionRouter)
-router.use('/v1',rolePermissionRouter)
 router.use('/v1',loginRouter)
-
+router.use('/v1',merchantRouter)
+router.use('/v1',bankAccountRouter)
+router.use('/v1',payInRouter)
+router.use('/v1',botResRouter)
+router.use('/v1', settlementRouter)
 
 
 

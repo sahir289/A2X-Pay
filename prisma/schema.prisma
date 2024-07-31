@@ -15,43 +15,55 @@ enum Role {
   MERCHANT
 }
 
-model Permission {
-  id          Int              @id @default(autoincrement())
-  name        String           @unique
-  description String?
-  roles       RolePermission[]
+enum Status {
+  INITIATED
+  ASSIGNED
+  SUCCESS
+  DROPPED
+  DUPLICATE
+  DISPUTE
 }
 
-model RolePermission {
-  id           Int        @id @default(autoincrement())
-  role         Role
-  permissionId Int
-  permission   Permission @relation(fields: [permissionId], references: [id])
+enum Currency {
+  INR
+}
 
-  @@unique([role, permissionId])
+enum Method {
+  BANK
+  CASH
+  AED
+  CRYPTO
 }
 
 model User {
-  id          Int       @id @default(autoincrement())
-  fullName    String
-  userName    String    @unique
-  password    String
-  isEnabled   Boolean   @default(true)
-  tg_handle   String?
-  tg_id       String?
-  last_login  DateTime?
-  last_logout DateTime?
-  role        Role
-  code        String? // Add a field to store the merchant code
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String        @id @default(uuid())
+  fullName     String
+  userName     String        @unique
+  password     String
+  isEnabled    Boolean       @default(true)
+  tg_handle    String?
+  tg_id        String?
+  last_login   DateTime?
+  last_logout  DateTime?
+  role         Role
+  code         String? // Add a field to store the merchant code
+  accessTokens AccessToken[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
 
-  @@index([role]) // Add an index on role for better query performance
+model AccessToken {
+  id          String   @id @default(uuid())
+  accessToken String
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Merchant {
-  id                Int      @id @default(autoincrement())
-  code              String
+  id                String          @id @default(uuid())
+  code              String          @unique
   parent_id         Int?
   payin_theme       String?
   notes             String?
@@ -67,10 +79,126 @@ model Merchant {
   max_payout        String
   payout_commission Decimal
   payout_notify_url String
-  balance           String
-  is_test_mode      Boolean  @default(false)
-  is_enabled        Boolean  @default(true)
-  is_demo           Boolean  @default(false)
+  balance           Decimal
+  is_test_mode      Boolean         @default(false)
+  is_enabled        Boolean         @default(true)
+  is_demo           Boolean         @default(false)
+  Merchant_Bank     Merchant_Bank[]
+  Payin             Payin[]
+  Payout            Payout[]
+  Settlement        Settlement[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model BankAccount {
+  id            String          @id @default(uuid())
+  upi_id        String
+  upi_params    String?
+  name          String
+  ac_no         String
+  ac_name       String
+  ifsc          String
+  bank_name     String
+  is_qr         Boolean         @default(true)
+  is_bank       Boolean         @default(true)
+  min_payin     Decimal
+  max_payin     Decimal
+  is_enabled    Boolean         @default(true)
+  payin_count   Int //
+  balance       Decimal // this is the amount which has been deposited we have to consider it on per day basis
+  Merchant_Bank Merchant_Bank[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Merchant_Bank {
+  id            String      @id @default(uuid())
+  merchantId    String
+  bankAccountId String
+  merchant      Merchant    @relation(fields: [merchantId], references: [id])
+  bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id])
+
+  @@unique([merchantId, bankAccountId])
+}
+
+model Payin {
+  id                   String    @id @default(uuid())
+  sno                  Int       @default(autoincrement())
+  upi_short_code       String // code added by us
+  qr_params            String?
+  amount               Decimal
+  confirmed            Decimal? // data coming from bot.
+  status               Status
+  is_notified          Boolean   @default(false)
+  user_submitted_utr   String?
+  utr                  String? // utr added by the bot.
+  currency             Currency
+  merchant_order_id    String
+  user_id              String
+  bank_acc_id          String?
+  payin_commission     Decimal
+  return_url           String
+  notify_url           String
+  user_submitted_image String?
+  approved_at          DateTime?
+  merchant_id          String
+  duration             String?
+  expirationDate       Int?
+  is_url_expires       Boolean   @default(false)
+  Merchant             Merchant  @relation(fields: [merchant_id], references: [id])
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model Payout {
+  id                String   @id @default(uuid())
+  sno               Int      @default(autoincrement())
+  user_id           String
+  amount            Decimal
+  status            Status
+  failed_reason     String?
+  currency          Currency
+  merchant_id       String
+  Merchant          Merchant @relation(fields: [merchant_id], references: [id])
+  banck_account_id  String
+  merchant_order_id String
+  acc_no            String
+  acc_holder_name   String
+  ifsc_code         String
+  bank_name         String
+  upi_id            String
+  utr_id            String
+  payout_commision  String
+  notify_url        String?
+  rejected_reason   String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+model Settlement {
+  id              Int   @id @default(autoincrement())
+  merchant_id     String
+  Merchant        Merchant @relation(fields: [merchant_id], references: [id])
+  status          Status
+  amount          Decimal
+  method          Method
+  acc_name        String?
+  acc_no          String?
+  ifsc            String?
+  refrence_id     String?
+  rejected_reason String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model TelegramResponse {
+  id          String   @id @default(uuid())
+  status      String?
+  amount      Decimal?
+  amount_code String?  @unique
+  utr         String?
+  is_used     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

@@ -4,39 +4,27 @@ import { CustomError, customError } from "../middlewares/errorHandler.js";
 import { DefaultResponse } from "../helper/customResponse.js"
 import userRepo from "../repository/userRepo.js";
 import userService from "../services/userService.js";
+import merchantRepo from "../repository/merchantRepo.js";
 
-class UserController {
-    async createUser(req, res, next) {
+class MerchantController {
+    async createMerchant(req, res, next) {
         try {
             checkValidation(req)
             const data = req.body;
 
-            const isUserExist = await userRepo.getUserByUsernameRepo(data?.userName)
+            const isMerchantExist = await merchantRepo.getMerchantByCode(data?.code)
 
-            if (isUserExist) {
-                throw new CustomError(409, 'User with this username already exist')
+            if (isMerchantExist) {
+                throw new CustomError(409, 'Merchant with this code already exist')
             }
 
-            if (req.body.role ==="MERCHANT"){
-                if(!req?.body?.code){
-                    throw new CustomError(409, 'merchant code is required')
-                }
-            }
-
-            const hashedPassword = await hashPassword(req.body?.password)
-
-            const updatedData = {
-                ...data,
-                password: hashedPassword
-            }
-
-            const userRes = await userRepo.createUserRepo(updatedData)
+            const merchantRes = await merchantRepo.createMerchant(data)
 
             return DefaultResponse(
                 res,
                 201,
-                "User is created successfully",
-                // userRes
+                "Merchant is created successfully",
+                
             );
         } catch (error) {
             next(error)
@@ -44,7 +32,7 @@ class UserController {
     }
 
 
-    async getAllUser(req, res, next) {
+    async getAllMerchants(req, res, next) {
         try {
             checkValidation(req)
             const { id: userId } = req.user
@@ -52,25 +40,32 @@ class UserController {
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 15
 
-            const { name: fullName, userName, role } = req.query;
+            // const fullName = req.query.name;
+
+            // const userName = req.query.userName;
+
+            // const role = req.query.role;
 
             const skip = (page - 1) * pageSize
             const take = pageSize
 
             await userRepo.validateUserId(userId)
 
-            const users = await userService.getAllUsers(skip, take, fullName, userName, role)
+            const merchants = await merchantRepo.getAllMerchants(skip, take)
 
             return DefaultResponse(
                 res,
                 201,
-                "Users fetched successfully",
-                users
+                "Merchants fetched successfully",
+                merchants
             );
         } catch (error) {
             next(error)
         }
     }
+
+
+    
 }
 
-export default new UserController()
+export default new MerchantController()

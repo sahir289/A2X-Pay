@@ -5,10 +5,4 @@ const loginRouter = express()
 
 loginRouter.post('/login',  loginController.login)
 
-
-
-
-
-
-
 export default loginRouter;
