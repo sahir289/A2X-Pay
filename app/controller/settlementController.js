@@ -41,9 +41,10 @@ class SettlementController {
             } = req.query;
             const take = Number(qTake) || 10;
             const skip = take * (Number(page || 1) - 1);
-            const data = await settlementService.getSettlement(skip, take, id, code, status, amount, acc_no, method, refrence_id);
+            const data = await settlementService.getSettlement(skip, take, parseInt(id), code, status, amount, acc_no, method, refrence_id);
             return DefaultResponse(res, 201, "Settlement fetched successfully!", data);
         } catch (err) {
+            console.log("🚀 ~ SettlementController ~ getSettlement ~ err:", err)
             next(err);
         }
     }
