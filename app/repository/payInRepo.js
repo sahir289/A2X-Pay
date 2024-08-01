@@ -60,14 +60,33 @@ class PayInRepo {
         return payInUrlRes
     }
 
-    async getPayInDataByUtr(utr){
-        console.log("🚀 ~ PayInRepo ~ getPayInDataByUtr ~ utr:", utr)
+    async getPayInDataByUtrOrUpi(utr, upi_short_code) {
+        // Construct the OR condition based on the presence of utr and upi_short_code
+        let orConditions = [];
+
+        if (utr) {
+            orConditions.push({ user_submitted_utr: utr });
+        }
+
+        if (upi_short_code) {
+            orConditions.push({ upi_short_code: upi_short_code });
+        }
+
+        console.log("🚀 ~ PayInRepo ~ getPayInDataByUtrOrUpi ~ orConditions:", orConditions);
+
+        // If no conditions are provided, return an empty array
+        if (orConditions.length === 0) {
+            return [];
+        }
+
+        // Perform the query with the OR condition
         const payInRes = await prisma.payin.findMany({
-            where:{
-                user_submitted_utr:utr
-            }
-        })
-        return payInRes
+            where: {
+                OR: orConditions
+            },
+        });
+
+        return payInRes;
     }
 }
 

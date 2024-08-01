@@ -202,7 +202,7 @@ class PayInController {
                     const updateMerchantDataRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(getBotDataRes?.amount));
 
                     const updateBankAccRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(getBotDataRes?.amount));
-                    
+
                     if (parseFloat(getBotDataRes?.amount) === parseFloat(getPayInData?.amount)) {
                         const updatePayInData = {
                             confirmed: getBotDataRes?.amount,
@@ -214,6 +214,19 @@ class PayInController {
                         };
 
                         const updatePayInRes = await payInRepo.updatePayInData(payInId, updatePayInData);
+
+                        // to notify the Merchant
+                        const notifyData = {
+                            status: "success",
+                            merchantOrderId: updatePayInRes?.merchant_order_id,
+                            payinId: updatePayInRes?.id,
+                            amount: updatePayInRes?.confirmed
+                        }
+                        try {
+                            //when we get the correct notify url;
+                            // const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                        } catch (error) {
+                        }
 
                         const response = {
                             status: "Success",
@@ -287,21 +300,18 @@ class PayInController {
     // To Handle payment process
     async payInProcess(req, res, next) {
         try {
-            checkValidation(req)
+            checkValidation(req);
             const { payInId } = req.params;
-            const data = req.body;
-            const { usrSubmittedUtr, code, amount } = data;
+            const { usrSubmittedUtr, code, amount } = req.body;
 
             const getPayInData = await payInRepo.getPayInData(payInId);
-
             if (!getPayInData) {
-                throw new CustomError(404, 'Payment does not exist')
+                throw new CustomError(404, 'Payment does not exist');
             }
 
-            const urlValidationRes = await payInRepo.validatePayInUrl(payInId)
-
+            const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
             if (urlValidationRes?.is_url_expires === true) {
-                throw new CustomError(403, 'Url is expired')
+                throw new CustomError(403, 'Url is expired');
             }
 
             const matchDataFromBotRes = await botResponseRepo.getBotResByUtr(usrSubmittedUtr);
@@ -312,9 +322,8 @@ class PayInController {
                 payInData = {
                     amount,
                     user_submitted_utr: usrSubmittedUtr,
-                    is_url_expires: true
+                    is_url_expires: true,
                 };
-
                 responseMessage = "Payment Not Found";
             } else if (matchDataFromBotRes.is_used === true) {
                 payInData = {
@@ -322,68 +331,74 @@ class PayInController {
                     status: "DUPLICATE",
                     is_notified: true,
                     user_submitted_utr: usrSubmittedUtr,
-                    is_url_expires: true
+                    is_url_expires: true,
                 };
-                const updatePayinRes = await payInRepo.updatePayInData(payInId, payInData);
                 responseMessage = "Duplicate Payment Found";
             } else {
+                await botResponseRepo.updateBotResponseByUtr(matchDataFromBotRes?.id, usrSubmittedUtr);
+                await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(matchDataFromBotRes?.amount));
+                await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(matchDataFromBotRes?.amount));
 
-               
-                const updateBotByUtrAndAmountRes = await botResponseRepo.updateBotResponseByUtr(matchDataFromBotRes?.id, usrSubmittedUtr)
-
-                const updateMerchantDataRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(matchDataFromBotRes?.amount))
-                const updateBankAccRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(matchDataFromBotRes?.amount))
-
-
-                if (amount === matchDataFromBotRes?.amount){
+                if (parseFloat(amount) === parseFloat(matchDataFromBotRes?.amount)) {
                     payInData = {
-                        confirmed:matchDataFromBotRes?.amount,
+                        confirmed: matchDataFromBotRes?.amount,
                         status: "SUCCESS",
                         is_notified: true,
                         user_submitted_utr: usrSubmittedUtr,
                         utr: matchDataFromBotRes.utr,
                         approved_at: new Date(),
-                        is_url_expires: true
+                        is_url_expires: true,
                     };
-    
                     responseMessage = "Payment Done successfully";
-                }else{
+                } else {
                     payInData = {
-                        confirmed:matchDataFromBotRes?.amount,
+                        confirmed: matchDataFromBotRes?.amount,
                         status: "DISPUTE",
                         is_notified: true,
                         user_submitted_utr: usrSubmittedUtr,
                         utr: matchDataFromBotRes.utr,
                         approved_at: new Date(),
-                        is_url_expires: true
+                        is_url_expires: true,
                     };
-    
                     responseMessage = "Dispute in Payment";
                 }
-                
             }
 
             const updatePayinRes = await payInRepo.updatePayInData(payInId, payInData);
+            
+            if (updatePayinRes.status === "SUCCESS") {
+                const notifyData = {
+                    status: "success",
+                    merchantOrderId: updatePayinRes?.merchant_order_id,
+                    payinId: payInId,
+                    amount: updatePayinRes?.confirmed,
+                };
+                console.log("🚀 ~ PayInController ~ payInProcess ~ notifyData:", notifyData)
+                try {
+                    //When we get the notify url we will add it.
+                    // const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+                    // console.log("Notification sent:", notifyMerchant);
+                } catch (error) {
+                    console.error("Error sending notification:", error);
+                }
+            }
+
 
             const response = {
-                status: payInData.status || "Not Found",
+                status:  payInData.status === "SUCCESS" ? "Success" : (payInData.status || "Not Found"),
                 amount,
                 transactionId: updatePayinRes?.merchant_order_id,
-                return_url: updatePayinRes?.return_url
+                return_url: updatePayinRes?.return_url,
             };
+
             if (payInData.status === "SUCCESS") {
                 response.utr = updatePayinRes?.utr;
             }
-            return DefaultResponse(
-                res,
-                200,
-                responseMessage,
-                response
-            );
 
+            return DefaultResponse(res, 200, responseMessage, response);
         } catch (error) {
-            console.log("🚀 ~ PayInController ~ payInProcess ~ error:", error)
-            next(error)
+            console.error("Error in payInProcess:", error);
+            next(error);
         }
     }
 
