@@ -373,7 +373,6 @@ class PayInController {
                     payinId: payInId,
                     amount: updatePayinRes?.confirmed,
                 };
-                console.log("🚀 ~ PayInController ~ payInProcess ~ notifyData:", notifyData)
                 try {
                     //When we get the notify url we will add it.
                     // const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
@@ -406,16 +405,15 @@ class PayInController {
     async getAllPayInData(req, res, next) {
         try {
 
-            const { upiShortCode, amount, merchantOrderId, merchantCode, userId, utr, payInId, dur, status, bank, filterToday } = req.query;
-
+            const { sno,upiShortCode, amount, merchantOrderId, merchantCode, userId, utr, payInId, dur, status, bank, filterToday } = req.query;
             const page = parseInt(req.query.page) || 1;
-            const pageSize = parseInt(req.query.pageSize) || 15;
+            const pageSize = parseInt(req.query.pageSize) || 20;
             const skip = (page - 1) * pageSize;
             const take = pageSize;
 
             const filterTodayBool = filterToday === 'false';  // to check the today entry
 
-            const payInDataRes = await payInServices.getAllPayInData(skip, take, upiShortCode, amount, merchantOrderId, merchantCode, userId, utr, payInId, dur, status, bank, filterTodayBool);
+            const payInDataRes = await payInServices.getAllPayInData(skip, take, parseInt(sno), upiShortCode, amount, merchantOrderId, merchantCode, userId, utr, payInId, dur, status, bank, filterTodayBool);
 
             return DefaultResponse(
                 res,
