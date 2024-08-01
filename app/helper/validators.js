@@ -1,6 +1,17 @@
 import { param } from "express-validator";
 import validator from 'express-validator'
-const { body } = validator
+const { body,query } = validator
+
+const methodEnums = ["BANK", "CASH", "CRYPTO", "AED"];
+const walletEnums = ["WALLET1", "WALLET2", "WALLET3"];
+const statusEnums = [
+  "INITIATED",
+  "ASSIGNED",
+  "SUCCESS",
+  "DROPPED",
+  "DUPLICATE",
+];
+
 
 export const permissionValidator = [
   body("name").notEmpty().withMessage("Name is required"),
@@ -63,12 +74,6 @@ export const merchantCreateValidator = [
   body('site_url')
     .notEmpty().withMessage('Site URL is required')
     .isURL().withMessage('Site URL must be a valid URL'),
-  body('api_key')
-    .notEmpty().withMessage('API key is required')
-    .isString().withMessage('API key must be a string'),
-  body('secret_key')
-    .notEmpty().withMessage('Secret key is required')
-    .isString().withMessage('Secret key must be a string'),
   body('notify_url')
     .notEmpty().withMessage('Notify URL is required')
     .isURL().withMessage('Notify URL must be a valid URL'),
@@ -184,3 +189,145 @@ export const payInAssignValidator = [
     .notEmpty().withMessage('User ID is required')
     .isString().withMessage('User ID must be a string'),
 ];
+
+export const validatePayInIdUrl = [
+  param('payInId')
+  .notEmpty()
+  .withMessage('payInId must not be empty')
+  .isUUID()
+  .withMessage('payInId must be a valid UUID')
+];
+
+export const validatePayInIdAndAmountAssigned = [
+  param('payInId')
+    .notEmpty()
+    .withMessage('payInId must not be empty')
+    .isUUID()
+    .withMessage('payInId must be a valid UUID'),
+
+  body('amount')
+    .notEmpty()
+    .withMessage('amount must not be empty')
+    .isFloat({ min: 0 })
+    .withMessage('amount must be a valid number greater than or equal to 0')
+];
+
+export const validatePayInProcess = [
+  param('payInId')
+    .notEmpty()
+    .withMessage('payInId must not be empty')
+    .isUUID()
+    .withMessage('payInId must be a valid UUID'),
+
+  body('usrSubmittedUtr')
+    .notEmpty()
+    .withMessage('usrSubmittedUtr must not be empty'),
+
+  body('code')
+    .notEmpty()
+    .withMessage('code must not be empty')
+    .isLength({ min: 5, max: 5 })
+    .withMessage('code must be 5 digits long'),
+
+  body('amount')
+    .notEmpty()
+    .withMessage('amount must not be empty')
+    .isFloat({ min: 0})
+    .withMessage('amount must be a valid number between 0 and 100000')
+];
+
+export const settlementCreateValidator = [
+  body("amount")
+    .trim()
+    .notEmpty()
+    .withMessage("Amount is required!")
+    .isNumeric()
+    .withMessage("Amount is invalid!"),
+  body("method")
+    .trim()
+    .notEmpty()
+    .withMessage("Method should be provided!")
+    .custom((method, meta) => {
+      if (!methodEnums.includes(method)) {
+        return Promise.reject(`Method is invalid! Should be one of these ${methodEnums}`)
+      }
+      const body = meta.req.body;
+      let validateFields = [];
+      switch (method) {
+        case "CRYPTO":
+          validateFields = ["wallet", "wallet_address"];
+          break;
+        case "BANK":
+          validateFields = ["acc_name", "acc_no", "ifsc"];
+          break;
+      }
+      for (const field of validateFields) {
+        const value = body[field];
+        if (!value || typeof value === "string" && !value.trim()) {
+          return Promise.reject(`${field} is required!`);
+        }
+        if (field == "ifsc" && !ifsc.validate(value)) {
+          return Promise.reject(`ifsc is invalid!`);
+        }
+        if (field == "wallet" && !walletEnums.includes(value)) {
+          return Promise.reject(`Wallet is invalid! Should be one of these ${walletEnums}`);
+        }
+      }
+      return Promise.resolve();
+    }),
+]
+
+export const settlementsGetValidator = [
+  query("id")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("Id is required!"),
+  query("status")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("status is required!")
+    .isIn(statusEnums)
+    .withMessage(`Invalid status, Should be one of these ${statusEnums}`),
+  query("method")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("method is required!")
+    .isIn(methodEnums)
+    .withMessage(`Invalid method, Should be one of these ${methodEnums}`),
+  query("reference_id")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("reference_id is required!"),
+  query("acc_no")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("acc_no is required!"),
+  query("amount")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("amount is required!")
+    .isNumeric()
+    .withMessage("amount is invalid!"),
+  query("code")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("code is required!"),
+  query("page")
+    .optional()
+    .notEmpty()
+    .isNumeric()
+    .isInt({ min: 0 })
+    .withMessage("Invalid page!"),
+  query("take")
+    .optional()
+    .notEmpty()
+    .isNumeric()
+    .withMessage("Invalid take"),
+]

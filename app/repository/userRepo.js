@@ -62,6 +62,17 @@ class UserRepo {
     
         return { users, totalRecords };
     }
+    async updateUser({id,status}) {
+        const user = await prisma.user.update({
+            where:{
+                id:id
+            },
+            data: {
+                isEnabled:status
+            }
+        })
+        return user;
+    }
     
 }
 

@@ -21,6 +21,8 @@ enum Status {
   SUCCESS
   DROPPED
   DUPLICATE
+  DISPUTE
+  REVERSED
 }
 
 enum Currency {
@@ -67,8 +69,8 @@ model Merchant {
   payin_theme       String?
   notes             String?
   site_url          String
-  api_key           String
-  secret_key        String
+  api_key           String          @unique
+  secret_key        String          @unique
   notify_url        String
   return_url        String
   min_payin         String
@@ -123,9 +125,11 @@ model Merchant_Bank {
 
 model Payin {
   id                   String    @id @default(uuid())
+  sno                  Int       @default(autoincrement())
   upi_short_code       String // code added by us
   qr_params            String?
   amount               Decimal
+  confirmed            Decimal? // data coming from bot.
   status               Status
   is_notified          Boolean   @default(false)
   user_submitted_utr   String?
@@ -133,7 +137,7 @@ model Payin {
   currency             Currency
   merchant_order_id    String
   user_id              String
-  bank_acc_id          String
+  bank_acc_id          String?
   payin_commission     Decimal
   return_url           String
   notify_url           String
@@ -150,6 +154,7 @@ model Payin {
 
 model Payout {
   id                String   @id @default(uuid())
+  sno               Int      @default(autoincrement())
   user_id           String
   amount            Decimal
   status            Status
@@ -157,14 +162,14 @@ model Payout {
   currency          Currency
   merchant_id       String
   Merchant          Merchant @relation(fields: [merchant_id], references: [id])
-  banck_account_id  String
+  banck_account_id  String?
   merchant_order_id String
   acc_no            String
   acc_holder_name   String
   ifsc_code         String
   bank_name         String
-  upi_id            String
-  utr_id            String
+  upi_id            String?
+  utr_id            String?
   payout_commision  String
   notify_url        String?
   rejected_reason   String?
@@ -173,7 +178,7 @@ model Payout {
 }
 
 model Settlement {
-  id              String   @id @default(uuid())
+  id              Int      @id @default(autoincrement())
   merchant_id     String
   Merchant        Merchant @relation(fields: [merchant_id], references: [id])
   status          Status
@@ -182,7 +187,7 @@ model Settlement {
   acc_name        String?
   acc_no          String?
   ifsc            String?
-  refrence_id     String
+  refrence_id     String?
   rejected_reason String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -192,7 +197,7 @@ model TelegramResponse {
   id          String   @id @default(uuid())
   status      String?
   amount      Decimal?
-  amount_code String? @unique
+  amount_code String?  @unique
   utr         String?
   is_used     Boolean  @default(false)
   createdAt   DateTime @default(now())

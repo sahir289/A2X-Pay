@@ -29,7 +29,6 @@ class PayInRepo {
         return expirePayInUrlRes
     }
 
-
     async getMerchantByCodeAndApiKey(code, api_key) {
 
         const merchantRes = await prisma.merchant.findFirst({
@@ -41,8 +40,6 @@ class PayInRepo {
 
         return merchantRes;
     }
-
-
 
     async getPayInData(payInId) {
         const paymentRes = await prisma.payin.findFirst({
@@ -63,6 +60,34 @@ class PayInRepo {
         return payInUrlRes
     }
 
+    async getPayInDataByUtrOrUpi(utr, upi_short_code) {
+        // Construct the OR condition based on the presence of utr and upi_short_code
+        let orConditions = [];
+
+        if (utr) {
+            orConditions.push({ user_submitted_utr: utr });
+        }
+
+        if (upi_short_code) {
+            orConditions.push({ upi_short_code: upi_short_code });
+        }
+
+        console.log("🚀 ~ PayInRepo ~ getPayInDataByUtrOrUpi ~ orConditions:", orConditions);
+
+        // If no conditions are provided, return an empty array
+        if (orConditions.length === 0) {
+            return [];
+        }
+
+        // Perform the query with the OR condition
+        const payInRes = await prisma.payin.findMany({
+            where: {
+                OR: orConditions
+            },
+        });
+
+        return payInRes;
+    }
 }
 
 export default new PayInRepo()

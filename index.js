@@ -10,7 +10,7 @@ const app = express();
 app.use(cookieParser())
 
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'], // List all frontend URLs
+    origin: ['http://localhost:3000', 'http://localhost:5173','http://localhost:3001'], // List all frontend URLs
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
     credentials: true
 }));
@@ -24,7 +24,13 @@ app.use(express.static('public'))
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: [
+            "http://localhost:3000",
+            "http://localhost:5173" ,
+            "http://localhost:3001"
+            // Add any other origins you need here
+        ],
+        methods: ["GET", "POST"], // Specify the methods if needed
     },
 });
 
@@ -32,12 +38,25 @@ const io = new Server(httpServer, {
 const PORT = process.env.PORT || 8080; 
 
 
+io.on('connection', (socket) => {
+    console.log('Client connected with socket ID:', socket.id);
 
-io.on("connection", (socket) => {
-    console.log(`${socket.id} user is just connected`);
+    // Emit a test message to the client
+    socket.emit('new-entry', { message: 'Hello from server!', data: {} });
 
-})
+    // Optional: Broadcast to all clients
+    io.emit('broadcast-message', { message: 'A new client has connected!' });
 
+    // Listen for client events
+    socket.on('client-message', (data) => {
+        console.log('Received from client:', data);
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log('Client disconnected');
+    });
+});
 
 export { io };
 
