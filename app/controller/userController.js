@@ -71,6 +71,28 @@ class UserController {
             next(error)
         }
     }
+    async updateUser(req, res, next) {
+        try {
+            checkValidation(req)
+            const { id: userId } = req.user
+
+            const { id:updateUserId,status} = req.body;
+
+            await userRepo.validateUserId(userId) 
+            await userRepo.validateUserId(updateUserId)
+
+            const users = await userRepo.updateUser({id:updateUserId,status})
+
+            return DefaultResponse(
+                res,
+                201,
+                "Users updated successfully",
+                users
+            );
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export default new UserController()

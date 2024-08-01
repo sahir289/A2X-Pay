@@ -9,7 +9,7 @@ userRouter.post('/create-user', userCreateValidator, userController.createUser)
 
 userRouter.get('/getall-users', isAuthenticated, userController.getAllUser)
 
-
+userRouter.put('/update-status', isAuthenticated, userController.updateUser)
 
 
 
