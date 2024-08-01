@@ -6,14 +6,14 @@ import userRepo from "../repository/userRepo.js";
 import { v4 as uuidv4 } from 'uuid';
 
 class MerchantController {
-    async createMerchant(req, res, next) {
-        try {
-            checkValidation(req)
-            const data = req.body;
-            const api_key = uuidv4()
-            console.log("🚀 ~ MerchantController ~ createMerchant ~ api_key:", api_key)
-            const secret_key = uuidv4()
-            console.log("🚀 ~ MerchantController ~ createMerchant ~ secret_key:", secret_key)
+  async createMerchant(req, res, next) {
+    try {
+      checkValidation(req)
+      const data = req.body;
+      const api_key = uuidv4()
+      console.log("🚀 ~ MerchantController ~ createMerchant ~ api_key:", api_key)
+      const secret_key = uuidv4()
+      console.log("🚀 ~ MerchantController ~ createMerchant ~ secret_key:", secret_key)
 
       const isMerchantExist = await merchantRepo.getMerchantByCode(data?.code);
 
@@ -21,25 +21,42 @@ class MerchantController {
         throw new CustomError(409, "Merchant with this code already exist");
       }
 
-      const merchantRes = await merchantRepo.createMerchant(data);
 
-            const updateData = {
-                ...data,
-                api_key,
-                secret_key
-            }
-            const merchantRes = await merchantRepo.createMerchant(updateData)
 
-            return DefaultResponse(
-                res,
-                201,
-                "Merchant is created successfully",
+      const updateData = {
+        ...data,
+        api_key,
+        secret_key
+      }
+      const merchantRes = await merchantRepo.createMerchant(updateData)
 
-            );
-        } catch (error) {
-            next(error)
-        }
+      return DefaultResponse(
+        res,
+        201,
+        "Merchant is created successfully",
+
+      );
+    } catch (error) {
+      next(error)
     }
+  }
+  async getMerchants(req, res, next) {
+    try {
+      checkValidation(req);
+      const { id } = req.query;
+
+      const merchant = await merchantRepo.getMerchantById(id);
+
+      return DefaultResponse(
+        res,
+        200,
+        "Merchant fetched successfully",
+        merchant
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 
 
   async getAllMerchants(req, res, next) {
@@ -77,6 +94,6 @@ class MerchantController {
 
 
 
-}
+
 
 export default new MerchantController()
