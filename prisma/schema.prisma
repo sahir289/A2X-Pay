@@ -22,6 +22,7 @@ enum Status {
   DROPPED
   DUPLICATE
   DISPUTE
+  REVERSED
 }
 
 enum Currency {
@@ -161,14 +162,14 @@ model Payout {
   currency          Currency
   merchant_id       String
   Merchant          Merchant @relation(fields: [merchant_id], references: [id])
-  banck_account_id  String
+  banck_account_id  String?
   merchant_order_id String
   acc_no            String
   acc_holder_name   String
   ifsc_code         String
   bank_name         String
-  upi_id            String
-  utr_id            String
+  upi_id            String?
+  utr_id            String?
   payout_commision  String
   notify_url        String?
   rejected_reason   String?

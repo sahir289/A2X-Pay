@@ -1,0 +1,7 @@
+-- AlterEnum
+ALTER TYPE "Status" ADD VALUE 'REVERSED';
+
+-- AlterTable
+ALTER TABLE "Payout" ALTER COLUMN "banck_account_id" DROP NOT NULL,
+ALTER COLUMN "upi_id" DROP NOT NULL,
+ALTER COLUMN "utr_id" DROP NOT NULL;
