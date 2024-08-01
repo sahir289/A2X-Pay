@@ -71,7 +71,7 @@ model Merchant {
   site_url          String
   api_key           String          @unique
   secret_key        String          @unique
-  notify_url        String
+  notify_url        String?
   return_url        String
   min_payin         String
   max_payin         String
@@ -79,8 +79,8 @@ model Merchant {
   min_payout        String
   max_payout        String
   payout_commission Decimal
-  payout_notify_url String
-  balance           Decimal
+  payout_notify_url String?
+  balance           Decimal?
   is_test_mode      Boolean         @default(false)
   is_enabled        Boolean         @default(true)
   is_demo           Boolean         @default(false)
