@@ -23,6 +23,7 @@ enum Status {
   DUPLICATE
   DISPUTE
   REVERSED
+  IMG_PENDING
 }
 
 enum Currency {
