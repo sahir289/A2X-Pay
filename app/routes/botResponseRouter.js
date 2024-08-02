@@ -1,15 +1,10 @@
-import express from 'express';
-import botResponseController from '../controller/botResponseController.js';
+import express from "express";
+import botResponseController from "../controller/botResponseController.js";
 
+const botResRouter = express();
 
-const botResRouter = express()
+botResRouter.post("/create-message", botResponseController.botResponse);
 
-botResRouter.post('/get-message', botResponseController.botResponse)
-
-
-
-
-
-
+botResRouter.get("/get-message", botResponseController.getBotResponse);
 
 export default botResRouter;
