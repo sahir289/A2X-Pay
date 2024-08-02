@@ -9,8 +9,6 @@ class BotResponseController {
   async botResponse(req, res, next) {
     try {
       const data = req.body?.message?.text;
-
-      console.log(data, "data");
       const splitData = data.split(" ");
 
       const status = splitData[0];
@@ -23,8 +21,6 @@ class BotResponseController {
       const isValidAmountCode =
         amount_code !== "nil" && amount_code.length === 5;
       const isValidUtr = utr.length === 12;
-
-      console.log(isValidAmount, isValidUtr, utr.length, "klll");
 
       if (isValidAmount && isValidUtr) {
         const updatedData = {
@@ -43,7 +39,6 @@ class BotResponseController {
           amount_code
         );
 
-        // 121892128612
         if (checkPayInUtr.length !== 0) {
           const payInData = {
             confirmed: botRes?.amount,

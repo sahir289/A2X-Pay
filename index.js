@@ -10,7 +10,7 @@ const app = express();
 app.use(cookieParser())
 
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:5173','http://localhost:3001'], // List all frontend URLs
+    origin: ['http://localhost:3000', 'http://localhost:5173'], // List all frontend URLs
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
     credentials: true
 }));
@@ -27,7 +27,6 @@ const io = new Server(httpServer, {
         origin: [
             "http://localhost:3000",
             "http://localhost:5173" ,
-            "http://localhost:3001"
             // Add any other origins you need here
         ],
         methods: ["GET", "POST"], // Specify the methods if needed
