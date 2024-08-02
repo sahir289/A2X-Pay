@@ -3,17 +3,23 @@ import { checkValidation } from "../helper/validationHelper.js";
 import { CustomError } from "../middlewares/errorHandler.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import userRepo from "../repository/userRepo.js";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 class MerchantController {
   async createMerchant(req, res, next) {
     try {
-      checkValidation(req)
+      checkValidation(req);
       const data = req.body;
-      const api_key = uuidv4()
-      console.log("🚀 ~ MerchantController ~ createMerchant ~ api_key:", api_key)
-      const secret_key = uuidv4()
-      console.log("🚀 ~ MerchantController ~ createMerchant ~ secret_key:", secret_key)
+      const api_key = uuidv4();
+      console.log(
+        "🚀 ~ MerchantController ~ createMerchant ~ api_key:",
+        api_key
+      );
+      const secret_key = uuidv4();
+      console.log(
+        "🚀 ~ MerchantController ~ createMerchant ~ secret_key:",
+        secret_key
+      );
 
       const isMerchantExist = await merchantRepo.getMerchantByCode(data?.code);
 
@@ -21,25 +27,19 @@ class MerchantController {
         throw new CustomError(409, "Merchant with this code already exist");
       }
 
-
-
       const updateData = {
         ...data,
         api_key,
-        secret_key
-      }
-      const merchantRes = await merchantRepo.createMerchant(updateData)
+        secret_key,
+      };
+      const merchantRes = await merchantRepo.createMerchant(updateData);
 
-      return DefaultResponse(
-        res,
-        201,
-        "Merchant is created successfully",
-
-      );
+      return DefaultResponse(res, 201, "Merchant is created successfully");
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
+
   async getMerchants(req, res, next) {
     try {
       checkValidation(req);
@@ -58,14 +58,12 @@ class MerchantController {
     }
   }
 
-
   async getAllMerchants(req, res, next) {
     try {
       checkValidation(req);
       const { id: userId } = req.user;
 
-      const page = parseInt(req.query.page) || 1;
-      const pageSize = parseInt(req.query.pageSize) || 15;
+      const query = req.query;
 
       // const fullName = req.query.name;
 
@@ -73,12 +71,9 @@ class MerchantController {
 
       // const role = req.query.role;
 
-      const skip = (page - 1) * pageSize;
-      const take = pageSize;
-
       await userRepo.validateUserId(userId);
 
-      const merchants = await merchantRepo.getAllMerchants(skip, take);
+      const merchants = await merchantRepo.getAllMerchants(query);
 
       return DefaultResponse(
         res,
@@ -92,8 +87,4 @@ class MerchantController {
   }
 }
 
-
-
-
-
-export default new MerchantController()
+export default new MerchantController();

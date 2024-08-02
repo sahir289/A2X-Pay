@@ -49,16 +49,16 @@ class MerchantRepo {
         id: id,
       },
     });
-    console.log(
-      "🚀 ~ MerchantRepo ~ getMerchantById ~ merchant",
-      merchant,
-      "id",
-      id
-    );
     return merchant;
   }
 
-  async getAllMerchants(skip, take) {
+  async getAllMerchants(query) {
+    const page = parseInt(query.page) || 1;
+    const pageSize = parseInt(query.pageSize) || 15;
+
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
     const merchants = await prisma.merchant.findMany({
       // where: {
       //     fullName: {
@@ -91,7 +91,15 @@ class MerchantRepo {
       //     },
       // },
     });
-    return { merchants, totalRecords };
+
+    return {
+      merchants,
+      pagination: {
+        page,
+        pageSize,
+        total: totalRecords,
+      },
+    };
   }
 
   async updateMerchant(merchant_id, amount) {

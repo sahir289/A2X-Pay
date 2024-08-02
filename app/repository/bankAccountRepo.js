@@ -112,7 +112,11 @@ class BankAccountRepo {
           });
 
           if (merchantBank.length > 0) {
-            bank.merchant = merchantBank;
+            const allMerchantBank = [];
+            merchantBank.forEach((merchant) => {
+              allMerchantBank.push(merchant.merchant);
+            });
+            bank.merchant = allMerchantBank;
           }
 
           return bank;
