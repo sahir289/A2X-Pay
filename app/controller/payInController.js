@@ -407,7 +407,7 @@ class PayInController {
     async getAllPayInData(req, res, next) {
         try {
 
-            const { sno, upiShortCode, amount, merchantOrderId, merchantCode, userId, utr, payInId, dur, status, bank, filterToday } = req.query;
+            const { sno, upiShortCode, amount, merchantOrderId, merchantCode, userId,userSubmittedUtr, utr, payInId, dur, status, bank, filterToday } = req.query;
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 20;
             const skip = (page - 1) * pageSize;
@@ -415,7 +415,7 @@ class PayInController {
 
             const filterTodayBool = filterToday === 'false';  // to check the today entry
 
-            const payInDataRes = await payInServices.getAllPayInData(skip, take, parseInt(sno), upiShortCode, amount, merchantOrderId, merchantCode, userId, utr, payInId, dur, status, bank, filterTodayBool);
+            const payInDataRes = await payInServices.getAllPayInData(skip, take, parseInt(sno), upiShortCode, amount, merchantOrderId, merchantCode, userId,userSubmittedUtr, utr, payInId, dur, status, bank, filterTodayBool);
 
             return DefaultResponse(
                 res,
@@ -436,21 +436,16 @@ class PayInController {
             const { payInId } = req.params;
             const { amount } = req.query
             const usrSubmittedUtr = await detectText(filePath);
-            console.log("🚀 ~ PayInController ~ payInProcessByImg ~ usrSubmittedUtr:", usrSubmittedUtr)
-
             if (usrSubmittedUtr !== null) {
                 if (usrSubmittedUtr.length > 0) {
                     console.log('UTR Numbers:', usrSubmittedUtr);
                     const usrSubmittedUtrData = usrSubmittedUtr[0]
-                    console.log("🚀 ~ PayInController ~ payInProcessByImg ~ usrSubmittedUtrData:", usrSubmittedUtrData)
-
                     // Delete the image file
                     fs.unlink(filePath, (err) => {
                         if (err) console.error('Error deleting the file:', err);
                     });
 
                     const getPayInData = await payInRepo.getPayInData(payInId);
-                    console.log("🚀 ~ PayInController ~ payInProcessByImg ~ getPayInData:", getPayInData)
                     if (!getPayInData) {
                         throw new CustomError(404, 'Payment does not exist');
                     }
@@ -461,7 +456,6 @@ class PayInController {
                     }
 
                     const matchDataFromBotRes = await botResponseRepo.getBotResByUtr(usrSubmittedUtrData);
-                    console.log("🚀 ~ PayInController ~ payInProcessByImg ~ matchDataFromBotRes:", matchDataFromBotRes)
                     let payInData;
                     let responseMessage;
 
@@ -541,7 +535,7 @@ class PayInController {
 
                     return DefaultResponse(res, 200, responseMessage, response);
                 }
-                
+
             } else {
                 // No UTR found, send image URL to the controller
                 const imageUrl = `Images/${req.file.filename}`;
@@ -553,13 +547,18 @@ class PayInController {
                     is_url_expires: true,
                     user_submitted_image: imageUrl
                 };
-                console.log("🚀 ~ PayInController ~ payInProcessByImg ~ payInData:", payInData)
                 const updatePayinRes = await payInRepo.updatePayInData(payInId, payInData);
-                console.log("🚀 ~ PayInController ~ payInProcessByImg ~ updatePayinRes:", updatePayinRes)
+                const response = {
+                    status: "Not Found",
+                    amount,
+                    transactionId: updatePayinRes?.merchant_order_id,
+                    return_url: updatePayinRes?.return_url,
+                };
+                return DefaultResponse(res, 200, "Utr is not recognized", response);
             }
         } catch (error) {
             console.error('Error processing the image:', error);
-            res.status(500).send('Internal Server Error');
+            next(error)
         }
     }
 

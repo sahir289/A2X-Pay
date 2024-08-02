@@ -52,7 +52,7 @@ class PayInService {
         return updatedResData
     }
 
-    async getAllPayInData(skip, take,sno, upiShortCode, amount, merchantOrderId, merchantCode, userId, utr, payInId, dur, status, bankName, filterToday) {
+    async getAllPayInData(skip, take,sno, upiShortCode, amount, merchantOrderId, merchantCode, userId,userSubmittedUtr, utr, payInId, dur, status, bankName, filterToday) {
         const now = new Date();
         const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString(); // Start of today
         const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString(); // End of today
@@ -60,6 +60,7 @@ class PayInService {
         const filters = {
             ...(sno && {sno:{ equals: sno }}),
             ...(merchantOrderId && { merchant_order_id: { contains: merchantOrderId, mode: 'insensitive' } }),
+            ...(userSubmittedUtr &&{ user_submitted_utr:{ contains: userSubmittedUtr, mode: 'insensitive' }}),
             ...(utr && { utr: { contains: utr, mode: 'insensitive' } }),
             ...(userId && { user_id: { equals: userId } }),
             ...(payInId && { id: { equals: payInId } }),
