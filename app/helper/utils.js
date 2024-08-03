@@ -6,3 +6,7 @@ export const generateAccessToken = (payload) => {
     });
     return token;
 }
+
+export const getAmountFromPerc = (perc, amount)=>{
+    return (amount/100) * perc;
+}

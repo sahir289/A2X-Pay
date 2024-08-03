@@ -1,5 +1,6 @@
 import { param } from "express-validator";
 import validator from "express-validator";
+import ifsc from "ifsc";
 const { body, query } = validator;
 
 const methodEnums = ["BANK", "CASH", "CRYPTO", "AED"];
@@ -410,7 +411,7 @@ export const payoutCreateValidator = [
     .trim()
     .notEmpty()
     .withMessage("Account number is required!"),
-  body("acc_name")
+  body("acc_holder_name")
     .trim()
     .notEmpty()
     .withMessage("Account Holder Name is required!"),

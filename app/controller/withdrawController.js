@@ -2,6 +2,7 @@ import merchantRepo from "../repository/merchantRepo.js";
 import withdrawService from "../services/withdrawService.js";
 import { checkValidation } from "../helper/validationHelper.js"
 import { DefaultResponse } from "../helper/customResponse.js"
+import { getAmountFromPerc } from "../helper/utils.js";
 
 class WithdrawController {
 
@@ -18,7 +19,7 @@ class WithdrawController {
                 ...req.body,
                 status: "INITIATED",
                 merchant_id: merchant.id,
-                payout_commission: merchant.payin_commission,
+                payout_commision: getAmountFromPerc(merchant.payin_commission, req.body.amount),
                 currency: "INR",
             });
             return DefaultResponse(res, 201, "Payout created successfully");
@@ -38,23 +39,35 @@ class WithdrawController {
                 status,
                 amount,
                 acc_no,
+                merchant_order_id,
+                user_id,
+                sno,
+                payout_commision,
+                utr_id,
+                acc_holder_name,
             } = req.query;
             const take = Number(qTake) || 10;
             const skip = take * (Number(page || 1) - 1);
-            const data = await withdrawService.getWithdraw(skip, take, parseInt(id), code, status, amount, acc_no);
+            const data = await withdrawService.getWithdraw(skip, take, id, code, status, amount, acc_no, merchant_order_id, user_id, Number(sno), payout_commision, utr_id, acc_holder_name);
             return DefaultResponse(res, 200, "Payout fetched successfully!", data);
 
         } catch (err) {
-            console.log(err);
             next(err);
         }
     }
 
     async updateWithdraw(req, res, next) {
         try {
+            const payload = {
+                ...req.body,
+            };
+            if(req.body.utr_id){
+                payload.status = "SUCCESS";
+            }
             const data = await withdrawService.updateWithdraw(req.params.id, payload);
             return DefaultResponse(res, 200, "Payout Updated!", data);
         } catch (err) {
+            console.log(err);
             next(err);
         }
     }

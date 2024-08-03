@@ -12,7 +12,7 @@ class Withdraw {
         })
     }
 
-    async getWithdraw(skip, take, id, code, status, amount, acc_no) {
+    async getWithdraw(skip, take, id, code, status, amount, acc_no, merchant_order_id, user_id, sno, payout_commision, utr_id, acc_holder_name) {
 
         const where = {};
         [
@@ -20,6 +20,12 @@ class Withdraw {
             { col: "status", value: status },
             { col: "amount", value: amount },
             { col: "acc_no", value: acc_no },
+            { col: "merchant_order_id", value: merchant_order_id },
+            { col: "user_id", value: user_id },
+            { col: "sno", value: sno },
+            { col: "payout_commision", value: payout_commision },
+            { col: "utr_id", value: utr_id },
+            { col: "acc_holder_name", value: acc_holder_name },
         ]
             .forEach(el => {
                 if (el.value) {
@@ -62,7 +68,7 @@ class Withdraw {
     async updateWithdraw(id, body) {
         return await prisma.payout.update({
             where: {
-                id: Number(id),
+                id,
             },
             data: body
         })
