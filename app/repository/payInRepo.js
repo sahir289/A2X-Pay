@@ -23,7 +23,8 @@ class PayInRepo {
             where: {
                 id: payInId
             }, data: {
-                is_url_expires: true
+                is_url_expires: true,
+                status:"DROPPED"
             }
         })
         return expirePayInUrlRes
@@ -71,9 +72,6 @@ class PayInRepo {
         if (upi_short_code) {
             orConditions.push({ upi_short_code: upi_short_code });
         }
-
-        console.log("🚀 ~ PayInRepo ~ getPayInDataByUtrOrUpi ~ orConditions:", orConditions);
-
         // If no conditions are provided, return an empty array
         if (orConditions.length === 0) {
             return [];

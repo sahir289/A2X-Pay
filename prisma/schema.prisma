@@ -24,6 +24,7 @@ enum Status {
   DISPUTE
   REVERSED
   IMG_PENDING
+  PENDING
 }
 
 enum Currency {
@@ -139,7 +140,7 @@ model Payin {
   merchant_order_id    String
   user_id              String
   bank_acc_id          String?
-  payin_commission     Decimal
+  payin_commission     Decimal?
   return_url           String
   notify_url           String
   user_submitted_image String?
@@ -168,10 +169,10 @@ model Payout {
   acc_no            String
   acc_holder_name   String
   ifsc_code         String
-  bank_name         String
+  bank_name         String?
   upi_id            String?
   utr_id            String?
-  payout_commision  String
+  payout_commision  Decimal
   notify_url        String?
   rejected_reason   String?
   createdAt         DateTime @default(now())
