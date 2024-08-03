@@ -64,6 +64,9 @@ class WithdrawController {
             if(req.body.utr_id){
                 payload.status = "SUCCESS";
             }
+            if(req.body.rejected_reason){
+                payload.status = "REVERSED";
+            }
             const data = await withdrawService.updateWithdraw(req.params.id, payload);
             return DefaultResponse(res, 200, "Payout Updated!", data);
         } catch (err) {
