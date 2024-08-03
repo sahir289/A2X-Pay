@@ -7,6 +7,7 @@ import bankAccountRouter from './bankAccountRoute.js';
 import payInRouter from './payinRouter.js';
 import botResRouter from './botResponseRouter.js';
 import settlementRouter from './settlementRoute.js';
+import payoutRouter from './withdrawRoutes.js';
 
 const router = express();
 
@@ -17,6 +18,7 @@ router.use('/v1',bankAccountRouter)
 router.use('/v1',payInRouter)
 router.use('/v1',botResRouter)
 router.use('/v1', settlementRouter)
+router.use('/v1', payoutRouter)
 
 
 

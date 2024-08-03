@@ -396,3 +396,78 @@ export const settlementsGetValidator = [
     .withMessage("Invalid page!"),
   query("take").optional().notEmpty().isNumeric().withMessage("Invalid take"),
 ];
+
+export const payoutCreateValidator = [
+  body("code")
+    .trim()
+    .notEmpty()
+    .withMessage("Code is required!"),
+  body("user_id")
+    .trim()
+    .notEmpty()
+    .withMessage("User ID is required!"),
+  body("acc_no")
+    .trim()
+    .notEmpty()
+    .withMessage("Account number is required!"),
+  body("acc_name")
+    .trim()
+    .notEmpty()
+    .withMessage("Account Holder Name is required!"),
+  body("ifsc_code")
+    .trim()
+    .notEmpty()
+    .withMessage("ifsc_code is required!")
+    .custom((input, meta) => {
+      if (ifsc.validate(input)) {
+        return Promise.resolve();
+      }
+      return Promise.reject("IFSC is invalid!")
+    }),
+  body("amount")
+    .trim()
+    .notEmpty()
+    .isNumeric()
+    .withMessage("amount is invalid or required!"),
+]
+
+export const payoutGetValidator = [
+  query("id").optional().trim().notEmpty().withMessage("Id is required!"),
+  query("merchant_order_id").optional().trim().notEmpty().withMessage("merchant_order_id is required!"),
+  query("user_id").optional().trim().notEmpty().withMessage("user_id is required!"),
+  query("sno").optional().trim().notEmpty().withMessage("sno is required!"),
+  query("payout_commision").optional().trim().notEmpty().withMessage("payout_commision is required!"),
+  query("utr_id").optional().trim().notEmpty().withMessage("utr_id is required!"),
+  query("status")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("status is required!")
+    .isIn(statusEnums)
+    .withMessage(`Invalid status, Should be one of these ${statusEnums}`),
+  query("acc_no")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("acc_no is required!"),
+  query("acc_holder_name")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("acc_holder_name is required!"),
+  query("amount")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("amount is required!")
+    .isNumeric()
+    .withMessage("amount is invalid!"),
+  query("code").optional().trim().notEmpty().withMessage("code is required!"),
+  query("page")
+    .optional()
+    .notEmpty()
+    .isNumeric()
+    .isInt({ min: 0 })
+    .withMessage("Invalid page!"),
+  query("take").optional().notEmpty().isNumeric().withMessage("Invalid take"),
+];
