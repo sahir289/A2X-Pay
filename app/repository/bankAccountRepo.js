@@ -185,11 +185,9 @@ class BankAccountRepo {
   async getBankByBankAccId(bankAccId) {
     const bankRes = await prisma.bankAccount.findUnique({
       where: {
-        id: bankAccId
+        id: bankAccId,
       },
-
-    })
-    console.log("🚀 ~ BankAccountRepo ~ getBankByBankAccId ~ bankRes:", bankRes)
+    });
     return bankRes;
   }
 }

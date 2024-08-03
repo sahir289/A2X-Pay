@@ -77,7 +77,7 @@ class MerchantController {
 
       return DefaultResponse(
         res,
-        201,
+        200,
         "Merchants fetched successfully",
         merchants
       );
