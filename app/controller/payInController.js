@@ -174,7 +174,6 @@ class PayInController {
             const expirePayinUrl = await payInRepo.expirePayInUrl(payInId)
 
 
-
             return DefaultResponse(
                 res,
                 200,
@@ -307,7 +306,7 @@ class PayInController {
         try {
             checkValidation(req);
             const { payInId } = req.params;
-            const { usrSubmittedUtr, code, amount } = req.body;
+            const { usrSubmittedUtr, code, amount, isFront,filePath} = req.body;
 
             const getPayInData = await payInRepo.getPayInData(payInId);
             if (!getPayInData) {
@@ -315,8 +314,18 @@ class PayInController {
             }
 
             const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
-            if (urlValidationRes?.is_url_expires === true) {
-                throw new CustomError(403, 'Url is expired');
+
+            if (isFront !== true) {
+                if (urlValidationRes?.is_url_expires === true) {
+                    throw new CustomError(403, 'Url is expired');
+                }
+            }
+
+            if (filePath){
+                fs.unlink(`public/${filePath}`, (err) => {
+                    console.log("🚀 ~ PayInController ~ fs.unlink ~ filePath:", filePath)
+                    if (err) console.error('Error deleting the file:', err);
+                });
             }
 
             const matchDataFromBotRes = await botResponseRepo.getBotResByUtr(usrSubmittedUtr);
@@ -326,8 +335,10 @@ class PayInController {
             if (!matchDataFromBotRes) {
                 payInData = {
                     amount,
+                    status: "PENDING",
                     user_submitted_utr: usrSubmittedUtr,
                     is_url_expires: true,
+                    user_submitted_image:null
                 };
                 responseMessage = "Payment Not Found";
             } else if (matchDataFromBotRes.is_used === true) {
@@ -337,11 +348,12 @@ class PayInController {
                     is_notified: true,
                     user_submitted_utr: usrSubmittedUtr,
                     is_url_expires: true,
+                    user_submitted_image:null
                 };
                 responseMessage = "Duplicate Payment Found";
             } else {
                 const updateBotRes = await botResponseRepo.updateBotResponseByUtr(matchDataFromBotRes?.id, usrSubmittedUtr);
-                
+
                 const updateMerchantRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(matchDataFromBotRes?.amount));
 
                 const updateBankRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(matchDataFromBotRes?.amount));
@@ -358,7 +370,8 @@ class PayInController {
                         utr: matchDataFromBotRes.utr,
                         approved_at: new Date(),
                         is_url_expires: true,
-                        payin_commission: payinCommission
+                        payin_commission: payinCommission,
+                        user_submitted_image:null
                     };
                     responseMessage = "Payment Done successfully";
                 } else {
@@ -370,6 +383,7 @@ class PayInController {
                         utr: matchDataFromBotRes.utr,
                         approved_at: new Date(),
                         is_url_expires: true,
+                        user_submitted_image:null
                     };
                     responseMessage = "Dispute in Payment";
                 }
@@ -416,7 +430,7 @@ class PayInController {
     async getAllPayInData(req, res, next) {
         try {
 
-            const { sno, upiShortCode, amount, merchantOrderId, merchantCode, userId, userSubmittedUtr, utr, payInId, dur, status, bank, filterToday } = req.query;
+            const { sno, upiShortCode, confirmed, amount, merchantOrderId, merchantCode, userId, userSubmittedUtr, utr, payInId, dur, status, bank, filterToday } = req.query;
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 20;
             const skip = (page - 1) * pageSize;
@@ -424,7 +438,7 @@ class PayInController {
 
             const filterTodayBool = filterToday === 'false';  // to check the today entry
 
-            const payInDataRes = await payInServices.getAllPayInData(skip, take, parseInt(sno), upiShortCode, amount, merchantOrderId, merchantCode, userId, userSubmittedUtr, utr, payInId, dur, status, bank, filterTodayBool);
+            const payInDataRes = await payInServices.getAllPayInData(skip, take, parseInt(sno), upiShortCode, confirmed, amount, merchantOrderId, merchantCode, userId, userSubmittedUtr, utr, payInId, dur, status, bank, filterTodayBool);
 
             return DefaultResponse(
                 res,
@@ -442,6 +456,7 @@ class PayInController {
     async payInProcessByImg(req, res, next) {
         try {
             const filePath = req.file.path;
+            console.log("🚀 ~ PayInController ~ payInProcessByImg ~ filePath:", filePath)
             const { payInId } = req.params;
             const { amount } = req.query
             const usrSubmittedUtr = await detectText(filePath);
@@ -451,6 +466,7 @@ class PayInController {
                     const usrSubmittedUtrData = usrSubmittedUtr[0]
                     // Delete the image file
                     fs.unlink(filePath, (err) => {
+                        console.log("🚀 ~ PayInController ~ fs.unlink ~ filePath:", filePath)
                         if (err) console.error('Error deleting the file:', err);
                     });
 
