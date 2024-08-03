@@ -6,3 +6,8 @@ export const generateAccessToken = (payload) => {
     });
     return token;
 }
+
+
+export const calculateCommission = (amount, percentage) => {
+    return (amount * percentage) / 100;
+  };

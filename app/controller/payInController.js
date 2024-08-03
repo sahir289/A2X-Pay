@@ -1,4 +1,5 @@
 import { DefaultResponse } from '../helper/customResponse.js';
+import { calculateCommission } from '../helper/utils.js';
 import { checkValidation } from '../helper/validationHelper.js';
 import { detectText } from '../middlewares/OCRMidleware.js';
 import { CustomError } from '../middlewares/errorHandler.js';
@@ -202,8 +203,9 @@ class PayInController {
                     const updateBotIsUsedRes = await botResponseRepo.updateBotResponse(getBotDataRes?.amount_code);
 
                     const updateMerchantDataRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(getBotDataRes?.amount));
-
                     const updateBankAccRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(getBotDataRes?.amount));
+
+                    const payinCommission = await calculateCommission(getBotDataRes?.amount, updateMerchantDataRes?.payin_commission);
 
                     if (parseFloat(getBotDataRes?.amount) === parseFloat(getPayInData?.amount)) {
                         const updatePayInData = {
@@ -212,7 +214,8 @@ class PayInController {
                             is_notified: true,
                             utr: getBotDataRes?.utr,
                             approved_at: new Date(),
-                            is_url_expires: true
+                            is_url_expires: true,
+                            payin_commission: payinCommission
                         };
 
                         const updatePayInRes = await payInRepo.updatePayInData(payInId, updatePayInData);
@@ -337,9 +340,14 @@ class PayInController {
                 };
                 responseMessage = "Duplicate Payment Found";
             } else {
-                await botResponseRepo.updateBotResponseByUtr(matchDataFromBotRes?.id, usrSubmittedUtr);
-                await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(matchDataFromBotRes?.amount));
-                await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(matchDataFromBotRes?.amount));
+                const updateBotRes = await botResponseRepo.updateBotResponseByUtr(matchDataFromBotRes?.id, usrSubmittedUtr);
+                
+                const updateMerchantRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(matchDataFromBotRes?.amount));
+
+                const updateBankRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(matchDataFromBotRes?.amount));
+
+
+                const payinCommission = await calculateCommission(matchDataFromBotRes?.amount, updateMerchantRes?.payin_commission);
 
                 if (parseFloat(amount) === parseFloat(matchDataFromBotRes?.amount)) {
                     payInData = {
@@ -350,6 +358,7 @@ class PayInController {
                         utr: matchDataFromBotRes.utr,
                         approved_at: new Date(),
                         is_url_expires: true,
+                        payin_commission: payinCommission
                     };
                     responseMessage = "Payment Done successfully";
                 } else {
@@ -407,7 +416,7 @@ class PayInController {
     async getAllPayInData(req, res, next) {
         try {
 
-            const { sno, upiShortCode, amount, merchantOrderId, merchantCode, userId,userSubmittedUtr, utr, payInId, dur, status, bank, filterToday } = req.query;
+            const { sno, upiShortCode, amount, merchantOrderId, merchantCode, userId, userSubmittedUtr, utr, payInId, dur, status, bank, filterToday } = req.query;
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 20;
             const skip = (page - 1) * pageSize;
@@ -415,7 +424,7 @@ class PayInController {
 
             const filterTodayBool = filterToday === 'false';  // to check the today entry
 
-            const payInDataRes = await payInServices.getAllPayInData(skip, take, parseInt(sno), upiShortCode, amount, merchantOrderId, merchantCode, userId,userSubmittedUtr, utr, payInId, dur, status, bank, filterTodayBool);
+            const payInDataRes = await payInServices.getAllPayInData(skip, take, parseInt(sno), upiShortCode, amount, merchantOrderId, merchantCode, userId, userSubmittedUtr, utr, payInId, dur, status, bank, filterTodayBool);
 
             return DefaultResponse(
                 res,

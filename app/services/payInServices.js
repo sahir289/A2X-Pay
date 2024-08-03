@@ -21,7 +21,6 @@ class PayInService {
             merchant_order_id: payInData?.merchant_order_id,  // for time being we are using this
             user_id: payInData?.user_id,
             // bank_acc_id: bankAccountLinkRes?.bankAccountId,   this is done bcs bank will be assigned after the submission of amount in frontend.
-            payin_commission: getMerchantRes?.payin_commission,
             return_url: getMerchantRes?.return_url,
             notify_url: getMerchantRes?.notify_url,
             merchant_id: getMerchantRes?.id,
@@ -41,6 +40,7 @@ class PayInService {
             amount: amount,   // this amount is given by the user
             status: "ASSIGNED",
             bank_acc_id: bankDetails?.bankAccountId,
+
         }
         const payInUrlUpdateRes = await payInRepo.updatePayInData(payInId, data)
         const getBankRes = await bankAccountRepo.getBankByBankAccId(payInUrlUpdateRes?.bank_acc_id)
