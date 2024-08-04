@@ -3,6 +3,7 @@ import withdrawService from "../services/withdrawService.js";
 import { checkValidation } from "../helper/validationHelper.js"
 import { DefaultResponse } from "../helper/customResponse.js"
 import { getAmountFromPerc } from "../helper/utils.js";
+import axios from "axios";
 
 class WithdrawController {
 
@@ -61,11 +62,28 @@ class WithdrawController {
             const payload = {
                 ...req.body,
             };
-            if(req.body.utr_id){
+            if (req.body.utr_id) {
                 payload.status = "SUCCESS";
             }
-            if(req.body.rejected_reason){
-                payload.status = "REVERSED";
+            if (req.body.rejected_reason) {
+                // TODO: confirm the status
+                payload.status = "INITIATED";
+            }
+            if([req.body.status, payload.status].includes("INITIATED")){
+                payload.utr_id = "";
+            }
+            if(req.body.method == "accure"){
+                delete payload.method;
+                // const { ACCURE_SECRET  } = process.env;
+                // await axios.post("http://www.example.com", {})
+                // .then(res=>{
+                //     payload.status = "SUCCESS";
+                //     // TODO: check response from accure and extracct utr_id
+                //     payload.utr_id = res.data.utr_id;
+                // })
+                // .catch(err=>{
+                //     payload.status = "REVERSED";
+                // })
             }
             const data = await withdrawService.updateWithdraw(req.params.id, payload);
             return DefaultResponse(res, 200, "Payout Updated!", data);
