@@ -28,11 +28,17 @@ payInRouter.post(
   payInController.payInProcessByImg
 );
 
-payInRouter.post(
+payInRouter.get(
   "/payIn",
   payInAssignValidator,
   payInController.generatePayInUrl
 );
+
+// payInRouter.get(
+//   "/payIn",
+//   ()=>{console.log("jhbbfhjg")}
+// );
+
 
 payInRouter.get(
   "/validate-payIn-url/:payInId",
