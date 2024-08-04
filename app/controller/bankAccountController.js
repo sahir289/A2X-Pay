@@ -61,7 +61,7 @@ class BankAccountController {
     try {
       checkValidation(req);
       const query = req.query;
-
+      
       const bankAccountRes = await bankAccountRepo.getAllBankAccounts(query);
 
       return DefaultResponse(

@@ -5,7 +5,7 @@ import isAuthenticated from '../middlewares/authMiddleware.js';
 
 const userRouter = express()
 
-userRouter.post('/create-user', userCreateValidator, userController.createUser)
+userRouter.post('/create-user', userCreateValidator,isAuthenticated, userController.createUser)
 
 userRouter.get('/getall-users', isAuthenticated, userController.getAllUser)
 

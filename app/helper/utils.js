@@ -10,3 +10,7 @@ export const generateAccessToken = (payload) => {
 export const getAmountFromPerc = (perc, amount)=>{
     return (amount/100) * perc;
 }
+
+export const calculateCommission = (amount, percentage) => {
+    return (amount * percentage) / 100;
+  };

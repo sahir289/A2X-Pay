@@ -4,6 +4,8 @@ import { DefaultResponse } from "../helper/customResponse.js";
 import botResponseRepo from "../repository/botResponseRepo.js";
 import payInRepo from "../repository/payInRepo.js";
 import { checkValidation } from "../helper/validationHelper.js";
+import merchantRepo from "../repository/merchantRepo.js";
+import { calculateCommission } from "../helper/utils.js";
 
 class BotResponseController {
   async botResponse(req, res, next) {
@@ -33,11 +35,13 @@ class BotResponseController {
           updatedData.amount_code = amount_code;
         }
         const botRes = await botResponseRepo.botResponse(updatedData);
-
         const checkPayInUtr = await payInRepo.getPayInDataByUtrOrUpi(
           utr,
           amount_code
         );
+        const getMerchantToGetPayinCommissionRes = await merchantRepo.getMerchantById(checkPayInUtr[0]?.merchant_id)
+        
+        const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
 
         if (checkPayInUtr.length !== 0) {
           const payInData = {
@@ -46,6 +50,7 @@ class BotResponseController {
             is_notified: true,
             utr: botRes?.utr,
             approved_at: new Date(),
+            payin_commission: payinCommission
           };
 
           const updatePayInDataRes = await payInRepo.updatePayInData(
@@ -59,19 +64,10 @@ class BotResponseController {
             payinId: updatePayInDataRes?.id,
             amount: updatePayInDataRes?.confirmed,
           };
-          console.log(
-            "🚀 ~ BotResponseController ~ botResponse ~ notifyData:",
-            notifyData
-          );
           try {
             //when we get the correct notify url;
             // const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-            // console.log("🚀 ~ BotResponseController ~ botResponse ~ notifyMerchant:", notifyMerchant)
           } catch (error) {
-            console.log(
-              "🚀 ~ BotResponseController ~ botResponse ~ error:",
-              error
-            );
           }
         }
 
@@ -93,7 +89,6 @@ class BotResponseController {
         });
       }
     } catch (err) {
-      console.log("🚀 ~ BotResponseController ~ botResponse ~ err:", err);
       next(err);
     }
   }
