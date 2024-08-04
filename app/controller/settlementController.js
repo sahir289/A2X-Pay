@@ -57,6 +57,13 @@ class SettlementController {
             if (req.body.refrence_id) {
                 payload.status = "SUCCESS";
             }
+            if (req.body.status == "INITIATED") {
+                payload.refrence_id = "";
+                payload.rejected_reason = "";
+            }
+            if (req.body.rejected_reason) {
+                payload.status = "REVERSED";
+            }
             const data = await settlementService.updateSettlement(req.params.id, payload);
             return DefaultResponse(res, 200, "Settlement Updated!", data);
         } catch (err) {

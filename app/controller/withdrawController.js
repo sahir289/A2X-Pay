@@ -71,6 +71,7 @@ class WithdrawController {
             }
             if([req.body.status, payload.status].includes("INITIATED")){
                 payload.utr_id = "";
+                payload.rejected_reason = "";
             }
             if(req.body.method == "accure"){
                 delete payload.method;
