@@ -89,48 +89,41 @@ class BankAccountRepo {
     const take = pageSize;
 
     const filter = {
-      ...(ac_no !== "" && { ac_no }),
-      ...(ac_name !== "" && { ac_name }),
-      ...(upi_id !== "" && { upi_id }),
+        ...(ac_no !== "" && { ac_no: { contains: ac_no, mode: 'insensitive' } }),
+        ...(ac_name !== "" && { ac_name: { contains: ac_name, mode: 'insensitive' } }),
+        ...(upi_id !== "" && { upi_id: { contains: upi_id, mode: 'insensitive' } }),
     };
+
     const bankAccRes = await prisma.bankAccount.findMany({
       where: filter,
-      skip: skip,
-      take: take,
+      skip,
+      take,
+      include: {
+        Merchant_Bank: {
+          include: {
+            merchant: true,
+          },
+        },
+      },
     });
 
-    if (bankAccRes.length > 0) {
-      await Promise.all(
-        bankAccRes.map(async (bank) => {
-          const merchantBank = await prisma.merchant_Bank.findMany({
-            where: {
-              bankAccountId: bank.id,
-            },
-            include: {
-              merchant: true,
-            },
-          });
-
-          if (merchantBank.length > 0) {
-            const allMerchantBank = [];
-            merchantBank.forEach((merchant) => {
-              allMerchantBank.push(merchant.merchant);
-            });
-            bank.merchant = allMerchantBank;
-          }
-
-          return bank;
-        })
+    const transformedBankAccRes = bankAccRes.map((bank) => {
+      bank.merchants = bank.Merchant_Bank.map(
+        (merchantBank) => merchantBank.merchant
       );
-    }
+      delete bank.Merchant_Bank;
+      return bank;
+    });
 
-    const totalRecords = await prisma.bankAccount.count();
+    const totalRecords = await prisma.bankAccount.count({
+      where: filter,
+    });
 
     return {
-      bankAccRes,
+      bankAccRes: transformedBankAccRes,
       pagination: {
-        page,
-        pageSize,
+        page: parseInt(page),
+        pageSize: take,
         total: totalRecords,
       },
     };
@@ -163,14 +156,6 @@ class BankAccountRepo {
       );
 
       return bankRes;
-    } else if (merchantId === undefined) {
-      const bankRes = await prisma.bankAccount.delete({
-        where: {
-          id: bankAccountId,
-        },
-      });
-
-      return bankRes;
     } else {
       const bankRes = await prisma.merchant_Bank.deleteMany({
         where: {
@@ -182,6 +167,7 @@ class BankAccountRepo {
       return bankRes;
     }
   }
+
   async getBankByBankAccId(bankAccId) {
     const bankRes = await prisma.bankAccount.findUnique({
       where: {

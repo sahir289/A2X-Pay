@@ -63,11 +63,12 @@ class BotResponseRepo {
     const skip = (page - 1) * pageSize;
     const take = pageSize;
 
+    console.log(typeof amount, "amount", query)
+
     const filter = {
-      ...(status !== "" && { status: status }),
-      ...(amount !== "" && { amount: amount }),
-      ...(amount_code !== "" && { amount_code: amount_code }),
-      ...(utr !== "" && { utr: utr }),
+      ...(status !== "" && { status: status  }),
+      ...(amount_code !== "" && { amount_code: { contains: amount_code, mode: 'insensitive' } }),
+      ...(utr !== "" && { utr: { contains: utr, mode: 'insensitive' } }),
     };
 
     const botRes = await prisma.telegramResponse.findMany({
@@ -76,10 +77,17 @@ class BotResponseRepo {
       take: take,
     });
 
+    const filteredRecords = botRes.filter(record => {
+      const amountStr = record.amount ? record.amount.toString() : "";
+      return (
+        (amount === "" || amountStr.includes(amount))
+      );
+    });
+
     const totalRecords = await prisma.telegramResponse.count();
 
     return {
-      botRes,
+      botRes: filteredRecords,
       pagination: {
         page,
         pageSize,
