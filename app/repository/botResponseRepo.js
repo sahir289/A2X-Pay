@@ -53,6 +53,7 @@ class BotResponseRepo {
   }
 
   async getBotResponse(query) {
+    const sno = query.sno;
     const status = query.status;
     const amount = query.amount;
     const amount_code = query.amount_code;
@@ -63,12 +64,12 @@ class BotResponseRepo {
     const skip = (page - 1) * pageSize;
     const take = pageSize;
 
-    console.log(typeof amount, "amount", query)
-
     const filter = {
-      ...(status !== "" && { status: status  }),
-      ...(amount_code !== "" && { amount_code: { contains: amount_code, mode: 'insensitive' } }),
-      ...(utr !== "" && { utr: { contains: utr, mode: 'insensitive' } }),
+      ...(status !== "" && { status: status }),
+      ...(amount_code !== "" && {
+        amount_code: { contains: amount_code, mode: "insensitive" },
+      }),
+      ...(utr !== "" && { utr: { contains: utr, mode: "insensitive" } }),
     };
 
     const botRes = await prisma.telegramResponse.findMany({
@@ -77,9 +78,10 @@ class BotResponseRepo {
       take: take,
     });
 
-    const filteredRecords = botRes.filter(record => {
+    const filteredRecords = botRes.filter((record) => {
       const amountStr = record.amount ? record.amount.toString() : "";
       return (
+        (sno === "" || record.sno === sno) &&
         (amount === "" || amountStr.includes(amount))
       );
     });
