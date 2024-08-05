@@ -2,6 +2,7 @@ import express from "express";
 import payInController from "../controller/payInController.js";
 import {
   payInAssignValidator,
+  payOutInAllDataValidator,
   validatePayInIdAndAmountAssigned,
   validatePayInIdUrl,
   validatePayInProcess,
@@ -32,6 +33,12 @@ payInRouter.get(
   "/payIn",
   payInAssignValidator,
   payInController.generatePayInUrl
+);
+//new payin router
+payInRouter.get(
+  "/get-all-payins",
+  payOutInAllDataValidator,
+  payInController.getAllPayInDataNew
 );
 
 // payInRouter.get(

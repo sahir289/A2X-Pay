@@ -11,6 +11,7 @@ import payInServices from '../services/payInServices.js';
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs"
 
+
 class PayInController {
   // To Generate Url
   async generatePayInUrl(req, res, next) {
@@ -637,6 +638,33 @@ class PayInController {
       next(error);
     }
   }
+  //new get All pay In data.
+  async getAllPayInDataNew(req, res, next) {
+    try {
+      console.log(req.query);
+      checkValidation(req);
+      const { merchantCode, status, startDate, endDate } = req.query;
+
+      const payInDataRes = await payInServices.getAllPayInDataNew(
+        merchantCode,
+        status,
+        startDate,
+        endDate
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        "PayIn data fetched successfully",
+        payInDataRes
+      );
+    } catch (error) {
+      console.log('=====>',error);
+      next(error);
+    }
+  }
+
+
 }
 
 export default new PayInController();

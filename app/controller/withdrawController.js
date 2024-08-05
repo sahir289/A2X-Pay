@@ -69,11 +69,11 @@ class WithdrawController {
                 // TODO: confirm the status
                 payload.status = "INITIATED";
             }
-            if([req.body.status, payload.status].includes("INITIATED")){
+            if ([req.body.status, payload.status].includes("INITIATED")) {
                 payload.utr_id = "";
                 payload.rejected_reason = "";
             }
-            if(req.body.method == "accure"){
+            if (req.body.method == "accure") {
                 delete payload.method;
                 // const { ACCURE_SECRET  } = process.env;
                 // await axios.post("http://www.example.com", {})
@@ -93,6 +93,32 @@ class WithdrawController {
             next(err);
         }
     }
+
+    //new get All pay out data.
+    async getAllPayOutDataNew(req, res, next) {
+        try {
+            checkValidation(req);
+            const { merchantCode, status, startDate, endDate } = req.query;
+
+            const payOutDataRes = await withdrawService.getAllPayOutDataNew(
+                merchantCode,
+                status,
+                startDate,
+                endDate
+            );
+
+            return DefaultResponse(
+                res,
+                200,
+                "PayIn data fetched successfully",
+                payOutDataRes
+            );
+        } catch (error) {
+            console.log('======>',error);
+            next(error);
+        }
+    }
+
 }
 
 export default new WithdrawController();

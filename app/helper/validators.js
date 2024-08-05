@@ -264,6 +264,7 @@ export const payInAssignValidator = [
     .withMessage("User ID must be a string"),
 ];
 
+
 export const validatePayInIdUrl = [
   param("payInId")
     .notEmpty()
@@ -471,4 +472,22 @@ export const payoutGetValidator = [
     .isInt({ min: 0 })
     .withMessage("Invalid page!"),
   query("take").optional().notEmpty().isNumeric().withMessage("Invalid take"),
+];
+
+//new pay in validator
+export const payOutInAllDataValidator = [
+  query("merchantCode")
+    .notEmpty()
+    .withMessage("Code is required"),
+  query("status")
+    .notEmpty()
+    .withMessage("Status is required")
+    .isIn(statusEnums)
+    .withMessage(`Invalid status, Should be one of these ${statusEnums}`),
+  query("startDate")
+    .notEmpty()
+    .withMessage("Start date is required"),
+  query("endDate")
+    .notEmpty()
+    .withMessage("End date is required")
 ];

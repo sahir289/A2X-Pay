@@ -2,7 +2,8 @@ import express from 'express';
 import withdrawController from '../controller/withdrawController.js';
 import {
     payoutCreateValidator,
-    settlementsGetValidator
+    settlementsGetValidator,
+    payOutInAllDataValidator,
 } from '../helper/validators.js';
 
 import isAuthenticated from '../middlewares/authMiddleware.js';
@@ -12,4 +13,6 @@ withdrawRouter.use(isAuthenticated);
 withdrawRouter.post('/create-payout', payoutCreateValidator, withdrawController.createWithdraw);
 withdrawRouter.get('/getall-payout', settlementsGetValidator, withdrawController.getWithdraw);
 withdrawRouter.put('/update-payout/:id', withdrawController.updateWithdraw);
+//new payout router
+withdrawRouter.get("/get-all-payouts", payOutInAllDataValidator, withdrawController.getAllPayOutDataNew);
 export default withdrawRouter;
