@@ -26,7 +26,7 @@ class LogInService {
     if (isAccessTokenExists) {
       await tokenRepo.deleteTokenByUserId(user?.id)
     }
-    const newAccessToken = generateAccessToken({ id: user.id, userName: user?.userName, role: user?.role })
+    const newAccessToken = generateAccessToken({ id: user.id, userName: user?.userName, role: user?.role,code:user.code })
     await tokenRepo.createUserToken(newAccessToken, user?.id)
 
 
