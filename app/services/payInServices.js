@@ -172,6 +172,17 @@ class PayInService {
           lte: new Date(endDate),
         },
       },
+      include: {
+        Merchant: {
+          include: {
+            Merchant_Bank: {
+              include: {
+                bankAccount: true,
+              },
+            },
+          },
+        },
+      },
     });
     return payInData;
   }

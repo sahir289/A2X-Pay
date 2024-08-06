@@ -109,11 +109,10 @@ class WithdrawController {
             return DefaultResponse(
                 res,
                 200,
-                "PayIn data fetched successfully",
+                "Payout data fetched successfully",
                 payOutDataRes
             );
         } catch (error) {
-            console.log('======>', error);
             next(error);
         }
     }

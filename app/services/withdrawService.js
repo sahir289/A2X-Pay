@@ -74,21 +74,24 @@ class Withdraw {
         })
     }
 
-     async getAllPayOutDataWithRange(merchantCode, status, startDate, endDate) {
+    async getAllPayOutDataWithRange(merchantCode, status, startDate, endDate) {
         const payOutData = await prisma.payout.findMany({
-          where: {
-            status,
-            Merchant: {
-              code: merchantCode,
+            where: {
+                status,
+                Merchant: {
+                    code: merchantCode,
+                },
+                createdAt: {
+                    gte: new Date(startDate),
+                    lte: new Date(endDate),
+                },
             },
-            createdAt: {
-              gte: new Date(startDate),
-              lte: new Date(endDate),
-            },
-          },
+            include: {
+                Merchant: true,
+            }
         });
         return payOutData;
-      }
+    }
 }
 
 export default new Withdraw();
