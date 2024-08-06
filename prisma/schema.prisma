@@ -140,6 +140,7 @@ model Payin {
   merchant_order_id    String
   user_id              String
   bank_acc_id          String?
+  bank_name            String?
   payin_commission     Decimal?
   return_url           String
   notify_url           String

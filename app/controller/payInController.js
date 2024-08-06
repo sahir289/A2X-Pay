@@ -180,6 +180,7 @@ class PayInController {
       // Randomly select one enabled bank account
       const randomIndex = Math.floor(Math.random() * enabledBanks.length);
       const selectedBankDetails = enabledBanks[randomIndex];
+      console.log("🚀 ~ PayInController ~ assignedBankToPayInUrl ~ selectedBankDetails:", selectedBankDetails)
 
       const assignedBankToPayInUrlRes =
         await payInServices.assignedBankToPayInUrl(

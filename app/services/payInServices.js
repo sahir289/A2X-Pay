@@ -31,10 +31,12 @@ class PayInService {
   }
 
   async assignedBankToPayInUrl(payInId, bankDetails, amount) {
+    console.log("🚀 ~ PayInService ~ assignedBankToPayInUrl ~ bankDetails:", bankDetails)
     const data = {
       amount: amount, // this amount is given by the user
       status: "ASSIGNED",
       bank_acc_id: bankDetails?.bankAccountId,
+      bank_name: bankDetails?.bankAccount?.bank_name
     };
     const payInUrlUpdateRes = await payInRepo.updatePayInData(payInId, data);
     const getBankRes = await bankAccountRepo.getBankByBankAccId(
@@ -101,15 +103,7 @@ class PayInService {
         },
       }),
       ...(bankName && {
-        Merchant: {
-          Merchant_Bank: {
-            some: {
-              bankAccount: {
-                bank_name: { contains: bankName, mode: "insensitive" },
-              },
-            },
-          },
-        },
+        bank_name: { contains: bankName, mode: "insensitive" },
       }),
     };
 
@@ -118,16 +112,9 @@ class PayInService {
       skip: skip,
       take: take,
       include: {
-        Merchant: {
-          include: {
-            Merchant_Bank: {
-              include: {
-                bankAccount: true,
-              },
-            },
-          },
-        },
+        Merchant: true
       },
+
     });
 
     const totalRecords = await prisma.payin.count({
