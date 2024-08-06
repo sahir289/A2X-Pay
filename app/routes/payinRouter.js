@@ -34,12 +34,6 @@ payInRouter.get(
   payInController.generatePayInUrl
 );
 
-// payInRouter.get(
-//   "/payIn",
-//   ()=>{console.log("jhbbfhjg")}
-// );
-
-
 payInRouter.get(
   "/validate-payIn-url/:payInId",
   validatePayInIdUrl,
@@ -76,5 +70,8 @@ payInRouter.get(
   "/get-payInDataMerchant",
   payInController.getAllPayInDataByMerchant
 );
+
+// telegram resp ocr
+payInRouter.post("/tele-ocr",payInController.telegramResHandler)
 
 export default payInRouter;

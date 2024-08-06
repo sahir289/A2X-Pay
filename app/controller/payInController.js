@@ -1,7 +1,7 @@
 import { DefaultResponse } from '../helper/customResponse.js';
 import { calculateCommission } from '../helper/utils.js';
 import { checkValidation } from '../helper/validationHelper.js';
-import { detectText } from '../middlewares/OCRMidleware.js';
+import { detectText, detectUtrAmountText } from '../middlewares/OCRMidleware.js';
 import { CustomError } from '../middlewares/errorHandler.js';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import botResponseRepo from '../repository/botResponseRepo.js';
@@ -10,6 +10,14 @@ import payInRepo from '../repository/payInRepo.js';
 import payInServices from '../services/payInServices.js';
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs"
+import axios from 'axios';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { sendTelegramMessage } from '../helper/sendTelegramMessages.js';
+
+// Construct __dirname manually
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class PayInController {
   // To Generate Url
@@ -499,6 +507,7 @@ class PayInController {
 
           if (!matchDataFromBotRes) {
             payInData = {
+              status: "PENDING",
               amount,
               user_submitted_utr: usrSubmittedUtrData,
               is_url_expires: true,
@@ -637,6 +646,70 @@ class PayInController {
       next(error);
     }
   }
+
+  async  telegramResHandler(req, res, next) {
+    const TELEGRAM_BOT_TOKEN = '7213263102:AAHaSjFaXaODoQM6Zxv1aoWmKNaA7YXPEnQ';
+    try {
+      const { message } = req.body;
+      console.log("🚀 ~ PayInController ~ telegramResHandler ~ message:", message)
+      if (message?.photo) {
+        const photoArray = message.photo;
+        const fileId = photoArray[photoArray.length - 1]?.file_id;
+  
+        const getFileUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`;
+        const getFileResponse = await axios.get(getFileUrl);
+  
+        if (!getFileResponse.data.ok) {
+          throw new Error('Failed to get file path from Telegram');
+        }
+  
+        const filePath = getFileResponse.data.result.file_path;
+  
+        // Step 3: Download the image
+        const downloadUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+        const imageResponse = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+  
+        if (imageResponse.status !== 200) {
+          throw new Error('Failed to download image from Telegram');
+        }
+  
+        const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+  
+        // Ensure the directory exists
+        const imagesDir = path.join(__dirname, '..', '..', 'public', 'Images');
+        if (!fs.existsSync(imagesDir)) {
+          fs.mkdirSync(imagesDir, { recursive: true });
+        }
+  
+        // Write the image buffer to a file
+        const fileName = `${Date.now()}.jpg`; 
+
+        const filePathToSave = path.join(imagesDir, fileName);
+
+        fs.writeFileSync(filePathToSave, imageBuffer);
+        console.log(`Image saved to ${filePathToSave}`);
+
+        const dataRes =await detectUtrAmountText(fileName)
+        console.log("🚀 ~ PayInController ~ telegramResHandler ~ dataRes:", dataRes)
+        fs.unlink(filePathToSave, (err) => {
+          if (err) console.error('Error deleting the file:', err);
+        });
+
+        await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN,message?.message_id);
+
+  
+        res.status(200).json({ message: "true" });
+  
+      } else {
+        res.status(200).json({ message: "No photo in the message" });
+      }
+  
+    } catch (error) {
+      res.status(400).json({ message: "No photo in the message" })
+      next(error);
+    }
+  }
+  
 }
 
 export default new PayInController();
