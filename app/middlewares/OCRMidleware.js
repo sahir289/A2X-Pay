@@ -126,7 +126,7 @@ export const detectUtrAmountText = async (filePath) => {
 
     if (extractedAmounts.length > 0) {
         // Clean up any currency symbols
-        extractedData.amount = extractedAmounts[0].replace(/₹\s*|Rs\s*|INR\s*/, '');
+        extractedData.amount = extractedAmounts[0].replace(/₹\s*|Rs\s*|INR\s*|,/g, '');
     }
     return extractedData;
 }
