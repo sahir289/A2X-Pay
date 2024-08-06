@@ -1,7 +1,7 @@
 import { DefaultResponse } from '../helper/customResponse.js';
 import { calculateCommission } from '../helper/utils.js';
 import { checkValidation } from '../helper/validationHelper.js';
-import { detectText } from '../middlewares/OCRMidleware.js';
+import { detectText, detectUtrAmountText } from '../middlewares/OCRMidleware.js';
 import { CustomError } from '../middlewares/errorHandler.js';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import botResponseRepo from '../repository/botResponseRepo.js';
@@ -10,6 +10,15 @@ import payInRepo from '../repository/payInRepo.js';
 import payInServices from '../services/payInServices.js';
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs"
+import axios from 'axios';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { sendAlreadyConfirmedMessageTelegramBot, sendErrorMessageNoDepositFoundTelegramBot, sendErrorMessageTelegram, sendErrorMessageUtrNotFoundTelegramBot, sendErrorMessageUtrOrAmountNotFoundImgTelegramBot, sendSuccessMessageTelegram, sendTelegramMessage } from '../helper/sendTelegramMessages.js';
+
+// Construct __dirname manually
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const processedMessages = new Set();
 
 
 class PayInController {
@@ -20,53 +29,72 @@ class PayInController {
 
       const { code, user_id, merchant_order_id, ot } = req.query;
       // If query parameters are provided, use them
-      const getMerchantApiKeyByCode = await merchantRepo.getMerchantByCode(code);
+      const getMerchantApiKeyByCode = await merchantRepo.getMerchantByCode(
+        code
+      );
 
       if (!getMerchantApiKeyByCode) {
         throw new CustomError(404, "Merchant does not exist");
       }
 
-      const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(getMerchantApiKeyByCode?.id);
+      const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(
+        getMerchantApiKeyByCode?.id
+      );
       if (!bankAccountLinkRes || bankAccountLinkRes.length === 0) {
-        throw new CustomError(404, "Bank Account has not been linked with Merchant");
+        throw new CustomError(
+          404,
+          "Bank Account has not been linked with Merchant"
+        );
       }
-
 
       if (!merchant_order_id && ot) {
         payInData = {
           code: code,
           api_key: getMerchantApiKeyByCode?.api_key,
           merchant_order_id: uuidv4(),
-          user_id: user_id
+          user_id: user_id,
         };
         // Uncomment and use your service to generate PayIn URL
-        const generatePayInUrlRes = await payInServices.generatePayInUrl(getMerchantApiKeyByCode, payInData);
+        const generatePayInUrlRes = await payInServices.generatePayInUrl(
+          getMerchantApiKeyByCode,
+          payInData
+        );
         const updateRes = {
           expirationDate: generatePayInUrlRes?.expirationDate,
           payInUrl: `http://localhost:5173/transaction/${generatePayInUrlRes?.id}`, // use env
         };
 
-        if (ot === 'y') {
-          return DefaultResponse(res, 200, "Payment is assigned & url is sent successfully", updateRes);
-        }
-        else {
+        if (ot === "y") {
+          return DefaultResponse(
+            res,
+            200,
+            "Payment is assigned & url is sent successfully",
+            updateRes
+          );
+        } else {
           res.redirect(302, updateRes?.payInUrl);
         }
-
       } else {
-
         payInData = {
           code,
           merchant_order_id,
-          user_id
-        }
+          user_id,
+        };
 
-        const generatePayInUrlRes = await payInServices.generatePayInUrl(getMerchantApiKeyByCode, payInData);
+        const generatePayInUrlRes = await payInServices.generatePayInUrl(
+          getMerchantApiKeyByCode,
+          payInData
+        );
         const updateRes = {
           expirationDate: generatePayInUrlRes?.expirationDate,
           payInUrl: `http://localhost:5173/transaction/${generatePayInUrlRes?.id}`, // use env
         };
-        return DefaultResponse(res, 200, "Payment is assigned & url is sent successfully", updateRes);
+        return DefaultResponse(
+          res,
+          200,
+          "Payment is assigned & url is sent successfully",
+          updateRes
+        );
       }
     } catch (err) {
       // Handle errors and pass them to the next middleware
@@ -96,7 +124,6 @@ class PayInController {
         const urlExpired = await payInRepo.expirePayInUrl(payInId);
         throw new CustomError(403, "Session is expired");
       }
-
 
       const updatedRes = {
         code: urlValidationRes?.upi_short_code,
@@ -153,6 +180,7 @@ class PayInController {
       // Randomly select one enabled bank account
       const randomIndex = Math.floor(Math.random() * enabledBanks.length);
       const selectedBankDetails = enabledBanks[randomIndex];
+      console.log("🚀 ~ PayInController ~ assignedBankToPayInUrl ~ selectedBankDetails:", selectedBankDetails)
 
       const assignedBankToPayInUrlRes =
         await payInServices.assignedBankToPayInUrl(
@@ -178,17 +206,11 @@ class PayInController {
       checkValidation(req);
       const { payInId } = req.params;
 
-      const expirePayinUrl = await payInRepo.expirePayInUrl(payInId)
+      const expirePayinUrl = await payInRepo.expirePayInUrl(payInId);
 
-
-      return DefaultResponse(
-        res,
-        200,
-        "Payment Url is expires",
-      );
-
+      return DefaultResponse(res, 200, "Payment Url is expires");
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 
@@ -208,14 +230,29 @@ class PayInController {
 
       if (getBotDataRes) {
         if (getBotDataRes.is_used === false) {
-          const updateBotIsUsedRes = await botResponseRepo.updateBotResponse(getBotDataRes?.amount_code);
+          const updateBotIsUsedRes = await botResponseRepo.updateBotResponse(
+            getBotDataRes?.amount_code
+          );
 
-          const updateMerchantDataRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(getBotDataRes?.amount));
-          const updateBankAccRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(getBotDataRes?.amount));
+          const updateMerchantDataRes = await merchantRepo.updateMerchant(
+            getPayInData?.merchant_id,
+            parseFloat(getBotDataRes?.amount)
+          );
+          const updateBankAccRes =
+            await bankAccountRepo.updateBankAccountBalance(
+              getPayInData?.bank_acc_id,
+              parseFloat(getBotDataRes?.amount)
+            );
 
-          const payinCommission = await calculateCommission(getBotDataRes?.amount, updateMerchantDataRes?.payin_commission);
+          const payinCommission = await calculateCommission(
+            getBotDataRes?.amount,
+            updateMerchantDataRes?.payin_commission
+          );
 
-          if (parseFloat(getBotDataRes?.amount) === parseFloat(getPayInData?.amount)) {
+          if (
+            parseFloat(getBotDataRes?.amount) ===
+            parseFloat(getPayInData?.amount)
+          ) {
             const updatePayInData = {
               confirmed: getBotDataRes?.amount,
               status: "SUCCESS",
@@ -223,7 +260,7 @@ class PayInController {
               utr: getBotDataRes?.utr,
               approved_at: new Date(),
               is_url_expires: true,
-              payin_commission: payinCommission
+              payin_commission: payinCommission,
             };
 
             const updatePayInRes = await payInRepo.updatePayInData(
@@ -261,7 +298,6 @@ class PayInController {
             const updatePayInData = {
               confirmed: getBotDataRes?.amount,
               status: "DISPUTE",
-              is_notified: true,
               utr: getBotDataRes?.utr,
               approved_at: new Date(),
               is_url_expires: true,
@@ -325,13 +361,13 @@ class PayInController {
 
       if (isFront !== true) {
         if (urlValidationRes?.is_url_expires === true) {
-          throw new CustomError(403, 'Url is expired');
+          throw new CustomError(403, "Url is expired");
         }
       }
 
       if (filePath) {
         fs.unlink(`public/${filePath}`, (err) => {
-          if (err) console.error('Error deleting the file:', err);
+          if (err) console.error("Error deleting the file:", err);
         });
       }
 
@@ -347,7 +383,7 @@ class PayInController {
           status: "PENDING",
           user_submitted_utr: usrSubmittedUtr,
           is_url_expires: true,
-          user_submitted_image: null
+          user_submitted_image: null,
         };
         responseMessage = "Payment Not Found";
       } else if (matchDataFromBotRes.is_used === true) {
@@ -357,18 +393,29 @@ class PayInController {
           is_notified: true,
           user_submitted_utr: usrSubmittedUtr,
           is_url_expires: true,
-          user_submitted_image: null
+          user_submitted_image: null,
         };
         responseMessage = "Duplicate Payment Found";
       } else {
-        const updateBotRes = await botResponseRepo.updateBotResponseByUtr(matchDataFromBotRes?.id, usrSubmittedUtr);
+        const updateBotRes = await botResponseRepo.updateBotResponseByUtr(
+          matchDataFromBotRes?.id,
+          usrSubmittedUtr
+        );
 
-        const updateMerchantRes = await merchantRepo.updateMerchant(getPayInData?.merchant_id, parseFloat(matchDataFromBotRes?.amount));
+        const updateMerchantRes = await merchantRepo.updateMerchant(
+          getPayInData?.merchant_id,
+          parseFloat(matchDataFromBotRes?.amount)
+        );
 
-        const updateBankRes = await bankAccountRepo.updateBankAccountBalance(getPayInData?.bank_acc_id, parseFloat(matchDataFromBotRes?.amount));
+        const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+          getPayInData?.bank_acc_id,
+          parseFloat(matchDataFromBotRes?.amount)
+        );
 
-
-        const payinCommission = await calculateCommission(matchDataFromBotRes?.amount, updateMerchantRes?.payin_commission);
+        const payinCommission = await calculateCommission(
+          matchDataFromBotRes?.amount,
+          updateMerchantRes?.payin_commission
+        );
 
         if (parseFloat(amount) === parseFloat(matchDataFromBotRes?.amount)) {
           payInData = {
@@ -380,19 +427,18 @@ class PayInController {
             approved_at: new Date(),
             is_url_expires: true,
             payin_commission: payinCommission,
-            user_submitted_image: null
+            user_submitted_image: null,
           };
           responseMessage = "Payment Done successfully";
         } else {
           payInData = {
             confirmed: matchDataFromBotRes?.amount,
             status: "DISPUTE",
-            is_notified: true,
             user_submitted_utr: usrSubmittedUtr,
             utr: matchDataFromBotRes.utr,
             approved_at: new Date(),
             is_url_expires: true,
-            user_submitted_image: null
+            user_submitted_image: null,
           };
           responseMessage = "Dispute in Payment";
         }
@@ -420,10 +466,7 @@ class PayInController {
       }
 
       const response = {
-        status:
-          payInData.status === "SUCCESS"
-            ? "Success"
-            : payInData.status,
+        status: payInData.status === "SUCCESS" ? "Success" : payInData.status,
         amount,
         transactionId: updatePayinRes?.merchant_order_id,
         return_url: updatePayinRes?.return_url,
@@ -443,8 +486,22 @@ class PayInController {
   // To Get pay-in data.
   async getAllPayInData(req, res, next) {
     try {
-
-      const { sno, upiShortCode, confirmed, amount, merchantOrderId, merchantCode, userId, userSubmittedUtr, utr, payInId, dur, status, bank, filterToday } = req.query;
+      const {
+        sno,
+        upiShortCode,
+        confirmed,
+        amount,
+        merchantOrderId,
+        merchantCode,
+        userId,
+        userSubmittedUtr,
+        utr,
+        payInId,
+        dur,
+        status,
+        bank,
+        filterToday,
+      } = req.query;
       const page = parseInt(req.query.page) || 1;
       const pageSize = parseInt(req.query.pageSize) || 20;
       const skip = (page - 1) * pageSize;
@@ -452,7 +509,24 @@ class PayInController {
 
       const filterTodayBool = filterToday === "false"; // to check the today entry
 
-      const payInDataRes = await payInServices.getAllPayInData(skip, take, parseInt(sno), upiShortCode, confirmed, amount, merchantOrderId, merchantCode, userId, userSubmittedUtr, utr, payInId, dur, status, bank, filterTodayBool);
+      const payInDataRes = await payInServices.getAllPayInData(
+        skip,
+        take,
+        parseInt(sno),
+        upiShortCode,
+        confirmed,
+        amount,
+        merchantOrderId,
+        merchantCode,
+        userId,
+        userSubmittedUtr,
+        utr,
+        payInId,
+        dur,
+        status,
+        bank,
+        filterTodayBool
+      );
 
       return DefaultResponse(
         res,
@@ -471,15 +545,15 @@ class PayInController {
     try {
       const filePath = req.file.path;
       const { payInId } = req.params;
-      const { amount } = req.query
+      const { amount } = req.query;
       const usrSubmittedUtr = await detectText(filePath);
       if (usrSubmittedUtr !== null) {
         if (usrSubmittedUtr.length > 0) {
-          console.log('UTR Numbers:', usrSubmittedUtr);
-          const usrSubmittedUtrData = usrSubmittedUtr[0]
+          console.log("UTR Numbers:", usrSubmittedUtr);
+          const usrSubmittedUtrData = usrSubmittedUtr[0];
           // Delete the image file
           fs.unlink(filePath, (err) => {
-            if (err) console.error('Error deleting the file:', err);
+            if (err) console.error("Error deleting the file:", err);
           });
 
           const getPayInData = await payInRepo.getPayInData(payInId);
@@ -500,6 +574,7 @@ class PayInController {
 
           if (!matchDataFromBotRes) {
             payInData = {
+              status: "PENDING",
               amount,
               user_submitted_utr: usrSubmittedUtrData,
               is_url_expires: true,
@@ -545,7 +620,6 @@ class PayInController {
               payInData = {
                 confirmed: matchDataFromBotRes?.amount,
                 status: "DISPUTE",
-                is_notified: true,
                 user_submitted_utr: usrSubmittedUtrData,
                 utr: matchDataFromBotRes.utr,
                 approved_at: new Date(),
@@ -622,10 +696,16 @@ class PayInController {
 
   async getAllPayInDataByMerchant(req, res, next) {
     try {
-      const { merchantCode } = req.query;
+      let { merchantCode } = req.query;
+
+      if (merchantCode == null) {
+        merchantCode = [];
+      } else if (typeof merchantCode === "string") {
+        merchantCode = [merchantCode];
+      }
 
       const payInDataRes = await payInServices.getAllPayInDataByMerchant(
-        merchantCode.split(",")
+        merchantCode
       );
 
       return DefaultResponse(
@@ -638,29 +718,297 @@ class PayInController {
       next(error);
     }
   }
-  //new get All pay In data.
-  async getAllPayInDataWithRange(req, res, next) {
+
+ 
+  async telegramResHandler(req, res, next) {
+    const TELEGRAM_BOT_TOKEN = '7213263102:AAHaSjFaXaODoQM6Zxv1aoWmKNaA7YXPEnQ';
     try {
-      checkValidation(req);
-      const { merchantCode, status, startDate, endDate } = req.query;
+      const { message } = req.body;
+      if (message?.photo) {
+        const photoArray = message.photo;
+        const fileId = photoArray[photoArray.length - 1]?.file_id;
 
-      const payInDataRes = await payInServices.getAllPayInDataWithRange(
-        merchantCode,
-        status,
-        startDate,
-        endDate
-      );
-      
-      return DefaultResponse(
-        res,
-        200,
-        "PayIn data fetched successfully",
-        payInDataRes
-      );
+        const getFileUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`;
+        const getFileResponse = await axios.get(getFileUrl);
+
+        if (!getFileResponse.data.ok) {
+          throw new Error('Failed to get file path from Telegram');
+        }
+
+        const filePath = getFileResponse.data.result.file_path;
+        const downloadUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+        const imageResponse = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+
+        if (imageResponse.status !== 200) {
+          throw new Error('Failed to download image from Telegram');
+        }
+
+        const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+        const imagesDir = path.join(__dirname, '..', '..', 'public', 'Images');
+        if (!fs.existsSync(imagesDir)) {
+          fs.mkdirSync(imagesDir, { recursive: true });
+        }
+
+        const fileName = `${Date.now()}.jpg`;
+        const filePathToSave = path.join(imagesDir, fileName);
+        fs.writeFileSync(filePathToSave, imageBuffer);
+        console.log(`Image saved to ${filePathToSave}`);
+
+        const dataRes = await detectUtrAmountText(fileName);
+        fs.unlink(filePathToSave, (err) => {
+          if (err) console.error('Error deleting the file:', err);
+        });
+
+        await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN, message?.message_id);
+
+        if (dataRes) {
+          console.log("we are in");
+          if (dataRes?.utr !== undefined || dataRes?.amount !== undefined) {
+            const merchantOrderIdTele = message?.caption;
+            const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(merchantOrderIdTele);
+            if (!getPayInData) {
+              await sendErrorMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+              return res.status(200).json({ message: "Merchant order id does not exist" });
+            }
+            if (getPayInData?.is_notified === true) {
+              await sendAlreadyConfirmedMessageTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+              return res.status(200).json({ message: "Utr is already used" });
+            }
+
+            let updatePayInData;
+
+            if (getPayInData?.user_submitted_utr !== null) {
+              if (dataRes?.utr === getPayInData?.user_submitted_utr && parseFloat(dataRes?.amount) === parseFloat(getPayInData?.amount)) {
+                const payinCommission = await calculateCommission(
+                  dataRes?.amount,
+                  getPayInData.Merchant?.payin_commission
+                );
+
+                updatePayInData = {
+                  confirmed: dataRes?.amount,
+                  status: "SUCCESS",
+                  is_notified: true,
+                  utr: dataRes.utr,
+                  approved_at: new Date(),
+                  is_url_expires: true,
+                  payin_commission: payinCommission,
+                  user_submitted_image: null,
+                };
+                const updatePayInDataRes = await payInRepo.updatePayInData(getPayInData?.id, updatePayInData);
+                await sendSuccessMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+
+                // ----> Notify url
+
+
+                return res.status(200).json({ message: "true" });
+              } else {
+                await sendErrorMessageUtrNotFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+                return res.status(404).json({ message: "Utr does not exist" });
+              }
+            } else {
+              const getTelegramResByUtr = await botResponseRepo.getBotResByUtr(dataRes?.utr);
+              if (!getTelegramResByUtr) {
+                await sendErrorMessageUtrNotFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+                return res.status(404).json({ message: "Utr does not exist" });
+              }
+
+              if (getTelegramResByUtr?.is_used === true) {
+                await sendAlreadyConfirmedMessageTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+                return res.status(200).json({ message: "Utr is already used" });
+              }
+
+              if (dataRes?.utr === getTelegramResByUtr?.utr && parseFloat(dataRes?.amount) === parseFloat(getTelegramResByUtr?.amount)) {
+                const payinCommission = await calculateCommission(
+                  dataRes?.amount,
+                  getPayInData.Merchant?.payin_commission
+                );
+
+                updatePayInData = {
+                  confirmed: dataRes?.amount,
+                  status: "SUCCESS",
+                  is_notified: true,
+                  utr: dataRes.utr,
+                  approved_at: new Date(),
+                  is_url_expires: true,
+                  payin_commission: payinCommission,
+                  user_submitted_image: null,
+                };
+                const updatePayInDataRes = await payInRepo.updatePayInData(getPayInData?.id, updatePayInData);
+                await botResponseRepo.updateBotResponseByUtr(getTelegramResByUtr?.id, getTelegramResByUtr?.utr);
+
+                await sendSuccessMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+
+                // Notify url---> 
+
+                return res.status(200).json({ message: "true" });
+              } else {
+                await sendErrorMessageNoDepositFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+                return res.status(404).json({ message: "Utr does not exist" });
+              }
+            }
+          }
+          else {
+            await sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(message.chat.id, TELEGRAM_BOT_TOKEN, message?.message_id)
+            return res.status(200).json({ message: "Utr or Amount not recognized" });
+          }
+        } else {
+
+          await sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(message.chat.id, TELEGRAM_BOT_TOKEN, message?.message_id)
+          return res.status(200).json({ message: "Utr or Amount not recognized" });
+        }
+      } else {
+        return res.status(200).json({ message: "No photo in the message" });
+      }
     } catch (error) {
       next(error);
     }
   }
+
+
+  // async  telegramResHandler(req, res, next) {
+  //   const TELEGRAM_BOT_TOKEN = '7213263102:AAHaSjFaXaODoQM6Zxv1aoWmKNaA7YXPEnQ';
+  //   try {
+  //     const { message } = req.body;
+  //     if (processedMessages.has(message?.message_id)) {
+  //       console.log("Message already processed:", message.message_id);
+  //       return res.status(200).json({ message: "Message already processed" });
+  //     }
+
+  //     if (message?.photo) {
+  //       const photoArray = message.photo;
+  //       const fileId = photoArray[photoArray.length - 1]?.file_id;
+
+  //       const getFileUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`;
+  //       const getFileResponse = await axios.get(getFileUrl);
+
+  //       if (!getFileResponse.data.ok) {
+  //         throw new Error('Failed to get file path from Telegram');
+  //       }
+
+  //       const filePath = getFileResponse.data.result.file_path;
+  //       const downloadUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+  //       const imageResponse = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+
+  //       if (imageResponse.status !== 200) {
+  //         throw new Error('Failed to download image from Telegram');
+  //       }
+
+  //       const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+  //       const imagesDir = path.join(__dirname, '..', '..', 'public', 'Images');
+  //       if (!fs.existsSync(imagesDir)) {
+  //         fs.mkdirSync(imagesDir, { recursive: true });
+  //       }
+
+  //       const fileName = `${Date.now()}.jpg`;
+  //       const filePathToSave = path.join(imagesDir, fileName);
+  //       fs.writeFileSync(filePathToSave, imageBuffer);
+  //       console.log(`Image saved to ${filePathToSave}`);
+
+  //       const dataRes = await detectUtrAmountText(fileName);
+  //       fs.unlink(filePathToSave, (err) => {
+  //         if (err) console.error('Error deleting the file:', err);
+  //       });
+
+  //       await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN, message?.message_id);
+
+  //       if (dataRes) {
+  //         console.log("we are in");
+  //         if (dataRes?.utr !== undefined || dataRes?.amount !== undefined) {
+  //           const merchantOrderIdTele = message?.caption;
+  //           const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(merchantOrderIdTele);
+  //           if (!getPayInData) {
+  //             await sendErrorMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //             processedMessages.add(message.message_id);
+  //             return res.status(404).json({ message: "Merchant order id does not exist" });
+  //           }
+  //           if (getPayInData?.is_notified === true) {
+  //             await sendAlreadyConfirmedMessageTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //             processedMessages.add(message.message_id);
+  //             return res.status(200).json({ message: "Utr is already used" });
+  //           }
+
+  //           let updatePayInData;
+
+  //           if (getPayInData?.user_submitted_utr !== null) {
+  //             if (dataRes?.utr === getPayInData?.user_submitted_utr && parseFloat(dataRes?.amount) === parseFloat(getPayInData?.amount)) {
+  //               const payinCommission = await calculateCommission(
+  //                 dataRes?.amount,
+  //                 getPayInData.Merchant?.payin_commission
+  //               );
+
+  //               updatePayInData = {
+  //                 confirmed: dataRes?.amount,
+  //                 status: "SUCCESS",
+  //                 is_notified: true,
+  //                 utr: dataRes.utr,
+  //                 approved_at: new Date(),
+  //                 is_url_expires: true,
+  //                 payin_commission: payinCommission,
+  //                 user_submitted_image: null,
+  //               };
+  //               const updatePayInDataRes = await payInRepo.updatePayInData(getPayInData?.id, updatePayInData);
+  //               await sendSuccessMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+
+  //               processedMessages.add(message.message_id);
+  //               return res.status(200).json({ message: "true" });
+  //             } else {
+  //               await sendErrorMessageUtrNotFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //               processedMessages.add(message.message_id);
+  //               return res.status(404).json({ message: "Utr does not exist" });
+  //             }
+  //           } else {
+  //             const getTelegramResByUtr = await botResponseRepo.getBotResByUtr(dataRes?.utr);
+  //             if (!getTelegramResByUtr) {
+  //               await sendErrorMessageUtrNotFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //               processedMessages.add(message.message_id);
+  //               return res.status(404).json({ message: "Utr does not exist" });
+  //             }
+
+  //             if (getTelegramResByUtr?.is_used === true) {
+  //               await sendAlreadyConfirmedMessageTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //               processedMessages.add(message.message_id);
+  //               return res.status(200).json({ message: "Utr is already used" });
+  //             }
+
+  //             if (dataRes?.utr === getTelegramResByUtr?.utr && parseFloat(dataRes?.amount) === parseFloat(getTelegramResByUtr?.amount)) {
+  //               const payinCommission = await calculateCommission(
+  //                 dataRes?.amount,
+  //                 getPayInData.Merchant?.payin_commission
+  //               );
+
+  //               updatePayInData = {
+  //                 confirmed: dataRes?.amount,
+  //                 status: "SUCCESS",
+  //                 is_notified: true,
+  //                 utr: dataRes.utr,
+  //                 approved_at: new Date(),
+  //                 is_url_expires: true,
+  //                 payin_commission: payinCommission,
+  //                 user_submitted_image: null,
+  //               };
+  //               const updatePayInDataRes = await payInRepo.updatePayInData(getPayInData?.id, updatePayInData);
+  //               await botResponseRepo.updateBotResponseByUtr(getTelegramResByUtr?.id, getTelegramResByUtr?.utr);
+
+  //               await sendSuccessMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+
+  //               processedMessages.add(message.message_id);
+  //               return res.status(200).json({ message: "true" });
+  //             } else {
+  //               await sendErrorMessageNoDepositFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //               processedMessages.add(message.message_id);
+  //               return res.status(404).json({ message: "Utr does not exist" });
+  //             }
+  //           }
+  //         }
+  //       } else {
+  //         return res.status(200).json({ message: "No photo in the message" });
+  //       }
+  //     }
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
+
 
 
 }

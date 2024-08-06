@@ -27,7 +27,7 @@ router.use('/v1', payoutRouter)
 
 // Middleware for handling 404 errors
 router.use(notFound);
-    
+
 // Register the custom error handling middleware after all routes
 router.use(customError);
 

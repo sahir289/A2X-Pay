@@ -140,6 +140,7 @@ model Payin {
   merchant_order_id    String
   user_id              String
   bank_acc_id          String?
+  bank_name            String?
   payin_commission     Decimal?
   return_url           String
   notify_url           String
@@ -197,6 +198,7 @@ model Settlement {
 
 model TelegramResponse {
   id          String   @id @default(uuid())
+  sno         Int      @default(autoincrement())
   status      String?
   amount      Decimal?
   amount_code String?  @unique

@@ -53,8 +53,9 @@ class BotResponseRepo {
   }
 
   async getBotResponse(query) {
+    const sno = !isNaN(Number(query.sno)) ? Number(query.sno) : 0;
     const status = query.status;
-    const amount = query.amount;
+    const amount = !isNaN(Number(query.amount)) ? Number(query.amount) : 0;
     const amount_code = query.amount_code;
     const utr = query.utr;
     const page = parseInt(query.page) || 1;
@@ -64,9 +65,12 @@ class BotResponseRepo {
     const take = pageSize;
 
     const filter = {
+      ...(sno > 0 && { sno: sno }),
       ...(status !== "" && { status: status }),
-      ...(amount !== "" && { amount: amount }),
-      ...(amount_code !== "" && { amount_code: amount_code }),
+      ...(amount > 0 && { amount: amount }),
+      ...(amount_code !== "" && {
+        amount_code: { contains: amount_code, mode: "insensitive" },
+      }),
       ...(utr !== "" && { utr: utr }),
     };
 
@@ -76,7 +80,7 @@ class BotResponseRepo {
       take: take,
     });
 
-    const totalRecords = await prisma.telegramResponse.count();
+    const totalRecords = await prisma.telegramResponse.count({ where: filter });
 
     return {
       botRes,
