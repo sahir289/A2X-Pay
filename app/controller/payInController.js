@@ -719,7 +719,29 @@ class PayInController {
     }
   }
 
- 
+  //new get All pay In data.
+  async getAllPayInDataWithRange(req, res, next) {
+    try {
+      checkValidation(req);
+      const { merchantCode, status, startDate, endDate } = req.query;
+
+      const payInDataRes = await payInServices.getAllPayInDataWithRange(
+        merchantCode,
+        status,
+        startDate,
+        endDate
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        "PayIn data fetched successfully",
+        payInDataRes
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
   async telegramResHandler(req, res, next) {
     const TELEGRAM_BOT_TOKEN = '7213263102:AAHaSjFaXaODoQM6Zxv1aoWmKNaA7YXPEnQ';
     try {
