@@ -86,6 +86,18 @@ class PayInRepo {
 
         return payInRes;
     }
+
+    async getPayInDataByMerchantOrderId(merchantOrderId){
+        const payInDataRes = await prisma.payin.findFirst({
+            where:{
+                merchant_order_id:merchantOrderId,
+            },
+            include:{
+                Merchant:true
+            }
+        })
+        return payInDataRes;
+    }
 }
 
 export default new PayInRepo()
