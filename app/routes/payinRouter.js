@@ -38,7 +38,7 @@ payInRouter.get(
 payInRouter.get(
   "/get-all-payins",
   payOutInAllDataValidator,
-  payInController.getAllPayInDataNew
+  payInController.getAllPayInDataWithRange
 );
 
 // payInRouter.get(

@@ -74,9 +74,8 @@ class Withdraw {
         })
     }
 
-     //new service for pay out data
-     async getAllPayOutDataNew(merchantCode, status, startDate, endDate) {
-        const payInData = await prisma.payin.findMany({
+     async getAllPayOutDataWithRange(merchantCode, status, startDate, endDate) {
+        const payOutData = await prisma.payout.findMany({
           where: {
             status,
             Merchant: {
@@ -88,7 +87,7 @@ class Withdraw {
             },
           },
         });
-        return payInData;
+        return payOutData;
       }
 }
 

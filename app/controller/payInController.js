@@ -639,13 +639,12 @@ class PayInController {
     }
   }
   //new get All pay In data.
-  async getAllPayInDataNew(req, res, next) {
+  async getAllPayInDataWithRange(req, res, next) {
     try {
-      console.log(req.query);
       checkValidation(req);
       const { merchantCode, status, startDate, endDate } = req.query;
 
-      const payInDataRes = await payInServices.getAllPayInDataNew(
+      const payInDataRes = await payInServices.getAllPayInDataWithRange(
         merchantCode,
         status,
         startDate,
@@ -659,7 +658,6 @@ class PayInController {
         payInDataRes
       );
     } catch (error) {
-      console.log('=====>',error);
       next(error);
     }
   }

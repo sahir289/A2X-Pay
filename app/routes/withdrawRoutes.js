@@ -14,5 +14,5 @@ withdrawRouter.post('/create-payout', payoutCreateValidator, withdrawController.
 withdrawRouter.get('/getall-payout', settlementsGetValidator, withdrawController.getWithdraw);
 withdrawRouter.put('/update-payout/:id', withdrawController.updateWithdraw);
 //new payout router
-withdrawRouter.get("/get-all-payouts", payOutInAllDataValidator, withdrawController.getAllPayOutDataNew);
+withdrawRouter.get("/get-all-payouts", payOutInAllDataValidator, withdrawController.getAllPayOutDataWithRange);
 export default withdrawRouter;

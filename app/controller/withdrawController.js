@@ -94,13 +94,12 @@ class WithdrawController {
         }
     }
 
-    //new get All pay out data.
-    async getAllPayOutDataNew(req, res, next) {
+    async getAllPayOutDataWithRange(req, res, next) {
         try {
             checkValidation(req);
             const { merchantCode, status, startDate, endDate } = req.query;
 
-            const payOutDataRes = await withdrawService.getAllPayOutDataNew(
+            const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
                 merchantCode,
                 status,
                 startDate,
@@ -114,7 +113,7 @@ class WithdrawController {
                 payOutDataRes
             );
         } catch (error) {
-            console.log('======>',error);
+            console.log('======>', error);
             next(error);
         }
     }

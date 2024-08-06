@@ -160,7 +160,7 @@ class PayInService {
   }
 
   //new service for pay in data
-  async getAllPayInDataNew(merchantCode, status, startDate, endDate) {
+  async getAllPayInDataWithRange(merchantCode, status, startDate, endDate) {
     const payInData = await prisma.payin.findMany({
       where: {
         status,
