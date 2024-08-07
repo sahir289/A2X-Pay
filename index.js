@@ -59,10 +59,6 @@ io.on('connection', (socket) => {
 
 export { io };
 
-// Server configuration
-// app.listen(PORT, () => {
-//     console.log("Server is listening on port " + PORT);
-// });
 
 httpServer.listen(PORT, () => {
     console.log(`app is running on Port ${PORT}`);

@@ -115,15 +115,8 @@ class MerchantRepo {
 
     // Ensure the balance is a number, even if it's 0
     const currentBalance = parseFloat(currentMerchant.balance) || 0;
-    console.log(
-      "🚀 ~ MerchantRepo ~ updateMerchant ~ currentBalance:",
-      currentBalance
-    );
-
     // Calculate the new balance
     const newBalance = currentBalance + parseFloat(amount);
-    console.log("🚀 ~ MerchantRepo ~ updateMerchant ~ newBalance:", newBalance);
-
     // Update the balance with the new total
     const updateMerchantRes = await prisma.merchant.update({
       where: {

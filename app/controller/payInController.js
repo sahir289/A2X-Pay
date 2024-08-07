@@ -180,8 +180,6 @@ class PayInController {
       // Randomly select one enabled bank account
       const randomIndex = Math.floor(Math.random() * enabledBanks.length);
       const selectedBankDetails = enabledBanks[randomIndex];
-      console.log("🚀 ~ PayInController ~ assignedBankToPayInUrl ~ selectedBankDetails:", selectedBankDetails)
-
       const assignedBankToPayInUrlRes =
         await payInServices.assignedBankToPayInUrl(
           payInId,
@@ -549,7 +547,6 @@ class PayInController {
       const usrSubmittedUtr = await detectText(filePath);
       if (usrSubmittedUtr !== null) {
         if (usrSubmittedUtr.length > 0) {
-          console.log("UTR Numbers:", usrSubmittedUtr);
           const usrSubmittedUtrData = usrSubmittedUtr[0];
           // Delete the image file
           fs.unlink(filePath, (err) => {
@@ -668,7 +665,6 @@ class PayInController {
       } else {
         // No UTR found, send image URL to the controller
         const imageUrl = `Images/${req.file.filename}`;
-        console.log("Image URL:", imageUrl);
 
         const payInData = {
           amount,
@@ -774,7 +770,6 @@ class PayInController {
         const fileName = `${Date.now()}.jpg`;
         const filePathToSave = path.join(imagesDir, fileName);
         fs.writeFileSync(filePathToSave, imageBuffer);
-        console.log(`Image saved to ${filePathToSave}`);
 
         const dataRes = await detectUtrAmountText(fileName);
         fs.unlink(filePathToSave, (err) => {
@@ -784,7 +779,6 @@ class PayInController {
         await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN, message?.message_id);
 
         if (dataRes) {
-          console.log("we are in");
           if (dataRes?.utr !== undefined || dataRes?.amount !== undefined) {
             const merchantOrderIdTele = message?.caption;
             const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(merchantOrderIdTele);

@@ -11,16 +11,7 @@ class MerchantController {
       checkValidation(req);
       const data = req.body;
       const api_key = uuidv4();
-      console.log(
-        "🚀 ~ MerchantController ~ createMerchant ~ api_key:",
-        api_key
-      );
       const secret_key = uuidv4();
-      console.log(
-        "🚀 ~ MerchantController ~ createMerchant ~ secret_key:",
-        secret_key
-      );
-
       const isMerchantExist = await merchantRepo.getMerchantByCode(data?.code);
 
       if (isMerchantExist) {

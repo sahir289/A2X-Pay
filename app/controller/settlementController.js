@@ -44,7 +44,6 @@ class SettlementController {
             const data = await settlementService.getSettlement(skip, take, parseInt(id), code, status, amount, acc_no, method, refrence_id);
             return DefaultResponse(res, 201, "Settlement fetched successfully!", data);
         } catch (err) {
-            console.log("🚀 ~ SettlementController ~ getSettlement ~ err:", err)
             next(err);
         }
     }

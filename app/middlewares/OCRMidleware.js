@@ -30,7 +30,6 @@ export const detectText = async (filePath) => {
     const text = result?.fullTextAnnotation.text;
 
     if (!text) {
-        console.log("No text detected");
         return [];
     }
 
@@ -61,10 +60,8 @@ export const detectUtrAmountText = async (filePath) => {
     const text = result?.fullTextAnnotation?.text;
     const extractedData = {};
 
-    console.log("Detected Text:", text); // Debug: Log the detected text
 
     if (!text) {
-        console.log("No text detected");
         return {};
     }
 
@@ -119,7 +116,6 @@ export const detectUtrAmountText = async (filePath) => {
     const extractedAmounts = [];
     amountPatterns.forEach(pattern => {
         const matches = text.match(pattern);
-        console.log("🚀 ~ detectUtrAmountText ~ matches:", matches)
         if (matches) {
             extractedAmounts.push(...matches);
         }
