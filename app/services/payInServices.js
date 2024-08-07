@@ -183,15 +183,7 @@ class PayInService {
         },
       },
       include: {
-        Merchant: {
-          include: {
-            Merchant_Bank: {
-              include: {
-                bankAccount: true,
-              },
-            },
-          },
-        },
+        Merchant: true,
       },
     });
     return payInData;
