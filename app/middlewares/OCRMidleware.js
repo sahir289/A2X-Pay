@@ -95,8 +95,8 @@ export const detectUtrAmountText = async (filePath) => {
         /Money Sent Successfully\s*₹\s*(\d+(\.\d{1,2})?)/gi,  
         /₹(\d+)\s*(.*)/,
         /₹(.*?)\s*Only/,
-        /\b\d{3,4}\b/g,
-        /\b\d{3,4}\b(?!(?:[^a-zA-Z0-9]*\b(?:bank|am|pm)\b))/g
+        // /\b\d{3,4}\b/g,
+        // /\b\d{3,4}\b(?!(?:[^a-zA-Z0-9]*\b(?:bank|am|pm)\b))/g
  
     ];
 
@@ -119,6 +119,7 @@ export const detectUtrAmountText = async (filePath) => {
     const extractedAmounts = [];
     amountPatterns.forEach(pattern => {
         const matches = text.match(pattern);
+        console.log("🚀 ~ detectUtrAmountText ~ matches:", matches)
         if (matches) {
             extractedAmounts.push(...matches);
         }

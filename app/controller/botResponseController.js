@@ -72,10 +72,10 @@ class BotResponseController {
         }
 
         // Notify all connected clients about the new entry
-        // io.emit("new-entry", {
-        //     message: 'New entry added',
-        //     data: updatedData
-        // });
+        io.emit("new-entry", {
+          message: 'New entry added',
+          data: updatedData
+        });
 
         res.status(201).json({
           success: true,
