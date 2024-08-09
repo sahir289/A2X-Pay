@@ -113,6 +113,9 @@ class PayInService {
       include: {
         Merchant: true
       },
+      orderBy:{
+        sno:"desc"
+      }
 
     });
 
