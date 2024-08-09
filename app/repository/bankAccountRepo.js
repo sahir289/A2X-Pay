@@ -59,12 +59,6 @@ class BankAccountRepo {
     const newBalance = currentBalance + parseFloat(amount);
 
     // Calculate the new balance
-
-    console.log(
-      "🚀 ~ BankAccountRepo ~ updateBankAccountBalance ~ newBalance:",
-      newBalance
-    );
-
     // Update the balance with the new total
     const updateBankAccRes = await prisma.bankAccount.update({
       where: {

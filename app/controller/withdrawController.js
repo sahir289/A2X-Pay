@@ -89,7 +89,6 @@ class WithdrawController {
             const data = await withdrawService.updateWithdraw(req.params.id, payload);
             return DefaultResponse(res, 200, "Payout Updated!", data);
         } catch (err) {
-            console.log(err);
             next(err);
         }
     }

@@ -31,7 +31,6 @@ class PayInService {
   }
 
   async assignedBankToPayInUrl(payInId, bankDetails, amount) {
-    console.log("🚀 ~ PayInService ~ assignedBankToPayInUrl ~ bankDetails:", bankDetails)
     const data = {
       amount: amount, // this amount is given by the user
       status: "ASSIGNED",
