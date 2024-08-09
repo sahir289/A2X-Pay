@@ -5,12 +5,12 @@ import cookieParser from "cookie-parser"
 import router from "./app/routes/index.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import config from "./config.js";
 
 const app = express();
 app.use(cookieParser())
-
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'], // List all frontend URLs
+    origin: [`${config?.reactFrontOrigin}`, `${config?.reactPaymentOrigin}`], // List all frontend URLs
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
     credentials: true
 }));
@@ -18,17 +18,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Use routes
-app.use("/a2x", router);
+app.use("/", router);
 app.use(express.static('public'))
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: [
-            "http://localhost:3000",
-            "http://localhost:5173" ,
-            // Add any other origins you need here
-        ],
+        origin: [`${config?.reactFrontOrigin}`, `${config?.reactPaymentOrigin}`],
         methods: ["GET", "POST"], // Specify the methods if needed
     },
 });
