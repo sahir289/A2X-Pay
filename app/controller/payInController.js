@@ -14,6 +14,7 @@ import axios from 'axios';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { sendAlreadyConfirmedMessageTelegramBot, sendErrorMessageNoDepositFoundTelegramBot, sendErrorMessageTelegram, sendErrorMessageUtrNotFoundTelegramBot, sendErrorMessageUtrOrAmountNotFoundImgTelegramBot, sendSuccessMessageTelegram, sendTelegramMessage } from '../helper/sendTelegramMessages.js';
+import config from '../../config.js';
 
 // Construct __dirname manually
 const __filename = fileURLToPath(import.meta.url);
@@ -61,7 +62,7 @@ class PayInController {
         );
         const updateRes = {
           expirationDate: generatePayInUrlRes?.expirationDate,
-          payInUrl: `http://localhost:5173/transaction/${generatePayInUrlRes?.id}`, // use env
+          payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
         };
 
         if (ot === "y") {
@@ -180,8 +181,6 @@ class PayInController {
       // Randomly select one enabled bank account
       const randomIndex = Math.floor(Math.random() * enabledBanks.length);
       const selectedBankDetails = enabledBanks[randomIndex];
-      console.log("🚀 ~ PayInController ~ assignedBankToPayInUrl ~ selectedBankDetails:", selectedBankDetails)
-
       const assignedBankToPayInUrlRes =
         await payInServices.assignedBankToPayInUrl(
           payInId,
@@ -222,6 +221,9 @@ class PayInController {
       const getPayInData = await payInRepo.getPayInData(payInId);
       if (!getPayInData) {
         throw new CustomError(404, "Payment does not exist");
+      }
+      if (getPayInData?.is_url_expires === true){
+        throw new CustomError(400, "Url is already used");
       }
 
       const getBotDataRes = await botResponseRepo.getBotData(
@@ -546,11 +548,24 @@ class PayInController {
       const filePath = req.file.path;
       const { payInId } = req.params;
       const { amount } = req.query;
-      const usrSubmittedUtr = await detectText(filePath);
-      if (usrSubmittedUtr !== null) {
-        if (usrSubmittedUtr.length > 0) {
-          console.log("UTR Numbers:", usrSubmittedUtr);
-          const usrSubmittedUtrData = usrSubmittedUtr[0];
+
+      const imageBuffer = fs.readFileSync(filePath);
+      const base64Image = imageBuffer.toString('base64');
+      const imgData = {
+        image: base64Image
+      }
+      const resFromOcrPy = await axios.post('http://34.196.43.192:11000/ocr', imgData)
+      // Merge the data from the API with the existing dataRes
+      const usrSubmittedUtr = {
+        amount: resFromOcrPy?.data?.data?.amount,//|| dataRes.amount,
+        utr: resFromOcrPy?.data?.data?.transaction_id //|| dataRes.utr
+      };
+      // const usrSubmittedUtr = await detectText(filePath);
+
+      if (usrSubmittedUtr?.utr !== undefined) {
+        // if (usrSubmittedUtr.length > 0) {
+          // const usrSubmittedUtrData = usrSubmittedUtr[0];
+          const usrSubmittedUtrData = usrSubmittedUtr?.utr;
           // Delete the image file
           fs.unlink(filePath, (err) => {
             if (err) console.error("Error deleting the file:", err);
@@ -664,11 +679,10 @@ class PayInController {
           }
 
           return DefaultResponse(res, 200, responseMessage, response);
-        }
+        // }
       } else {
         // No UTR found, send image URL to the controller
         const imageUrl = `Images/${req.file.filename}`;
-        console.log("Image URL:", imageUrl);
 
         const payInData = {
           amount,
@@ -742,6 +756,159 @@ class PayInController {
       next(error);
     }
   }
+
+  // async telegramResHandler(req, res, next) {
+  //   const TELEGRAM_BOT_TOKEN = '7213263102:AAHaSjFaXaODoQM6Zxv1aoWmKNaA7YXPEnQ';
+  //   try {
+  //     const { message } = req.body;
+  //     if (message?.photo) {
+  //       const photoArray = message.photo;
+  //       const fileId = photoArray[photoArray.length - 1]?.file_id;
+
+  //       const getFileUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`;
+  //       const getFileResponse = await axios.get(getFileUrl);
+
+  //       if (!getFileResponse.data.ok) {
+  //         throw new Error('Failed to get file path from Telegram');
+  //       }
+
+  //       const filePath = getFileResponse.data.result.file_path;
+  //       const downloadUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+  //       const imageResponse = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+  //       // const imageBufferString = imageResponse.data;
+
+  //       // // Convert the buffer to a Base64 string
+  //       // const base64Image = imageBufferString.toString('base64');
+
+
+  //       // console.log(base64ImageString);
+
+  //       if (imageResponse.status !== 200) {
+  //         throw new Error('Failed to download image from Telegram');
+  //       }
+
+  //       console.log("khjsdfbldhflsdf")
+  //       const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+  //       const imagesDir = path.join(__dirname, '..', '..', 'public', 'Images');
+  //       if (!fs.existsSync(imagesDir)) {
+  //         fs.mkdirSync(imagesDir, { recursive: true });
+  //       }
+
+  //       const fileName = `${Date.now()}.jpg`;
+  //       const filePathToSave = path.join(imagesDir, fileName);
+  //       fs.writeFileSync(filePathToSave, imageBuffer);
+
+  //       const dataRes = await detectUtrAmountText(fileName);
+
+  //       fs.unlink(filePathToSave, (err) => {
+  //         if (err) console.error('Error deleting the file:', err);
+  //       });
+
+  //       await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN, message?.message_id);
+
+  //       if (dataRes) {
+  //         if (dataRes?.utr !== undefined || dataRes?.amount !== undefined) {
+  //           const merchantOrderIdTele = message?.caption;
+  //           const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(merchantOrderIdTele);
+  //           if (!getPayInData) {
+  //             await sendErrorMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //             return res.status(200).json({ message: "Merchant order id does not exist" });
+  //           }
+  //           if (getPayInData?.is_notified === true) {
+  //             await sendAlreadyConfirmedMessageTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //             return res.status(200).json({ message: "Utr is already used" });
+  //           }
+
+  //           let updatePayInData;
+
+  //           if (getPayInData?.user_submitted_utr !== null) {
+  //             if (dataRes?.utr === getPayInData?.user_submitted_utr && parseFloat(dataRes?.amount) === parseFloat(getPayInData?.amount)) {
+  //               const payinCommission = await calculateCommission(
+  //                 dataRes?.amount,
+  //                 getPayInData.Merchant?.payin_commission
+  //               );
+
+  //               updatePayInData = {
+  //                 confirmed: dataRes?.amount,
+  //                 status: "SUCCESS",
+  //                 is_notified: true,
+  //                 utr: dataRes.utr,
+  //                 approved_at: new Date(),
+  //                 is_url_expires: true,
+  //                 payin_commission: payinCommission,
+  //                 user_submitted_image: null,
+  //               };
+  //               const updatePayInDataRes = await payInRepo.updatePayInData(getPayInData?.id, updatePayInData);
+  //               await sendSuccessMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+
+  //               // ----> Notify url
+
+
+  //               return res.status(200).json({ message: "true" });
+  //             } else {
+  //               await sendErrorMessageUtrNotFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //               return res.status(404).json({ message: "Utr does not exist" });
+  //             }
+  //           } else {
+  //             const getTelegramResByUtr = await botResponseRepo.getBotResByUtr(dataRes?.utr);
+  //             if (!getTelegramResByUtr) {
+  //               await sendErrorMessageUtrNotFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //               return res.status(404).json({ message: "Utr does not exist" });
+  //             }
+
+  //             if (getTelegramResByUtr?.is_used === true) {
+  //               await sendAlreadyConfirmedMessageTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //               return res.status(200).json({ message: "Utr is already used" });
+  //             }
+
+  //             if (dataRes?.utr === getTelegramResByUtr?.utr && parseFloat(dataRes?.amount) === parseFloat(getTelegramResByUtr?.amount)) {
+  //               const payinCommission = await calculateCommission(
+  //                 dataRes?.amount,
+  //                 getPayInData.Merchant?.payin_commission
+  //               );
+
+  //               updatePayInData = {
+  //                 confirmed: dataRes?.amount,
+  //                 status: "SUCCESS",
+  //                 is_notified: true,
+  //                 utr: dataRes.utr,
+  //                 approved_at: new Date(),
+  //                 is_url_expires: true,
+  //                 payin_commission: payinCommission,
+  //                 user_submitted_image: null,
+  //               };
+  //               const updatePayInDataRes = await payInRepo.updatePayInData(getPayInData?.id, updatePayInData);
+  //               await botResponseRepo.updateBotResponseByUtr(getTelegramResByUtr?.id, getTelegramResByUtr?.utr);
+
+  //               await sendSuccessMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+
+  //               // Notify url---> 
+
+  //               return res.status(200).json({ message: "true" });
+  //             } else {
+  //               await sendErrorMessageNoDepositFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
+  //               return res.status(404).json({ message: "Utr does not exist" });
+  //             }
+  //           }
+  //         }
+  //         else {
+  //           await sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(message.chat.id, TELEGRAM_BOT_TOKEN, message?.message_id)
+  //           return res.status(200).json({ message: "Utr or Amount not recognized" });
+  //         }
+  //       } else {
+
+  //         await sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(message.chat.id, TELEGRAM_BOT_TOKEN, message?.message_id)
+  //         return res.status(200).json({ message: "Utr or Amount not recognized" });
+  //       }
+  //     } else {
+  //       return res.status(200).json({ message: "No photo in the message" });
+  //     }
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
+
+
   async telegramResHandler(req, res, next) {
     const TELEGRAM_BOT_TOKEN = '7213263102:AAHaSjFaXaODoQM6Zxv1aoWmKNaA7YXPEnQ';
     try {
@@ -765,7 +932,17 @@ class PayInController {
           throw new Error('Failed to download image from Telegram');
         }
 
-        const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+        // Convert the image buffer to Base64
+        let base64Image;
+        let imageBuffer
+        try {
+          imageBuffer = Buffer.from(imageResponse.data, 'binary');
+          base64Image = imageBuffer.toString('base64');
+        } catch (error) {
+          console.error("Error converting image to Base64:", error);
+          return res.status(500).json({ message: "Error processing the image" });
+        }
+
         const imagesDir = path.join(__dirname, '..', '..', 'public', 'Images');
         if (!fs.existsSync(imagesDir)) {
           fs.mkdirSync(imagesDir, { recursive: true });
@@ -774,17 +951,32 @@ class PayInController {
         const fileName = `${Date.now()}.jpg`;
         const filePathToSave = path.join(imagesDir, fileName);
         fs.writeFileSync(filePathToSave, imageBuffer);
-        console.log(`Image saved to ${filePathToSave}`);
 
-        const dataRes = await detectUtrAmountText(fileName);
+        let dataRes;
+        // let dataRes = await detectUtrAmountText(fileName);
+        // if (!dataRes?.utr || !dataRes?.amount) {
+        const imgData = {
+          image: base64Image
+        }
+        const resFromOcrPy = await axios.post('http://34.196.43.192:11000/ocr', imgData)
+        // Merge the data from the API with the existing dataRes
+        dataRes = {
+          amount: resFromOcrPy?.data?.data?.amount,//|| dataRes.amount,
+          utr: resFromOcrPy?.data?.data?.transaction_id //|| dataRes.utr
+        };
+        // return res.status(200).json({ message: "UTR or Amount is missing in the image data" });
+
+        // }
+        await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN, message?.message_id);
+
+        // Clean up the saved image file after processing
         fs.unlink(filePathToSave, (err) => {
           if (err) console.error('Error deleting the file:', err);
         });
 
-        await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN, message?.message_id);
+        // await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN, message?.message_id);
 
         if (dataRes) {
-          console.log("we are in");
           if (dataRes?.utr !== undefined || dataRes?.amount !== undefined) {
             const merchantOrderIdTele = message?.caption;
             const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(merchantOrderIdTele);
@@ -820,7 +1012,6 @@ class PayInController {
                 await sendSuccessMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
 
                 // ----> Notify url
-
 
                 return res.status(200).json({ message: "true" });
               } else {
@@ -868,14 +1059,12 @@ class PayInController {
                 return res.status(404).json({ message: "Utr does not exist" });
               }
             }
-          }
-          else {
-            await sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(message.chat.id, TELEGRAM_BOT_TOKEN, message?.message_id)
+          } else {
+            await sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(message.chat.id, TELEGRAM_BOT_TOKEN, message?.message_id);
             return res.status(200).json({ message: "Utr or Amount not recognized" });
           }
         } else {
-
-          await sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(message.chat.id, TELEGRAM_BOT_TOKEN, message?.message_id)
+          await sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(message.chat.id, TELEGRAM_BOT_TOKEN, message?.message_id);
           return res.status(200).json({ message: "Utr or Amount not recognized" });
         }
       } else {
@@ -885,153 +1074,6 @@ class PayInController {
       next(error);
     }
   }
-
-
-  // async  telegramResHandler(req, res, next) {
-  //   const TELEGRAM_BOT_TOKEN = '7213263102:AAHaSjFaXaODoQM6Zxv1aoWmKNaA7YXPEnQ';
-  //   try {
-  //     const { message } = req.body;
-  //     if (processedMessages.has(message?.message_id)) {
-  //       console.log("Message already processed:", message.message_id);
-  //       return res.status(200).json({ message: "Message already processed" });
-  //     }
-
-  //     if (message?.photo) {
-  //       const photoArray = message.photo;
-  //       const fileId = photoArray[photoArray.length - 1]?.file_id;
-
-  //       const getFileUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`;
-  //       const getFileResponse = await axios.get(getFileUrl);
-
-  //       if (!getFileResponse.data.ok) {
-  //         throw new Error('Failed to get file path from Telegram');
-  //       }
-
-  //       const filePath = getFileResponse.data.result.file_path;
-  //       const downloadUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
-  //       const imageResponse = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
-
-  //       if (imageResponse.status !== 200) {
-  //         throw new Error('Failed to download image from Telegram');
-  //       }
-
-  //       const imageBuffer = Buffer.from(imageResponse.data, 'binary');
-  //       const imagesDir = path.join(__dirname, '..', '..', 'public', 'Images');
-  //       if (!fs.existsSync(imagesDir)) {
-  //         fs.mkdirSync(imagesDir, { recursive: true });
-  //       }
-
-  //       const fileName = `${Date.now()}.jpg`;
-  //       const filePathToSave = path.join(imagesDir, fileName);
-  //       fs.writeFileSync(filePathToSave, imageBuffer);
-  //       console.log(`Image saved to ${filePathToSave}`);
-
-  //       const dataRes = await detectUtrAmountText(fileName);
-  //       fs.unlink(filePathToSave, (err) => {
-  //         if (err) console.error('Error deleting the file:', err);
-  //       });
-
-  //       await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN, message?.message_id);
-
-  //       if (dataRes) {
-  //         console.log("we are in");
-  //         if (dataRes?.utr !== undefined || dataRes?.amount !== undefined) {
-  //           const merchantOrderIdTele = message?.caption;
-  //           const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(merchantOrderIdTele);
-  //           if (!getPayInData) {
-  //             await sendErrorMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
-  //             processedMessages.add(message.message_id);
-  //             return res.status(404).json({ message: "Merchant order id does not exist" });
-  //           }
-  //           if (getPayInData?.is_notified === true) {
-  //             await sendAlreadyConfirmedMessageTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
-  //             processedMessages.add(message.message_id);
-  //             return res.status(200).json({ message: "Utr is already used" });
-  //           }
-
-  //           let updatePayInData;
-
-  //           if (getPayInData?.user_submitted_utr !== null) {
-  //             if (dataRes?.utr === getPayInData?.user_submitted_utr && parseFloat(dataRes?.amount) === parseFloat(getPayInData?.amount)) {
-  //               const payinCommission = await calculateCommission(
-  //                 dataRes?.amount,
-  //                 getPayInData.Merchant?.payin_commission
-  //               );
-
-  //               updatePayInData = {
-  //                 confirmed: dataRes?.amount,
-  //                 status: "SUCCESS",
-  //                 is_notified: true,
-  //                 utr: dataRes.utr,
-  //                 approved_at: new Date(),
-  //                 is_url_expires: true,
-  //                 payin_commission: payinCommission,
-  //                 user_submitted_image: null,
-  //               };
-  //               const updatePayInDataRes = await payInRepo.updatePayInData(getPayInData?.id, updatePayInData);
-  //               await sendSuccessMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
-
-  //               processedMessages.add(message.message_id);
-  //               return res.status(200).json({ message: "true" });
-  //             } else {
-  //               await sendErrorMessageUtrNotFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
-  //               processedMessages.add(message.message_id);
-  //               return res.status(404).json({ message: "Utr does not exist" });
-  //             }
-  //           } else {
-  //             const getTelegramResByUtr = await botResponseRepo.getBotResByUtr(dataRes?.utr);
-  //             if (!getTelegramResByUtr) {
-  //               await sendErrorMessageUtrNotFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
-  //               processedMessages.add(message.message_id);
-  //               return res.status(404).json({ message: "Utr does not exist" });
-  //             }
-
-  //             if (getTelegramResByUtr?.is_used === true) {
-  //               await sendAlreadyConfirmedMessageTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
-  //               processedMessages.add(message.message_id);
-  //               return res.status(200).json({ message: "Utr is already used" });
-  //             }
-
-  //             if (dataRes?.utr === getTelegramResByUtr?.utr && parseFloat(dataRes?.amount) === parseFloat(getTelegramResByUtr?.amount)) {
-  //               const payinCommission = await calculateCommission(
-  //                 dataRes?.amount,
-  //                 getPayInData.Merchant?.payin_commission
-  //               );
-
-  //               updatePayInData = {
-  //                 confirmed: dataRes?.amount,
-  //                 status: "SUCCESS",
-  //                 is_notified: true,
-  //                 utr: dataRes.utr,
-  //                 approved_at: new Date(),
-  //                 is_url_expires: true,
-  //                 payin_commission: payinCommission,
-  //                 user_submitted_image: null,
-  //               };
-  //               const updatePayInDataRes = await payInRepo.updatePayInData(getPayInData?.id, updatePayInData);
-  //               await botResponseRepo.updateBotResponseByUtr(getTelegramResByUtr?.id, getTelegramResByUtr?.utr);
-
-  //               await sendSuccessMessageTelegram(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
-
-  //               processedMessages.add(message.message_id);
-  //               return res.status(200).json({ message: "true" });
-  //             } else {
-  //               await sendErrorMessageNoDepositFoundTelegramBot(message.chat.id, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, message?.message_id);
-  //               processedMessages.add(message.message_id);
-  //               return res.status(404).json({ message: "Utr does not exist" });
-  //             }
-  //           }
-  //         }
-  //       } else {
-  //         return res.status(200).json({ message: "No photo in the message" });
-  //       }
-  //     }
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // }
-
-
 
 }
 

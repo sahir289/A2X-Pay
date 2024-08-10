@@ -31,7 +31,6 @@ class PayInService {
   }
 
   async assignedBankToPayInUrl(payInId, bankDetails, amount) {
-    console.log("🚀 ~ PayInService ~ assignedBankToPayInUrl ~ bankDetails:", bankDetails)
     const data = {
       amount: amount, // this amount is given by the user
       status: "ASSIGNED",
@@ -114,6 +113,9 @@ class PayInService {
       include: {
         Merchant: true
       },
+      orderBy:{
+        sno:"desc"
+      }
 
     });
 
@@ -183,15 +185,7 @@ class PayInService {
         },
       },
       include: {
-        Merchant: {
-          include: {
-            Merchant_Bank: {
-              include: {
-                bankAccount: true,
-              },
-            },
-          },
-        },
+        Merchant: true,
       },
     });
     return payInData;

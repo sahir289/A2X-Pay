@@ -4,27 +4,28 @@ import {
   merchantBankValidator,
 } from "../helper/validators.js";
 import bankAccountController from "../controller/bankAccountController.js";
+import isAuthenticated from "../middlewares/authMiddleware.js";
 
 const bankAccountRouter = express();
 
 bankAccountRouter.post(
-  "/create-bank",
+  "/create-bank",isAuthenticated,
   bankAccountCreateValidator,
   bankAccountController.createBankAccount
 );
 
 bankAccountRouter.post(
-  "/add-bank-merchant",
+  "/add-bank-merchant",isAuthenticated,
   merchantBankValidator,
   bankAccountController.addBankToMerchant
 );
 
-bankAccountRouter.get("/merchant-bank", bankAccountController.getMerchantBank);
+bankAccountRouter.get("/merchant-bank",isAuthenticated, bankAccountController.getMerchantBank);
 
-bankAccountRouter.get("/getall-bank", bankAccountController.getAllBankAccounts);
+bankAccountRouter.get("/getall-bank",isAuthenticated, bankAccountController.getAllBankAccounts);
 
 bankAccountRouter.delete(
-  "/delete-bank-merchant",
+  "/delete-bank-merchant",isAuthenticated,
   bankAccountController.deleteBankFromMerchant
 );
 

@@ -6,7 +6,7 @@ import isAuthenticated from "../middlewares/authMiddleware.js";
 const merchantRouter = express();
 
 merchantRouter.post(
-  "/create-merchant",
+  "/create-merchant",isAuthenticated,
   merchantCreateValidator,
   merchantController.createMerchant
 );
