@@ -88,7 +88,7 @@ class PayInController {
         );
         const updateRes = {
           expirationDate: generatePayInUrlRes?.expirationDate,
-          payInUrl: `http://localhost:5173/transaction/${generatePayInUrlRes?.id}`, // use env
+          payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
         };
         return DefaultResponse(
           res,
@@ -98,6 +98,7 @@ class PayInController {
         );
       }
     } catch (err) {
+      console.log("🚀 ~ PayInController ~ generatePayInUrl ~ err:", err)
       // Handle errors and pass them to the next middleware
       next(err);
     }
