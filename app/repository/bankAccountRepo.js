@@ -83,9 +83,13 @@ class BankAccountRepo {
     const take = pageSize;
 
     const filter = {
-        ...(ac_no !== "" && { ac_no: { contains: ac_no, mode: 'insensitive' } }),
-        ...(ac_name !== "" && { ac_name: { contains: ac_name, mode: 'insensitive' } }),
-        ...(upi_id !== "" && { upi_id: { contains: upi_id, mode: 'insensitive' } }),
+      ...(ac_no !== "" && { ac_no: { contains: ac_no, mode: "insensitive" } }),
+      ...(ac_name !== "" && {
+        ac_name: { contains: ac_name, mode: "insensitive" },
+      }),
+      ...(upi_id !== "" && {
+        upi_id: { contains: upi_id, mode: "insensitive" },
+      }),
     };
 
     const bankAccRes = await prisma.bankAccount.findMany({
@@ -169,6 +173,20 @@ class BankAccountRepo {
       },
     });
     return bankRes;
+  }
+
+  async updateBankAccountStates(data) {
+    console.log(data);
+    const bankAccRes = await prisma.bankAccount.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        [data.fieldName]: data.value,
+      },
+    });
+
+    return bankAccRes;
   }
 }
 
