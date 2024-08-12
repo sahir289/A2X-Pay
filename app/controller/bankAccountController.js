@@ -61,7 +61,7 @@ class BankAccountController {
     try {
       checkValidation(req);
       const query = req.query;
-      
+
       const bankAccountRes = await bankAccountRepo.getAllBankAccounts(query);
 
       return DefaultResponse(
@@ -118,6 +118,26 @@ class BankAccountController {
         res,
         200,
         "Bank is deleted from merchant successfully",
+        bankAccountRes
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateBankAccountStates(req, res, next) {
+    try {
+      checkValidation(req);
+      const data = req.body;
+
+      const bankAccountRes = await bankAccountRepo.updateBankAccountStates(
+        data
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        "Bank Account state is updated successfully",
         bankAccountRes
       );
     } catch (error) {
