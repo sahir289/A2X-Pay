@@ -78,6 +78,9 @@ class BotResponseRepo {
       where: filter,
       skip: skip,
       take: take,
+      orderBy:{
+        sno:"desc"
+      }
     });
 
     const totalRecords = await prisma.telegramResponse.count({ where: filter });
