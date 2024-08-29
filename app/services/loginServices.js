@@ -6,7 +6,7 @@ import { comparePassword } from "../helper/passwordHelper.js";
 
 class LogInService {
 
-  async login(userName, password) {
+  async login(userName, password, confirmOverRide) {
     const user = await userRepo.getUserByUsernameRepo(userName);
     if (!user) {
       throw new CustomError(404, "User not found");
@@ -23,15 +23,18 @@ class LogInService {
     }
 
     const isAccessTokenExists = await tokenRepo.getTokenByUserId(user?.id)
-    if (isAccessTokenExists) {
-      await tokenRepo.deleteTokenByUserId(user?.id)
+    if (!isAccessTokenExists) {
+      const newAccessToken = generateAccessToken({ id: user.id, userName: user?.userName, role: user?.role, code: user.code })
+      await tokenRepo.createUserToken(newAccessToken, user?.id)
+      return newAccessToken
     }
-    const newAccessToken = generateAccessToken({ id: user.id, userName: user?.userName, role: user?.role,code:user.code })
-    await tokenRepo.createUserToken(newAccessToken, user?.id)
-
-
-
-    return newAccessToken
+    else if (confirmOverRide) {
+      const updateAccessToken = generateAccessToken({ id: user.id, userName: user?.userName, role: user?.role, code: user.code })
+      await tokenRepo.updateUserToken(updateAccessToken, isAccessTokenExists?.id)
+      return updateAccessToken;
+    } else {
+      throw new CustomError(409, "User is already logged in somewhere else")
+    }
   }
 }
 

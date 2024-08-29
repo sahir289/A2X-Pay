@@ -176,7 +176,6 @@ class BankAccountRepo {
   }
 
   async updateBankAccountStates(data) {
-    console.log(data);
     const bankAccRes = await prisma.bankAccount.update({
       where: {
         id: data.id,
