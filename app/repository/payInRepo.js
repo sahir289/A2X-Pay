@@ -61,39 +61,80 @@ class PayInRepo {
         return payInUrlRes
     }
 
+    // async getPayInDataByUtrOrUpi(utr, upi_short_code) {
+    //     // Construct the OR condition based on the presence of utr and upi_short_code
+    //     let orConditions = [];
+
+    //     if (utr) {
+    //         orConditions.push({ user_submitted_utr: utr });
+    //     }
+
+    //     if (upi_short_code) {
+    //         orConditions.push({ upi_short_code: upi_short_code });
+    //     }
+    //     // If no conditions are provided, return an empty array
+    //     if (orConditions.length === 0) {
+    //         return [];
+    //     }
+
+    //     // Perform the query with the OR condition
+    //     const payInRes = await prisma.payin.findMany({
+    //         where: {
+    //             OR: orConditions
+    //         },
+    //     });
+
+    //     return payInRes;
+    // }
     async getPayInDataByUtrOrUpi(utr, upi_short_code) {
-        // Construct the OR condition based on the presence of utr and upi_short_code
-        let orConditions = [];
+        // Construct the conditions
+        let conditions = [];
 
         if (utr) {
-            orConditions.push({ user_submitted_utr: utr });
+            conditions.push({ user_submitted_utr: utr });
         }
 
         if (upi_short_code) {
-            orConditions.push({ upi_short_code: upi_short_code });
+            conditions.push({ upi_short_code: upi_short_code });
         }
+
         // If no conditions are provided, return an empty array
-        if (orConditions.length === 0) {
+        if (conditions.length === 0) {
             return [];
         }
 
-        // Perform the query with the OR condition
+        // If both conditions are present, use AND condition
+        if (utr && upi_short_code) {
+            const payInRes = await prisma.payin.findMany({
+                where: {
+                    AND: [
+                        { user_submitted_utr: utr },
+                        { upi_short_code: upi_short_code }
+                    ]
+                }
+            });
+
+            return payInRes;
+        }
+
+        // If only one condition is present, use OR condition
         const payInRes = await prisma.payin.findMany({
             where: {
-                OR: orConditions
-            },
+                OR: conditions
+            }
         });
 
         return payInRes;
     }
 
-    async getPayInDataByMerchantOrderId(merchantOrderId){
+
+    async getPayInDataByMerchantOrderId(merchantOrderId) {
         const payInDataRes = await prisma.payin.findFirst({
-            where:{
-                merchant_order_id:merchantOrderId,
+            where: {
+                merchant_order_id: merchantOrderId,
             },
-            include:{
-                Merchant:true
+            include: {
+                Merchant: true
             }
         })
         return payInDataRes;

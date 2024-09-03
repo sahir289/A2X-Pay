@@ -37,7 +37,7 @@ io.on('connection', (socket) => {
     console.log('Client connected with socket ID:', socket.id);
 
     // Emit a test message to the client
-    socket.emit('new-entry', { message: 'Hello from server!', data: {} });
+    socket.emit('new-entry', { message: 'Hello from server!!!', data: {} });
 
     // Optional: Broadcast to all clients
     io.emit('broadcast-message', { message: 'A new client has connected!' });

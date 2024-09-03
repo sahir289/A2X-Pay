@@ -51,6 +51,7 @@ model User {
   role         Role
   code         String? // Add a field to store the merchant code
   accessTokens AccessToken[]
+  createdBy    String? // id of the creater 
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -90,6 +91,7 @@ model Merchant {
   Payin             Payin[]
   Payout            Payout[]
   Settlement        Settlement[]
+  createdBy         String? // id of the creater 
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 }
@@ -111,6 +113,7 @@ model BankAccount {
   payin_count   Int //
   balance       Decimal // this is the amount which has been deposited we have to consider it on per day basis
   Merchant_Bank Merchant_Bank[]
+  createdBy     String? // id of the creater 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
@@ -192,6 +195,7 @@ model Settlement {
   ifsc            String?
   refrence_id     String?
   rejected_reason String?
+  createdBy       String? // id of the creater  
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
