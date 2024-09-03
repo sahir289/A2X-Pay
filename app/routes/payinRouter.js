@@ -1,5 +1,9 @@
 import express from "express";
+import multer from "multer";
+import multerS3 from 'multer-s3';
+import config from "../../config.js";
 import payInController from "../controller/payInController.js";
+import { s3 } from "../helper/AwsS3.js";
 import {
   payInAssignValidator,
   payOutInAllDataValidator,
@@ -7,21 +11,23 @@ import {
   validatePayInIdUrl,
   validatePayInProcess,
 } from "../helper/validators.js";
-import multer from "multer";
 
 const payInRouter = express();
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./public/Images");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now();
-    cb(null, uniqueSuffix + file.originalname);
-  },
+
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: config?.bucketName,
+    acl: 'public-read', // Set the access control list (ACL) policy for the file
+    key: function (req, file, cb) {
+      cb(null, `uploads/${Date.now()}-${file.originalname}`); // Set the file path and name
+    }
+  })
 });
 
-const upload = multer({ storage: storage });
+
+// const upload = multer({ storage: storage });
 
 payInRouter.post(
   "/upload/:payInId",

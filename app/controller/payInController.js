@@ -1,21 +1,22 @@
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import axios from 'axios';
+import fs from "fs";
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { v4 as uuidv4 } from "uuid";
+import config from '../../config.js';
+import { s3 } from '../helper/AwsS3.js';
+import { streamToBase64 } from '../helper/StreamToBase64.js';
 import { DefaultResponse } from '../helper/customResponse.js';
+import { sendAlreadyConfirmedMessageTelegramBot, sendErrorMessageNoDepositFoundTelegramBot, sendErrorMessageTelegram, sendErrorMessageUtrNotFoundTelegramBot, sendErrorMessageUtrOrAmountNotFoundImgTelegramBot, sendSuccessMessageTelegram, sendTelegramMessage } from '../helper/sendTelegramMessages.js';
 import { calculateCommission } from '../helper/utils.js';
 import { checkValidation } from '../helper/validationHelper.js';
-import { detectText, detectUtrAmountText } from '../middlewares/OCRMidleware.js';
 import { CustomError } from '../middlewares/errorHandler.js';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import botResponseRepo from '../repository/botResponseRepo.js';
 import merchantRepo from '../repository/merchantRepo.js';
 import payInRepo from '../repository/payInRepo.js';
 import payInServices from '../services/payInServices.js';
-import { v4 as uuidv4 } from "uuid";
-import fs from "fs"
-import axios from 'axios';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { sendAlreadyConfirmedMessageTelegramBot, sendErrorMessageNoDepositFoundTelegramBot, sendErrorMessageTelegram, sendErrorMessageUtrNotFoundTelegramBot, sendErrorMessageUtrOrAmountNotFoundImgTelegramBot, sendSuccessMessageTelegram, sendTelegramMessage } from '../helper/sendTelegramMessages.js';
-import config from '../../config.js';
-
 // Construct __dirname manually
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -546,12 +547,19 @@ class PayInController {
 
   async payInProcessByImg(req, res, next) {
     try {
-      const filePath = req.file.path;
+      // const filePath = req.file.path;
       const { payInId } = req.params;
       const { amount } = req.query;
 
-      const imageBuffer = fs.readFileSync(filePath);
-      const base64Image = imageBuffer.toString('base64');
+      const command = new GetObjectCommand({
+        Bucket: config.bucketName,
+        Key: req.file?.key
+      });
+
+      const { Body } = await s3.send(command);
+
+      // Convert the readable stream to a buffer using pipeline
+      const base64Image = await streamToBase64(Body);
       const imgData = {
         image: base64Image
       }
@@ -564,13 +572,11 @@ class PayInController {
       // const usrSubmittedUtr = await detectText(filePath);
 
       if (usrSubmittedUtr?.utr !== undefined) {
-        // if (usrSubmittedUtr.length > 0) {
-        // const usrSubmittedUtrData = usrSubmittedUtr[0];
         const usrSubmittedUtrData = usrSubmittedUtr?.utr;
         // Delete the image file
-        fs.unlink(filePath, (err) => {
-          if (err) console.error("Error deleting the file:", err);
-        });
+        // fs.unlink(filePath, (err) => {
+        //   if (err) console.error("Error deleting the file:", err);
+        // });
 
         const getPayInData = await payInRepo.getPayInData(payInId);
         if (!getPayInData) {
