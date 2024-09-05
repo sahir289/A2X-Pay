@@ -215,7 +215,7 @@ model TelegramResponse {
 
 model Vendor {
   id                Int      @id @default(autoincrement())
-  vendor_code       String?
+  vendor_code       String?  @unique
   vendor_commission String?
   balance           String?
   createdBy         String? // id of the creater  
