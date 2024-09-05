@@ -78,7 +78,8 @@ class BankAccountRepo {
     const upi_id = query.upi_id;
     const page = parseInt(query.page) || 1;
     const pageSize = parseInt(query.pageSize) || 10;
-
+    const createdBy = query?.createdBy
+    const role = query?.role
     const skip = (page - 1) * pageSize;
     const take = pageSize;
 
@@ -90,6 +91,7 @@ class BankAccountRepo {
       ...(upi_id !== "" && {
         upi_id: { contains: upi_id, mode: "insensitive" },
       }),
+      ...(role !== "ADMIN" && createdBy && { createdBy }) 
     };
 
     const bankAccRes = await prisma.bankAccount.findMany({
@@ -104,7 +106,6 @@ class BankAccountRepo {
         },
       },
     });
-
     const transformedBankAccRes = bankAccRes.map((bank) => {
       bank.merchants = bank.Merchant_Bank.map(
         (merchantBank) => merchantBank.merchant

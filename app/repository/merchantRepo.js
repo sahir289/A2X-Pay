@@ -19,30 +19,6 @@ class MerchantRepo {
     return merchantRes;
   }
 
-  // async updateLastLoginByUserId(userId) {
-  //     const userRes = await prisma.user.update({
-  //         where: {
-  //             id: userId
-  //         },
-  //         data: {
-  //             last_login: new Date()
-  //         }
-  //     })
-
-  //     return userRes;
-  // }
-
-  // async validateUserId(userId) {
-  //     const user = await prisma.user.findFirst({
-  //         where: {
-  //             id: userId
-  //         }
-  //     })
-  //     if (!user) {
-  //         throw new CustomError("Invalid user id", 404)
-  //     }
-  // }
-
   async getMerchantById(id) {
     const merchant = await prisma.merchant.findFirst({
       where: {
@@ -60,37 +36,10 @@ class MerchantRepo {
     const take = pageSize;
 
     const merchants = await prisma.merchant.findMany({
-      // where: {
-      //     fullName: {
-      //         contains: fullName,
-      //         mode: 'insensitive'
-      //     },
-      //     userName: {
-      //         contains: userName,
-      //         mode: 'insensitive'
-      //     },
-      //     role: {
-      //         equals: role,
-      //     }
-      // },
       skip: skip,
       take: take,
     });
-    const totalRecords = await prisma.merchant.count({
-      // where: {
-      //     fullName: {
-      //         contains: fullName,
-      //         mode: 'insensitive',
-      //     },
-      //     userName: {
-      //         contains: userName,
-      //         mode: 'insensitive',
-      //     },
-      //     role: {
-      //         equals: role,
-      //     },
-      // },
-    });
+    const totalRecords = await prisma.merchant.count({});
 
     return {
       merchants,

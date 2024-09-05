@@ -8,7 +8,7 @@ import userService from "../services/userService.js";
 class UserController {
     async createUser(req, res, next) {
         try {
-            checkValidation(req)
+            checkValidation(req)  // when first user/admin is created we have to allow the user without any created by.
             const data = req.body;
 
             const isUserExist = await userRepo.getUserByUsernameRepo(data?.userName)
@@ -39,6 +39,7 @@ class UserController {
                 // userRes
             );
         } catch (error) {
+            console.log("🚀 ~ UserController ~ createUser ~ error:", error)
             next(error)
         }
     }
@@ -52,15 +53,13 @@ class UserController {
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 15
 
-            const { name: fullName, userName, role } = req.query;
-
+            const { name: fullName, userName, role ,createdBy} = req.query;
             const skip = (page - 1) * pageSize
             const take = pageSize
 
             await userRepo.validateUserId(userId)
 
-            const users = await userService.getAllUsers(skip, take, fullName, userName, role)
-
+            const users = await userService.getAllUsers(skip, take, fullName, userName, role,createdBy)
             return DefaultResponse(
                 res,
                 201,

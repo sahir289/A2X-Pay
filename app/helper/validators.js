@@ -70,11 +70,17 @@ export const userCreateValidator = [
       "TRANSACTIONS",
       "OPERATIONS",
       "MERCHANT",
+      "VENDOR"
     ])
     .withMessage(
-      "Role must be one of ADMIN, CUSTOMER_SERVICE, TRANSACTIONS, OPERATIONS, MERCHANT"
+      "Role must be one of ADMIN, CUSTOMER_SERVICE, TRANSACTIONS, OPERATIONS, MERCHANT,VENDOR"
     ),
   body("code").optional().isString().withMessage("Code must be a string"),
+  body("createdBy")
+    .notEmpty()
+    .withMessage("Created By is required")
+    .isString()
+    .withMessage("Created By must be a string"),
 ];
 
 export const merchantCreateValidator = [

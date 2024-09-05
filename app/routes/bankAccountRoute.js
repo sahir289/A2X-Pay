@@ -46,6 +46,5 @@ bankAccountRouter.delete(
   bankAccountController.deleteBankFromMerchant
 );
 
-// bankAccountRouter.get('/getall-merchant',isAuthenticated, merchantController.getAllMerchants)
 
 export default bankAccountRouter;

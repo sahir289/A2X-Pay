@@ -43,11 +43,12 @@ class UserRepo {
         }
     }
 
-    async getAllUsers(skip, take, fullName, userName, role) {
+    async getAllUsers(skip, take, fullName, userName, role,createdBy) {
         const filters = {
             ...(fullName && { fullName: { contains: fullName, mode: 'insensitive' } }),
             ...(userName && { userName: { contains: userName, mode: 'insensitive' } }),
-            ...(role && { role: { equals: role } }),
+            // ...(role && { role: { equals: role } }),
+            ...(role !== "ADMIN" && createdBy && { createdBy }) 
         };
     
         const users = await prisma.user.findMany({

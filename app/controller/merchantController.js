@@ -56,16 +56,9 @@ class MerchantController {
 
       const query = req.query;
 
-      // const fullName = req.query.name;
-
-      // const userName = req.query.userName;
-
-      // const role = req.query.role;
-
       await userRepo.validateUserId(userId);
 
       const merchants = await merchantRepo.getAllMerchants(query);
-
       return DefaultResponse(
         res,
         200,
