@@ -799,38 +799,20 @@ class PayInController {
           return res.status(500).json({ message: "Error processing the image" });
         }
 
-        const imagesDir = path.join(__dirname, '..', '..', 'public', 'Images');
-        if (!fs.existsSync(imagesDir)) {
-          fs.mkdirSync(imagesDir, { recursive: true });
-        }
-
-        const fileName = `${Date.now()}.jpg`;
-        const filePathToSave = path.join(imagesDir, fileName);
-        fs.writeFileSync(filePathToSave, imageBuffer);
-
         let dataRes;
-        // let dataRes = await detectUtrAmountText(fileName);
-        // if (!dataRes?.utr || !dataRes?.amount) {
+      
         const imgData = {
           image: base64Image
         }
         const resFromOcrPy = await axios.post('http://34.196.43.192:11000/ocr', imgData)
+
         // Merge the data from the API with the existing dataRes
         dataRes = {
           amount: resFromOcrPy?.data?.data?.amount,//|| dataRes.amount,
           utr: resFromOcrPy?.data?.data?.transaction_id //|| dataRes.utr
         };
-        // return res.status(200).json({ message: "UTR or Amount is missing in the image data" });
-
-        // }
+      
         await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN, message?.message_id);
-
-        // Clean up the saved image file after processing
-        fs.unlink(filePathToSave, (err) => {
-          if (err) console.error('Error deleting the file:', err);
-        });
-
-        // await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN, message?.message_id);
 
         if (dataRes) {
           if (dataRes?.utr !== undefined || dataRes?.amount !== undefined) {
