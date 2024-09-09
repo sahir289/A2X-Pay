@@ -15,6 +15,7 @@ enum Role {
   MERCHANT
   VENDOR
   VENDOR_OPERATIONS
+  MERCHANT_OPERATIONS
 }
 
 enum Status {
@@ -51,7 +52,7 @@ model User {
   last_login   DateTime?
   last_logout  DateTime?
   role         Role
-  code         String? // Add a field to store the merchant code
+  code         String[] // Add a field to store the merchant code
   vendor_code  String? // to store the vendor code who has created this bank acc.
   accessTokens AccessToken[]
   createdBy    String? // id of the creater 
