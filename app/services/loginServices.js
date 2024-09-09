@@ -24,12 +24,12 @@ class LogInService {
 
     const isAccessTokenExists = await tokenRepo.getTokenByUserId(user?.id)
     if (!isAccessTokenExists) {
-      const newAccessToken = generateAccessToken({ id: user.id, userName: user?.userName, role: user?.role, code: user.code })
+      const newAccessToken = generateAccessToken({ id: user.id, userName: user?.userName, role: user?.role, code: user.code, vendor_code: user?.vendor_code })
       await tokenRepo.createUserToken(newAccessToken, user?.id)
       return newAccessToken
     }
     else if (confirmOverRide) {
-      const updateAccessToken = generateAccessToken({ id: user.id, userName: user?.userName, role: user?.role, code: user.code })
+      const updateAccessToken = generateAccessToken({ id: user.id, userName: user?.userName, role: user?.role, code: user.code, vendor_code: user?.vendor_code })
       await tokenRepo.updateUserToken(updateAccessToken, isAccessTokenExists?.id)
       return updateAccessToken;
     } else {
