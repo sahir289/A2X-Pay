@@ -27,8 +27,11 @@ class VendorSettlement {
 
         // Check for the `code` and add Vendor filtering if provided
         if (code) {
-            where.Vendor = { vendor_code: code };
+            const SplitedCode = code?.split(",")
+
+            where.Vendor = { vendor_code: Array.isArray(SplitedCode) ? { in: SplitedCode } : code };
         }
+       
 
         // Fetch the settlements based on the where conditions
         const data = await prisma.vendorSettlement.findMany({

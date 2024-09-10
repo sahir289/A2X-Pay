@@ -2,6 +2,7 @@ import { DefaultResponse } from "../helper/customResponse.js"
 import { checkValidation } from "../helper/validationHelper.js";
 import { CustomError } from "../models/customError.js";
 import merchantRepo from "../repository/merchantRepo.js";
+import userRepo from "../repository/userRepo.js";
 import settlementService from "../services/settlementService.js";
 
 class SettlementController {
@@ -39,9 +40,22 @@ class SettlementController {
                 method,
                 refrence_id
             } = req.query;
+
+            const user = await userRepo.getUserByUsernameRepo(req.user.userName)
+
+            let Codes;
+
+
+            if ((user?.role !== "ADMIN" || !user?.code) && !code) {
+                Codes = user?.code.join(",")
+            }
+            else {
+                Codes = code
+            }
+
             const take = Number(qTake) || 20;
             const skip = take * (Number(page || 1) - 1);
-            const data = await settlementService.getSettlement(skip, take, parseInt(id), code, status, amount, acc_no, method, refrence_id);
+            const data = await settlementService.getSettlement(skip, take, parseInt(id), Codes, status, amount, acc_no, method, refrence_id);
             return DefaultResponse(res, 201, "Settlement fetched successfully!", data);
         } catch (err) {
             next(err);
