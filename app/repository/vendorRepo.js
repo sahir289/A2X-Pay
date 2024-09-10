@@ -13,6 +13,14 @@ class VendorRepo {
     const vendors = await prisma.vendor.findMany();
     return vendors;
   }
+  async getVendorByCode(code) {
+    const vendors = await prisma.vendor.findFirst({
+      where: {
+        vendor_code: code
+      }
+    });
+    return vendors;
+  }
 }
 
 export default new VendorRepo();

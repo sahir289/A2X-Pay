@@ -247,5 +247,5 @@ model VendorSettlement {
   createdBy       String? // id of the creater  
   vendor_code     String? // to store the vendor code who has created this bank acc.
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  updatedAt       DateTime @updatedAt 
 }

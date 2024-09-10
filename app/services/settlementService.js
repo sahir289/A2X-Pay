@@ -8,7 +8,7 @@ class Settlement {
     }
 
     async getSettlement(skip, take, id, code, status, amount, acc_no, method, refrence_id) {
-
+      
         const where = {};
         [
             { col: "id", value: id },
@@ -25,7 +25,11 @@ class Settlement {
             })
 
         if (code) {
+            // const SplitedCode = code?.split(",")
+
             where.Merchant = { code };
+            // where.Merchant = { code:Array.isArray(SplitedCode)?{in:SplitedCode} :code };
+
         }
 
         const data = await prisma.settlement.findMany({
