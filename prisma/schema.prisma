@@ -228,4 +228,24 @@ model Vendor {
   createdBy         String? // id of the creater  
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  VendorSettlement VendorSettlement[]
+}
+
+model VendorSettlement {
+  id              Int      @id @default(autoincrement())
+  vendor_id       Int
+  Vendor          Vendor   @relation(fields: [vendor_id], references: [id])
+  status          Status
+  amount          Decimal
+  method          Method
+  acc_name        String?
+  acc_no          String?
+  ifsc            String?
+  refrence_id     String?
+  rejected_reason String?
+  createdBy       String? // id of the creater  
+  vendor_code     String? // to store the vendor code who has created this bank acc.
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
