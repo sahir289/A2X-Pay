@@ -58,6 +58,7 @@ class PayInService {
     amount,
     merchantOrderId,
     merchantCode,
+    vendorCode,
     userId,
     userSubmittedUtr,
     utr,
@@ -70,7 +71,18 @@ class PayInService {
     const now = new Date();
     const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString(); // Start of today
     const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString(); // End of today
+    let bankIds = []
+    if (vendorCode) {
+      const data = await prisma.bankAccount.findMany({
+        where:{
+          vendor_code:vendorCode
+        }
+      })
 
+      bankIds= data?.map(item=> item.id)
+    }
+
+    const SplitedCode = merchantCode?.split(",")
     const filters = {
       ...(sno && { sno: { equals: sno } }),
       ...(merchantOrderId && {
@@ -92,7 +104,14 @@ class PayInService {
       ...(status && { status: { equals: status } }),
       ...(merchantCode && {
         Merchant: {
-          code: { contains: merchantCode, mode: "insensitive" },
+          code: Array.isArray(SplitedCode)
+            ? { in: SplitedCode }
+            : merchantCode,
+        },
+      }),
+       ...(vendorCode && {
+        bank_acc_id: {
+          in: bankIds,
         },
       }),
       ...(filterToday && {
@@ -105,6 +124,13 @@ class PayInService {
         bank_name: { contains: bankName, mode: "insensitive" },
       }),
     };
+    // const Data = await prisma.payin.findMany({
+    //   where: {
+    //     bank_acc_id: {
+    //       in: []
+    //     }
+    //   }
+    // })
 
     const payInData = await prisma.payin.findMany({
       where: filters,
@@ -113,8 +139,8 @@ class PayInService {
       include: {
         Merchant: true
       },
-      orderBy:{
-        sno:"desc"
+      orderBy: {
+        sno: "desc"
       }
 
     });
