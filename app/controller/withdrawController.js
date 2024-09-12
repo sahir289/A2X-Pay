@@ -37,6 +37,7 @@ class WithdrawController {
                 take: qTake,
                 id,
                 code,
+                vendorCode,
                 status,
                 amount,
                 acc_no,
@@ -49,7 +50,7 @@ class WithdrawController {
             } = req.query;
             const take = Number(qTake) || 20;
             const skip = take * (Number(page || 1) - 1);
-            const data = await withdrawService.getWithdraw(skip, take, id, code, status, amount, acc_no, merchant_order_id, user_id, Number(sno), payout_commision, utr_id, acc_holder_name);
+            const data = await withdrawService.getWithdraw(skip, take, id, code,vendorCode, status, amount, acc_no, merchant_order_id, user_id, Number(sno), payout_commision, utr_id, acc_holder_name);
             return DefaultResponse(res, 200, "Payout fetched successfully!", data);
 
         } catch (err) {
