@@ -6,6 +6,7 @@ import payInRepo from "../repository/payInRepo.js";
 import { checkValidation } from "../helper/validationHelper.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import { calculateCommission } from "../helper/utils.js";
+import bankAccountRepo from "../repository/bankAccountRepo.js";
 
 class BotResponseController {
   async botResponse(req, res, next) {
@@ -19,7 +20,7 @@ class BotResponseController {
       const utr = splitData[3];
 
       // Validate amount, amount_code, and utr
-      const isValidAmount = amount <= 100000;
+      const isValidAmount = amount;
       const isValidAmountCode =
         amount_code !== "nil" && amount_code.length === 5;
       const isValidUtr = utr.length === 12;
@@ -30,7 +31,6 @@ class BotResponseController {
           amount,
           utr,
         };
-
         if (isValidAmountCode) {
           updatedData.amount_code = amount_code;
         }
@@ -57,6 +57,12 @@ class BotResponseController {
             checkPayInUtr[0]?.id,
             payInData
           );
+
+          const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+            checkPayInUtr[0]?.bank_acc_id,
+            parseFloat(amount)
+          );
+          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id,botRes?.utr)
 
           const notifyData = {
             status: "success",
