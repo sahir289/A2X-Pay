@@ -66,16 +66,16 @@ class PayInController {
           payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
         };
 
-        if (ot === "y") {
+        // if (ot === "y") {
           return DefaultResponse(
             res,
             200,
             "Payment is assigned & url is sent successfully",
             updateRes
           );
-        } else {
-          res.redirect(302, updateRes?.payInUrl);
-        }
+        // } else {
+        //   res.redirect(302, updateRes?.payInUrl);
+        // }
       } else {
         payInData = {
           code,
