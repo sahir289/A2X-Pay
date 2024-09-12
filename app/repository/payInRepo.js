@@ -24,7 +24,7 @@ class PayInRepo {
                 id: payInId
             }, data: {
                 is_url_expires: true,
-                status:"DROPPED"
+                status: "DROPPED"
             }
         })
         return expirePayInUrlRes
@@ -61,31 +61,7 @@ class PayInRepo {
         return payInUrlRes
     }
 
-    // async getPayInDataByUtrOrUpi(utr, upi_short_code) {
-    //     // Construct the OR condition based on the presence of utr and upi_short_code
-    //     let orConditions = [];
-
-    //     if (utr) {
-    //         orConditions.push({ user_submitted_utr: utr });
-    //     }
-
-    //     if (upi_short_code) {
-    //         orConditions.push({ upi_short_code: upi_short_code });
-    //     }
-    //     // If no conditions are provided, return an empty array
-    //     if (orConditions.length === 0) {
-    //         return [];
-    //     }
-
-    //     // Perform the query with the OR condition
-    //     const payInRes = await prisma.payin.findMany({
-    //         where: {
-    //             OR: orConditions
-    //         },
-    //     });
-
-    //     return payInRes;
-    // }
+    
     async getPayInDataByUtrOrUpi(utr, upi_short_code) {
         // Construct the conditions
         let conditions = [];
@@ -93,8 +69,7 @@ class PayInRepo {
         if (utr) {
             conditions.push({ user_submitted_utr: utr });
         }
-
-        if (upi_short_code) {
+        if (upi_short_code !== "nill") {
             conditions.push({ upi_short_code: upi_short_code });
         }
 
@@ -104,7 +79,7 @@ class PayInRepo {
         }
 
         // If both conditions are present, use AND condition
-        if (utr && upi_short_code) {
+        if (conditions?.utr && conditions?.upi_short_code) {
             const payInRes = await prisma.payin.findMany({
                 where: {
                     AND: [
@@ -113,18 +88,18 @@ class PayInRepo {
                     ]
                 }
             });
-
+            return payInRes;
+        } else {
+            // If only one condition is present, use OR condition
+            const payInRes = await prisma.payin.findMany({
+                where: {
+                    OR: conditions
+                },
+            });
             return payInRes;
         }
 
-        // If only one condition is present, use OR condition
-        const payInRes = await prisma.payin.findMany({
-            where: {
-                OR: conditions
-            }
-        });
 
-        return payInRes;
     }
 
 
@@ -138,6 +113,15 @@ class PayInRepo {
             }
         })
         return payInDataRes;
+    }
+
+    async getPayinDataByUsrSubmittedUtr(usrSubmittedUtr){
+        const payInRes = await prisma.payin.findMany({
+            where: {
+                user_submitted_utr:usrSubmittedUtr
+            },
+        });
+        return payInRes;
     }
 }
 

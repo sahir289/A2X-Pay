@@ -355,6 +355,8 @@ class PayInController {
       checkValidation(req);
       const { payInId } = req.params;
       const { usrSubmittedUtr, code, amount, isFront, filePath } = req.body;
+      let payInData;
+      let responseMessage;
 
       const getPayInData = await payInRepo.getPayInData(payInId);
       if (!getPayInData) {
@@ -363,23 +365,50 @@ class PayInController {
 
       const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
 
+      // check tht usrSubmittedUtr is previously used or not if it is thn send Duplicate utr.
+      const isUsrSubmittedUtrUsed = await payInRepo?.getPayinDataByUsrSubmittedUtr(usrSubmittedUtr)
+      
+      if (isUsrSubmittedUtrUsed.length > 0) {
+        payInData = {
+          amount,
+          status: "DUPLICATE",
+          is_notified: true,
+          user_submitted_utr: usrSubmittedUtr,
+          is_url_expires: true,
+          user_submitted_image: null,
+        };
+        responseMessage = "Duplicate Payment Found";
+        const updatePayinRes = await payInRepo.updatePayInData(
+          payInId,
+          payInData
+        );
+        const response = {
+          status: payInData.status,
+          amount,
+          transactionId: updatePayinRes?.merchant_order_id,
+          return_url: updatePayinRes?.return_url,
+        };
+        return DefaultResponse(res, 200, responseMessage, response);
+
+      }
+
       if (isFront !== true) {
+        // is front is used to check it is comig from deposit img pending or not.
         if (urlValidationRes?.is_url_expires === true) {
           throw new CustomError(403, "Url is expired");
         }
       }
 
       if (filePath) {
-        fs.unlink(`public/${filePath}`, (err) => {
-          if (err) console.error("Error deleting the file:", err);
-        });
+        // we have to remove the img from the s3
+        // fs.unlink(`public/${filePath}`, (err) => {
+        //   if (err) console.error("Error deleting the file:", err);
+        // });
       }
 
       const matchDataFromBotRes = await botResponseRepo.getBotResByUtr(
         usrSubmittedUtr
       );
-      let payInData;
-      let responseMessage;
 
       if (!matchDataFromBotRes) {
         payInData = {
@@ -400,7 +429,8 @@ class PayInController {
           user_submitted_image: null,
         };
         responseMessage = "Duplicate Payment Found";
-      } else {
+      }
+      else {
         const updateBotRes = await botResponseRepo.updateBotResponseByUtr(
           matchDataFromBotRes?.id,
           usrSubmittedUtr
@@ -415,7 +445,6 @@ class PayInController {
           getPayInData?.bank_acc_id,
           parseFloat(matchDataFromBotRes?.amount)
         );
-
         const payinCommission = await calculateCommission(
           matchDataFromBotRes?.amount,
           updateMerchantRes?.payin_commission
@@ -802,7 +831,7 @@ class PayInController {
         }
 
         let dataRes;
-      
+
         const imgData = {
           image: base64Image
         }
@@ -813,7 +842,7 @@ class PayInController {
           amount: resFromOcrPy?.data?.data?.amount,//|| dataRes.amount,
           utr: resFromOcrPy?.data?.data?.transaction_id //|| dataRes.utr
         };
-      
+
         await sendTelegramMessage(message.chat.id, dataRes, TELEGRAM_BOT_TOKEN, message?.message_id);
 
         if (dataRes) {
