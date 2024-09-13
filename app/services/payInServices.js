@@ -173,7 +173,20 @@ class PayInService {
     return { payInData: serializedPayinData, totalRecords };
   }
 
-  async getAllPayInDataByMerchant(merchantCode) {
+  async getAllPayInDataByMerchant(merchantCode,startDate,endDate) {
+
+    const dateFilter = {};
+    if (startDate) {
+      dateFilter.gte = new Date(startDate); // Greater than or equal to startDate
+    }
+    if (endDate) {
+
+      let end = new Date(endDate)
+
+      end.setDate(end.getDate()+1)
+
+      dateFilter.lte = end; // Less than or equal to endDate
+    }
     const payInData = await prisma.payin.findMany({
       where: {
         status: "SUCCESS",
@@ -182,6 +195,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
+        createdAt:dateFilter
       },
     });
 
@@ -193,6 +207,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
+        createdAt:dateFilter
       },
     });
 
@@ -204,6 +219,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
+        createdAt:dateFilter
       },
     });
 
