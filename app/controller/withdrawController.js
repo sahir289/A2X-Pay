@@ -117,6 +117,28 @@ class WithdrawController {
         }
     }
 
+
+    async updateVendorCode(req, res, next) {
+        try {
+            checkValidation(req);
+     
+            const { vendorCode, merchantCode } = req.body; 
+            if (!Array.isArray(vendorCode) || !Array.isArray(merchantCode)) {
+                throw new CustomError(400, 'Invalid input format');
+            }
+     
+            const result = await withdrawService.updateVendorCodes(merchantCode, vendorCode);
+     
+            return DefaultResponse(res, 200, result.message);
+        } catch (err) {
+            console.error('Error in updateVendorCode:', err);
+            next(err);
+        }
+    }
+    
+    
+    
+
 }
 
 export default new WithdrawController();
