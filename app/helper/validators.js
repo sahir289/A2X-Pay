@@ -517,3 +517,28 @@ export const vendorCreateValidator = [
     .notEmpty()
     .withMessage("createdBy is required!"),
 ];
+
+export const updateVendorCodeValidator = [
+  body('vendorCode')
+      .isArray()
+      .withMessage('vendorCode must be an array')
+      .bail()
+      .custom((value) => value.every((item) => typeof item === 'string'))
+      .withMessage('Each vendorCode must be a string'),
+
+  body('merchantCode')
+      .isArray()
+      .withMessage('merchantCode must be an array')
+      .bail()
+      .custom((value) => value.every((item) => typeof item === 'string'))
+      .withMessage('Each merchantCode must be a string'),
+
+  body('vendorCode')
+      .custom((value, { req }) => {
+          const { merchantCode } = req.body;
+          if (value.length !== merchantCode.length) {
+              throw new Error('vendorCode and merchantCode arrays must be of the same length');
+          }
+          return true;
+      })
+];
