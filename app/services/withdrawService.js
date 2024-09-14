@@ -94,6 +94,24 @@ class Withdraw {
         });
         return payOutData;
     }
+
+    async updateVendorCodes(withdrawIds, vendorCode) {
+        await prisma.payout.updateMany({
+            where: {
+                id: {
+                    in: withdrawIds,
+                },
+            },
+            data: { vendor_code: vendorCode }
+        });
+    
+        return { message: 'Vendor code updated successfully for all specified withdrawal IDs' };
+    }
+    
+
+    
 }
+
+
 
 export default new Withdraw();
