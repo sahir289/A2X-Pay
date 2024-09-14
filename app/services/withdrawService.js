@@ -95,21 +95,17 @@ class Withdraw {
         return payOutData;
     }
 
-    async updateVendorCodes(merchantCodes, vendorCodes) {
-        if (merchantCodes.length !== vendorCodes.length) {
-            throw new Error('Length of merchantCodes and vendorCodes must be the same');
-        }
+    async updateVendorCodes(withdrawIds, vendorCode) {
+        await prisma.payout.updateMany({
+            where: {
+                id: {
+                    in: withdrawIds,
+                },
+            },
+            data: { vendor_code: vendorCode }
+        });
     
-        await Promise.all(
-            merchantCodes.map((merchantCode, index) =>
-                prisma.payout.updateMany({
-                    where: { merchant_code: merchantCode },
-                    data: { vendor_code: vendorCodes[index] }
-                })
-            )
-        );
-    
-        return { message: 'Vendor codes updated successfully' };
+        return { message: 'Vendor code updated successfully for all specified withdrawal IDs' };
     }
     
 

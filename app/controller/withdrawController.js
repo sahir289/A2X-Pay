@@ -116,25 +116,32 @@ class WithdrawController {
             next(error);
         }
     }
-
-
     async updateVendorCode(req, res, next) {
         try {
             checkValidation(req);
-     
-            const { vendorCode, merchantCode } = req.body; 
-            if (!Array.isArray(vendorCode) || !Array.isArray(merchantCode)) {
-                throw new CustomError(400, 'Invalid input format');
+        
+            const { vendorCode, withdrawId } = req.body;
+        
+            if (typeof vendorCode !== 'string' || vendorCode.trim() === '') {
+                return DefaultResponse(res, 400, 'Invalid vendorCode: must be a non-empty string');
             }
-     
-            const result = await withdrawService.updateVendorCodes(merchantCode, vendorCode);
-     
-            return DefaultResponse(res, 200, result.message);
+        
+            if (!Array.isArray(withdrawId) || withdrawId.length === 0 || !withdrawId.every(id => typeof id === 'string')) {
+                return DefaultResponse(res, 400, 'Invalid withdrawId: must be a non-empty array containing strings');
+            }
+        
+            const vendorCodeValue = vendorCode;
+            const withdrawIds = withdrawId;
+        
+            const result = await withdrawService.updateVendorCodes(withdrawIds, vendorCodeValue);
+        
+            return DefaultResponse(res, 200, result.message || 'Vendor code updated successfully');
         } catch (err) {
-            console.error('Error in updateVendorCode:', err);
             next(err);
         }
     }
+    
+    
     
     
     
