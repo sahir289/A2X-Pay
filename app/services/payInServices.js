@@ -35,7 +35,7 @@ class PayInService {
       amount: amount, // this amount is given by the user
       status: "ASSIGNED",
       bank_acc_id: bankDetails?.bankAccountId,
-      bank_name: bankDetails?.bankAccount?.bank_name
+      bank_name: bankDetails?.bankAccount?.bank_name,
     };
     const payInUrlUpdateRes = await payInRepo.updatePayInData(payInId, data);
     const getBankRes = await bankAccountRepo.getBankByBankAccId(
@@ -68,34 +68,33 @@ class PayInService {
     bankName,
     filterToday
   ) {
-
     const Data = await prisma.payin.updateMany({
       where: {
-        status: 'INITIATED',
+        status: "INITIATED",
         expirationDate: {
-          lt: Math.floor(new Date().getTime() / 1000)// Compare if expirationDate is less than the current time
-        }
+          lt: Math.floor(new Date().getTime() / 1000), // Compare if expirationDate is less than the current time
+        },
       },
       data: {
-        status: 'DROPPED'
-      }
+        status: "DROPPED",
+      },
     });
 
     const now = new Date();
     const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString(); // Start of today
     const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString(); // End of today
-    let bankIds = []
+    let bankIds = [];
     if (vendorCode) {
       const data = await prisma.bankAccount.findMany({
         where: {
-          vendor_code: vendorCode
-        }
-      })
+          vendor_code: vendorCode,
+        },
+      });
 
-      bankIds = data?.map(item => item.id)
+      bankIds = data?.map((item) => item.id);
     }
 
-    const SplitedCode = merchantCode?.split(",")
+    const SplitedCode = merchantCode?.split(",");
     const filters = {
       ...(sno && { sno: { equals: sno } }),
       ...(merchantOrderId && {
@@ -117,9 +116,7 @@ class PayInService {
       ...(status && { status: { equals: status } }),
       ...(merchantCode && {
         Merchant: {
-          code: Array.isArray(SplitedCode)
-            ? { in: SplitedCode }
-            : merchantCode,
+          code: Array.isArray(SplitedCode) ? { in: SplitedCode } : merchantCode,
         },
       }),
       ...(vendorCode && {
@@ -150,12 +147,11 @@ class PayInService {
       skip: skip,
       take: take,
       include: {
-        Merchant: true
+        Merchant: true,
       },
       orderBy: {
-        sno: "desc"
-      }
-
+        sno: "desc",
+      },
     });
 
     const totalRecords = await prisma.payin.count({
@@ -210,6 +206,56 @@ class PayInService {
     return { payInOutData: { payInData, payOutData, settlementData } };
   }
 
+  async getAllPayInDataByVendor(vendorCode) {
+    let bankIds = [];
+    if (vendorCode) {
+      const data = await prisma.bankAccount.findMany({
+        where: {
+          vendor_code: Array.isArray(vendorCode)
+            ? { in: vendorCode }
+            : vendorCode,
+        },
+      });
+
+      bankIds = data?.map((item) => item.id);
+    }
+
+    const filter = {
+      ...(vendorCode && {
+        bank_acc_id: {
+          in: bankIds,
+        },
+      }),
+    };
+
+    const payInData = await prisma.payin.findMany({
+      where: {
+        status: "SUCCESS",
+        ...filter,
+      },
+    });
+
+    const payOutData = await prisma.payout.findMany({
+      where: {
+        status: "SUCCESS",
+        vendor_code: Array.isArray(vendorCode)
+          ? { in: vendorCode }
+          : vendorCode,
+      },
+    });
+
+    const settlementData = await prisma.settlement.findMany({
+      where: {
+        status: "SUCCESS",
+        vendor_code: Array.isArray(vendorCode)
+          ? { in: vendorCode }
+          : vendorCode,
+      },
+    });
+
+    return { payInOutData: { payInData, payOutData, settlementData } };
+  }
+
   //new service for pay in data
   async getAllPayInDataWithRange(merchantCode, status, startDate, endDate) {
     const payInData = await prisma.payin.findMany({
@@ -230,6 +276,5 @@ class PayInService {
     return payInData;
   }
 }
-
 
 export default new PayInService();
