@@ -10,7 +10,11 @@ class VendorRepo {
   }
 
   async getAllVendors() {
-    const vendors = await prisma.vendor.findMany();
+    const vendors = await prisma.vendor.findMany({
+      orderBy: {
+        id: "desc"
+      }
+    });
     return vendors;
   }
   async getVendorByCode(code) {

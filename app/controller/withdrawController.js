@@ -116,6 +116,7 @@ class WithdrawController {
             next(error);
         }
     }
+     
     async updateVendorCode(req, res, next) {
         try {
             checkValidation(req);

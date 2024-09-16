@@ -44,7 +44,7 @@ class Withdraw {
             skip,
             take,
             orderBy: {
-                id: "desc",
+                sno: "desc",
             },
             include: {
                 Merchant: {
@@ -53,7 +53,7 @@ class Withdraw {
                         code: true,
                     }
                 }
-            }
+            },
         })
         const totalRecords = await prisma.payout.count({
             where,
