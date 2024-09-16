@@ -244,12 +244,14 @@ class PayInService {
       },
     });
 
-    const settlementData = await prisma.settlement.findMany({
+    const settlementData = await prisma.vendorSettlement.findMany({
       where: {
         status: "SUCCESS",
-        vendor_code: Array.isArray(vendorCode)
-          ? { in: vendorCode }
-          : vendorCode,
+        Vendor: {
+          vendor_code: Array.isArray(vendorCode)
+            ? { in: vendorCode }
+            : vendorCode,
+        },
       },
     });
 
