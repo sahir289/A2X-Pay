@@ -517,3 +517,18 @@ export const vendorCreateValidator = [
     .notEmpty()
     .withMessage("createdBy is required!"),
 ];
+
+export const updateVendorCodeValidator = [
+  body('vendorCode')
+      .isString()  // Validate that vendorCode is a string
+      .withMessage('vendorCode must be a string')
+      .bail()
+      .trim(),
+
+  body('withdrawId')
+      .isArray()
+      .withMessage('withdrawId must be an array')
+      .bail()
+      .custom((value) => value.every((item) => typeof item === 'string'))
+      .withMessage('Each Withdraw ID must be a string')
+];
