@@ -586,7 +586,6 @@ class PayInController {
 
   async payInProcessByImg(req, res, next) {
     try {
-      // const filePath = req.file.path;
       const { payInId } = req.params;
       const { amount } = req.query;
 
@@ -611,14 +610,10 @@ class PayInController {
         amount: resFromOcrPy?.data?.data?.amount, //|| dataRes.amount,
         utr: resFromOcrPy?.data?.data?.transaction_id, //|| dataRes.utr
       };
-      // const usrSubmittedUtr = await detectText(filePath);
 
-      if (usrSubmittedUtr?.utr !== undefined) {
+
+      if (usrSubmittedUtr?.utr !== "undefined") {
         const usrSubmittedUtrData = usrSubmittedUtr?.utr;
-        // Delete the image file
-        // fs.unlink(filePath, (err) => {
-        //   if (err) console.error("Error deleting the file:", err);
-        // });
 
         const getPayInData = await payInRepo.getPayInData(payInId);
         if (!getPayInData) {
@@ -729,8 +724,7 @@ class PayInController {
         // }
       } else {
         // No UTR found, send image URL to the controller
-        const imageUrl = `Images/${req.file.filename}`;
-
+        const imageUrl = `${req?.file?.key}`;
         const payInData = {
           amount,
           status: "IMG_PENDING",

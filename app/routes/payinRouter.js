@@ -25,7 +25,6 @@ const upload = multer({
   }),
 });
 
-// const upload = multer({ storage: storage });
 
 payInRouter.post(
   "/upload/:payInId",
