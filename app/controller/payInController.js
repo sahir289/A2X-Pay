@@ -751,7 +751,7 @@ class PayInController {
 
   async getAllPayInDataByMerchant(req, res, next) {
     try {
-      let { merchantCode } = req.query;
+      let { merchantCode,startDate,endDate } = req.query;
 
       if (merchantCode == null) {
         merchantCode = [];
@@ -760,7 +760,7 @@ class PayInController {
       }
 
       const payInDataRes = await payInServices.getAllPayInDataByMerchant(
-        merchantCode
+        merchantCode,startDate,endDate
       );
 
       return DefaultResponse(
