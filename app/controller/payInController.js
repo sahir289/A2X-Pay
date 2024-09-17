@@ -337,10 +337,18 @@ class PayInController {
             );
           }
         } else if (getBotDataRes.is_used === true) {
+          const response = {
+            status: "Success",
+            amount: getBotDataRes?.amount,
+            utr: getBotDataRes?.utr,
+            transactionId: getPayInData?.merchant_order_id,
+            return_url: getPayInData?.return_url,
+          };
           return DefaultResponse(
             res,
             200,
-            "Payment is added for this transaction"
+            "Payment is added for this transaction",
+            response
           );
         }
       } else {
