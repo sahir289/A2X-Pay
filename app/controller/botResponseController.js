@@ -43,7 +43,7 @@ class BotResponseController {
         
         const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
 
-        if (checkPayInUtr.length !== 0) {
+        if (checkPayInUtr.length !== 0 && checkPayInUtr.at(0)?.amount == amount && checkPayInUtr.at(0)?.user_submitted_utr == utr) {
           const payInData = {
             confirmed: botRes?.amount,
             status: "SUCCESS",
@@ -76,18 +76,54 @@ class BotResponseController {
           } catch (error) {
           }
         }
+        else {
+          const payInData = {
+            confirmed: botRes?.amount,
+            status: "DISPUTE",
+            is_notified: true,
+            utr: botRes?.utr,
+            approved_at: new Date(),
+            payin_commission: payinCommission
+          };
+          const updatePayInDataRes = await payInRepo.updatePayInData(
+            checkPayInUtr[0]?.id,
+            payInData
+          );
+
+          const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+            checkPayInUtr[0]?.bank_acc_id,
+            parseFloat(amount)
+          );
+
+          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id,botRes?.utr);
+
+          const notifyData = {
+            status: "dispute",
+            merchantOrderId: updatePayInDataRes?.merchant_order_id,
+            payinId: updatePayInDataRes?.id,
+            amount: updatePayInDataRes?.confirmed,
+          };
+        }
 
         // Notify all connected clients about the new entry
-        io.emit("new-entry", {
-          message: 'New entry added',
-          data: updatedData
-        });
-
-        res.status(201).json({
-          success: true,
-          message: "Response received successfully",
-          data: updatedData,
-        });
+        if (checkPayInUtr.at(0)?.amount == amount && checkPayInUtr.at(0)?.user_submitted_utr == utr) {
+          io.emit("new-entry", {
+            message: 'New entry added',
+            data: updatedData
+          });
+  
+          res.status(201).json({
+            success: true,
+            message: "Response received successfully",
+            data: updatedData,
+          }); 
+        }
+        else {
+          res.status(400).json({
+            success: false,
+            message: "Invalid data received",
+          });
+        }
       } else {
         res.status(400).json({
           success: false,
