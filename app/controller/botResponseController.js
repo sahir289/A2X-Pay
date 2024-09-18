@@ -37,11 +37,15 @@ class BotResponseController {
         const botRes = await botResponseRepo.botResponse(updatedData);
         const checkPayInUtr = await payInRepo.getPayInDataByUtrOrUpi(
           utr,
-          amount_code
+          amount_code,
         );
         const getMerchantToGetPayinCommissionRes = await merchantRepo.getMerchantById(checkPayInUtr[0]?.merchant_id)
         
         const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
+        const durSeconds = Math.floor((new Date() - checkPayInUtr.at(0)?.createdAt) / 1000).toString().padStart(2, '0');
+        const durMinutes = Math.floor(durSeconds / 60).toString().padStart(2, '0');
+        const durHours = Math.floor(durMinutes / 60).toString().padStart(2, '0');
+        const duration = `${durHours % 24}:${durMinutes % 60}:${durSeconds % 60}`;
 
         if (checkPayInUtr.length !== 0 && checkPayInUtr.at(0)?.amount == amount && checkPayInUtr.at(0)?.user_submitted_utr == utr) {
           const payInData = {
@@ -50,6 +54,7 @@ class BotResponseController {
             is_notified: true,
             utr: botRes?.utr,
             approved_at: new Date(),
+            duration: duration,
             payin_commission: payinCommission
           };
 
@@ -83,6 +88,7 @@ class BotResponseController {
             is_notified: true,
             utr: botRes?.utr,
             approved_at: new Date(),
+            duration: duration,
             payin_commission: payinCommission
           };
           const updatePayInDataRes = await payInRepo.updatePayInData(

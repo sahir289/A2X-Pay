@@ -386,6 +386,11 @@ class PayInController {
       const isUsrSubmittedUtrUsed =
         await payInRepo?.getPayinDataByUsrSubmittedUtr(usrSubmittedUtr);
 
+      const durSeconds = Math.floor((new Date() - getPayInData.createdAt) / 1000).toString().padStart(2, '0');
+      const durMinutes = Math.floor(durSeconds / 60).toString().padStart(2, '0');
+      const durHours = Math.floor(durMinutes / 60).toString().padStart(2, '0');
+      const duration = `${durHours % 24}:${durMinutes % 60}:${durSeconds % 60}`;
+
       if (isUsrSubmittedUtrUsed.length > 0) {
         payInData = {
           amount,
@@ -394,6 +399,7 @@ class PayInController {
           user_submitted_utr: usrSubmittedUtr,
           is_url_expires: true,
           user_submitted_image: null,
+          duration: duration,
         };
         responseMessage = "Duplicate Payment Found";
         const updatePayinRes = await payInRepo.updatePayInData(
@@ -444,6 +450,7 @@ class PayInController {
           user_submitted_utr: usrSubmittedUtr,
           is_url_expires: true,
           user_submitted_image: null,
+          duration: duration,
         };
         responseMessage = "Duplicate Payment Found";
       } else {
@@ -477,6 +484,7 @@ class PayInController {
             is_url_expires: true,
             payin_commission: payinCommission,
             user_submitted_image: null,
+            duration: duration,
           };
           responseMessage = "Payment Done successfully";
         } else {
@@ -488,6 +496,7 @@ class PayInController {
             approved_at: new Date(),
             is_url_expires: true,
             user_submitted_image: null,
+            duration: duration,
           };
           responseMessage = "Dispute in Payment";
         }
