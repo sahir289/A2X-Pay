@@ -106,24 +106,16 @@ class BotResponseController {
         }
 
         // Notify all connected clients about the new entry
-        if (checkPayInUtr.at(0)?.amount == amount && checkPayInUtr.at(0)?.user_submitted_utr == utr) {
-          io.emit("new-entry", {
-            message: 'New entry added',
-            data: updatedData
-          });
-  
-          res.status(201).json({
-            success: true,
-            message: "Response received successfully",
-            data: updatedData,
-          }); 
-        }
-        else {
-          res.status(400).json({
-            success: false,
-            message: "Invalid data received",
-          });
-        }
+        io.emit("new-entry", {
+          message: 'New entry added',
+          data: updatedData
+        });
+
+        res.status(201).json({
+          success: true,
+          message: "Response received successfully",
+          data: updatedData,
+        }); 
       } else {
         res.status(400).json({
           success: false,
