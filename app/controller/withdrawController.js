@@ -37,6 +37,7 @@ class WithdrawController {
                 take: qTake,
                 id,
                 code,
+                vendorCode,
                 status,
                 amount,
                 acc_no,
@@ -49,7 +50,7 @@ class WithdrawController {
             } = req.query;
             const take = Number(qTake) || 20;
             const skip = take * (Number(page || 1) - 1);
-            const data = await withdrawService.getWithdraw(skip, take, id, code, status, amount, acc_no, merchant_order_id, user_id, Number(sno), payout_commision, utr_id, acc_holder_name);
+            const data = await withdrawService.getWithdraw(skip, take, id, code,vendorCode, status, amount, acc_no, merchant_order_id, user_id, Number(sno), payout_commision, utr_id, acc_holder_name);
             return DefaultResponse(res, 200, "Payout fetched successfully!", data);
 
         } catch (err) {
@@ -115,6 +116,36 @@ class WithdrawController {
             next(error);
         }
     }
+     
+    async updateVendorCode(req, res, next) {
+        try {
+            checkValidation(req);
+        
+            const { vendorCode, withdrawId } = req.body;
+        
+            if (typeof vendorCode !== 'string' || vendorCode.trim() === '') {
+                return DefaultResponse(res, 400, 'Invalid vendorCode: must be a non-empty string');
+            }
+        
+            if (!Array.isArray(withdrawId) || withdrawId.length === 0 || !withdrawId.every(id => typeof id === 'string')) {
+                return DefaultResponse(res, 400, 'Invalid withdrawId: must be a non-empty array containing strings');
+            }
+        
+            const vendorCodeValue = vendorCode;
+            const withdrawIds = withdrawId;
+        
+            const result = await withdrawService.updateVendorCodes(withdrawIds, vendorCodeValue);
+        
+            return DefaultResponse(res, 200, result.message || 'Vendor code updated successfully');
+        } catch (err) {
+            next(err);
+        }
+    }
+    
+    
+    
+    
+    
 
 }
 

@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import multerS3 from 'multer-s3';
+import multerS3 from "multer-s3";
 import config from "../../config.js";
 import payInController from "../controller/payInController.js";
 import { s3 } from "../helper/AwsS3.js";
@@ -15,20 +15,17 @@ import {
 
 const payInRouter = express();
 
-
 const upload = multer({
   storage: multerS3({
     s3: s3,
     bucket: config?.bucketName,
-    acl: 'public-read', // Set the access control list (ACL) policy for the file
+    acl: "public-read", // Set the access control list (ACL) policy for the file
     key: function (req, file, cb) {
       cb(null, `uploads/${Date.now()}-${file.originalname}`); // Set the file path and name
-    }
-  })
+    },
+  }),
 });
 
-
-// const upload = multer({ storage: storage });
 
 payInRouter.post(
   "/upload/:payInId",
@@ -93,5 +90,8 @@ payInRouter.post(
 
 // telegram resp ocr
 payInRouter.post("/tele-ocr", payInController.telegramResHandler)
-
+payInRouter.get(
+  "/get-payInDataVendor",
+  payInController.getAllPayInDataByVendor
+);
 export default payInRouter;

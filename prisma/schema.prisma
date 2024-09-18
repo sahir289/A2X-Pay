@@ -14,6 +14,8 @@ enum Role {
   OPERATIONS
   MERCHANT
   VENDOR
+  VENDOR_OPERATIONS
+  MERCHANT_OPERATIONS
 }
 
 enum Status {
@@ -50,7 +52,8 @@ model User {
   last_login   DateTime?
   last_logout  DateTime?
   role         Role
-  code         String? // Add a field to store the merchant code
+  code         String[] // Add a field to store the merchant code
+  vendor_code  String? // to store the vendor code who has created this bank acc.
   accessTokens AccessToken[]
   createdBy    String? // id of the creater 
   createdAt    DateTime      @default(now())
@@ -115,6 +118,8 @@ model BankAccount {
   balance       Decimal // this is the amount which has been deposited we have to consider it on per day basis
   Merchant_Bank Merchant_Bank[]
   createdBy     String? // id of the creater 
+  code          String? // to store the vendor code who has created this bank acc.
+  vendor_code   String? // to store the vendor code who has created this bank acc.
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
@@ -181,6 +186,7 @@ model Payout {
   payout_commision  Decimal
   notify_url        String?
   rejected_reason   String?
+  vendor_code       String? // to store the vendor code who has created this bank acc.
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
@@ -198,6 +204,7 @@ model Settlement {
   refrence_id     String?
   rejected_reason String?
   createdBy       String? // id of the creater  
+  vendor_code     String? // to store the vendor code who has created this bank acc.
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -222,4 +229,24 @@ model Vendor {
   createdBy         String? // id of the creater  
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  VendorSettlement VendorSettlement[]
+}
+
+model VendorSettlement {
+  id              Int      @id @default(autoincrement())
+  vendor_id       Int
+  Vendor          Vendor   @relation(fields: [vendor_id], references: [id])
+  status          Status
+  amount          Decimal
+  method          Method
+  acc_name        String?
+  acc_no          String?
+  ifsc            String?
+  refrence_id     String?
+  rejected_reason String?
+  createdBy       String? // id of the creater  
+  vendor_code     String? // to store the vendor code who has created this bank acc.
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt 
 }

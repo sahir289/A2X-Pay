@@ -25,7 +25,10 @@ class Settlement {
             })
 
         if (code) {
-            where.Merchant = { code };
+            const SplitedCode = code?.split(",")
+            // where.Merchant = { code };
+            where.Merchant = { code: Array.isArray(SplitedCode) ? { in: SplitedCode } : code };
+
         }
 
         const data = await prisma.settlement.findMany({

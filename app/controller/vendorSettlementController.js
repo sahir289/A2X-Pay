@@ -3,22 +3,23 @@ import { checkValidation } from "../helper/validationHelper.js";
 import { CustomError } from "../models/customError.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import userRepo from "../repository/userRepo.js";
-import settlementService from "../services/settlementService.js";
+import vendorRepo from "../repository/vendorRepo.js";
+import vendorSettlementService from "../services/vendorSettlementService.js";
 
 class SettlementController {
 
     async createSettlement(req, res, next) {
         try {
             checkValidation(req)
-            const merchant = await merchantRepo.getMerchantByCode(req.body.code);
-            if (!merchant) {
-                throw new CustomError(404, 'Merchant does not exist')
+            const vendor = await vendorRepo.getVendorByCode(req.body.code);
+            if (!vendor) {
+                throw new CustomError(404, 'Vendor does not exist')
             }
             delete req.body.code;
-            const data = await settlementService.createSettlement({
+            const data = await vendorSettlementService.createSettlement({
                 ...req.body,
                 status: "INITIATED",
-                merchant_id: merchant.id,
+                vendor_id: vendor.id,
             });
             return DefaultResponse(res, 201, "Settlement created successfully");
         } catch (err) {
@@ -46,8 +47,8 @@ class SettlementController {
             let Codes;
 
 
-            if ((user?.role !== "ADMIN" || !user?.code) && !code) {
-                Codes = user?.code.join(",")
+            if (user?.role !== "ADMIN"  && !code) {
+                Codes = user?.vendor_code
             }
             else {
                 Codes = code
@@ -55,7 +56,7 @@ class SettlementController {
 
             const take = Number(qTake) || 20;
             const skip = take * (Number(page || 1) - 1);
-            const data = await settlementService.getSettlement(skip, take, parseInt(id), Codes, status, amount, acc_no, method, refrence_id);
+            const data = await vendorSettlementService.getSettlement(skip, take, parseInt(id), Codes, status, amount, acc_no, method, refrence_id);
             return DefaultResponse(res, 201, "Settlement fetched successfully!", data);
         } catch (err) {
             next(err);
@@ -77,7 +78,7 @@ class SettlementController {
             if (req.body.rejected_reason) {
                 payload.status = "REVERSED";
             }
-            const data = await settlementService.updateSettlement(req.params.id, payload);
+            const data = await vendorSettlementService.updateSettlement(req.params.id, payload);
             return DefaultResponse(res, 200, "Settlement Updated!", data);
         } catch (err) {
             next(err);

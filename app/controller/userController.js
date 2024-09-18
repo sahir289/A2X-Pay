@@ -39,7 +39,6 @@ class UserController {
                 // userRes
             );
         } catch (error) {
-            console.log("🚀 ~ UserController ~ createUser ~ error:", error)
             next(error)
         }
     }

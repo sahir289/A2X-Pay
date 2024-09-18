@@ -6,6 +6,7 @@ import payInRepo from "../repository/payInRepo.js";
 import { checkValidation } from "../helper/validationHelper.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import { calculateCommission } from "../helper/utils.js";
+import bankAccountRepo from "../repository/bankAccountRepo.js";
 
 class BotResponseController {
   async botResponse(req, res, next) {
@@ -19,7 +20,7 @@ class BotResponseController {
       const utr = splitData[3];
 
       // Validate amount, amount_code, and utr
-      const isValidAmount = amount <= 100000;
+      const isValidAmount = amount;
       const isValidAmountCode =
         amount_code !== "nil" && amount_code.length === 5;
       const isValidUtr = utr.length === 12;
@@ -30,7 +31,6 @@ class BotResponseController {
           amount,
           utr,
         };
-
         if (isValidAmountCode) {
           updatedData.amount_code = amount_code;
         }
@@ -43,7 +43,7 @@ class BotResponseController {
         
         const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
 
-        if (checkPayInUtr.length !== 0) {
+        if (checkPayInUtr.length !== 0 && checkPayInUtr.at(0)?.amount == amount && checkPayInUtr.at(0)?.user_submitted_utr == utr) {
           const payInData = {
             confirmed: botRes?.amount,
             status: "SUCCESS",
@@ -58,6 +58,12 @@ class BotResponseController {
             payInData
           );
 
+          const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+            checkPayInUtr[0]?.bank_acc_id,
+            parseFloat(amount)
+          );
+          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id,botRes?.utr)
+
           const notifyData = {
             status: "success",
             merchantOrderId: updatePayInDataRes?.merchant_order_id,
@@ -70,6 +76,34 @@ class BotResponseController {
           } catch (error) {
           }
         }
+        else {
+          const payInData = {
+            confirmed: botRes?.amount,
+            status: "DISPUTE",
+            is_notified: true,
+            utr: botRes?.utr,
+            approved_at: new Date(),
+            payin_commission: payinCommission
+          };
+          const updatePayInDataRes = await payInRepo.updatePayInData(
+            checkPayInUtr[0]?.id,
+            payInData
+          );
+
+          const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+            checkPayInUtr[0]?.bank_acc_id,
+            parseFloat(amount)
+          );
+
+          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id,botRes?.utr);
+
+          const notifyData = {
+            status: "dispute",
+            merchantOrderId: updatePayInDataRes?.merchant_order_id,
+            payinId: updatePayInDataRes?.id,
+            amount: updatePayInDataRes?.confirmed,
+          };
+        }
 
         // Notify all connected clients about the new entry
         io.emit("new-entry", {
@@ -81,7 +115,7 @@ class BotResponseController {
           success: true,
           message: "Response received successfully",
           data: updatedData,
-        });
+        }); 
       } else {
         res.status(400).json({
           success: false,

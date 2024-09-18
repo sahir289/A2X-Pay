@@ -35,7 +35,7 @@ class PayInService {
       amount: amount, // this amount is given by the user
       status: "ASSIGNED",
       bank_acc_id: bankDetails?.bankAccountId,
-      bank_name: bankDetails?.bankAccount?.bank_name
+      bank_name: bankDetails?.bankAccount?.bank_name,
     };
     const payInUrlUpdateRes = await payInRepo.updatePayInData(payInId, data);
     const getBankRes = await bankAccountRepo.getBankByBankAccId(
@@ -58,6 +58,7 @@ class PayInService {
     amount,
     merchantOrderId,
     merchantCode,
+    vendorCode,
     userId,
     userSubmittedUtr,
     utr,
@@ -67,10 +68,33 @@ class PayInService {
     bankName,
     filterToday
   ) {
+    const Data = await prisma.payin.updateMany({
+      where: {
+        status: "INITIATED",
+        expirationDate: {
+          lt: Math.floor(new Date().getTime() / 1000), // Compare if expirationDate is less than the current time
+        },
+      },
+      data: {
+        status: "DROPPED",
+      },
+    });
+
     const now = new Date();
     const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString(); // Start of today
     const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString(); // End of today
+    let bankIds = [];
+    if (vendorCode) {
+      const data = await prisma.bankAccount.findMany({
+        where: {
+          vendor_code: vendorCode,
+        },
+      });
 
+      bankIds = data?.map((item) => item.id);
+    }
+
+    const SplitedCode = merchantCode?.split(",");
     const filters = {
       ...(sno && { sno: { equals: sno } }),
       ...(merchantOrderId && {
@@ -92,7 +116,12 @@ class PayInService {
       ...(status && { status: { equals: status } }),
       ...(merchantCode && {
         Merchant: {
-          code: { contains: merchantCode, mode: "insensitive" },
+          code: Array.isArray(SplitedCode) ? { in: SplitedCode } : merchantCode,
+        },
+      }),
+      ...(vendorCode && {
+        bank_acc_id: {
+          in: bankIds,
         },
       }),
       ...(filterToday && {
@@ -105,18 +134,24 @@ class PayInService {
         bank_name: { contains: bankName, mode: "insensitive" },
       }),
     };
+    // const Data = await prisma.payin.findMany({
+    //   where: {
+    //     bank_acc_id: {
+    //       in: []
+    //     }
+    //   }
+    // })
 
     const payInData = await prisma.payin.findMany({
       where: filters,
       skip: skip,
       take: take,
       include: {
-        Merchant: true
+        Merchant: true,
       },
-      orderBy:{
-        sno:"desc"
-      }
-
+      orderBy: {
+        sno: "desc",
+      },
     });
 
     const totalRecords = await prisma.payin.count({
@@ -134,7 +169,20 @@ class PayInService {
     return { payInData: serializedPayinData, totalRecords };
   }
 
-  async getAllPayInDataByMerchant(merchantCode) {
+  async getAllPayInDataByMerchant(merchantCode,startDate,endDate) {
+
+    const dateFilter = {};
+    if (startDate) {
+      dateFilter.gte = new Date(startDate); // Greater than or equal to startDate
+    }
+    if (endDate) {
+
+      let end = new Date(endDate)
+
+      end.setDate(end.getDate()+1)
+
+      dateFilter.lte = end; // Less than or equal to endDate
+    }
     const payInData = await prisma.payin.findMany({
       where: {
         status: "SUCCESS",
@@ -143,6 +191,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
+        createdAt:dateFilter
       },
     });
 
@@ -154,6 +203,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
+        createdAt:dateFilter
       },
     });
 
@@ -164,6 +214,59 @@ class PayInService {
           code: Array.isArray(merchantCode)
             ? { in: merchantCode }
             : merchantCode,
+        },
+        createdAt:dateFilter
+      },
+    });
+
+    return { payInOutData: { payInData, payOutData, settlementData } };
+  }
+
+  async getAllPayInDataByVendor(vendorCode) {
+    let bankIds = [];
+    if (vendorCode) {
+      const data = await prisma.bankAccount.findMany({
+        where: {
+          vendor_code: Array.isArray(vendorCode)
+            ? { in: vendorCode }
+            : vendorCode,
+        },
+      });
+
+      bankIds = data?.map((item) => item.id);
+    }
+
+    const filter = {
+      ...(vendorCode && {
+        bank_acc_id: {
+          in: bankIds,
+        },
+      }),
+    };
+
+    const payInData = await prisma.payin.findMany({
+      where: {
+        status: "SUCCESS",
+        ...filter,
+      },
+    });
+
+    const payOutData = await prisma.payout.findMany({
+      where: {
+        status: "SUCCESS",
+        vendor_code: Array.isArray(vendorCode)
+          ? { in: vendorCode }
+          : vendorCode,
+      },
+    });
+
+    const settlementData = await prisma.vendorSettlement.findMany({
+      where: {
+        status: "SUCCESS",
+        Vendor: {
+          vendor_code: Array.isArray(vendorCode)
+            ? { in: vendorCode }
+            : vendorCode,
         },
       },
     });
@@ -201,6 +304,5 @@ class PayInService {
     return expirePayInUrlRes
 }
 }
-
 
 export default new PayInService();

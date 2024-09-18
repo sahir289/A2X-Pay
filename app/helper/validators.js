@@ -70,12 +70,14 @@ export const userCreateValidator = [
       "TRANSACTIONS",
       "OPERATIONS",
       "MERCHANT",
-      "VENDOR"
+      "VENDOR",
+      "VENDOR_OPERATIONS",
+      "MERCHANT_OPERATIONS"
     ])
     .withMessage(
-      "Role must be one of ADMIN, CUSTOMER_SERVICE, TRANSACTIONS, OPERATIONS, MERCHANT,VENDOR"
+      "Role must be one of ADMIN, CUSTOMER_SERVICE, TRANSACTIONS, OPERATIONS, MERCHANT,VENDOR,VENDOR_OPERATIONS"
     ),
-  body("code").optional().isString().withMessage("Code must be a string"),
+  // body("code").optional().isString().withMessage("Code must be a string"),
   body("createdBy")
     .notEmpty()
     .withMessage("Created By is required")
@@ -270,7 +272,6 @@ export const payInAssignValidator = [
     .withMessage("User ID must be a string"),
 ];
 
-
 export const validatePayInIdUrl = [
   param("payInId")
     .notEmpty()
@@ -406,18 +407,9 @@ export const settlementsGetValidator = [
 ];
 
 export const payoutCreateValidator = [
-  body("code")
-    .trim()
-    .notEmpty()
-    .withMessage("Code is required!"),
-  body("user_id")
-    .trim()
-    .notEmpty()
-    .withMessage("User ID is required!"),
-  body("acc_no")
-    .trim()
-    .notEmpty()
-    .withMessage("Account number is required!"),
+  body("code").trim().notEmpty().withMessage("Code is required!"),
+  body("user_id").trim().notEmpty().withMessage("User ID is required!"),
+  body("acc_no").trim().notEmpty().withMessage("Account number is required!"),
   body("acc_holder_name")
     .trim()
     .notEmpty()
@@ -430,22 +422,38 @@ export const payoutCreateValidator = [
       if (ifsc.validate(input)) {
         return Promise.resolve();
       }
-      return Promise.reject("IFSC is invalid!")
+      return Promise.reject("IFSC is invalid!");
     }),
   body("amount")
     .trim()
     .notEmpty()
     .isNumeric()
     .withMessage("amount is invalid or required!"),
-]
+];
 
 export const payoutGetValidator = [
   query("id").optional().trim().notEmpty().withMessage("Id is required!"),
-  query("merchant_order_id").optional().trim().notEmpty().withMessage("merchant_order_id is required!"),
-  query("user_id").optional().trim().notEmpty().withMessage("user_id is required!"),
+  query("merchant_order_id")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("merchant_order_id is required!"),
+  query("user_id")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("user_id is required!"),
   query("sno").optional().trim().notEmpty().withMessage("sno is required!"),
-  query("payout_commision").optional().trim().notEmpty().withMessage("payout_commision is required!"),
-  query("utr_id").optional().trim().notEmpty().withMessage("utr_id is required!"),
+  query("payout_commision")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("payout_commision is required!"),
+  query("utr_id")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("utr_id is required!"),
   query("status")
     .optional()
     .trim()
@@ -482,20 +490,14 @@ export const payoutGetValidator = [
 
 //new pay in validator
 export const payOutInAllDataValidator = [
-  query("merchantCode")
-    .notEmpty()
-    .withMessage("Code is required"),
+  query("merchantCode").notEmpty().withMessage("Code is required"),
   query("status")
     .notEmpty()
     .withMessage("Status is required")
     .isIn(statusEnums)
     .withMessage(`Invalid status, Should be one of these ${statusEnums}`),
-  query("startDate")
-    .notEmpty()
-    .withMessage("Start date is required"),
-  query("endDate")
-    .notEmpty()
-    .withMessage("End date is required")
+  query("startDate").notEmpty().withMessage("Start date is required"),
+  query("endDate").notEmpty().withMessage("End date is required"),
 ];
 
 export const payInExpireURLValidator = [
@@ -504,4 +506,36 @@ export const payInExpireURLValidator = [
     .withMessage("payInId must not be empty")
     .isUUID()
     .withMessage("payInId must be a valid UUID"),
+];
+export const vendorCreateValidator = [
+  query("vendor_code")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("vendor_code is required!"),
+  query("vendor_commission")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("vendor_commission is required!"),
+  query("createdBy")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("createdBy is required!"),
+];
+
+export const updateVendorCodeValidator = [
+  body('vendorCode')
+      .isString()  // Validate that vendorCode is a string
+      .withMessage('vendorCode must be a string')
+      .bail()
+      .trim(),
+
+  body('withdrawId')
+      .isArray()
+      .withMessage('withdrawId must be an array')
+      .bail()
+      .custom((value) => value.every((item) => typeof item === 'string'))
+      .withMessage('Each Withdraw ID must be a string')
 ];

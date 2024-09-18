@@ -12,7 +12,7 @@ class Withdraw {
         })
     }
 
-    async getWithdraw(skip, take, id, code, status, amount, acc_no, merchant_order_id, user_id, sno, payout_commision, utr_id, acc_holder_name) {
+    async getWithdraw(skip, take, id, code,vendorCode, status, amount, acc_no, merchant_order_id, user_id, sno, payout_commision, utr_id, acc_holder_name) {
 
         const where = {};
         [
@@ -26,6 +26,7 @@ class Withdraw {
             { col: "payout_commision", value: payout_commision },
             { col: "utr_id", value: utr_id },
             { col: "acc_holder_name", value: acc_holder_name },
+            {col: "vendor_code", value: vendorCode }
         ]
             .forEach(el => {
                 if (el.value) {
@@ -37,12 +38,13 @@ class Withdraw {
             where.Merchant = { code };
         }
 
+
         const data = await prisma.payout.findMany({
             where,
             skip,
             take,
             orderBy: {
-                id: "desc",
+                sno: "desc",
             },
             include: {
                 Merchant: {
@@ -51,7 +53,7 @@ class Withdraw {
                         code: true,
                     }
                 }
-            }
+            },
         })
         const totalRecords = await prisma.payout.count({
             where,
@@ -92,6 +94,24 @@ class Withdraw {
         });
         return payOutData;
     }
+
+    async updateVendorCodes(withdrawIds, vendorCode) {
+        await prisma.payout.updateMany({
+            where: {
+                id: {
+                    in: withdrawIds,
+                },
+            },
+            data: { vendor_code: vendorCode }
+        });
+    
+        return { message: 'Vendor code updated successfully for all specified withdrawal IDs' };
+    }
+    
+
+    
 }
+
+
 
 export default new Withdraw();
