@@ -125,7 +125,7 @@ class PayInController {
         throw new CustomError(404, "Payment Url is incorrect");
       }
 
-      if (urlValidationRes?.is_url_expires === true || urlValidationRes?.one_time_used === true) {
+      if (urlValidationRes?.is_url_expires === true) {
         throw new CustomError(403, "Url is expired");
       }
 
@@ -141,7 +141,6 @@ class PayInController {
         expiryTime: Number(urlValidationRes?.expirationDate),
         one_time_used: urlValidationRes?.one_time_used
       };
-      console.log('backend====>',urlValidationRes);
       return DefaultResponse(res, 200, "Payment Url is correct", updatedRes);
     } catch (error) {
       next(error);
@@ -1070,7 +1069,9 @@ class PayInController {
     try {
       checkValidation(req)
       const { id } = req.params;
-      const expirePayInUrlRes = await payInServices.oneTimeExpire(id)      
+      const expirePayInUrlRes = await payInServices.oneTimeExpire(id) 
+      console.log('=======>',expirePayInUrlRes);
+           
       return DefaultResponse(res, 200, "URL is expired!");
     } catch (error) {
       next(error);
