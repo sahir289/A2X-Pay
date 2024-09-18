@@ -72,7 +72,7 @@ export const userCreateValidator = [
       "MERCHANT",
       "VENDOR",
       "VENDOR_OPERATIONS",
-      "MERCHANT_OPERATIONS"
+      "MERCHANT_OPERATIONS",
     ])
     .withMessage(
       "Role must be one of ADMIN, CUSTOMER_SERVICE, TRANSACTIONS, OPERATIONS, MERCHANT,VENDOR,VENDOR_OPERATIONS"
@@ -363,6 +363,24 @@ export const settlementCreateValidator = [
     }),
 ];
 
+export const validatePayOuId = [
+  body("payoutId")
+    .notEmpty()
+    .withMessage("payOutId must not be empty")
+    .isString()
+    .withMessage("payOutId must be a string"),
+  body("merchantCode")
+    .notEmpty()
+    .withMessage("merchantCode must not be empty")
+    .isString()
+    .withMessage("merchantCode must be a string"),
+  body("merchantOrderId")
+    .notEmpty()
+    .withMessage("merchantOrderId must not be empty")
+    .isString()
+    .withMessage("merchantOrderId must be a string"),
+];
+
 export const settlementsGetValidator = [
   query("id").optional().trim().notEmpty().withMessage("Id is required!"),
   query("status")
@@ -519,16 +537,16 @@ export const vendorCreateValidator = [
 ];
 
 export const updateVendorCodeValidator = [
-  body('vendorCode')
-      .isString()  // Validate that vendorCode is a string
-      .withMessage('vendorCode must be a string')
-      .bail()
-      .trim(),
+  body("vendorCode")
+    .isString() // Validate that vendorCode is a string
+    .withMessage("vendorCode must be a string")
+    .bail()
+    .trim(),
 
-  body('withdrawId')
-      .isArray()
-      .withMessage('withdrawId must be an array')
-      .bail()
-      .custom((value) => value.every((item) => typeof item === 'string'))
-      .withMessage('Each Withdraw ID must be a string')
+  body("withdrawId")
+    .isArray()
+    .withMessage("withdrawId must be an array")
+    .bail()
+    .custom((value) => value.every((item) => typeof item === "string"))
+    .withMessage("Each Withdraw ID must be a string"),
 ];
