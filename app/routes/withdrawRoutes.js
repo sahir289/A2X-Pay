@@ -11,8 +11,8 @@ import {
 import isAuthenticated from '../middlewares/authMiddleware.js';
 
 const withdrawRouter = express();
-withdrawRouter.use(isAuthenticated);
 withdrawRouter.post('/create-payout', payoutCreateValidator, withdrawController.createWithdraw);
+withdrawRouter.use(isAuthenticated);
 withdrawRouter.get('/getall-payout', settlementsGetValidator, withdrawController.getWithdraw);
 withdrawRouter.put('/update-payout/:id', withdrawController.updateWithdraw);
 withdrawRouter.put('/update-vendor-code', updateVendorCodeValidator , withdrawController.updateVendorCode);

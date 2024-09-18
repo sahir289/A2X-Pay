@@ -11,7 +11,7 @@ class WithdrawController {
     async createWithdraw(req, res, next) {
         try {
             checkValidation(req);
-            const merchant = await merchantRepo.getMerchantByCode(req.body.code);
+            const merchant = await merchantRepo.getMerchantByCode(req?.body?.code);
             if (!merchant) {
                 throw new CustomError(404, 'Merchant does not exist')
             }
