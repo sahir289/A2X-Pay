@@ -224,6 +224,31 @@ class PayInController {
     }
   }
 
+  async checkPayinStatus(req, res, next) {
+    try {
+      checkValidation(req);
+      const { payinId, merchantCode, merchantOrderId } = req.body;
+      const data = await payInServices.checkPayinStatus(
+        payinId,
+        merchantCode,
+        merchantOrderId
+      );
+
+      if (!data) {
+        return DefaultResponse(res, 404, "Payin not found");
+      }
+
+      return DefaultResponse(
+        res,
+        200,
+        "Payin status fetched successfully",
+        data
+      );
+    } catch (err) {
+      next(err);
+    }
+  }
+
   // To Check Payment Status using code. (telegram)
   async checkPaymentStatus(req, res, next) {
     try {
@@ -619,7 +644,6 @@ class PayInController {
         utr: resFromOcrPy?.data?.data?.transaction_id, //|| dataRes.utr
       };
 
-
       if (usrSubmittedUtr?.utr !== "undefined") {
         const usrSubmittedUtrData = usrSubmittedUtr?.utr;
 
@@ -759,7 +783,7 @@ class PayInController {
 
   async getAllPayInDataByMerchant(req, res, next) {
     try {
-      let { merchantCode,startDate,endDate } = req.query;
+      let { merchantCode, startDate, endDate } = req.query;
 
       if (merchantCode == null) {
         merchantCode = [];
@@ -768,7 +792,9 @@ class PayInController {
       }
 
       const payInDataRes = await payInServices.getAllPayInDataByMerchant(
-        merchantCode,startDate,endDate
+        merchantCode,
+        startDate,
+        endDate
       );
 
       return DefaultResponse(

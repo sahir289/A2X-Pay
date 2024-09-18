@@ -5,7 +5,7 @@ import {
   settlementsGetValidator,
   payOutInAllDataValidator,
   updateVendorCodeValidator,
-  validatePayOuId,
+  validatePayOutId,
 } from "../helper/validators.js";
 
 import isAuthenticated from "../middlewares/authMiddleware.js";
@@ -25,7 +25,7 @@ withdrawRouter.get(
 withdrawRouter.put("/update-payout/:id", withdrawController.updateWithdraw);
 withdrawRouter.post(
   "/check-payout-status",
-  validatePayOuId,
+  validatePayOutId,
   withdrawController.checkPayoutStatus
 );
 withdrawRouter.put(

@@ -169,17 +169,15 @@ class PayInService {
     return { payInData: serializedPayinData, totalRecords };
   }
 
-  async getAllPayInDataByMerchant(merchantCode,startDate,endDate) {
-
+  async getAllPayInDataByMerchant(merchantCode, startDate, endDate) {
     const dateFilter = {};
     if (startDate) {
       dateFilter.gte = new Date(startDate); // Greater than or equal to startDate
     }
     if (endDate) {
+      let end = new Date(endDate);
 
-      let end = new Date(endDate)
-
-      end.setDate(end.getDate()+1)
+      end.setDate(end.getDate() + 1);
 
       dateFilter.lte = end; // Less than or equal to endDate
     }
@@ -191,7 +189,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
-        createdAt:dateFilter
+        createdAt: dateFilter,
       },
     });
 
@@ -203,7 +201,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
-        createdAt:dateFilter
+        createdAt: dateFilter,
       },
     });
 
@@ -215,11 +213,37 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
-        createdAt:dateFilter
+        createdAt: dateFilter,
       },
     });
 
     return { payInOutData: { payInData, payOutData, settlementData } };
+  }
+
+  async checkPayinStatus(payinId, merchantCode, merchantOrderId) {
+    const data = await prisma.payin.findFirst({
+      where: {
+        id: payinId,
+        Merchant: {
+          code: merchantCode,
+        },
+        merchant_order_id: merchantOrderId,
+      },
+      include: {
+        Merchant: true,
+      },
+    });
+    if (!data) {
+      return null;
+    }
+    const response = {
+      status: data.status,
+      merchant_code: data.Merchant.code,
+      merchant_order_id: data.merchant_order_id,
+      amount: data.amount,
+      payinId: data.id,
+    };
+    return response;
   }
 
   async getAllPayInDataByVendor(vendorCode) {

@@ -363,12 +363,30 @@ export const settlementCreateValidator = [
     }),
 ];
 
-export const validatePayOuId = [
+export const validatePayOutId = [
   body("payoutId")
     .notEmpty()
     .withMessage("payOutId must not be empty")
     .isString()
     .withMessage("payOutId must be a string"),
+  body("merchantCode")
+    .notEmpty()
+    .withMessage("merchantCode must not be empty")
+    .isString()
+    .withMessage("merchantCode must be a string"),
+  body("merchantOrderId")
+    .notEmpty()
+    .withMessage("merchantOrderId must not be empty")
+    .isString()
+    .withMessage("merchantOrderId must be a string"),
+];
+
+export const validatePayInId = [
+  body("payinId")
+    .notEmpty()
+    .withMessage("payinId must not be empty")
+    .isString()
+    .withMessage("payinId must be a string"),
   body("merchantCode")
     .notEmpty()
     .withMessage("merchantCode must not be empty")

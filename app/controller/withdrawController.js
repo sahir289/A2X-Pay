@@ -33,14 +33,12 @@ class WithdrawController {
   async checkPayoutStatus(req, res, next) {
     try {
       checkValidation(req);
-      console.log(req.body, "req.body");
       const { payoutId, merchantCode, merchantOrderId } = req.body;
       const data = await withdrawService.checkPayoutStatus(
         payoutId,
         merchantCode,
         merchantOrderId
       );
-      console.log(data, "data33");
 
       if (!data) {
         return DefaultResponse(res, 404, "Payout not found");

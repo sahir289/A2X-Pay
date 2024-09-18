@@ -24,7 +24,6 @@ class Withdraw {
         Merchant: true,
       },
     });
-    console.log(data, "data");
     if (!data) {
       return null;
     }
@@ -35,7 +34,6 @@ class Withdraw {
       amount: data.amount,
       payoutId: data.id,
     };
-    console.log(response, "response");
     return response;
   }
 

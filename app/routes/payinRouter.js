@@ -7,6 +7,7 @@ import { s3 } from "../helper/AwsS3.js";
 import {
   payInAssignValidator,
   payOutInAllDataValidator,
+  validatePayInId,
   validatePayInIdAndAmountAssigned,
   validatePayInIdUrl,
   validatePayInProcess,
@@ -24,7 +25,6 @@ const upload = multer({
     },
   }),
 });
-
 
 payInRouter.post(
   "/upload/:payInId",
@@ -66,6 +66,12 @@ payInRouter.get(
   "/check-payment-status/:payInId",
   validatePayInIdUrl,
   payInController.checkPaymentStatus
+);
+
+payInRouter.post(
+  "/check-payin-status",
+  validatePayInId,
+  payInController.checkPayinStatus
 );
 
 payInRouter.post(
