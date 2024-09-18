@@ -497,3 +497,11 @@ export const payOutInAllDataValidator = [
     .notEmpty()
     .withMessage("End date is required")
 ];
+
+export const payInExpireURLValidator = [
+  param("id")
+    .notEmpty()
+    .withMessage("payInId must not be empty")
+    .isUUID()
+    .withMessage("payInId must be a valid UUID"),
+];

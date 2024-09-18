@@ -118,7 +118,7 @@ class PayInController {
         throw new CustomError(404, "Payment Url is incorrect");
       }
 
-      if (urlValidationRes?.is_url_expires === true) {
+      if (urlValidationRes?.is_url_expires === true || urlValidationRes?.one_time_used === true) {
         throw new CustomError(403, "Url is expired");
       }
 
@@ -132,7 +132,9 @@ class PayInController {
         return_url: urlValidationRes?.return_url,
         notify_url: urlValidationRes?.notify_url,
         expiryTime: Number(urlValidationRes?.expirationDate),
+        one_time_used: urlValidationRes?.one_time_used
       };
+      console.log('backend====>',urlValidationRes);
       return DefaultResponse(res, 200, "Payment Url is correct", updatedRes);
     } catch (error) {
       next(error);
@@ -208,7 +210,6 @@ class PayInController {
       const { payInId } = req.params;
 
       const expirePayinUrl = await payInRepo.expirePayInUrl(payInId);
-
       return DefaultResponse(res, 200, "Payment Url is expires");
     } catch (error) {
       next(error);
@@ -926,6 +927,17 @@ class PayInController {
       } else {
         return res.status(200).json({ message: "No photo in the message" });
       }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async expirePayInUrl(req, res, next) {
+    try {
+      checkValidation(req)
+      const { id } = req.params;
+      const expirePayInUrlRes = await payInServices.oneTimeExpire(id)      
+      return DefaultResponse(res, 200, "URL is expired!");
     } catch (error) {
       next(error);
     }

@@ -154,6 +154,7 @@ model Payin {
   duration             String?
   expirationDate       Int?
   is_url_expires       Boolean   @default(false)
+  one_time_used        Boolean   @default(false)
   Merchant             Merchant  @relation(fields: [merchant_id], references: [id])
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
