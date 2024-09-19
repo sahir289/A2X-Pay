@@ -293,6 +293,16 @@ class PayInService {
     });
     return payInData;
   }
+  async oneTimeExpire(payInId) {
+    const expirePayInUrlRes = await prisma.payin.update({
+        where: {
+            id: payInId
+        }, data: {
+          one_time_used : true,
+        }
+    })
+    return expirePayInUrlRes
+}
 }
 
 export default new PayInService();

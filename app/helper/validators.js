@@ -500,6 +500,13 @@ export const payOutInAllDataValidator = [
   query("endDate").notEmpty().withMessage("End date is required"),
 ];
 
+export const payInExpireURLValidator = [
+  param("id")
+    .notEmpty()
+    .withMessage("payInId must not be empty")
+    .isUUID()
+    .withMessage("payInId must be a valid UUID"),
+];
 export const vendorCreateValidator = [
   query("vendor_code")
     .optional()

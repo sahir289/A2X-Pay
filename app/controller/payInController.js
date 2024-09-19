@@ -139,6 +139,7 @@ class PayInController {
         return_url: urlValidationRes?.return_url,
         notify_url: urlValidationRes?.notify_url,
         expiryTime: Number(urlValidationRes?.expirationDate),
+        one_time_used: urlValidationRes?.one_time_used
       };
       return DefaultResponse(res, 200, "Payment Url is correct", updatedRes);
     } catch (error) {
@@ -217,7 +218,6 @@ class PayInController {
       const { payInId } = req.params;
 
       const expirePayinUrl = await payInRepo.expirePayInUrl(payInId);
-
       return DefaultResponse(res, 200, "Payment Url is expires");
     } catch (error) {
       next(error);
@@ -1073,6 +1073,20 @@ class PayInController {
       next(error);
     }
   }
+
+  async expirePayInUrl(req, res, next) {
+    try {
+      checkValidation(req)
+      const { id } = req.params;
+      const expirePayInUrlRes = await payInServices.oneTimeExpire(id) 
+      console.log('=======>',expirePayInUrlRes);
+           
+      return DefaultResponse(res, 200, "URL is expired!");
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }
 
 export default new PayInController();

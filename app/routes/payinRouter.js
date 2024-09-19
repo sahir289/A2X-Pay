@@ -6,6 +6,7 @@ import payInController from "../controller/payInController.js";
 import { s3 } from "../helper/AwsS3.js";
 import {
   payInAssignValidator,
+  payInExpireURLValidator,
   payOutInAllDataValidator,
   validatePayInIdAndAmountAssigned,
   validatePayInIdUrl,
@@ -81,12 +82,16 @@ payInRouter.get(
   payInController.getAllPayInDataByMerchant
 );
 
+payInRouter.post(
+  "/expire-url/:id",
+  payInExpireURLValidator,
+  payInController.expirePayInUrl
+);
+
+// telegram resp ocr
+payInRouter.post("/tele-ocr", payInController.telegramResHandler)
 payInRouter.get(
   "/get-payInDataVendor",
   payInController.getAllPayInDataByVendor
 );
-
-// telegram resp ocr
-payInRouter.post("/tele-ocr", payInController.telegramResHandler);
-
 export default payInRouter;
