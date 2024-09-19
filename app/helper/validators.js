@@ -294,6 +294,24 @@ export const validatePayInIdAndAmountAssigned = [
     .withMessage("amount must be a valid number greater than or equal to 0"),
 ];
 
+export const validatePayInIdAndMerchant = [
+  body("payinId")
+    .notEmpty()
+    .withMessage("payinId must not be empty")
+    .isString()
+    .withMessage("payinId must be a string"),
+  body("merchantCode")
+    .notEmpty()
+    .withMessage("merchantCode must not be empty")
+    .isString()
+    .withMessage("merchantCode must be a string"),
+  body("merchantOrderId")
+    .notEmpty()
+    .withMessage("merchantOrderId must not be empty")
+    .isString()
+    .withMessage("merchantOrderId must be a string"),
+];
+
 export const validatePayInProcess = [
   param("payInId")
     .notEmpty()

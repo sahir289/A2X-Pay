@@ -11,30 +11,18 @@ class Withdraw {
     });
   }
 
-  async checkPayoutStatus(payOutId, merchantCode, merchantOrderId) {
+  async checkPayoutStatus(payoutId, merchantCode, merchantOrderId) {
     const data = await prisma.payout.findFirst({
       where: {
-        id: payOutId,
-        Merchant: {
-          code: merchantCode,
-        },
+        id: payoutId,
+        merchant_id: merchantCode,
         merchant_order_id: merchantOrderId,
       },
       include: {
         Merchant: true,
       },
     });
-    if (!data) {
-      return null;
-    }
-    const response = {
-      status: data.status,
-      merchant_code: data.Merchant.code,
-      merchant_order_id: data.merchant_order_id,
-      amount: data.amount,
-      payoutId: data.id,
-    };
-    return response;
+    return data;
   }
 
   async getWithdraw(

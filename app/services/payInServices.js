@@ -224,26 +224,28 @@ class PayInService {
     const data = await prisma.payin.findFirst({
       where: {
         id: payinId,
-        Merchant: {
-          code: merchantCode,
-        },
+        merchant_id: merchantCode,
         merchant_order_id: merchantOrderId,
       },
       include: {
         Merchant: true,
       },
     });
-    if (!data) {
-      return null;
-    }
-    const response = {
-      status: data.status,
-      merchant_code: data.Merchant.code,
-      merchant_order_id: data.merchant_order_id,
-      amount: data.amount,
-      payinId: data.id,
-    };
-    return response;
+    return data;
+  }
+
+  async payinAssignment(payinId, merchantCode, merchantOrderId) {
+    const data = await prisma.payin.findFirst({
+      where: {
+        id: payinId,
+        merchant_id: merchantCode,
+        merchant_order_id: merchantOrderId,
+      },
+      include: {
+        Merchant: true,
+      },
+    });
+    return data;
   }
 
   async getAllPayInDataByVendor(vendorCode) {

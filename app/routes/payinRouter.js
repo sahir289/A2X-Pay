@@ -9,6 +9,7 @@ import {
   payOutInAllDataValidator,
   validatePayInId,
   validatePayInIdAndAmountAssigned,
+  validatePayInIdAndMerchant,
   validatePayInIdUrl,
   validatePayInProcess,
 } from "../helper/validators.js";
@@ -54,6 +55,12 @@ payInRouter.post(
   "/assign-bank/:payInId",
   validatePayInIdAndAmountAssigned,
   payInController.assignedBankToPayInUrl
+);
+
+payInRouter.post(
+  "/payin-assignment",
+  validatePayInIdAndMerchant,
+  payInController.payinAssignment
 );
 
 payInRouter.get(

@@ -3,6 +3,7 @@ import withdrawService from "../services/withdrawService.js";
 import { checkValidation } from "../helper/validationHelper.js";
 import { DefaultResponse } from "../helper/customResponse.js";
 import { getAmountFromPerc } from "../helper/utils.js";
+import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 
 class WithdrawController {
@@ -34,21 +35,80 @@ class WithdrawController {
     try {
       checkValidation(req);
       const { payoutId, merchantCode, merchantOrderId } = req.body;
+
+      if (!payoutId && !merchantCode && !merchantOrderId) {
+        return DefaultResponse(res, 400, {
+          status: "error",
+          error: "Invalid request. Data type mismatch or incomplete request",
+        });
+      }
+
+      if (!merchantCode) {
+        return DefaultResponse(res, 404, {
+          status: "error",
+          error: "API key / code not found",
+        });
+      }
+
       const data = await withdrawService.checkPayoutStatus(
         payoutId,
         merchantCode,
         merchantOrderId
       );
+      console.log(data);
 
       if (!data) {
         return DefaultResponse(res, 404, "Payout not found");
       }
 
+      if (data.Merchant.max_payout < data.amount) {
+        return DefaultResponse(res, 461, {
+          status: "error",
+          error: "Amount beyond payout limits",
+        });
+      }
+
+      if (
+        data.status !== "SUCCESS" ||
+        data.status !== "FIALED" ||
+        data.status !== "PENDING"
+      ) {
+        return DefaultResponse(res, 400, {
+          status: "error",
+          error: "Invalid request. Data type mismatch or incomplete request",
+        });
+      }
+
+      if (data.is_notified) {
+        const notifyData = {
+          status: "success",
+          merchantCode: data.Merchant.code,
+          merchantOrderId: data.merchant_order_id,
+          payinId: data.id,
+          amount: data.amount,
+        };
+        try {
+          const notifyMerchant = await axios.post(data.notify_url, notifyData);
+        } catch (error) {}
+      }
+
+      if (data.status === "SUCCESS") {
+        res.redirect(302, data.return_url);
+      }
+
+      const response = {
+        status: data.status,
+        merchantOrderId: data.merchant_order_id,
+        amount: data.amount,
+        payoutId: data.id,
+        paymentId: uuidv4(),
+      };
+
       return DefaultResponse(
         res,
         200,
         "Payout status fetched successfully",
-        data
+        response
       );
     } catch (err) {
       next(err);
