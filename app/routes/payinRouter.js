@@ -8,7 +8,9 @@ import {
   payInAssignValidator,
   payInExpireURLValidator,
   payOutInAllDataValidator,
+  validatePayInId,
   validatePayInIdAndAmountAssigned,
+  validatePayInIdAndMerchant,
   validatePayInIdUrl,
   validatePayInProcess,
 } from "../helper/validators.js";
@@ -25,7 +27,6 @@ const upload = multer({
     },
   }),
 });
-
 
 payInRouter.post(
   "/upload/:payInId",
@@ -57,6 +58,12 @@ payInRouter.post(
   payInController.assignedBankToPayInUrl
 );
 
+payInRouter.post(
+  "/payin-assignment",
+  validatePayInIdAndMerchant,
+  payInController.payinAssignment
+);
+
 payInRouter.get(
   "/expire-payIn-url/:payInId",
   validatePayInIdUrl,
@@ -67,6 +74,12 @@ payInRouter.get(
   "/check-payment-status/:payInId",
   validatePayInIdUrl,
   payInController.checkPaymentStatus
+);
+
+payInRouter.post(
+  "/check-payin-status",
+  validatePayInId,
+  payInController.checkPayinStatus
 );
 
 payInRouter.post(

@@ -224,6 +224,165 @@ class PayInController {
     }
   }
 
+  async checkPayinStatus(req, res, next) {
+    try {
+      checkValidation(req);
+      const { payinId, merchantCode, merchantOrderId } = req.body;
+
+      if (!payinId && !merchantCode && !merchantOrderId) {
+        return DefaultResponse(res, 400, {
+          status: "error",
+          error: "Invalid request. Data type mismatch or incomplete request",
+        });
+      }
+
+      if (!merchantCode) {
+        return DefaultResponse(res, 404, {
+          status: "error",
+          error: "API key / code not found",
+        });
+      }
+
+      const data = await payInServices.checkPayinStatus(
+        payinId,
+        merchantCode,
+        merchantOrderId
+      );
+
+      if (!data) {
+        return DefaultResponse(res, 404, {
+          status: "error",
+          error: "payin not found",
+        });
+      }
+
+      if (data.Merchant.max_payin < data.amount) {
+        return DefaultResponse(res, 461, {
+          status: "error",
+          error: "Amount beyond payout limits",
+        });
+      }
+
+      if (
+        data.status !== "SUCCESS" ||
+        data.status !== "FIALED" ||
+        data.status !== "PENDING"
+      ) {
+        return DefaultResponse(res, 400, {
+          status: "error",
+          error: "Invalid request. Data type mismatch or incomplete request",
+        });
+      }
+
+      if (data.is_notified) {
+        const notifyData = {
+          status: "success",
+          merchantCode: data.Merchant.code,
+          merchantOrderId: data.merchant_order_id,
+          payinId: data.id,
+          amount: data.amount,
+        };
+        try {
+          const notifyMerchant = await axios.post(data.notify_url, notifyData);
+        } catch (error) {}
+      }
+
+      if (data.status === "SUCCESS") {
+        res.redirect(302, data.return_url);
+      }
+
+      const response = {
+        status: data.status,
+        merchantOrderId: data.merchant_order_id,
+        amount: data.amount,
+        payinId: data.id,
+        paymentId: uuidv4(),
+      };
+
+      return DefaultResponse(
+        res,
+        200,
+        "Payin status fetched successfully",
+        response
+      );
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async payinAssignment(req, res, next) {
+    try {
+      checkValidation(req);
+      const { payInId, merchantCode, merchantOrderId } = req.body;
+
+      if (!payInId && !merchantCode && !merchantOrderId) {
+        return DefaultResponse(res, 400, {
+          status: "error",
+          code: "invalid-request",
+          message: "Invalid request. Data type mismatch or incomplete request",
+        });
+      }
+
+      const data = await payInServices.payinAssignment(
+        payInId,
+        merchantCode,
+        merchantOrderId
+      );
+
+      if (!data) {
+        return DefaultResponse(res, 404, {
+          status: "error",
+          code: "payin-not-found",
+          message: "API key / code not found",
+        });
+      }
+
+      let bankAccount;
+      if (data?.bank_acc_id) {
+        bankAccount = await bankAccountRepo.getBankByBankAccId(
+          data?.bank_acc_id
+        );
+      } else {
+        bankAccount = await bankAccountRepo.getMerchantBankById(merchantCode);
+        if (bankAccount.length > 0) {
+          bankAccount = bankAccount[0]?.bankAccount;
+        }
+      }
+
+      if (!bankAccount) {
+        return DefaultResponse(res, 404, {
+          status: "error",
+          code: "invalid-bank-account",
+          message: "Bank account not found",
+        });
+      }
+
+      if (data.status === "SUCCESS") {
+        return DefaultResponse(res, 403, {
+          status: "error",
+          code: "already-confirmed",
+          message: "Payout already complete",
+        });
+      }
+
+      const response = {
+        bankAccountName: bankAccount?.bank_name,
+        amount: data?.amount,
+        payinId: data?.id,
+        totalTime: data.duration,
+        "time-remaining": data.expirationDate - Math.floor(Date.now() / 1000),
+        upiLink: data?.upi_short_code,
+        bankAcIfsc: bankAccount?.ifsc,
+        merchantOrderId: data?.merchant_order_id,
+        bankAccountNumber: bankAccount?.ac_no,
+      };
+
+      return DefaultResponse(res, 200, "Payin assigned successfully", response);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   // To Check Payment Status using code. (telegram)
   async checkPaymentStatus(req, res, next) {
     try {
@@ -628,7 +787,6 @@ class PayInController {
         utr: resFromOcrPy?.data?.data?.transaction_id, //|| dataRes.utr
       };
 
-
       if (usrSubmittedUtr?.utr !== "undefined") {
         const usrSubmittedUtrData = usrSubmittedUtr?.utr;
 
@@ -768,7 +926,7 @@ class PayInController {
 
   async getAllPayInDataByMerchant(req, res, next) {
     try {
-      let { merchantCode,startDate,endDate } = req.query;
+      let { merchantCode, startDate, endDate } = req.query;
 
       if (merchantCode == null) {
         merchantCode = [];
@@ -777,7 +935,9 @@ class PayInController {
       }
 
       const payInDataRes = await payInServices.getAllPayInDataByMerchant(
-        merchantCode,startDate,endDate
+        merchantCode,
+        startDate,
+        endDate
       );
 
       return DefaultResponse(
