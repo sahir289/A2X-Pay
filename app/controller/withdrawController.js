@@ -99,6 +99,12 @@ class WithdrawController {
             checkValidation(req);
             const { merchantCode, status, startDate, endDate } = req.query;
 
+            if (merchantCode == null) {
+              merchantCode = [];
+            } else if (typeof merchantCode === "string") {
+              merchantCode = [merchantCode];
+            }
+
             const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
                 merchantCode,
                 status,

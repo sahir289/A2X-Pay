@@ -822,6 +822,12 @@ class PayInController {
       checkValidation(req);
       const { merchantCode, status, startDate, endDate } = req.query;
 
+      if (merchantCode == null) {
+        merchantCode = [];
+      } else if (typeof merchantCode === "string") {
+        merchantCode = [merchantCode];
+      }
+
       const payInDataRes = await payInServices.getAllPayInDataWithRange(
         merchantCode,
         status,
