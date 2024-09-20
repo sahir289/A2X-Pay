@@ -68,9 +68,10 @@ class WithdrawController {
             }
             if (req.body.rejected_reason) {
                 // TODO: confirm the status
-                payload.status = "INITIATED";
+                payload.status = "REJECTED";
+                payload.rejected_reason = req.body.rejected_reason;
             }
-            if ([req.body.status, payload.status].includes("INITIATED")) {
+            if ([req.body.status].includes("INITIATED")) {
                 payload.utr_id = "";
                 payload.rejected_reason = "";
             }
