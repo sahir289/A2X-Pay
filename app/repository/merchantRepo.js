@@ -78,6 +78,30 @@ class MerchantRepo {
 
     return updateMerchantRes;
   }
+
+  async deleteMerchant(body) {
+    const { merchantId } = body;
+    const merchantRes = await prisma.merchant.delete(
+      {
+        where: {
+          id: merchantId,
+        },
+      },
+    );
+
+    return merchantRes;
+  }
+
+  async updateMerchantData(data) {
+    const merchantRes = await prisma.merchant.update({
+      where: {
+        id: data.id,
+      },
+      data: data,
+    });
+
+    return merchantRes;
+  }
 }
 
 export default new MerchantRepo();

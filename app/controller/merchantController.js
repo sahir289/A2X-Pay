@@ -69,6 +69,43 @@ class MerchantController {
       next(error);
     }
   }
+  async deleteMerchant(req, res, next) {
+    try {
+      checkValidation(req);
+      const body = req.body;
+
+      const merchantRes = await merchantRepo.deleteMerchant(body);
+
+      return DefaultResponse(
+        res,
+        200,
+        "Merchant is deleted successfully",
+        merchantRes
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateMerchant(req, res, next) {
+    try {
+      checkValidation(req);
+      const data = req.body;
+
+      const merchantRes = await merchantRepo.updateMerchantData(
+        data
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        "Merchant is updated successfully",
+        merchantRes
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new MerchantController();
