@@ -176,8 +176,7 @@ class PayInService {
     }
     if (endDate) {
       let end = new Date(endDate);
-
-      end.setDate(end.getDate() + 1);
+      end.setHours(23, 59, 59, 999);
 
       dateFilter.lte = end; // Less than or equal to endDate
     }
