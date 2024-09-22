@@ -28,6 +28,7 @@ enum Status {
   REVERSED
   IMG_PENDING
   PENDING
+  REJECTED
 }
 
 enum Currency {

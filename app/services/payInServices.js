@@ -306,7 +306,9 @@ class PayInService {
       where: {
         status,
         Merchant: {
-          code: merchantCode,
+          code: Array.isArray(merchantCode)
+            ? { in: merchantCode }
+            : merchantCode,
         },
         createdAt: {
           gte: new Date(startDate),

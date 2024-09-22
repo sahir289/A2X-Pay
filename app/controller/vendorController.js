@@ -22,8 +22,9 @@ class VendorController {
   }
 
   async getAllVendors(req, res, next) {
+    const vendor_code = req.query.vendor_code;
     try {
-      const vendors = await vendorRepo.getAllVendors();
+      const vendors = await vendorRepo.getAllVendors(vendor_code);
       return DefaultResponse(res, 200, "All vendors", vendors);
     } catch (error) {
       next(error);

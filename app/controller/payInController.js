@@ -545,10 +545,11 @@ class PayInController {
       const isUsrSubmittedUtrUsed =
         await payInRepo?.getPayinDataByUsrSubmittedUtr(usrSubmittedUtr);
 
-      const durSeconds = Math.floor((new Date() - getPayInData.createdAt) / 1000).toString().padStart(2, '0');
-      const durMinutes = Math.floor(durSeconds / 60).toString().padStart(2, '0');
-      const durHours = Math.floor(durMinutes / 60).toString().padStart(2, '0');
-      const duration = `${durHours % 24}:${durMinutes % 60}:${durSeconds % 60}`;
+      const durMs = new Date() - getPayInData.createdAt;
+      const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+      const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+      const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+      const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
       if (isUsrSubmittedUtrUsed.length > 0) {
         payInData = {
@@ -981,6 +982,12 @@ class PayInController {
     try {
       checkValidation(req);
       const { merchantCode, status, startDate, endDate } = req.query;
+
+      if (merchantCode == null) {
+        merchantCode = [];
+      } else if (typeof merchantCode === "string") {
+        merchantCode = [merchantCode];
+      }
 
       const payInDataRes = await payInServices.getAllPayInDataWithRange(
         merchantCode,

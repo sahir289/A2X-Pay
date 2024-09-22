@@ -101,24 +101,26 @@ class Withdraw {
     });
   }
 
-  async getAllPayOutDataWithRange(merchantCode, status, startDate, endDate) {
-    const payOutData = await prisma.payout.findMany({
-      where: {
-        status,
-        Merchant: {
-          code: merchantCode,
-        },
-        createdAt: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-      },
-      include: {
-        Merchant: true,
-      },
-    });
-    return payOutData;
-  }
+    async getAllPayOutDataWithRange(merchantCode, status, startDate, endDate) {
+        const payOutData = await prisma.payout.findMany({
+            where: {
+                status,
+                Merchant: {
+                    code: Array.isArray(merchantCode)
+                      ? { in: merchantCode }
+                      : merchantCode,
+                  },
+                createdAt: {
+                    gte: new Date(startDate),
+                    lte: new Date(endDate),
+                },
+            },
+            include: {
+                Merchant: true,
+            }
+        });
+        return payOutData;
+    }
 
   async updateVendorCodes(withdrawIds, vendorCode) {
     await prisma.payout.updateMany({
