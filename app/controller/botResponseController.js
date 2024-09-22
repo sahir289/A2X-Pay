@@ -47,7 +47,9 @@ class BotResponseController {
         const durHours = Math.floor(durMinutes / 60).toString().padStart(2, '0');
         const duration = `${durHours % 24}:${durMinutes % 60}:${durSeconds % 60}`;
 
-        if (checkPayInUtr.length !== 0 && checkPayInUtr.at(0)?.amount == amount && checkPayInUtr.at(0)?.user_submitted_utr == utr) {
+        if (checkPayInUtr.length !== 0 && checkPayInUtr.at(0)?.amount == amount 
+        // && checkPayInUtr.at(0)?.user_submitted_utr == utr
+      ) {
           const payInData = {
             confirmed: botRes?.amount,
             status: "SUCCESS",
