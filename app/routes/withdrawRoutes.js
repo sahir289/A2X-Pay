@@ -35,7 +35,7 @@ withdrawRouter.put(
 );
 
 //new payout router
-withdrawRouter.get(
+withdrawRouter.post(
   "/get-all-payouts",
   payOutInAllDataValidator,
   withdrawController.getAllPayOutDataWithRange

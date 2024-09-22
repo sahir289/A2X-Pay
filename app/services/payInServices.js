@@ -301,20 +301,29 @@ class PayInService {
   }
 
   //new service for pay in data
-  async getAllPayInDataWithRange(merchantCode, status, startDate, endDate) {
-    const payInData = await prisma.payin.findMany({
-      where: {
-        status,
-        Merchant: {
-          code: Array.isArray(merchantCode)
-            ? { in: merchantCode }
-            : merchantCode,
-        },
-        createdAt: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
+  async getAllPayInDataWithRange(merchantCodes, status, startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    // this method will get the entire day of both dates
+    // from mid night 12 to mid night 12
+    start.setUTCHours(0, 0, 0, 0)
+    end.setUTCHours(23, 59, 59, 999)
+    const condition = {
+      Merchant: {
+        code: {
+          in: merchantCodes,
+        }
       },
+      createdAt: {
+        gte: start,
+        lte: end,
+      },
+    }
+    if(status != "All"){
+      condition.status = status;
+    }
+    const payInData = await prisma.payin.findMany({
+      where: condition,
       include: {
         Merchant: true,
       },

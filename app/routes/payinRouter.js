@@ -40,7 +40,7 @@ payInRouter.get(
   payInController.generatePayInUrl
 );
 //new payin router
-payInRouter.get(
+payInRouter.post(
   "/get-all-payins",
   payOutInAllDataValidator,
   payInController.getAllPayInDataWithRange

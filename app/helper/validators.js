@@ -11,6 +11,9 @@ const statusEnums = [
   "SUCCESS",
   "DROPPED",
   "DUPLICATE",
+  "DISPUTE",
+  "PENDING",
+  "IMG_PENDING",
 ];
 
 export const permissionValidator = [
@@ -544,14 +547,18 @@ export const payoutGetValidator = [
 
 //new pay in validator
 export const payOutInAllDataValidator = [
-  query("merchantCode").notEmpty().withMessage("Code is required"),
-  query("status")
+  body("merchantCode")
+  .notEmpty()
+  .withMessage("Code is required")
+  .isArray()
+  .withMessage("Invalid Merchant Code format!"),
+  body("status")
     .notEmpty()
     .withMessage("Status is required")
-    .isIn(statusEnums)
-    .withMessage(`Invalid status, Should be one of these ${statusEnums}`),
-  query("startDate").notEmpty().withMessage("Start date is required"),
-  query("endDate").notEmpty().withMessage("End date is required"),
+    .isIn([...statusEnums, "All"])
+    .withMessage(`Invalid status, Should be one of these ${[...statusEnums, "All"]}`),
+  body("startDate").notEmpty().withMessage("Start date is required"),
+  body("endDate").notEmpty().withMessage("End date is required"),
 ];
 
 export const payInExpireURLValidator = [

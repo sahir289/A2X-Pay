@@ -101,26 +101,32 @@ class Withdraw {
     });
   }
 
-    async getAllPayOutDataWithRange(merchantCode, status, startDate, endDate) {
-        const payOutData = await prisma.payout.findMany({
-            where: {
-                status,
-                Merchant: {
-                    code: Array.isArray(merchantCode)
-                      ? { in: merchantCode }
-                      : merchantCode,
-                  },
-                createdAt: {
-                    gte: new Date(startDate),
-                    lte: new Date(endDate),
-                },
-            },
-            include: {
-                Merchant: true,
-            }
-        });
-        return payOutData;
-    }
+  async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    // this method will get the entire day of both dates
+    // from mid night 12 to mid night 12
+    start.setUTCHours(0, 0, 0, 0)
+    end.setUTCHours(23, 59, 59, 999)
+    const payOutData = await prisma.payout.findMany({
+      where: {
+        status,
+        Merchant: {
+          code: {
+            in: merchantCodes,
+          },
+        },
+        createdAt: {
+          gte: start,
+          lte: end,
+        },
+      },
+      include: {
+        Merchant: true,
+      },
+    });
+    return payOutData;
+  }
 
   async updateVendorCodes(withdrawIds, vendorCode) {
     await prisma.payout.updateMany({
