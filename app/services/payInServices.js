@@ -169,17 +169,15 @@ class PayInService {
     return { payInData: serializedPayinData, totalRecords };
   }
 
-  async getAllPayInDataByMerchant(merchantCode,startDate,endDate) {
-
+  async getAllPayInDataByMerchant(merchantCode, startDate, endDate) {
     const dateFilter = {};
     if (startDate) {
       dateFilter.gte = new Date(startDate); // Greater than or equal to startDate
     }
     if (endDate) {
+      let end = new Date(endDate);
 
-      let end = new Date(endDate)
-
-      end.setDate(end.getDate()+1)
+      end.setDate(end.getDate() + 1);
 
       dateFilter.lte = end; // Less than or equal to endDate
     }
@@ -191,7 +189,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
-        createdAt:dateFilter
+        createdAt: dateFilter,
       },
     });
 
@@ -203,7 +201,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
-        createdAt:dateFilter
+        createdAt: dateFilter,
       },
     });
 
@@ -215,11 +213,39 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
-        createdAt:dateFilter
+        createdAt: dateFilter,
       },
     });
 
     return { payInOutData: { payInData, payOutData, settlementData } };
+  }
+
+  async checkPayinStatus(payinId, merchantCode, merchantOrderId) {
+    const data = await prisma.payin.findFirst({
+      where: {
+        id: payinId,
+        merchant_id: merchantCode,
+        merchant_order_id: merchantOrderId,
+      },
+      include: {
+        Merchant: true,
+      },
+    });
+    return data;
+  }
+
+  async payinAssignment(payinId, merchantCode, merchantOrderId) {
+    const data = await prisma.payin.findFirst({
+      where: {
+        id: payinId,
+        merchant_id: merchantCode,
+        merchant_order_id: merchantOrderId,
+      },
+      include: {
+        Merchant: true,
+      },
+    });
+    return data;
   }
 
   async getAllPayInDataByVendor(vendorCode) {
@@ -275,26 +301,45 @@ class PayInService {
   }
 
   //new service for pay in data
-  async getAllPayInDataWithRange(merchantCode, status, startDate, endDate) {
-    const payInData = await prisma.payin.findMany({
-      where: {
-        status,
-        Merchant: {
-          code: Array.isArray(merchantCode)
-            ? { in: merchantCode }
-            : merchantCode,
-        },
-        createdAt: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
+  async getAllPayInDataWithRange(merchantCodes, status, startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    // this method will get the entire day of both dates
+    // from mid night 12 to mid night 12
+    start.setUTCHours(0, 0, 0, 0)
+    end.setUTCHours(23, 59, 59, 999)
+    const condition = {
+      Merchant: {
+        code: {
+          in: merchantCodes,
+        }
       },
+      createdAt: {
+        gte: start,
+        lte: end,
+      },
+    }
+    if(status != "All"){
+      condition.status = status;
+    }
+    const payInData = await prisma.payin.findMany({
+      where: condition,
       include: {
         Merchant: true,
       },
     });
     return payInData;
   }
+  async oneTimeExpire(payInId) {
+    const expirePayInUrlRes = await prisma.payin.update({
+        where: {
+            id: payInId
+        }, data: {
+          one_time_used : true,
+        }
+    })
+    return expirePayInUrlRes
+}
 }
 
 export default new PayInService();

@@ -11,6 +11,9 @@ const statusEnums = [
   "SUCCESS",
   "DROPPED",
   "DUPLICATE",
+  "DISPUTE",
+  "PENDING",
+  "IMG_PENDING",
 ];
 
 export const permissionValidator = [
@@ -72,7 +75,7 @@ export const userCreateValidator = [
       "MERCHANT",
       "VENDOR",
       "VENDOR_OPERATIONS",
-      "MERCHANT_OPERATIONS"
+      "MERCHANT_OPERATIONS",
     ])
     .withMessage(
       "Role must be one of ADMIN, CUSTOMER_SERVICE, TRANSACTIONS, OPERATIONS, MERCHANT,VENDOR,VENDOR_OPERATIONS"
@@ -294,6 +297,24 @@ export const validatePayInIdAndAmountAssigned = [
     .withMessage("amount must be a valid number greater than or equal to 0"),
 ];
 
+export const validatePayInIdAndMerchant = [
+  body("payinId")
+    .notEmpty()
+    .withMessage("payinId must not be empty")
+    .isString()
+    .withMessage("payinId must be a string"),
+  body("merchantCode")
+    .notEmpty()
+    .withMessage("merchantCode must not be empty")
+    .isString()
+    .withMessage("merchantCode must be a string"),
+  body("merchantOrderId")
+    .notEmpty()
+    .withMessage("merchantOrderId must not be empty")
+    .isString()
+    .withMessage("merchantOrderId must be a string"),
+];
+
 export const validatePayInProcess = [
   param("payInId")
     .notEmpty()
@@ -361,6 +382,42 @@ export const settlementCreateValidator = [
       }
       return Promise.resolve();
     }),
+];
+
+export const validatePayOutId = [
+  body("payoutId")
+    .notEmpty()
+    .withMessage("payOutId must not be empty")
+    .isString()
+    .withMessage("payOutId must be a string"),
+  body("merchantCode")
+    .notEmpty()
+    .withMessage("merchantCode must not be empty")
+    .isString()
+    .withMessage("merchantCode must be a string"),
+  body("merchantOrderId")
+    .notEmpty()
+    .withMessage("merchantOrderId must not be empty")
+    .isString()
+    .withMessage("merchantOrderId must be a string"),
+];
+
+export const validatePayInId = [
+  body("payinId")
+    .notEmpty()
+    .withMessage("payinId must not be empty")
+    .isString()
+    .withMessage("payinId must be a string"),
+  body("merchantCode")
+    .notEmpty()
+    .withMessage("merchantCode must not be empty")
+    .isString()
+    .withMessage("merchantCode must be a string"),
+  body("merchantOrderId")
+    .notEmpty()
+    .withMessage("merchantOrderId must not be empty")
+    .isString()
+    .withMessage("merchantOrderId must be a string"),
 ];
 
 export const settlementsGetValidator = [
@@ -490,16 +547,27 @@ export const payoutGetValidator = [
 
 //new pay in validator
 export const payOutInAllDataValidator = [
-  query("merchantCode").notEmpty().withMessage("Code is required"),
-  query("status")
+  body("merchantCode")
+  .notEmpty()
+  .withMessage("Code is required")
+  .isArray()
+  .withMessage("Invalid Merchant Code format!"),
+  body("status")
     .notEmpty()
     .withMessage("Status is required")
-    .isIn(statusEnums)
-    .withMessage(`Invalid status, Should be one of these ${statusEnums}`),
-  query("startDate").notEmpty().withMessage("Start date is required"),
-  query("endDate").notEmpty().withMessage("End date is required"),
+    .isIn([...statusEnums, "All"])
+    .withMessage(`Invalid status, Should be one of these ${[...statusEnums, "All"]}`),
+  body("startDate").notEmpty().withMessage("Start date is required"),
+  body("endDate").notEmpty().withMessage("End date is required"),
 ];
 
+export const payInExpireURLValidator = [
+  param("id")
+    .notEmpty()
+    .withMessage("payInId must not be empty")
+    .isUUID()
+    .withMessage("payInId must be a valid UUID"),
+];
 export const vendorCreateValidator = [
   query("vendor_code")
     .optional()
@@ -519,16 +587,16 @@ export const vendorCreateValidator = [
 ];
 
 export const updateVendorCodeValidator = [
-  body('vendorCode')
-      .isString()  // Validate that vendorCode is a string
-      .withMessage('vendorCode must be a string')
-      .bail()
-      .trim(),
+  body("vendorCode")
+    .isString() // Validate that vendorCode is a string
+    .withMessage("vendorCode must be a string")
+    .bail()
+    .trim(),
 
-  body('withdrawId')
-      .isArray()
-      .withMessage('withdrawId must be an array')
-      .bail()
-      .custom((value) => value.every((item) => typeof item === 'string'))
-      .withMessage('Each Withdraw ID must be a string')
+  body("withdrawId")
+    .isArray()
+    .withMessage("withdrawId must be an array")
+    .bail()
+    .custom((value) => value.every((item) => typeof item === "string"))
+    .withMessage("Each Withdraw ID must be a string"),
 ];

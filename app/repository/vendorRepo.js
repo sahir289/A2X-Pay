@@ -9,8 +9,12 @@ class VendorRepo {
     return vendor;
   }
 
-  async getAllVendors() {
+  async getAllVendors(vendor_code) {
+    const filters = {
+      ...(vendor_code && { vendor_code: { equals: vendor_code } }),
+    };
     const vendors = await prisma.vendor.findMany({
+      where: filters,
       orderBy: {
         id: "desc"
       }

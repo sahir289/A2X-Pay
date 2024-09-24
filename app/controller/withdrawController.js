@@ -1,62 +1,162 @@
 import merchantRepo from "../repository/merchantRepo.js";
 import withdrawService from "../services/withdrawService.js";
-import { checkValidation } from "../helper/validationHelper.js"
-import { DefaultResponse } from "../helper/customResponse.js"
+import { checkValidation } from "../helper/validationHelper.js";
+import { DefaultResponse } from "../helper/customResponse.js";
 import { getAmountFromPerc } from "../helper/utils.js";
+import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 
 class WithdrawController {
-
-
-    async createWithdraw(req, res, next) {
-        try {
-            checkValidation(req);
-            const merchant = await merchantRepo.getMerchantByCode(req.body.code);
-            if (!merchant) {
-                throw new CustomError(404, 'Merchant does not exist')
-            }
-            delete req.body.code;
-            const data = await withdrawService.createWithdraw({
-                ...req.body,
-                status: "INITIATED",
-                merchant_id: merchant.id,
-                payout_commision: getAmountFromPerc(merchant.payin_commission, req.body.amount),
-                currency: "INR",
-            });
-            return DefaultResponse(res, 201, "Payout created successfully");
-        } catch (err) {
-            next(err);
-        }
+  async createWithdraw(req, res, next) {
+    try {
+      checkValidation(req);
+      const merchant = await merchantRepo.getMerchantByCode(req.body.code);
+      if (!merchant) {
+        throw new CustomError(404, "Merchant does not exist");
+      }
+      delete req.body.code;
+      const data = await withdrawService.createWithdraw({
+        ...req.body,
+        status: "INITIATED",
+        merchant_id: merchant.id,
+        payout_commision: getAmountFromPerc(
+          merchant.payin_commission,
+          req.body.amount
+        ),
+        currency: "INR",
+      });
+      return DefaultResponse(res, 201, "Payout created successfully");
+    } catch (err) {
+      next(err);
     }
+  }
 
-    async getWithdraw(req, res, next) {
+  async checkPayoutStatus(req, res, next) {
+    try {
+      checkValidation(req);
+      const { payoutId, merchantCode, merchantOrderId } = req.body;
+
+      if (!payoutId && !merchantCode && !merchantOrderId) {
+        return DefaultResponse(res, 400, {
+          status: "error",
+          error: "Invalid request. Data type mismatch or incomplete request",
+        });
+      }
+
+      if (!merchantCode) {
+        return DefaultResponse(res, 404, {
+          status: "error",
+          error: "API key / code not found",
+        });
+      }
+
+      const data = await withdrawService.checkPayoutStatus(
+        payoutId,
+        merchantCode,
+        merchantOrderId
+      );
+      console.log(data);
+
+      if (!data) {
+        return DefaultResponse(res, 404, "Payout not found");
+      }
+
+      if (data.Merchant.max_payout < data.amount) {
+        return DefaultResponse(res, 461, {
+          status: "error",
+          error: "Amount beyond payout limits",
+        });
+      }
+
+      if (
+        data.status !== "SUCCESS" ||
+        data.status !== "FIALED" ||
+        data.status !== "PENDING"
+      ) {
+        return DefaultResponse(res, 400, {
+          status: "error",
+          error: "Invalid request. Data type mismatch or incomplete request",
+        });
+      }
+
+      if (data.is_notified) {
+        const notifyData = {
+          status: "success",
+          merchantCode: data.Merchant.code,
+          merchantOrderId: data.merchant_order_id,
+          payinId: data.id,
+          amount: data.amount,
+        };
         try {
-            checkValidation(req)
-            const {
-                page,
-                take: qTake,
-                id,
-                code,
-                vendorCode,
-                status,
-                amount,
-                acc_no,
-                merchant_order_id,
-                user_id,
-                sno,
-                payout_commision,
-                utr_id,
-                acc_holder_name,
-            } = req.query;
-            const take = Number(qTake) || 20;
-            const skip = take * (Number(page || 1) - 1);
-            const data = await withdrawService.getWithdraw(skip, take, id, code,vendorCode, status, amount, acc_no, merchant_order_id, user_id, Number(sno), payout_commision, utr_id, acc_holder_name);
-            return DefaultResponse(res, 200, "Payout fetched successfully!", data);
+          const notifyMerchant = await axios.post(data.notify_url, notifyData);
+        } catch (error) {}
+      }
 
-        } catch (err) {
-            next(err);
-        }
+      if (data.status === "SUCCESS") {
+        res.redirect(302, data.return_url);
+      }
+
+      const response = {
+        status: data.status,
+        merchantOrderId: data.merchant_order_id,
+        amount: data.amount,
+        payoutId: data.id,
+        paymentId: uuidv4(),
+      };
+
+      return DefaultResponse(
+        res,
+        200,
+        "Payout status fetched successfully",
+        response
+      );
+    } catch (err) {
+      next(err);
     }
+  }
+
+  async getWithdraw(req, res, next) {
+    try {
+      checkValidation(req);
+      const {
+        page,
+        take: qTake,
+        id,
+        code,
+        vendorCode,
+        status,
+        amount,
+        acc_no,
+        merchant_order_id,
+        user_id,
+        sno,
+        payout_commision,
+        utr_id,
+        acc_holder_name,
+      } = req.query;
+      const take = Number(qTake) || 20;
+      const skip = take * (Number(page || 1) - 1);
+      const data = await withdrawService.getWithdraw(
+        skip,
+        take,
+        id,
+        code,
+        vendorCode,
+        status,
+        amount,
+        acc_no,
+        merchant_order_id,
+        user_id,
+        Number(sno),
+        payout_commision,
+        utr_id,
+        acc_holder_name
+      );
+      return DefaultResponse(res, 200, "Payout fetched successfully!", data);
+    } catch (err) {
+      next(err);
+    }
+  }
 
     async updateWithdraw(req, res, next) {
         try {
@@ -68,9 +168,10 @@ class WithdrawController {
             }
             if (req.body.rejected_reason) {
                 // TODO: confirm the status
-                payload.status = "INITIATED";
+                payload.status = "REJECTED";
+                payload.rejected_reason = req.body.rejected_reason;
             }
-            if ([req.body.status, payload.status].includes("INITIATED")) {
+            if ([req.body.status].includes("INITIATED")) {
                 payload.utr_id = "";
                 payload.rejected_reason = "";
             }
@@ -105,54 +206,67 @@ class WithdrawController {
               merchantCode = [merchantCode];
             }
 
-            const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
-                merchantCode,
-                status,
-                startDate,
-                endDate
-            );
+      const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
+        merchantCode,
+        status,
+        startDate,
+        endDate
+      );
 
-            return DefaultResponse(
-                res,
-                200,
-                "Payout data fetched successfully",
-                payOutDataRes
-            );
-        } catch (error) {
-            next(error);
-        }
+      return DefaultResponse(
+        res,
+        200,
+        "Payout data fetched successfully",
+        payOutDataRes
+      );
+    } catch (error) {
+      next(error);
     }
-     
-    async updateVendorCode(req, res, next) {
-        try {
-            checkValidation(req);
-        
-            const { vendorCode, withdrawId } = req.body;
-        
-            if (typeof vendorCode !== 'string' || vendorCode.trim() === '') {
-                return DefaultResponse(res, 400, 'Invalid vendorCode: must be a non-empty string');
-            }
-        
-            if (!Array.isArray(withdrawId) || withdrawId.length === 0 || !withdrawId.every(id => typeof id === 'string')) {
-                return DefaultResponse(res, 400, 'Invalid withdrawId: must be a non-empty array containing strings');
-            }
-        
-            const vendorCodeValue = vendorCode;
-            const withdrawIds = withdrawId;
-        
-            const result = await withdrawService.updateVendorCodes(withdrawIds, vendorCodeValue);
-        
-            return DefaultResponse(res, 200, result.message || 'Vendor code updated successfully');
-        } catch (err) {
-            next(err);
-        }
-    }
-    
-    
-    
-    
-    
+  }
 
+  async updateVendorCode(req, res, next) {
+    try {
+      checkValidation(req);
+
+      const { vendorCode, withdrawId } = req.body;
+
+      if (typeof vendorCode !== "string" || vendorCode.trim() === "") {
+        return DefaultResponse(
+          res,
+          400,
+          "Invalid vendorCode: must be a non-empty string"
+        );
+      }
+
+      if (
+        !Array.isArray(withdrawId) ||
+        withdrawId.length === 0 ||
+        !withdrawId.every((id) => typeof id === "string")
+      ) {
+        return DefaultResponse(
+          res,
+          400,
+          "Invalid withdrawId: must be a non-empty array containing strings"
+        );
+      }
+
+      const vendorCodeValue = vendorCode;
+      const withdrawIds = withdrawId;
+
+      const result = await withdrawService.updateVendorCodes(
+        withdrawIds,
+        vendorCodeValue
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        result.message || "Vendor code updated successfully"
+      );
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export default new WithdrawController();
