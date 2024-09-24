@@ -59,7 +59,7 @@ class BotResponseRepo {
     const amount_code = query.amount_code;
     const utr = query.utr;
     const page = parseInt(query.page) || 1;
-    const pageSize = parseInt(query.pageSize) || 10;
+    const pageSize = parseInt(query.pageSize) || 20;
 
     const skip = (page - 1) * pageSize;
     const take = pageSize;
@@ -78,9 +78,9 @@ class BotResponseRepo {
       where: filter,
       skip: skip,
       take: take,
-      orderBy:{
-        sno:"desc"
-      }
+      orderBy: {
+        sno: "desc",
+      },
     });
 
     const totalRecords = await prisma.telegramResponse.count({ where: filter });

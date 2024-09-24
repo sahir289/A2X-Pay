@@ -1,14 +1,18 @@
 import userRepo from "../repository/userRepo.js";
 
 class UserService {
+  async getAllUsers(page, pageSize, fullName, userName, role, createdBy) {
+    const users = await userRepo.getAllUsers(
+      page,
+      pageSize,
+      fullName,
+      userName,
+      role,
+      createdBy
+    );
 
-  async getAllUsers(skip,take,fullName,userName,role,createdBy) {
-
-    const users = await userRepo.getAllUsers(skip, take, fullName, userName, role,createdBy)
-
-    return users
-
+    return users;
   }
 }
 
-export default new UserService()
+export default new UserService();

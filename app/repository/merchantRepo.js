@@ -30,7 +30,7 @@ class MerchantRepo {
 
   async getAllMerchants(query) {
     const page = parseInt(query.page) || 1;
-    const pageSize = parseInt(query.pageSize) || 15;
+    const pageSize = parseInt(query.pageSize) || 20;
 
     const skip = (page - 1) * pageSize;
     const take = pageSize;

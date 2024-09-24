@@ -77,12 +77,12 @@ class BankAccountRepo {
     const ac_name = query.ac_name;
     const upi_id = query.upi_id;
     const page = parseInt(query.page) || 1;
-    const pageSize = parseInt(query.pageSize) || 10;
-    const code = query?.code
-    const role = query?.role
+    const pageSize = parseInt(query.pageSize) || 20;
+    const code = query?.code;
+    const role = query?.role;
     const skip = (page - 1) * pageSize;
     const take = pageSize;
-    const vendor_code= query?.vendor_code
+    const vendor_code = query?.vendor_code;
 
     const filter = {
       ...(ac_no !== "" && { ac_no: { contains: ac_no, mode: "insensitive" } }),
@@ -92,9 +92,8 @@ class BankAccountRepo {
       ...(upi_id !== "" && {
         upi_id: { contains: upi_id, mode: "insensitive" },
       }),
-      ...(role !== "ADMIN" && code && { code }) ,
-      ...(role !== "ADMIN" && vendor_code && { vendor_code: vendor_code }) 
-
+      ...(role !== "ADMIN" && code && { code }),
+      ...(role !== "ADMIN" && vendor_code && { vendor_code: vendor_code }),
     };
 
     const bankAccRes = await prisma.bankAccount.findMany({
@@ -125,7 +124,7 @@ class BankAccountRepo {
       bankAccRes: transformedBankAccRes,
       pagination: {
         page: parseInt(page),
-        pageSize: take,
+        pageSize,
         total: totalRecords,
       },
     };
