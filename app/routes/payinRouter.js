@@ -77,6 +77,12 @@ payInRouter.get(
 );
 
 payInRouter.post(
+  "/update-payment-status/:payInId",
+  validatePayInIdUrl,
+  payInController.updatePaymentStatus
+);
+
+payInRouter.post(
   "/check-payin-status",
   validatePayInId,
   payInController.checkPayinStatus

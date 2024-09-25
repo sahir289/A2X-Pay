@@ -525,6 +525,24 @@ class PayInController {
     }
   }
 
+  async updatePaymentStatus(req, res, next) {
+    try {
+      checkValidation(req);
+      const { payInId } = req.params;
+      const updatePayInData = {
+        status: req.body.status,
+      };
+
+      const updatePayInRes = await payInRepo.updatePayInData(
+        payInId,
+        updatePayInData
+      );
+      return res.status(200).json({ message: "true" });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // To Handle payment process
   async payInProcess(req, res, next) {
     try {
