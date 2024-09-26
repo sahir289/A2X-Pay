@@ -40,6 +40,7 @@ const isAuthenticated = async (
         req.user = {
             id: verifiedAccessToken.id,
             userName: verifiedAccessToken.userName,
+            loggedInUserRole: verifiedAccessToken.role, // For getting the role of the logged in user
         };
 
         // Fetch the token from the database for the user
