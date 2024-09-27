@@ -1138,7 +1138,7 @@ class PayInController {
                   TELEGRAM_BOT_TOKEN,
                   message?.message_id
                 );
-                return res.status(404).json({ message: "Utr does not exist" });
+                return res.status(200).json({ message: "Utr does not exist" });
               }
             } else {
               const getTelegramResByUtr = await botResponseRepo.getBotResByUtr(
@@ -1151,7 +1151,7 @@ class PayInController {
                   TELEGRAM_BOT_TOKEN,
                   message?.message_id
                 );
-                return res.status(404).json({ message: "Utr does not exist" });
+                return res.status(200).json({ message: "Utr does not exist" });
               }
 
               if (getTelegramResByUtr?.is_used === true) {
@@ -1210,7 +1210,7 @@ class PayInController {
                   TELEGRAM_BOT_TOKEN,
                   message?.message_id
                 );
-                return res.status(404).json({ message: "Utr does not exist" });
+                return res.status(200).json({ message: "Utr does not exist" });
               }
             }
           } else {
@@ -1237,6 +1237,7 @@ class PayInController {
         return res.status(200).json({ message: "No photo in the message" });
       }
     } catch (error) {
+      console.log("🚀 ~ telegramResHandler ~ error:", error)
       next(error);
     }
   }
