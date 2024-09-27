@@ -43,7 +43,7 @@ class UserRepo {
     }
   }
 
-  async getAllUsers(page, pageSize, fullName, userName, role, createdBy) {
+  async getAllUsers(page, pageSize, fullName, userName, role, createdBy, loggedInUserRole) {
     const skip = (page - 1) * pageSize;
     const take = pageSize;
 
@@ -55,7 +55,8 @@ class UserRepo {
         userName: { contains: userName, mode: "insensitive" },
       }),
       ...(role && { role: { equals: role } }),
-      // ...(role !== "ADMIN" && createdBy && { createdBy })
+      ...(loggedInUserRole !== "ADMIN" && createdBy && { createdBy }),
+      ...(loggedInUserRole === "ADMIN" && role && {  role: { equals: role } }),
     };
 
     const users = await prisma.user.findMany({

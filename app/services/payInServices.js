@@ -7,7 +7,7 @@ import { nanoid } from "nanoid";
 class PayInService {
   async generatePayInUrl(getMerchantRes, payInData) {
     const _10_MINUTES = 1000 * 60 * 10;
-    const expirationDate = new Date().getTime() + _10_MINUTES;
+    const expirationDate = Math.floor((new Date().getTime() + _10_MINUTES) / 1000);
 
     const data = {
       upi_short_code: nanoid(5), // code added by us
@@ -20,12 +20,12 @@ class PayInService {
       return_url: getMerchantRes?.return_url,
       notify_url: getMerchantRes?.notify_url,
       merchant_id: getMerchantRes?.id,
-      expirationDate: Math.floor(expirationDate / 1000),
+      expirationDate,
     };
     const payInUrlRes = await payInRepo.generatePayInUrl(data);
     const updatePayInUrlRes = {
       ...payInUrlRes,
-      expirationDate: Math.floor(expirationDate / 1000),
+      expirationDate,
     };
     return updatePayInUrlRes;
   }
