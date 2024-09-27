@@ -96,9 +96,9 @@ payInRouter.get(
 );
 
 payInRouter.post(
-  "/expire-url/:id",
+  "/expire-one-time-payin-url/:id",
   payInExpireURLValidator,
-  payInController.expirePayInUrl
+  payInController.expireOneTimeUrl
 );
 
 // telegram resp ocr

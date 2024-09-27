@@ -1241,7 +1241,7 @@ class PayInController {
     }
   }
 
-  async expirePayInUrl(req, res, next) {
+  async expireOneTimeUrl(req, res, next) {
     try {
       checkValidation(req)
       const { id } = req.params;
