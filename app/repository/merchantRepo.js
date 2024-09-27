@@ -13,6 +13,7 @@ class MerchantRepo {
     const merchantRes = await prisma.merchant.findFirst({
       where: {
         code: code,
+        is_deleted: false, //get merchant records which is not deleted
       },
     });
 
@@ -23,6 +24,7 @@ class MerchantRepo {
     const merchant = await prisma.merchant.findFirst({
       where: {
         id: id,
+        is_deleted: false, //get merchant records which is not deleted
       },
     });
     return merchant;
@@ -38,6 +40,9 @@ class MerchantRepo {
     const merchants = await prisma.merchant.findMany({
       skip: skip,
       take: take,
+      where: {
+        is_deleted: false, //get all merchant records which are not deleted
+      }
     });
     const totalRecords = await prisma.merchant.count({});
 
@@ -81,11 +86,14 @@ class MerchantRepo {
 
   async deleteMerchant(body) {
     const { merchantId } = body;
-    const merchantRes = await prisma.merchant.delete(
+    const merchantRes = await prisma.merchant.update(
       {
         where: {
           id: merchantId,
         },
+        data: {
+          is_deleted: true,
+        }
       },
     );
 
