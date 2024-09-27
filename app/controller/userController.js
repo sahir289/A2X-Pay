@@ -47,7 +47,7 @@ class UserController {
     async getAllUser(req, res, next) {
         try {
             checkValidation(req)
-            const { id: userId } = req.user
+            const { id: userId, loggedInUserRole } = req.user
 
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 15
@@ -58,7 +58,7 @@ class UserController {
 
             await userRepo.validateUserId(userId)
 
-            const users = await userService.getAllUsers(skip, take, fullName, userName, role,createdBy)
+            const users = await userService.getAllUsers(skip, take, fullName, userName, role, createdBy, loggedInUserRole)
             return DefaultResponse(
                 res,
                 201,
