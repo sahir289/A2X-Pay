@@ -29,6 +29,8 @@ enum Status {
   IMG_PENDING
   PENDING
   REJECTED
+  TEST_SUCCESS
+  TEST_DROPPED
 }
 
 enum Currency {

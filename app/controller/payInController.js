@@ -70,7 +70,7 @@ class PayInController {
           payInData
         );
         let   updateRes;
-        if(isTest){
+        if(isTest &&  (isTest==='true' || isTest===true)){
            updateRes = {
             expirationDate: generatePayInUrlRes?.expirationDate,
             payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}?t=true`, // use env
