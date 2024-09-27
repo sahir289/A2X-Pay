@@ -20,6 +20,30 @@ class LogInController {
             next(err);
         }
     }
+
+    // Verify Password while edit and delete functionality
+    async comparePassword(req, res, next) {
+        try {
+            const { userName, password } = req.body;
+            const result = await loginServices.comparePassword(userName, password)
+            if (result) {
+                return DefaultResponse(
+                    res,
+                    200,
+                    "Password Verified",
+                );
+            } else {
+                return DefaultResponse(
+                    res,
+                    401,
+                    "Invalid Password",
+                );
+            }
+        } catch (err) {
+            // Handle errors and pass them to the next middleware
+            next(err);
+        }
+    }
 }
 
 export default new LogInController()
