@@ -92,6 +92,7 @@ model Merchant {
   is_test_mode      Boolean         @default(false)
   is_enabled        Boolean         @default(true)
   is_demo           Boolean         @default(false)
+  is_deleted        Boolean         @default(false)  // enable soft delete functionality
   Merchant_Bank     Merchant_Bank[]
   Payin             Payin[]
   Payout            Payout[]
