@@ -16,6 +16,7 @@ class PayInService {
       currency: "INR",
       merchant_order_id: payInData?.merchant_order_id, // for time being we are using this
       user_id: payInData?.user_id,
+      // isTest:payInData?.isTest,
       // bank_acc_id: bankAccountLinkRes?.bankAccountId,   this is done bcs bank will be assigned after the submission of amount in frontend.
       return_url: getMerchantRes?.return_url,
       notify_url: getMerchantRes?.notify_url,

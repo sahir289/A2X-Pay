@@ -34,6 +34,12 @@ payInRouter.post(
   payInController.payInProcessByImg
 );
 
+payInRouter.post(
+"/update-payment-status/:payInId",
+  validatePayInIdUrl,
+  payInController.updatePaymentStatus
+);
+
 payInRouter.get(
   "/payIn",
   payInAssignValidator,

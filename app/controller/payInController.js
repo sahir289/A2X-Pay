@@ -36,7 +36,7 @@ class PayInController {
     try {
       let payInData;
 
-      const { code, user_id, merchant_order_id, ot } = req.query;
+      const { code, user_id, merchant_order_id, ot,isTest } = req.query;
       // If query parameters are provided, use them
       const getMerchantApiKeyByCode = await merchantRepo.getMerchantByCode(
         code
@@ -62,16 +62,25 @@ class PayInController {
           api_key: getMerchantApiKeyByCode?.api_key,
           merchant_order_id: uuidv4(),
           user_id: user_id,
+          // isTest:isTest
         };
         // Uncomment and use your service to generate PayIn URL
         const generatePayInUrlRes = await payInServices.generatePayInUrl(
           getMerchantApiKeyByCode,
           payInData
         );
-        const updateRes = {
+        let   updateRes;
+        if(isTest){
+           updateRes = {
+            expirationDate: generatePayInUrlRes?.expirationDate,
+            payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}?t=true`, // use env
+          };
+        }else{
+         updateRes = {
           expirationDate: generatePayInUrlRes?.expirationDate,
           payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
         };
+      }
 
         if (ot === "y") {
           return DefaultResponse(
@@ -111,6 +120,23 @@ class PayInController {
     }
   }
 
+
+  async updatePaymentStatus(req, res, next) {
+    try {
+      checkValidation(req);
+      const { payInId } = req.params;
+      const updatePayInData = {
+        status: req.body.status,
+      };
+      const updatePayInRes = await payInRepo.updatePayInData(
+        payInId,
+        updatePayInData
+      );
+      return res.status(200).json({ message: "true" });
+    } catch (error) {
+      next(error);
+    }
+  }
   // To Validate Url
   async validatePayInUrl(req, res, next) {
     try {
