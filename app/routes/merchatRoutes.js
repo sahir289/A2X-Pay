@@ -11,6 +11,12 @@ merchantRouter.post(
   merchantController.createMerchant
 );
 
+merchantRouter.put(
+  "/update-merchant",
+  isAuthenticated,
+  merchantController.updateMerchant
+);
+
 merchantRouter.get(
   "/get-merchant",
   isAuthenticated,
@@ -22,5 +28,11 @@ merchantRouter.get(
   isAuthenticated,
   merchantController.getAllMerchants
 );
+
+merchantRouter.delete(
+  "/delete-merchant",
+  isAuthenticated,
+  merchantController.deleteMerchant
+)
 
 export default merchantRouter;
