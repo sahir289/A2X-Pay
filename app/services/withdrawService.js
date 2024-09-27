@@ -101,6 +101,25 @@ class Withdraw {
     });
   }
 
+  // Service created to get single withdraw data by id
+  async getWithdrawById(id) {
+    const data = await prisma.payout.findFirst({
+      where: {
+        id,
+      },
+      include: {
+        Merchant: {
+          select: {
+            id: true,
+            code: true,
+          },
+        },
+      },
+    });
+
+    return data;
+  }
+
   async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);

@@ -93,7 +93,8 @@ class BankAccountRepo {
         upi_id: { contains: upi_id, mode: "insensitive" },
       }),
       ...(role !== "ADMIN" && code && { code }) ,
-      ...(role !== "ADMIN" && vendor_code && { vendor_code: vendor_code }) 
+      ...(role !== "ADMIN" && vendor_code && { vendor_code: vendor_code }),
+      ...(vendor_code && vendor_code && { vendor_code: vendor_code }) // For enabling vendor code filter only for ADMINS
 
     };
 
