@@ -139,7 +139,7 @@ class PayInController {
         return_url: urlValidationRes?.return_url,
         notify_url: urlValidationRes?.notify_url,
         expiryTime: Number(urlValidationRes?.expirationDate),
-        one_time_used: urlValidationRes?.one_time_used
+        one_time_used: urlValidationRes?.one_time_used,
       };
       return DefaultResponse(res, 200, "Payment Url is correct", updatedRes);
     } catch (error) {
@@ -546,9 +546,15 @@ class PayInController {
         await payInRepo?.getPayinDataByUsrSubmittedUtr(usrSubmittedUtr);
 
       const durMs = new Date() - getPayInData.createdAt;
-      const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
-      const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
-      const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+      const durSeconds = Math.floor((durMs / 1000) % 60)
+        .toString()
+        .padStart(2, "0");
+      const durMinutes = Math.floor((durSeconds / 60) % 60)
+        .toString()
+        .padStart(2, "0");
+      const durHours = Math.floor((durMinutes / 60) % 24)
+        .toString()
+        .padStart(2, "0");
       const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
       if (isUsrSubmittedUtrUsed.length > 0) {
@@ -954,7 +960,7 @@ class PayInController {
 
   async getAllPayInDataByVendor(req, res, next) {
     try {
-      let { vendorCode } = req.query;
+      let { vendorCode, startDate, endDate } = req.query;
 
       if (vendorCode == null) {
         vendorCode = [];
@@ -963,7 +969,9 @@ class PayInController {
       }
 
       const payInDataRes = await payInServices.getAllPayInDataByVendor(
-        vendorCode
+        vendorCode,
+        startDate,
+        endDate
       );
 
       return DefaultResponse(
@@ -1243,15 +1251,14 @@ class PayInController {
 
   async expireOneTimeUrl(req, res, next) {
     try {
-      checkValidation(req)
+      checkValidation(req);
       const { id } = req.params;
-      const expirePayInUrlRes = await payInServices.oneTimeExpire(id) 
+      const expirePayInUrlRes = await payInServices.oneTimeExpire(id);
       return DefaultResponse(res, 200, "URL is expired!");
     } catch (error) {
       next(error);
     }
   }
-
 }
 
 export default new PayInController();

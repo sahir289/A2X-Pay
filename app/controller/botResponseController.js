@@ -37,20 +37,32 @@ class BotResponseController {
         const botRes = await botResponseRepo.botResponse(updatedData);
         const checkPayInUtr = await payInRepo.getPayInDataByUtrOrUpi(
           utr,
-          amount_code,
+          amount_code
         );
-        const getMerchantToGetPayinCommissionRes = await merchantRepo.getMerchantById(checkPayInUtr[0]?.merchant_id)
-        
-        const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
+        const getMerchantToGetPayinCommissionRes =
+          await merchantRepo.getMerchantById(checkPayInUtr[0]?.merchant_id);
+
+        const payinCommission = await calculateCommission(
+          botRes?.amount,
+          getMerchantToGetPayinCommissionRes?.payin_commission
+        );
         const durMs = new Date() - checkPayInUtr.at(0)?.createdAt;
-        const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
-        const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
-        const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+        const durSeconds = Math.floor((durMs / 1000) % 60)
+          .toString()
+          .padStart(2, "0");
+        const durMinutes = Math.floor((durSeconds / 60) % 60)
+          .toString()
+          .padStart(2, "0");
+        const durHours = Math.floor((durMinutes / 60) % 24)
+          .toString()
+          .padStart(2, "0");
         const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
-        if (checkPayInUtr.length !== 0 && checkPayInUtr.at(0)?.amount == amount 
-        // && checkPayInUtr.at(0)?.user_submitted_utr == utr
-      ) {
+        if (
+          checkPayInUtr.length !== 0 &&
+          checkPayInUtr.at(0)?.amount == amount
+          // && checkPayInUtr.at(0)?.user_submitted_utr == utr
+        ) {
           const payInData = {
             confirmed: botRes?.amount,
             status: "SUCCESS",
@@ -58,7 +70,7 @@ class BotResponseController {
             utr: botRes?.utr,
             approved_at: new Date(),
             duration: duration,
-            payin_commission: payinCommission
+            payin_commission: payinCommission,
           };
 
           const updatePayInDataRes = await payInRepo.updatePayInData(
@@ -70,7 +82,10 @@ class BotResponseController {
             checkPayInUtr[0]?.bank_acc_id,
             parseFloat(amount)
           );
-          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id,botRes?.utr)
+          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(
+            botRes?.id,
+            botRes?.utr
+          );
 
           const notifyData = {
             status: "success",
@@ -81,10 +96,8 @@ class BotResponseController {
           try {
             //when we get the correct notify url;
             // const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-          } catch (error) {
-          }
-        }
-        else {
+          } catch (error) {}
+        } else {
           const payInData = {
             confirmed: botRes?.amount,
             status: "DISPUTE",
@@ -92,7 +105,7 @@ class BotResponseController {
             utr: botRes?.utr,
             approved_at: new Date(),
             duration: duration,
-            payin_commission: payinCommission
+            payin_commission: payinCommission,
           };
           const updatePayInDataRes = await payInRepo.updatePayInData(
             checkPayInUtr[0]?.id,
@@ -104,7 +117,10 @@ class BotResponseController {
             parseFloat(amount)
           );
 
-          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id,botRes?.utr);
+          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(
+            botRes?.id,
+            botRes?.utr
+          );
 
           const notifyData = {
             status: "dispute",
@@ -116,15 +132,15 @@ class BotResponseController {
 
         // Notify all connected clients about the new entry
         io.emit("new-entry", {
-          message: 'New entry added',
-          data: updatedData
+          message: "New entry added",
+          data: updatedData,
         });
 
         res.status(201).json({
           success: true,
           message: "Response received successfully",
           data: updatedData,
-        }); 
+        });
       } else {
         res.status(400).json({
           success: false,

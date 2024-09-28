@@ -25,7 +25,6 @@ class Settlement {
       { col: "id", value: id },
       { col: "status", value: status },
       { col: "amount", value: amount },
-      { col: "acc_no", value: acc_no },
       { col: "method", value: method },
       { col: "refrence_id", value: refrence_id },
     ].forEach((el) => {
@@ -43,7 +42,16 @@ class Settlement {
     }
 
     const data = await prisma.settlement.findMany({
-      where,
+      where: {
+        ...where,
+        ...(acc_no && {
+          OR: [
+            { acc_no: { contains: acc_no, mode: "insensitive" } },
+            { acc_name: { contains: acc_no, mode: "insensitive" } },
+            { ifsc: { contains: acc_no, mode: "insensitive" } },
+          ],
+        }),
+      },
       skip,
       take,
       orderBy: {
@@ -58,11 +66,18 @@ class Settlement {
         },
       },
     });
-    console.log(data);
     const totalRecords = await prisma.settlement.count({
-      where,
+      where: {
+        ...where,
+        ...(acc_no && {
+          OR: [
+            { acc_no: { contains: acc_no, mode: "insensitive" } },
+            { acc_name: { contains: acc_no, mode: "insensitive" } },
+            { ifsc: { contains: acc_no, mode: "insensitive" } },
+          ],
+        }),
+      },
     });
-    console.log(totalRecords);
 
     return {
       data,

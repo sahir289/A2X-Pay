@@ -7,7 +7,9 @@ import { nanoid } from "nanoid";
 class PayInService {
   async generatePayInUrl(getMerchantRes, payInData) {
     const _10_MINUTES = 1000 * 60 * 10;
-    const expirationDate = Math.floor((new Date().getTime() + _10_MINUTES) / 1000);
+    const expirationDate = Math.floor(
+      (new Date().getTime() + _10_MINUTES) / 1000
+    );
 
     const data = {
       upi_short_code: nanoid(5), // code added by us
@@ -248,7 +250,18 @@ class PayInService {
     return data;
   }
 
-  async getAllPayInDataByVendor(vendorCode) {
+  async getAllPayInDataByVendor(vendorCode, startDate, endDate) {
+    const dateFilter = {};
+    if (startDate) {
+      dateFilter.gte = new Date(startDate); // Greater than or equal to startDate
+    }
+    if (endDate) {
+      let end = new Date(endDate);
+
+      end.setDate(end.getDate() + 1);
+
+      dateFilter.lte = end; // Less than or equal to endDate
+    }
     let bankIds = [];
     if (vendorCode) {
       const data = await prisma.bankAccount.findMany({
@@ -274,6 +287,7 @@ class PayInService {
       where: {
         status: "SUCCESS",
         ...filter,
+        createdAt: dateFilter,
       },
     });
 
@@ -283,6 +297,7 @@ class PayInService {
         vendor_code: Array.isArray(vendorCode)
           ? { in: vendorCode }
           : vendorCode,
+        createdAt: dateFilter,
       },
     });
 
@@ -293,6 +308,7 @@ class PayInService {
           vendor_code: Array.isArray(vendorCode)
             ? { in: vendorCode }
             : vendorCode,
+          createdAt: dateFilter,
         },
       },
     });
@@ -306,20 +322,20 @@ class PayInService {
     const end = new Date(endDate);
     // this method will get the entire day of both dates
     // from mid night 12 to mid night 12
-    start.setUTCHours(0, 0, 0, 0)
-    end.setUTCHours(23, 59, 59, 999)
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
     const condition = {
       Merchant: {
         code: {
           in: merchantCodes,
-        }
+        },
       },
       createdAt: {
         gte: start,
         lte: end,
       },
-    }
-    if(status != "All"){
+    };
+    if (status != "All") {
       condition.status = status;
     }
     const payInData = await prisma.payin.findMany({
@@ -332,14 +348,15 @@ class PayInService {
   }
   async oneTimeExpire(payInId) {
     const expirePayInUrlRes = await prisma.payin.update({
-        where: {
-            id: payInId
-        }, data: {
-          one_time_used : true,
-        }
-    })
-    return expirePayInUrlRes
-}
+      where: {
+        id: payInId,
+      },
+      data: {
+        one_time_used: true,
+      },
+    });
+    return expirePayInUrlRes;
+  }
 }
 
 export default new PayInService();

@@ -46,13 +46,11 @@ class Withdraw {
       { col: "id", value: id },
       { col: "status", value: status },
       { col: "amount", value: amount },
-      { col: "acc_no", value: acc_no },
       { col: "merchant_order_id", value: merchant_order_id },
       { col: "user_id", value: user_id },
       { col: "sno", value: sno },
       { col: "payout_commision", value: payout_commision },
       { col: "utr_id", value: utr_id },
-      { col: "acc_holder_name", value: acc_holder_name },
       { col: "vendor_code", value: vendorCode },
     ].forEach((el) => {
       if (el.value) {
@@ -65,7 +63,17 @@ class Withdraw {
     }
 
     const data = await prisma.payout.findMany({
-      where,
+      where: {
+        ...where,
+        ...(acc_no && {
+          OR: [
+            { acc_no: { contains: acc_no, mode: "insensitive" } },
+            { bank_name: { contains: acc_no, mode: "insensitive" } },
+            { acc_holder_name: { contains: acc_no, mode: "insensitive" } },
+            { ifsc_code: { contains: acc_no, mode: "insensitive" } },
+          ],
+        }),
+      },
       skip,
       take,
       orderBy: {
@@ -81,9 +89,17 @@ class Withdraw {
       },
     });
     const totalRecords = await prisma.payout.count({
-      where,
-      skip,
-      take,
+      where: {
+        ...where,
+        ...(acc_no && {
+          OR: [
+            { acc_no: { contains: acc_no, mode: "insensitive" } },
+            { bank_name: { contains: acc_no, mode: "insensitive" } },
+            { acc_holder_name: { contains: acc_no, mode: "insensitive" } },
+            { ifsc_code: { contains: acc_no, mode: "insensitive" } },
+          ],
+        }),
+      },
     });
 
     return {
@@ -106,8 +122,8 @@ class Withdraw {
     const end = new Date(endDate);
     // this method will get the entire day of both dates
     // from mid night 12 to mid night 12
-    start.setUTCHours(0, 0, 0, 0)
-    end.setUTCHours(23, 59, 59, 999)
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
     const payOutData = await prisma.payout.findMany({
       where: {
         status,

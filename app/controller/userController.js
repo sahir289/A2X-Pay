@@ -52,6 +52,7 @@ class UserController {
       const pageSize = parseInt(req.query.pageSize) || 20;
 
       const { name: fullName, userName, role, createdBy } = req.query;
+      console.log(req.query, "query");
 
       await userRepo.validateUserId(userId);
 
