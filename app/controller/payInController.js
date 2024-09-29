@@ -36,7 +36,7 @@ class PayInController {
     try {
       let payInData;
 
-      const { code, user_id, merchant_order_id, ot,isTest } = req.query;
+      const { code, user_id, merchant_order_id, ot, isTest, amount } = req.query;
       // If query parameters are provided, use them
       const getMerchantApiKeyByCode = await merchantRepo.getMerchantByCode(
         code
@@ -59,6 +59,7 @@ class PayInController {
       if (!merchant_order_id && ot) {
         payInData = {
           code: code,
+          amount,
           api_key: getMerchantApiKeyByCode?.api_key,
           merchant_order_id: uuidv4(),
           user_id: user_id,
@@ -97,6 +98,7 @@ class PayInController {
           code,
           merchant_order_id,
           user_id,
+          amount,
         };
 
         const generatePayInUrlRes = await payInServices.generatePayInUrl(
@@ -146,6 +148,7 @@ class PayInController {
       const currentTime = Math.floor(Date.now() / 1000);
 
       const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
+      console.log(urlValidationRes);
 
       if (!urlValidationRes) {
         throw new CustomError(404, "Payment Url is incorrect");
@@ -165,6 +168,7 @@ class PayInController {
         return_url: urlValidationRes?.return_url,
         notify_url: urlValidationRes?.notify_url,
         expiryTime: Number(urlValidationRes?.expirationDate),
+        amount: urlValidationRes?.amount,
         one_time_used: urlValidationRes?.one_time_used
       };
       return DefaultResponse(res, 200, "Payment Url is correct", updatedRes);

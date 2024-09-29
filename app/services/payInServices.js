@@ -11,7 +11,7 @@ class PayInService {
 
     const data = {
       upi_short_code: nanoid(5), // code added by us
-      amount: 0, // as starting amount will be zero
+      amount: payInData.amount || 0, // as starting amount will be zero
       status: "INITIATED",
       currency: "INR",
       merchant_order_id: payInData?.merchant_order_id, // for time being we are using this
