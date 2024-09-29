@@ -7,6 +7,7 @@ import { checkValidation } from "../helper/validationHelper.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import { calculateCommission } from "../helper/utils.js";
 import bankAccountRepo from "../repository/bankAccountRepo.js";
+import { prisma } from "../client/prisma.js";
 
 class BotResponseController {
   async botResponse(req, res, next) {
@@ -25,6 +26,21 @@ class BotResponseController {
         amount_code !== "nil" && amount_code.length === 5;
       const isValidUtr = utr.length === 12;
 
+      // check if duplicate and return error
+      const existingResponse = prisma.telegramResponse.findFirst({
+        where: {
+          utr,
+          is_used: true
+        }
+      });
+      if (existingResponse) {
+        res.status(400).json({
+          success: false,
+          message: "The UTR already exists",
+        });
+        return next();
+      }
+
       if (isValidAmount && isValidUtr) {
         const updatedData = {
           status,
@@ -40,7 +56,7 @@ class BotResponseController {
           amount_code,
         );
         const getMerchantToGetPayinCommissionRes = await merchantRepo.getMerchantById(checkPayInUtr[0]?.merchant_id)
-        
+
         const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
         const durMs = new Date() - checkPayInUtr.at(0)?.createdAt;
         const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
@@ -48,9 +64,9 @@ class BotResponseController {
         const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
         const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
-        if (checkPayInUtr.length !== 0 && checkPayInUtr.at(0)?.amount == amount 
-        // && checkPayInUtr.at(0)?.user_submitted_utr == utr
-      ) {
+        if (checkPayInUtr.length !== 0 && checkPayInUtr.at(0)?.amount == amount
+          // && checkPayInUtr.at(0)?.user_submitted_utr == utr
+        ) {
           const payInData = {
             confirmed: botRes?.amount,
             status: "SUCCESS",
@@ -70,7 +86,7 @@ class BotResponseController {
             checkPayInUtr[0]?.bank_acc_id,
             parseFloat(amount)
           );
-          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id,botRes?.utr)
+          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id, botRes?.utr)
 
           const notifyData = {
             status: "success",
@@ -104,7 +120,7 @@ class BotResponseController {
             parseFloat(amount)
           );
 
-          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id,botRes?.utr);
+          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id, botRes?.utr);
 
           const notifyData = {
             status: "dispute",
@@ -124,7 +140,7 @@ class BotResponseController {
           success: true,
           message: "Response received successfully",
           data: updatedData,
-        }); 
+        });
       } else {
         res.status(400).json({
           success: false,
