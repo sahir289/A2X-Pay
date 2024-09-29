@@ -19,7 +19,6 @@ class BotResponseController {
       const amount = parseFloat(splitData[1]);
       const amount_code = splitData[2];
       const utr = splitData[3];
-
       // Validate amount, amount_code, and utr
       const isValidAmount = amount;
       const isValidAmountCode =
@@ -27,18 +26,18 @@ class BotResponseController {
       const isValidUtr = utr.length === 12;
 
       // check if duplicate and return error
-      const existingResponse = prisma.telegramResponse.findFirst({
+      const existingResponse = await prisma.telegramResponse.findMany({
         where: {
           utr,
           is_used: true
         }
       });
-      if (existingResponse) {
+      
+      if (existingResponse.length > 0) {
         res.status(400).json({
           success: false,
           message: "The UTR already exists",
         });
-        return next();
       }
 
       if (isValidAmount && isValidUtr) {
@@ -55,81 +54,82 @@ class BotResponseController {
           utr,
           amount_code,
         );
-        const getMerchantToGetPayinCommissionRes = await merchantRepo.getMerchantById(checkPayInUtr[0]?.merchant_id)
+        if (checkPayInUtr.length > 0) {
+          const getMerchantToGetPayinCommissionRes = await merchantRepo.getMerchantById(checkPayInUtr[0]?.merchant_id)
+          const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
 
-        const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
-        const durMs = new Date() - checkPayInUtr.at(0)?.createdAt;
-        const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
-        const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
-        const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
-        const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+          const durMs = new Date() - checkPayInUtr.at(0)?.createdAt;
+          const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+          const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+          const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+          const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
-        if (checkPayInUtr.length !== 0 && checkPayInUtr.at(0)?.amount == amount
-          // && checkPayInUtr.at(0)?.user_submitted_utr == utr
-        ) {
-          const payInData = {
-            confirmed: botRes?.amount,
-            status: "SUCCESS",
-            is_notified: true,
-            utr: botRes?.utr,
-            approved_at: new Date(),
-            duration: duration,
-            payin_commission: payinCommission
-          };
+          if (checkPayInUtr.at(0)?.amount == amount
+            // && checkPayInUtr.at(0)?.user_submitted_utr == utr
+          ) {
+            const payInData = {
+              confirmed: botRes?.amount,
+              status: "SUCCESS",
+              is_notified: true,
+              utr: botRes?.utr,
+              approved_at: new Date(),
+              duration: duration,
+              payin_commission: payinCommission
+            };
 
-          const updatePayInDataRes = await payInRepo.updatePayInData(
-            checkPayInUtr[0]?.id,
-            payInData
-          );
+            const updatePayInDataRes = await payInRepo.updatePayInData(
+              checkPayInUtr[0]?.id,
+              payInData
+            );
 
-          const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-            checkPayInUtr[0]?.bank_acc_id,
-            parseFloat(amount)
-          );
-          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id, botRes?.utr)
+            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+              checkPayInUtr[0]?.bank_acc_id,
+              parseFloat(amount)
+            );
+            const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id, botRes?.utr)
 
-          const notifyData = {
-            status: "success",
-            merchantOrderId: updatePayInDataRes?.merchant_order_id,
-            payinId: updatePayInDataRes?.id,
-            amount: updatePayInDataRes?.confirmed,
-          };
-          try {
-            //when we get the correct notify url;
-            // const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-          } catch (error) {
+            const notifyData = {
+              status: "success",
+              merchantOrderId: updatePayInDataRes?.merchant_order_id,
+              payinId: updatePayInDataRes?.id,
+              amount: updatePayInDataRes?.confirmed,
+            };
+            try {
+              //when we get the correct notify url;
+              // const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+            } catch (error) {
+            }
+          }
+          else {
+            const payInData = {
+              confirmed: botRes?.amount,
+              status: "DISPUTE",
+              is_notified: true,
+              utr: botRes?.utr,
+              approved_at: new Date(),
+              duration: duration,
+              payin_commission: payinCommission
+            };
+            const updatePayInDataRes = await payInRepo.updatePayInData(
+              checkPayInUtr[0]?.id,
+              payInData
+            );
+
+            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+              checkPayInUtr[0]?.bank_acc_id,
+              parseFloat(amount)
+            );
+
+            const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id, botRes?.utr);
+
+            const notifyData = {
+              status: "dispute",
+              merchantOrderId: updatePayInDataRes?.merchant_order_id,
+              payinId: updatePayInDataRes?.id,
+              amount: updatePayInDataRes?.confirmed,
+            };
           }
         }
-        else {
-          const payInData = {
-            confirmed: botRes?.amount,
-            status: "DISPUTE",
-            is_notified: true,
-            utr: botRes?.utr,
-            approved_at: new Date(),
-            duration: duration,
-            payin_commission: payinCommission
-          };
-          const updatePayInDataRes = await payInRepo.updatePayInData(
-            checkPayInUtr[0]?.id,
-            payInData
-          );
-
-          const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-            checkPayInUtr[0]?.bank_acc_id,
-            parseFloat(amount)
-          );
-
-          const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id, botRes?.utr);
-
-          const notifyData = {
-            status: "dispute",
-            merchantOrderId: updatePayInDataRes?.merchant_order_id,
-            payinId: updatePayInDataRes?.id,
-            amount: updatePayInDataRes?.confirmed,
-          };
-        }
-
         // Notify all connected clients about the new entry
         io.emit("new-entry", {
           message: 'New entry added',
