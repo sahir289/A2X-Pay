@@ -148,7 +148,6 @@ class PayInController {
       const currentTime = Math.floor(Date.now() / 1000);
 
       const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
-      console.log(urlValidationRes);
 
       if (!urlValidationRes) {
         throw new CustomError(404, "Payment Url is incorrect");
