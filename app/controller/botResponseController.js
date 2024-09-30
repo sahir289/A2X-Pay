@@ -33,7 +33,7 @@ class BotResponseController {
           is_used: true
         }
       });
-      
+
       if (existingResponse.length > 0) {
         throw new CustomError(400, "The UTR already exists");
       }
@@ -48,6 +48,7 @@ class BotResponseController {
           updatedData.amount_code = amount_code;
         }
         const botRes = await botResponseRepo.botResponse(updatedData);
+
         const checkPayInUtr = await payInRepo.getPayInDataByUtrOrUpi(
           utr,
           amount_code,
@@ -94,7 +95,7 @@ class BotResponseController {
             };
             try {
               //when we get the correct notify url;
-              // const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+              const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
             } catch (error) {
             }
           }

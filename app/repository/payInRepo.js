@@ -66,8 +66,14 @@ class PayInRepo {
         // Construct the conditions
         let conditions = [];
 
+        // if (utr) {
+        //     conditions.push({ user_submitted_utr: utr , });
+        // }
         if (utr) {
-            conditions.push({ user_submitted_utr: utr });
+            conditions.push({
+                user_submitted_utr: utr,
+                status: { not: 'DUPLICATE' }
+            });
         }
         if (upi_short_code !== "nill") {
             conditions.push({ upi_short_code: upi_short_code });
@@ -79,7 +85,7 @@ class PayInRepo {
         }
 
         // If both conditions are present, use AND condition
-        if (conditions?.utr && conditions?.upi_short_code) {
+        if (conditions[0]?.user_submitted_utr && conditions[1]?.upi_short_code) {
             const payInRes = await prisma.payin.findMany({
                 where: {
                     AND: [
