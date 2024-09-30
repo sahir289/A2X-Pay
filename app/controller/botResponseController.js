@@ -8,6 +8,7 @@ import merchantRepo from "../repository/merchantRepo.js";
 import { calculateCommission } from "../helper/utils.js";
 import bankAccountRepo from "../repository/bankAccountRepo.js";
 import { prisma } from "../client/prisma.js";
+import { CustomError } from "../middlewares/errorHandler.js";
 
 class BotResponseController {
   async botResponse(req, res, next) {
@@ -34,10 +35,7 @@ class BotResponseController {
       });
       
       if (existingResponse.length > 0) {
-        res.status(400).json({
-          success: false,
-          message: "The UTR already exists",
-        });
+        throw new CustomError(400, "The UTR already exists");
       }
 
       if (isValidAmount && isValidUtr) {
