@@ -478,8 +478,12 @@ class PayInController {
             };
             try {
               //when we get the correct notify url;
-              // const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-            } catch (error) {}
+              const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+              console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ notifyMerchant:", notifyMerchant)
+            } catch (error) {
+              console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ error:", error)
+              
+            }
 
             const response = {
               status: "Success",
@@ -705,8 +709,8 @@ class PayInController {
         };
         try {
           //When we get the notify url we will add it.
-          // const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-          // console.log("Notification sent:", notifyMerchant);
+          const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+          console.log("Notification sent:", notifyMerchant);
         } catch (error) {
           console.error("Error sending notification:", error);
         }
@@ -904,8 +908,8 @@ class PayInController {
           };
           try {
             //When we get the notify url we will add it.
-            // const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-            // console.log("Notification sent:", notifyMerchant);
+            const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+            console.log("Notification sent:", notifyMerchant);
           } catch (error) {
             console.error("Error sending notification:", error);
           }
@@ -1158,6 +1162,13 @@ class PayInController {
                 );
 
                 // ----> Notify url
+                try {
+                  //When we get the notify url we will add it.
+                  const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+                  console.log("Notification sent:", notifyMerchant);
+                } catch (error) {
+                  console.error("Error sending notification:", error);
+                }
 
                 return res.status(200).json({ message: "true" });
               } else {
@@ -1230,6 +1241,13 @@ class PayInController {
                 );
 
                 // Notify url--->
+                try {
+                  //When we get the notify url we will add it.
+                  const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+                  console.log("Notification sent:", notifyMerchant);
+                } catch (error) {
+                  console.error("Error sending notification:", error);
+                }
 
                 return res.status(200).json({ message: "true" });
               } else {
