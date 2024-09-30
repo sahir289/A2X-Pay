@@ -191,6 +191,7 @@ class WithdrawController {
       // Created payout callback feature
       const singleWithdrawData = await withdrawService.getWithdrawById(req.params.id);
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
+      
       const merchantPayoutUrl = merchant.payout_notify_url;
       if (merchantPayoutUrl !== null) {
         let merchantPayoutData = {
@@ -198,9 +199,10 @@ class WithdrawController {
           payoutId: req.params.id,
           amount: singleWithdrawData.amount,
           status: payload.status,
-          paymentId: payload.utr_id ? payload.utr_id : "",
+          // paymentId: payload.utr_id ? payload.utr_id : "",
         }
-        const response = await axios.post(`${merchantPayoutUrl}`, merchantPayoutData);
+        // Payout notify
+        // const response = await axios.post(`${merchantPayoutUrl}`, merchantPayoutData);
       }
       const data = await withdrawService.updateWithdraw(req.params.id, payload);
       return DefaultResponse(res, 200, "Payout Updated!", data);
