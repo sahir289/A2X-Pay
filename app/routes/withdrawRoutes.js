@@ -11,23 +11,33 @@ import {
 import isAuthenticated from "../middlewares/authMiddleware.js";
 
 const withdrawRouter = express();
-withdrawRouter.use(isAuthenticated);
+
+// Do not move it down bellow  as we do not want to use isAuthenticated in this.
 withdrawRouter.post(
   "/create-payout",
   payoutCreateValidator,
   withdrawController.createWithdraw
 );
-withdrawRouter.get(
-  "/getall-payout",
-  settlementsGetValidator,
-  withdrawController.getWithdraw
-);
-withdrawRouter.put("/update-payout/:id", withdrawController.updateWithdraw);
+
 withdrawRouter.post(
   "/check-payout-status",
   validatePayOutId,
   withdrawController.checkPayoutStatus
 );
+
+// From here authentication is started.
+// withdrawRouter.use(isAuthenticated);
+
+
+withdrawRouter.get(
+  "/getall-payout",
+  settlementsGetValidator,
+  withdrawController.getWithdraw
+);
+
+withdrawRouter.put("/update-payout/:id", withdrawController.updateWithdraw);
+
+
 withdrawRouter.put(
   "/update-vendor-code",
   updateVendorCodeValidator,

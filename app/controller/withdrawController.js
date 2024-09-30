@@ -55,29 +55,28 @@ class WithdrawController {
         merchantCode,
         merchantOrderId
       );
-      console.log(data);
 
       if (!data) {
         return DefaultResponse(res, 404, "Payout not found");
       }
 
-      if (data.Merchant.max_payout < data.amount) {
-        return DefaultResponse(res, 461, {
-          status: "error",
-          error: "Amount beyond payout limits",
-        });
-      }
+      // if (data.Merchant.max_payout < data.amount) {
+      //   return DefaultResponse(res, 461, {
+      //     status: "error",
+      //     error: "Amount beyond payout limits",
+      //   });
+      // }
 
-      if (
-        data.status !== "SUCCESS" ||
-        data.status !== "FIALED" ||
-        data.status !== "PENDING"
-      ) {
-        return DefaultResponse(res, 400, {
-          status: "error",
-          error: "Invalid request. Data type mismatch or incomplete request",
-        });
-      }
+      // if (
+      //   data.status !== "SUCCESS" ||
+      //   data.status !== "FAILED" ||
+      //   data.status !== "PENDING"
+      // ) {
+      //   return DefaultResponse(res, 400, {
+      //     status: "error",
+      //     error: "Invalid request. Data type mismatch or incomplete request",
+      //   });
+      // }
 
       if (data.is_notified) {
         const notifyData = {
@@ -88,20 +87,20 @@ class WithdrawController {
           amount: data.amount,
         };
         try {
-          const notifyMerchant = await axios.post(data.notify_url, notifyData);
-        } catch (error) {}
+          // const notifyMerchant = await axios.post(data.notify_url, notifyData);
+        } catch (error) { }
       }
 
-      if (data.status === "SUCCESS") {
-        res.redirect(302, data.return_url);
-      }
+      // if (data.status === "SUCCESS") {
+      //   res.redirect(302, data.return_url);
+      // }
 
       const response = {
         status: data.status,
         merchantOrderId: data.merchant_order_id,
         amount: data.amount,
         payoutId: data.id,
-        paymentId: uuidv4(),
+        // paymentId: uuidv4(),
       };
 
       return DefaultResponse(
@@ -158,68 +157,68 @@ class WithdrawController {
     }
   }
 
-    async updateWithdraw(req, res, next) {
-      try {
-        const payload = {
-          ...req.body,
-        };
-        if (req.body.utr_id) {
-          payload.status = "SUCCESS";
-        }
-        if (req.body.rejected_reason) {
-          // TODO: confirm the status
-          payload.status = "REJECTED";
-          payload.rejected_reason = req.body.rejected_reason;
-        }
-        if ([req.body.status].includes("INITIATED")) {
-          payload.utr_id = "";
-          payload.rejected_reason = "";
-        }
-        if (req.body.method == "accure") {
-          delete payload.method;
-          // const { ACCURE_SECRET  } = process.env;
-          // await axios.post("http://www.example.com", {})
-          // .then(res=>{
-            //     payload.status = "SUCCESS";
-            //     // TODO: check response from accure and extracct utr_id
-            //     payload.utr_id = res.data.utr_id;
-            // })
-            // .catch(err=>{
-              //     payload.status = "REVERSED";
-              // })
-            }
+  async updateWithdraw(req, res, next) {
+    try {
+      const payload = {
+        ...req.body,
+      };
+      if (req.body.utr_id) {
+        payload.status = "SUCCESS";
+      }
+      if (req.body.rejected_reason) {
+        // TODO: confirm the status
+        payload.status = "REJECTED";
+        payload.rejected_reason = req.body.rejected_reason;
+      }
+      if ([req.body.status].includes("INITIATED")) {
+        payload.utr_id = "";
+        payload.rejected_reason = "";
+      }
+      if (req.body.method == "accure") {
+        delete payload.method;
+        // const { ACCURE_SECRET  } = process.env;
+        // await axios.post("http://www.example.com", {})
+        // .then(res=>{
+        //     payload.status = "SUCCESS";
+        //     // TODO: check response from accure and extracct utr_id
+        //     payload.utr_id = res.data.utr_id;
+        // })
+        // .catch(err=>{
+        //     payload.status = "REVERSED";
+        // })
+      }
 
-            // Created payout callback feature
-            const singleWithdrawData = await withdrawService.getWithdrawById(req.params.id);
-            const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
-            const merchantPayoutUrl = merchant.payout_notify_url;
-            if (merchantPayoutUrl !== null) {
-              let merchantPayoutData = {
-                merchantOrderId : singleWithdrawData.merchant_order_id,
-                payoutId : req.params.id,
-                amount : singleWithdrawData.amount,
-                status : payload.status,
-                paymentId : payload.utr_id ? payload.utr_id : "",
-              }
-              const response = await axios.post(`${merchantPayoutUrl}`, merchantPayoutData);
-            }
-            const data = await withdrawService.updateWithdraw(req.params.id, payload);
-            return DefaultResponse(res, 200, "Payout Updated!", data);
-        } catch (err) {
-            next(err);
+      // Created payout callback feature
+      const singleWithdrawData = await withdrawService.getWithdrawById(req.params.id);
+      const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
+      const merchantPayoutUrl = merchant.payout_notify_url;
+      if (merchantPayoutUrl !== null) {
+        let merchantPayoutData = {
+          merchantOrderId: singleWithdrawData.merchant_order_id,
+          payoutId: req.params.id,
+          amount: singleWithdrawData.amount,
+          status: payload.status,
+          paymentId: payload.utr_id ? payload.utr_id : "",
         }
+        const response = await axios.post(`${merchantPayoutUrl}`, merchantPayoutData);
+      }
+      const data = await withdrawService.updateWithdraw(req.params.id, payload);
+      return DefaultResponse(res, 200, "Payout Updated!", data);
+    } catch (err) {
+      next(err);
     }
+  }
 
-    async getAllPayOutDataWithRange(req, res, next) {
-        try {
-            checkValidation(req);
-            const { merchantCode, status, startDate, endDate } = req.query;
+  async getAllPayOutDataWithRange(req, res, next) {
+    try {
+      checkValidation(req);
+      const { merchantCode, status, startDate, endDate } = req.query;
 
-            if (merchantCode == null) {
-              merchantCode = [];
-            } else if (typeof merchantCode === "string") {
-              merchantCode = [merchantCode];
-            }
+      if (merchantCode == null) {
+        merchantCode = [];
+      } else if (typeof merchantCode === "string") {
+        merchantCode = [merchantCode];
+      }
 
       const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
         merchantCode,

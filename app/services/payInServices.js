@@ -225,7 +225,10 @@ class PayInService {
     const data = await prisma.payin.findFirst({
       where: {
         id: payinId,
-        merchant_id: merchantCode,
+        // merchant_id: merchantCode,
+        Merchant: {
+          code: merchantCode
+        },
         merchant_order_id: merchantOrderId,
       },
       include: {
@@ -320,7 +323,7 @@ class PayInService {
         lte: end,
       },
     }
-    if(status != "All"){
+    if (status != "All") {
       condition.status = status;
     }
     const payInData = await prisma.payin.findMany({
@@ -333,14 +336,14 @@ class PayInService {
   }
   async oneTimeExpire(payInId) {
     const expirePayInUrlRes = await prisma.payin.update({
-        where: {
-            id: payInId
-        }, data: {
-          one_time_used : true,
-        }
+      where: {
+        id: payInId
+      }, data: {
+        one_time_used: true,
+      }
     })
     return expirePayInUrlRes
-}
+  }
 }
 
 export default new PayInService();

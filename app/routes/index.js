@@ -13,15 +13,18 @@ import vendorSettlementRouter from "./vendorSettlementRoute.js";
 
 const router = express();
 
+// Because we are not using the isAuthenticated at the time of create payout so it has to stay on top. otherwise it will give error
+router.use("/v1", payInRouter);
+router.use("/v1", payoutRouter);
+
+
 router.use("/v1", userRouter);
 router.use("/v1", loginRouter);
 router.use("/v1", merchantRouter);
 router.use("/v1", vendorRouter);
 router.use("/v1", bankAccountRouter);
-router.use("/v1", payInRouter);
 router.use("/v1", botResRouter);
 router.use("/v1", settlementRouter);
-router.use("/v1", payoutRouter);
 router.use("/v1", vendorSettlementRouter);
 
 // Middleware for handling 404 errors

@@ -277,7 +277,6 @@ class PayInController {
         merchantCode,
         merchantOrderId
       );
-
       if (!data) {
         return DefaultResponse(res, 404, {
           status: "error",
@@ -285,23 +284,24 @@ class PayInController {
         });
       }
 
-      if (data.Merchant.max_payin < data.amount) {
-        return DefaultResponse(res, 461, {
-          status: "error",
-          error: "Amount beyond payout limits",
-        });
-      }
+      //Not right now.
+      // if (data.Merchant.max_payin < data.amount) {
+      //   return DefaultResponse(res, 461, {
+      //     status: "error",
+      //     error: "Amount beyond payout limits",
+      //   });
+      // }
 
-      if (
-        data.status !== "SUCCESS" ||
-        data.status !== "FIALED" ||
-        data.status !== "PENDING"
-      ) {
-        return DefaultResponse(res, 400, {
-          status: "error",
-          error: "Invalid request. Data type mismatch or incomplete request",
-        });
-      }
+      // if (
+      //   data.status !== "SUCCESS" ||
+      //   data.status !== "FAILED" ||
+      //   data.status !== "PENDING"
+      // ) {
+      //   return DefaultResponse(res, 400, {
+      //     status: "error",
+      //     error: "Invalid request. Data type mismatch or incomplete request",
+      //   });
+      // }
 
       if (data.is_notified) {
         const notifyData = {
@@ -312,20 +312,20 @@ class PayInController {
           amount: data.amount,
         };
         try {
-          const notifyMerchant = await axios.post(data.notify_url, notifyData);
+          // const notifyMerchant = await axios.post(data.notify_url, notifyData);
         } catch (error) {}
       }
 
-      if (data.status === "SUCCESS") {
-        res.redirect(302, data.return_url);
-      }
+      // if (data.status === "SUCCESS") {
+      //   res.redirect(302, data.return_url);
+      // }
 
       const response = {
         status: data.status,
         merchantOrderId: data.merchant_order_id,
         amount: data.amount,
         payinId: data.id,
-        paymentId: uuidv4(),
+        // paymentId: uuidv4(),
       };
 
       return DefaultResponse(
@@ -1266,7 +1266,6 @@ class PayInController {
         return res.status(200).json({ message: "No photo in the message" });
       }
     } catch (error) {
-      console.log("🚀 ~ telegramResHandler ~ error:", error)
       next(error);
     }
   }

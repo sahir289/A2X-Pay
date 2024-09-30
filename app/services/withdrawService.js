@@ -15,7 +15,9 @@ class Withdraw {
     const data = await prisma.payout.findFirst({
       where: {
         id: payoutId,
-        merchant_id: merchantCode,
+        Merchant: {
+          code: merchantCode
+        },
         merchant_order_id: merchantOrderId,
       },
       include: {
