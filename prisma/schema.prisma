@@ -207,6 +207,8 @@ model Settlement {
   ifsc            String?
   refrence_id     String?
   rejected_reason String?
+  wallet          String?
+  wallet_address  String?
   createdBy       String? // id of the creater  
   vendor_code     String? // to store the vendor code who has created this bank acc.
   createdAt       DateTime @default(now())
@@ -249,6 +251,8 @@ model VendorSettlement {
   ifsc            String?
   refrence_id     String?
   rejected_reason String?
+  wallet          String?
+  wallet_address  String?
   createdBy       String? // id of the creater  
   vendor_code     String? // to store the vendor code who has created this bank acc.
   createdAt       DateTime @default(now())

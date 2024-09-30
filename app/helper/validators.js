@@ -375,11 +375,6 @@ export const settlementCreateValidator = [
         if (field == "ifsc" && !ifsc.validate(value)) {
           return Promise.reject(`ifsc is invalid!`);
         }
-        if (field == "wallet" && !walletEnums.includes(value)) {
-          return Promise.reject(
-            `Wallet is invalid! Should be one of these ${walletEnums}`
-          );
-        }
       }
       return Promise.resolve();
     }),
