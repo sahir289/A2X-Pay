@@ -14,6 +14,9 @@ class WithdrawController {
       if (!merchant) {
         throw new CustomError(404, "Merchant does not exist");
       }
+      if (req.headers["x-api-key"] !== merchant.api_key) {
+        throw new CustomError(404, "Enter valid Api key");
+      }
       delete req.body.code;
       const data = await withdrawService.createWithdraw({
         ...req.body,
@@ -42,12 +45,12 @@ class WithdrawController {
           error: "Invalid request. Data type mismatch or incomplete request",
         });
       }
-
-      if (!merchantCode) {
-        return DefaultResponse(res, 404, {
-          status: "error",
-          error: "API key / code not found",
-        });
+      const merchant = await merchantRepo.getMerchantByCode(merchantCode);
+      if (!merchant) {
+        throw new CustomError(404, "Merchant does not exist");
+      }
+      if (req.headers["x-api-key"] !== merchant.api_key) {
+        throw new CustomError(404, "Enter valid Api key");
       }
 
       const data = await withdrawService.checkPayoutStatus(

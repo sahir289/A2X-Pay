@@ -46,6 +46,10 @@ class PayInController {
         throw new CustomError(404, "Merchant does not exist");
       }
 
+      if (req.headers["x-api-key"] !== getMerchantApiKeyByCode.api_key){
+        throw new CustomError(404, "Enter valid Api key");
+      }
+
       const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(
         getMerchantApiKeyByCode?.id
       );
@@ -420,6 +424,11 @@ class PayInController {
       const getPayInData = await payInRepo.getPayInData(payInId);
       if (!getPayInData) {
         throw new CustomError(404, "Payment does not exist");
+      }
+
+      //validate api key
+      if (req.headers["x-api-key"] !== getPayInData?.Merchant?.api_key) {
+        throw new CustomError(404, "Enter valid Api key");
       }
       if (getPayInData?.is_url_expires === true) {
         throw new CustomError(400, "Url is already used");
