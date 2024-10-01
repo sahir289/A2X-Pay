@@ -46,7 +46,7 @@ class PayInController {
         throw new CustomError(404, "Merchant does not exist");
       }
 
-      if (req.headers["x-api-key"] !== getMerchantApiKeyByCode.api_key){
+      if (req.headers["x-api-key"] !== getMerchantApiKeyByCode.api_key) {
         throw new CustomError(404, "Enter valid Api key");
       }
 
@@ -80,14 +80,14 @@ class PayInController {
             expirationDate: generatePayInUrlRes?.expirationDate,
             payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}?t=true`, // use env
             payInId: generatePayInUrlRes?.id,
-            merchantOrderId:merchant_order_id,
+            merchantOrderId: merchant_order_id,
           };
         } else {
           updateRes = {
             expirationDate: generatePayInUrlRes?.expirationDate,
             payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
             payInId: generatePayInUrlRes?.id,
-            merchantOrderId:merchant_order_id,
+            merchantOrderId: merchant_order_id,
           };
         }
 
@@ -117,7 +117,7 @@ class PayInController {
           expirationDate: generatePayInUrlRes?.expirationDate,
           payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
           payInId: generatePayInUrlRes?.id,
-          merchantOrderId:merchant_order_id,
+          merchantOrderId: merchant_order_id,
         };
         return DefaultResponse(
           res,
@@ -290,6 +290,20 @@ class PayInController {
           error: "Invalid request. Data type mismatch or incomplete request",
         });
       }
+
+      // If query parameters are provided, use them
+      const getMerchantApiKeyByCode = await merchantRepo.getMerchantByCode(
+        merchantCode
+      );
+
+      if (!getMerchantApiKeyByCode) {
+        throw new CustomError(404, "Merchant does not exist");
+      }
+
+      if (req.headers["x-api-key"] !== getMerchantApiKeyByCode.api_key) {
+        throw new CustomError(404, "Enter valid Api key");
+      }
+
 
       if (!merchantCode) {
         return DefaultResponse(res, 404, {
@@ -510,10 +524,7 @@ class PayInController {
             try {
               //when we get the correct notify url;
               const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-              console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ notifyMerchant:", notifyMerchant)
             } catch (error) {
-              console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ error:", error)
-
             }
 
             const response = {
