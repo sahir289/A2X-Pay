@@ -46,6 +46,9 @@ class PayInRepo {
         const paymentRes = await prisma.payin.findFirst({
             where: {
                 id: payInId
+            },
+            include:{
+                Merchant:true
             }
         })
         return paymentRes
