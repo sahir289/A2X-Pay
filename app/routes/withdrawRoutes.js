@@ -26,7 +26,7 @@ withdrawRouter.post(
 );
 
 // From here authentication is started.
-// withdrawRouter.use(isAuthenticated);
+withdrawRouter.use(isAuthenticated);
 
 
 withdrawRouter.get(

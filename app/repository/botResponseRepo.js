@@ -39,11 +39,11 @@ class BotResponseRepo {
     return botRes;
   }
 
-  async updateBotResponseByUtr(id, utr) {
+  async updateBotResponseByUtr(id) {
     const updateBotRes = await prisma.telegramResponse.update({
       where: {
         id: id,
-        utr: utr,
+        // utr: utr,
       },
       data: {
         is_used: true,

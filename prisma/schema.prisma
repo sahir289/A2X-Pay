@@ -220,7 +220,7 @@ model TelegramResponse {
   sno         Int      @default(autoincrement())
   status      String?
   amount      Decimal?
-  amount_code String?  @unique
+  amount_code String?  
   utr         String?
   is_used     Boolean  @default(false)
   createdAt   DateTime @default(now())

@@ -38,7 +38,9 @@ class BotResponseController {
         throw new CustomError(400, "The UTR already exists");
       }
 
-      if (isValidAmount && isValidUtr) {
+      if (isValidAmount
+        && isValidUtr
+      ) {
         const updatedData = {
           status,
           amount,
@@ -47,7 +49,15 @@ class BotResponseController {
         if (isValidAmountCode) {
           updatedData.amount_code = amount_code;
         }
+
         const botRes = await botResponseRepo.botResponse(updatedData);
+        
+        const isAmountCodeExist = await botResponseRepo.getBotData(amount_code)
+
+        if (isAmountCodeExist) {
+          throw new CustomError(400, "Amount code already exist")
+        }
+
 
         const checkPayInUtr = await payInRepo.getPayInDataByUtrOrUpi(
           utr,
@@ -85,7 +95,7 @@ class BotResponseController {
               checkPayInUtr[0]?.bank_acc_id,
               parseFloat(amount)
             );
-            const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id, botRes?.utr)
+            const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
 
             const notifyData = {
               status: "success",
@@ -119,7 +129,9 @@ class BotResponseController {
               parseFloat(amount)
             );
 
-            const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id, botRes?.utr);
+
+            const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id);
+            console.log("🚀 ~ BotResponseController ~ botResponse ~ updateBotRes:", updateBotRes)
 
             const notifyData = {
               status: "dispute",
@@ -147,6 +159,7 @@ class BotResponseController {
         });
       }
     } catch (err) {
+      console.log("🚀 ~ BotResponseController ~ botResponse ~ err:", err)
       next(err);
     }
   }

@@ -61,7 +61,7 @@ class PayInRepo {
         return payInUrlRes
     }
 
-    
+
     async getPayInDataByUtrOrUpi(utr, upi_short_code) {
         // Construct the conditions
         let conditions = [];
@@ -86,6 +86,19 @@ class PayInRepo {
 
         // If both conditions are present, use AND condition
         if (conditions[0]?.user_submitted_utr && conditions[1]?.upi_short_code) {
+
+            // const payInRes = await prisma.payin.findMany({
+            //     where: {
+            //         AND: [
+            //             { user_submitted_utr: utr },
+            //             { upi_short_code: upi_short_code }
+            //         ],
+            //         OR: {
+            //             upi_short_code: upi_short_code
+            //         }
+            //     }
+            // });
+            // return payInRes;
             const payInRes = await prisma.payin.findMany({
                 where: {
                     AND: [
@@ -94,7 +107,17 @@ class PayInRepo {
                     ]
                 }
             });
-            return payInRes;
+
+            if (!payInRes.length) {
+                // If no result is found, try searching only by upi_short_code
+                const fallbackRes = await prisma.payin.findMany({
+                    where: {
+                        upi_short_code: upi_short_code,
+                       
+                    }
+                });
+                return fallbackRes;
+            }
         } else {
             // If only one condition is present, use OR condition
             const payInRes = await prisma.payin.findMany({
@@ -121,10 +144,10 @@ class PayInRepo {
         return payInDataRes;
     }
 
-    async getPayinDataByUsrSubmittedUtr(usrSubmittedUtr){
+    async getPayinDataByUsrSubmittedUtr(usrSubmittedUtr) {
         const payInRes = await prisma.payin.findMany({
             where: {
-                user_submitted_utr:usrSubmittedUtr
+                user_submitted_utr: usrSubmittedUtr
             },
         });
         return payInRes;

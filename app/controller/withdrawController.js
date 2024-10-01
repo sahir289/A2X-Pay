@@ -5,6 +5,7 @@ import { DefaultResponse } from "../helper/customResponse.js";
 import { getAmountFromPerc } from "../helper/utils.js";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+import { CustomError } from "../middlewares/errorHandler.js";
 
 class WithdrawController {
   async createWithdraw(req, res, next) {
@@ -20,7 +21,7 @@ class WithdrawController {
         status: "INITIATED",
         merchant_id: merchant.id,
         payout_commision: getAmountFromPerc(
-          merchant.payin_commission,
+          merchant.payout_commission,
           req.body.amount
         ),
         currency: "INR",
@@ -191,7 +192,7 @@ class WithdrawController {
       // Created payout callback feature
       const singleWithdrawData = await withdrawService.getWithdrawById(req.params.id);
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
-      
+
       const merchantPayoutUrl = merchant.payout_notify_url;
       if (merchantPayoutUrl !== null) {
         let merchantPayoutData = {
@@ -201,12 +202,23 @@ class WithdrawController {
           status: payload.status,
           // paymentId: payload.utr_id ? payload.utr_id : "",
         }
-        // Payout notify
-        // const response = await axios.post(`${merchantPayoutUrl}`, merchantPayoutData);
+        try {
+          // Payout notify
+          const response = await axios.post(`${merchantPayoutUrl}`, merchantPayoutData);
+          // Log response or take any action based on response
+          console.log("🚀 ~ WithdrawController ~ updateWithdraw ~ response:", response)
+        } catch (error) {
+          // Handle error for invalid/unreachable merchant URL
+          console.error("Error notifying merchant at payout URL:", error.message);
+
+          // Call your custom error function if necessary
+          new CustomError(400, "Failed to notify merchant about payout"); // Or handle in a different way
+        }
       }
       const data = await withdrawService.updateWithdraw(req.params.id, payload);
       return DefaultResponse(res, 200, "Payout Updated!", data);
     } catch (err) {
+      console.log("🚀 ~ WithdrawController ~ updateWithdraw ~ err:", err)
       next(err);
     }
   }
