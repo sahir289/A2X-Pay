@@ -80,14 +80,15 @@ class WithdrawController {
       // }
 
       if (data.is_notified) {
-        const notifyData = {
-          status: "success",
-          merchantCode: data.Merchant.code,
-          merchantOrderId: data.merchant_order_id,
-          payinId: data.id,
-          amount: data.amount,
-        };
+        // const notifyData = {
+        //   status: "success",
+        //   merchantCode: data.Merchant.code,
+        //   merchantOrderId: data.merchant_order_id,
+        //   payinId: data.id,
+        //   amount: data.amount,
+        // };
         try {
+          // We are not sending this
           // const notifyMerchant = await axios.post(data.notify_url, notifyData);
         } catch (error) { }
       }

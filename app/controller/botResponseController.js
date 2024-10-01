@@ -99,6 +99,7 @@ class BotResponseController {
             );
             const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
 
+            const updateMerchantData = await merchantRepo?.updateMerchant(checkPayInUtr[0]?.merchant_id, amount)
             const notifyData = {
               status: "success",
               merchantOrderId: updatePayInDataRes?.merchant_order_id,
@@ -133,8 +134,6 @@ class BotResponseController {
 
 
             const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id);
-            console.log("🚀 ~ BotResponseController ~ botResponse ~ updateBotRes:", updateBotRes)
-
             const notifyData = {
               status: "dispute",
               merchantOrderId: updatePayInDataRes?.merchant_order_id,
@@ -161,7 +160,6 @@ class BotResponseController {
         });
       }
     } catch (err) {
-      console.log("🚀 ~ BotResponseController ~ botResponse ~ err:", err)
       next(err);
     }
   }
