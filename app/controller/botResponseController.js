@@ -26,17 +26,7 @@ class BotResponseController {
         amount_code !== "nil" && amount_code.length === 5;
       const isValidUtr = utr.length === 12;
 
-      // check if duplicate and return error
-      const existingResponse = await prisma.telegramResponse.findMany({
-        where: {
-          utr,
-          is_used: true
-        }
-      });
 
-      if (existingResponse.length > 0) {
-        throw new CustomError(400, "The UTR already exists");
-      }
 
       if (isValidAmount
         && isValidUtr
@@ -51,7 +41,19 @@ class BotResponseController {
         }
 
         const botRes = await botResponseRepo.botResponse(updatedData);
-        
+
+        // check if duplicate and return error
+        const existingResponse = await prisma.telegramResponse.findMany({
+          where: {
+            utr,
+            is_used: true
+          }
+        });
+
+        if (existingResponse.length > 0) {
+          throw new CustomError(400, "The UTR already exists");
+        }
+
         const isAmountCodeExist = await botResponseRepo.getBotData(amount_code)
 
         if (isAmountCodeExist) {
