@@ -75,11 +75,15 @@ class PayInController {
           updateRes = {
             expirationDate: generatePayInUrlRes?.expirationDate,
             payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}?t=true`, // use env
+            payInId: generatePayInUrlRes?.id,
+            merchantOrderId:merchant_order_id,
           };
         } else {
           updateRes = {
             expirationDate: generatePayInUrlRes?.expirationDate,
             payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
+            payInId: generatePayInUrlRes?.id,
+            merchantOrderId:merchant_order_id,
           };
         }
 
@@ -108,6 +112,8 @@ class PayInController {
         const updateRes = {
           expirationDate: generatePayInUrlRes?.expirationDate,
           payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
+          payInId: generatePayInUrlRes?.id,
+          merchantOrderId:merchant_order_id,
         };
         return DefaultResponse(
           res,

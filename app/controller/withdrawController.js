@@ -26,7 +26,7 @@ class WithdrawController {
         ),
         currency: "INR",
       });
-      return DefaultResponse(res, 201, "Payout created successfully");
+      return DefaultResponse(res, 201, "Payout created successfully", { merchantOrderId: data?.merchant_order_id, payoutId: data?.id , amount : data?.amount});
     } catch (err) {
       next(err);
     }
