@@ -36,7 +36,7 @@ class PayInController {
     try {
       let payInData;
 
-      const { code, user_id, merchant_order_id, ot, isTest, amount } = req.query;
+      const { code, user_id, merchant_order_id, ot, isTest, amount, ap } = req.query;
       // If query parameters are provided, use them
       const getMerchantApiKeyByCode = await merchantRepo.getMerchantByCode(
         code
@@ -45,10 +45,17 @@ class PayInController {
       if (!getMerchantApiKeyByCode) {
         throw new CustomError(404, "Merchant does not exist");
       }
-
-      if (req.headers["x-api-key"] !== getMerchantApiKeyByCode.api_key) {
-        throw new CustomError(404, "Enter valid Api key");
+      if (ap) {
+        if (ap !== getMerchantApiKeyByCode.api_key) {
+          throw new CustomError(404, "Enter valid Api key");
+        }
+      } else {
+        if (req.headers["x-api-key"] !== getMerchantApiKeyByCode.api_key) {
+          throw new CustomError(404, "Enter valid Api key");
+        }
       }
+
+
 
       const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(
         getMerchantApiKeyByCode?.id
