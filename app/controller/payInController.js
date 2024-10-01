@@ -70,18 +70,18 @@ class PayInController {
           getMerchantApiKeyByCode,
           payInData
         );
-        let   updateRes;
-        if(isTest &&  (isTest==='true' || isTest===true)){
-           updateRes = {
+        let updateRes;
+        if (isTest && (isTest === 'true' || isTest === true)) {
+          updateRes = {
             expirationDate: generatePayInUrlRes?.expirationDate,
             payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}?t=true`, // use env
           };
-        }else{
-         updateRes = {
-          expirationDate: generatePayInUrlRes?.expirationDate,
-          payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
-        };
-      }
+        } else {
+          updateRes = {
+            expirationDate: generatePayInUrlRes?.expirationDate,
+            payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
+          };
+        }
 
         if (ot === "y") {
           return DefaultResponse(
@@ -121,8 +121,6 @@ class PayInController {
       next(err);
     }
   }
-
-
   async updatePaymentStatus(req, res, next) {
     try {
       checkValidation(req);
@@ -134,7 +132,25 @@ class PayInController {
         payInId,
         updatePayInData
       );
-      return res.status(200).json({ message: "true" });
+
+      const notifyData = {
+        status: req.body.status === "TEST_SUCCESS" ? "success" : req.body.status === "TEST_DROPPED" ? "Dropped" : "",
+        merchantOrderId: updatePayInRes?.merchant_order_id,
+        payinId: updatePayInRes?.id,
+        amount: updatePayInRes?.amount,
+      };
+      //Notify the merchant
+      try {
+        const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
+
+      } catch (error) {
+        console.log("error", error)
+      }
+      return DefaultResponse(
+        res,
+        200,
+        "Payment status updated successfully",
+      );
     } catch (error) {
       next(error);
     }
@@ -313,7 +329,7 @@ class PayInController {
         };
         try {
           // const notifyMerchant = await axios.post(data.notify_url, notifyData);
-        } catch (error) {}
+        } catch (error) { }
       }
 
       // if (data.status === "SUCCESS") {
@@ -482,7 +498,7 @@ class PayInController {
               console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ notifyMerchant:", notifyMerchant)
             } catch (error) {
               console.log("🚀 ~ PayInController ~ checkPaymentStatus ~ error:", error)
-              
+
             }
 
             const response = {
@@ -1207,7 +1223,7 @@ class PayInController {
               if (
                 dataRes?.utr === getTelegramResByUtr?.utr &&
                 parseFloat(dataRes?.amount) ===
-                  parseFloat(getTelegramResByUtr?.amount)
+                parseFloat(getTelegramResByUtr?.amount)
               ) {
                 const payinCommission = await calculateCommission(
                   dataRes?.amount,
@@ -1292,7 +1308,7 @@ class PayInController {
     try {
       checkValidation(req)
       const { id } = req.params;
-      const expirePayInUrlRes = await payInServices.oneTimeExpire(id) 
+      const expirePayInUrlRes = await payInServices.oneTimeExpire(id)
       return DefaultResponse(res, 200, "URL is expired!");
     } catch (error) {
       next(error);
