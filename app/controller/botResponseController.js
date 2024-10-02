@@ -40,6 +40,13 @@ class BotResponseController {
           updatedData.amount_code = amount_code;
         }
 
+        const isAmountCodeExist = await botResponseRepo.getBotData(amount_code)
+
+        if (isAmountCodeExist) {
+          const botRes = await botResponseRepo.botResponse(updatedData);
+          throw new CustomError(400, "Amount code already exist")
+        }
+
         const botRes = await botResponseRepo.botResponse(updatedData);
 
         // check if duplicate and return error
@@ -50,22 +57,17 @@ class BotResponseController {
           }
         });
 
-        if (existingResponse.length > 0) {
+        if (existingResponse?.length > 0) {
           throw new CustomError(400, "The UTR already exists");
         }
 
-        const isAmountCodeExist = await botResponseRepo.getBotData(amount_code)
-
-        if (isAmountCodeExist) {
-          throw new CustomError(400, "Amount code already exist")
-        }
 
 
         const checkPayInUtr = await payInRepo.getPayInDataByUtrOrUpi(
           utr,
           amount_code,
         );
-        if (checkPayInUtr.length > 0) {
+        if (checkPayInUtr?.length > 0) {
           const getMerchantToGetPayinCommissionRes = await merchantRepo.getMerchantById(checkPayInUtr[0]?.merchant_id)
           const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
 

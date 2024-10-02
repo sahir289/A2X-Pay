@@ -121,6 +121,7 @@ class PayInRepo {
                 });
                 return fallbackRes;
             }
+            return payInRes;
         } else {
             // If only one condition is present, use OR condition
             const payInRes = await prisma.payin.findMany({
