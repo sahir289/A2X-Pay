@@ -11,6 +11,7 @@ class WithdrawController {
   async createWithdraw(req, res, next) {
     try {
       checkValidation(req);
+      const { user_id, bank_name, acc_no, acc_holder_name, ifsc_code, amount, vendor_code } = req.body;
       const merchant = await merchantRepo.getMerchantByCode(req.body.code);
       if (!merchant) {
         throw new CustomError(404, "Merchant does not exist");
@@ -21,7 +22,13 @@ class WithdrawController {
       delete req.body.code;
 
       const data = await withdrawService.createWithdraw({
-        ...req.body,
+        user_id,
+        bank_name,
+        acc_no,
+        acc_holder_name,
+        ifsc_code,
+        amount,
+        vendor_code,
         status: "INITIATED",
         merchant_id: merchant.id,
         payout_commision: getAmountFromPerc(
