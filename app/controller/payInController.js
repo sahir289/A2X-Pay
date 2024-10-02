@@ -981,9 +981,9 @@ class PayInController {
   async getAllPayInDataWithRange(req, res, next) {
     try {
       checkValidation(req);
-      const { merchantCode, status, startDate, endDate } = req.body;
+      let { merchantCode, status, startDate, endDate } = req.body;
 
-      if (merchantCode == null) {
+      if (!merchantCode) {
         merchantCode = [];
       } else if (typeof merchantCode === "string") {
         merchantCode = [merchantCode];
