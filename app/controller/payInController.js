@@ -567,8 +567,9 @@ class PayInController {
         const response = {
           status: payInData.status,
           amount,
-          transactionId: updatePayinRes?.merchant_order_id,
+          merchant_order_id: updatePayinRes?.merchant_order_id,
           return_url: updatePayinRes?.return_url,
+          utr_id:updatePayinRes?.utr
         };
         return DefaultResponse(res, 200, responseMessage, response);
       }
@@ -684,15 +685,16 @@ class PayInController {
 
 
       const response = {
-        status: payInData.status === "SUCCESS" ? "Success" : payInData.status,
+        status: payInData.status,
         amount,
-        transactionId: updatePayinRes?.merchant_order_id,
+        merchant_order_id: updatePayinRes?.merchant_order_id,
         return_url: updatePayinRes?.return_url,
+        utr_id : updatePayinRes?.user_submitted_utr
       };
 
-      if (payInData.status === "SUCCESS") {
-        response.utr = updatePayinRes?.utr;
-      }
+      // if (payInData.status === "SUCCESS") {
+      //   response.utr_id = updatePayinRes?.utr;
+      // }
 
       return DefaultResponse(res, 200, responseMessage, response);
     } catch (error) {
