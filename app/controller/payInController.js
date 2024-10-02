@@ -138,40 +138,7 @@ class PayInController {
       next(err);
     }
   }
-  async updatePaymentStatus(req, res, next) {
-    try {
-      checkValidation(req);
-      const { payInId } = req.params;
-      const updatePayInData = {
-        status: req.body.status,
-      };
-      const updatePayInRes = await payInRepo.updatePayInData(
-        payInId,
-        updatePayInData
-      );
 
-      const notifyData = {
-        status: req.body.status === "TEST_SUCCESS" ? "success" : req.body.status === "TEST_DROPPED" ? "Dropped" : "",
-        merchantOrderId: updatePayInRes?.merchant_order_id,
-        payinId: updatePayInRes?.id,
-        amount: updatePayInRes?.amount,
-      };
-      //Notify the merchant
-      try {
-        const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
-
-      } catch (error) {
-        console.log("error", error)
-      }
-      return DefaultResponse(
-        res,
-        200,
-        "Payment status updated successfully",
-      );
-    } catch (error) {
-      next(error);
-    }
-  }
   // To Validate Url
   async validatePayInUrl(req, res, next) {
     try {
@@ -331,48 +298,14 @@ class PayInController {
         });
       }
 
-      //Not right now.
-      // if (data.Merchant.max_payin < data.amount) {
-      //   return DefaultResponse(res, 461, {
-      //     status: "error",
-      //     error: "Amount beyond payout limits",
-      //   });
-      // }
-
-      // if (
-      //   data.status !== "SUCCESS" ||
-      //   data.status !== "FAILED" ||
-      //   data.status !== "PENDING"
-      // ) {
-      //   return DefaultResponse(res, 400, {
-      //     status: "error",
-      //     error: "Invalid request. Data type mismatch or incomplete request",
-      //   });
-      // }
-
-      if (data.is_notified) {
-        const notifyData = {
-          status: "success",
-          merchantCode: data.Merchant.code,
-          merchantOrderId: data.merchant_order_id,
-          payinId: data.id,
-          amount: data.amount,
-        };
-        try {
-          // const notifyMerchant = await axios.post(data.notify_url, notifyData);
-        } catch (error) { }
-      }
-
-      // if (data.status === "SUCCESS") {
-      //   res.redirect(302, data.return_url);
-      // }
 
       const response = {
         status: data.status,
         merchantOrderId: data.merchant_order_id,
-        amount: data.amount,
+        amount: data.confirmed,
         payinId: data.id,
-        // paymentId: uuidv4(),
+        req_amount: data?.amount,
+        utr_id: (data.status === "SUCCESS" || data.status === "DISPUTE") ? data?.utr : " "
       };
 
       return DefaultResponse(
@@ -459,7 +392,7 @@ class PayInController {
     }
   }
 
-  // To Check Payment Status using code. (telegram)
+  // To Check Payment Status using code. (telegram) From payment site
   async checkPaymentStatus(req, res, next) {
     try {
       checkValidation(req);
@@ -469,10 +402,6 @@ class PayInController {
         throw new CustomError(404, "Payment does not exist");
       }
 
-      //validate api key
-      if (req.headers["x-api-key"] !== getPayInData?.Merchant?.api_key) {
-        throw new CustomError(404, "Enter valid Api key");
-      }
       if (getPayInData?.is_url_expires === true) {
         throw new CustomError(400, "Url is already used");
       }
@@ -521,24 +450,11 @@ class PayInController {
               updatePayInData
             );
 
-            // to notify the Merchant
-            const notifyData = {
-              status: "success",
-              merchantOrderId: updatePayInRes?.merchant_order_id,
-              payinId: updatePayInRes?.id,
-              amount: updatePayInRes?.confirmed,
-            };
-            try {
-              //when we get the correct notify url;
-              const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-            } catch (error) {
-            }
-
             const response = {
-              status: "Success",
+              status: "SUCCESS",
               amount: getBotDataRes?.amount,
-              utr: getBotDataRes?.utr,
-              transactionId: getPayInData?.merchant_order_id,
+              merchant_order_id: getPayInData?.merchant_order_id,
+              utr_id: getBotDataRes?.utr,
               return_url: getPayInData?.return_url,
             };
 
@@ -565,8 +481,8 @@ class PayInController {
             const response = {
               status: "DISPUTE",
               amount: getBotDataRes?.amount,
-              utr: getBotDataRes?.utr,
-              transactionId: getPayInData?.merchant_order_id,
+              utr_id: getBotDataRes?.utr,
+              merchant_order_id: getPayInData?.merchant_order_id,
               return_url: getPayInData?.return_url,
             };
 
@@ -579,10 +495,10 @@ class PayInController {
           }
         } else if (getBotDataRes.is_used === true) {
           const response = {
-            status: "Success",
+            status: "SUCCESS",
             amount: getBotDataRes?.amount,
-            utr: getBotDataRes?.utr,
-            transactionId: getPayInData?.merchant_order_id,
+            utr_id: getBotDataRes?.utr,
+            merchant_order_id: getPayInData?.merchant_order_id,
             return_url: getPayInData?.return_url,
           };
           return DefaultResponse(
@@ -594,10 +510,10 @@ class PayInController {
         }
       } else {
         const elseResponse = {
-          status: "Pending",
+          status: "PENDING",
           amount: 0,
           payInId: payInId,
-          transactionId: getPayInData?.merchant_order_id,
+          merchant_order_id: getPayInData?.merchant_order_id,
         };
 
         return DefaultResponse(res, 200, "Status Pending", elseResponse);
@@ -749,21 +665,24 @@ class PayInController {
         payInData
       );
 
-      if (updatePayinRes.status === "SUCCESS") {
-        const notifyData = {
-          status: "success",
-          merchantOrderId: updatePayinRes?.merchant_order_id,
-          payinId: payInId,
-          amount: updatePayinRes?.confirmed,
-        };
-        try {
-          //When we get the notify url we will add it.
-          const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-          console.log("Notification sent:", notifyMerchant);
-        } catch (error) {
-          console.error("Error sending notification:", error);
-        }
+      const notifyData = {
+        status: updatePayinRes.status,
+        merchantOrderId: updatePayinRes?.merchant_order_id,
+        payinId: payInId,
+        amount: updatePayinRes?.confirmed,
+        req_amount: amount,
+        utr_id: (updatePayinRes.status === "SUCCESS" || updatePayinRes.status === "DISPUTE") ? updatePayinRes?.utr : ""
+
+      };
+     
+      try {
+        //When we get the notify url we will add it.
+        const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+
+      } catch (error) {
+        console.error("Error sending notification:", error);
       }
+
 
       const response = {
         status: payInData.status === "SUCCESS" ? "Success" : payInData.status,
@@ -778,7 +697,6 @@ class PayInController {
 
       return DefaultResponse(res, 200, responseMessage, response);
     } catch (error) {
-      console.error("Error in payInProcess:", error);
       next(error);
     }
   }
@@ -842,7 +760,6 @@ class PayInController {
   }
 
   // handle payin using img
-
   async payInProcessByImg(req, res, next) {
     try {
       const { payInId } = req.params;
@@ -948,21 +865,23 @@ class PayInController {
           payInData
         );
 
-        if (updatePayinRes.status === "SUCCESS") {
-          const notifyData = {
-            status: "success",
-            merchantOrderId: updatePayinRes?.merchant_order_id,
-            payinId: payInId,
-            amount: updatePayinRes?.confirmed,
-          };
-          try {
-            //When we get the notify url we will add it.
-            const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-            console.log("Notification sent:", notifyMerchant);
-          } catch (error) {
-            console.error("Error sending notification:", error);
-          }
+       
+        const notifyData = {
+          status: updatePayinRes?.status,
+          merchantOrderId: updatePayinRes?.merchant_order_id,
+          payinId: payInId,
+          amount: updatePayinRes?.confirmed,
+          req_amount: amount,
+          utr_id: updatePayinRes?.utr
+        };
+        try {
+          //When we get the notify url we will add it.
+          const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+          console.log("Notification sent:", notifyMerchant);
+        } catch (error) {
+          console.error("Error sending notification:", error);
         }
+        // }
 
         const response = {
           status:
@@ -1212,6 +1131,15 @@ class PayInController {
 
                 // ----> Notify url
                 try {
+
+                  const notifyData ={
+                    status: "SUCCESS",
+                    merchantOrderId: getPayInData?.merchant_order_id,
+                    payinId: getPayInData?.id,
+                    amount: getPayInData?.confirmed,
+                    req_amount: getPayInData?.amount,
+                    utr_id: getPayInData?.utr
+                  }
                   //When we get the notify url we will add it.
                   const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
                   console.log("Notification sent:", notifyMerchant);
@@ -1290,6 +1218,14 @@ class PayInController {
                 );
 
                 // Notify url--->
+                const notifyData ={
+                  status: "SUCCESS",
+                  merchantOrderId: getPayInData?.merchant_order_id,
+                  payinId: getPayInData?.id,
+                  amount: getPayInData?.confirmed,
+                  req_amount: getPayInData?.amount,
+                  utr_id: getPayInData?.utr
+                }
                 try {
                   //When we get the notify url we will add it.
                   const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
@@ -1343,6 +1279,44 @@ class PayInController {
       const { id } = req.params;
       const expirePayInUrlRes = await payInServices.oneTimeExpire(id)
       return DefaultResponse(res, 200, "URL is expired!");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+
+  // For test modal pop up
+  async updatePaymentStatus(req, res, next) {
+    try {
+      checkValidation(req);
+      const { payInId } = req.params;
+      const updatePayInData = {
+        status: req.body.status,
+      };
+      const updatePayInRes = await payInRepo.updatePayInData(
+        payInId,
+        updatePayInData
+      );
+
+      const notifyData = {
+        status: req.body.status === "TEST_SUCCESS" ? "success" : req.body.status === "TEST_DROPPED" ? "Dropped" : "",
+        merchantOrderId: updatePayInRes?.merchant_order_id,
+        payinId: updatePayInRes?.id,
+        amount: updatePayInRes?.amount,
+      };
+      //Notify the merchant
+      try {
+        const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
+
+      } catch (error) {
+        console.log("error", error)
+      }
+      return DefaultResponse(
+        res,
+        200,
+        "Payment status updated successfully",
+      );
     } catch (error) {
       next(error);
     }

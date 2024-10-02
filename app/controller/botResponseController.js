@@ -103,10 +103,11 @@ class BotResponseController {
 
             const updateMerchantData = await merchantRepo?.updateMerchant(checkPayInUtr[0]?.merchant_id, amount)
             const notifyData = {
-              status: "success",
+              status: "SUCCESS",
               merchantOrderId: updatePayInDataRes?.merchant_order_id,
               payinId: updatePayInDataRes?.id,
               amount: updatePayInDataRes?.confirmed,
+              utr_id:updatePayInDataRes?.utr
             };
             try {
               //when we get the correct notify url;
@@ -137,13 +138,22 @@ class BotResponseController {
 
             const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id);
             const notifyData = {
-              status: "dispute",
+              status: "DISPUTE",
               merchantOrderId: updatePayInDataRes?.merchant_order_id,
               payinId: updatePayInDataRes?.id,
               amount: updatePayInDataRes?.confirmed,
+              req_amount:updatePayInDataRes?.amount,
+              utr_id:updatePayInDataRes?.utr
             };
+
+            try {
+              //when we get the correct notify url;
+              const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+            } catch (error) {
+            }
           }
         }
+        
         // Notify all connected clients about the new entry
         io.emit("new-entry", {
           message: 'New entry added',

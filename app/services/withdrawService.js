@@ -2,11 +2,11 @@ import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../client/prisma.js";
 class Withdraw {
   async createWithdraw(body) {
-    const id = uuidv4();
+    
     return await prisma.payout.create({
       data: {
         ...body,
-        merchant_order_id: id,
+        merchant_order_id: body?.merchant_order_id || uuidv4(),
       },
     });
   }

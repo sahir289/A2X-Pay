@@ -19,6 +19,7 @@ class WithdrawController {
         throw new CustomError(404, "Enter valid Api key");
       }
       delete req.body.code;
+
       const data = await withdrawService.createWithdraw({
         ...req.body,
         status: "INITIATED",
@@ -29,7 +30,7 @@ class WithdrawController {
         ),
         currency: "INR",
       });
-      return DefaultResponse(res, 201, "Payout created successfully", { merchantOrderId: data?.merchant_order_id, payoutId: data?.id , amount : data?.amount});
+      return DefaultResponse(res, 201, "Payout created successfully", { merchantOrderId: data?.merchant_order_id, payoutId: data?.id, amount: data?.amount });
     } catch (err) {
       next(err);
     }
@@ -64,48 +65,15 @@ class WithdrawController {
         return DefaultResponse(res, 404, "Payout not found");
       }
 
-      // if (data.Merchant.max_payout < data.amount) {
-      //   return DefaultResponse(res, 461, {
-      //     status: "error",
-      //     error: "Amount beyond payout limits",
-      //   });
-      // }
 
-      // if (
-      //   data.status !== "SUCCESS" ||
-      //   data.status !== "FAILED" ||
-      //   data.status !== "PENDING"
-      // ) {
-      //   return DefaultResponse(res, 400, {
-      //     status: "error",
-      //     error: "Invalid request. Data type mismatch or incomplete request",
-      //   });
-      // }
 
-      if (data.is_notified) {
-        // const notifyData = {
-        //   status: "success",
-        //   merchantCode: data.Merchant.code,
-        //   merchantOrderId: data.merchant_order_id,
-        //   payinId: data.id,
-        //   amount: data.amount,
-        // };
-        try {
-          // We are not sending this
-          // const notifyMerchant = await axios.post(data.notify_url, notifyData);
-        } catch (error) { }
-      }
-
-      // if (data.status === "SUCCESS") {
-      //   res.redirect(302, data.return_url);
-      // }
 
       const response = {
         status: data.status,
         merchantOrderId: data.merchant_order_id,
         amount: data.amount,
         payoutId: data.id,
-        // paymentId: uuidv4(),
+        utr_id: data?.status === "SUCCESS" ? data?.utr_id : ""
       };
 
       return DefaultResponse(
@@ -210,7 +178,6 @@ class WithdrawController {
           // Payout notify
           const response = await axios.post(`${merchantPayoutUrl}`, merchantPayoutData);
           // Log response or take any action based on response
-          console.log("🚀 ~ WithdrawController ~ updateWithdraw ~ response:", response)
         } catch (error) {
           // Handle error for invalid/unreachable merchant URL
           console.error("Error notifying merchant at payout URL:", error.message);
@@ -222,11 +189,11 @@ class WithdrawController {
       const data = await withdrawService.updateWithdraw(req.params.id, payload);
       return DefaultResponse(res, 200, "Payout Updated!", data);
     } catch (err) {
-      console.log("🚀 ~ WithdrawController ~ updateWithdraw ~ err:", err)
       next(err);
     }
   }
 
+  // Reports
   async getAllPayOutDataWithRange(req, res, next) {
     try {
       checkValidation(req);
