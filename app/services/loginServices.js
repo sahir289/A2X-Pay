@@ -36,6 +36,13 @@ class LogInService {
       throw new CustomError(409, "User is already logged in somewhere else")
     }
   }
+
+  // Verify Password while edit and delete functionality
+  async comparePassword(userName, password) {
+    const user = await userRepo.getUserByUsernameRepo(userName);
+    const isPasswordValid = await comparePassword(password, user?.password);
+    return isPasswordValid
+  }
 }
 
 export default new LogInService()
