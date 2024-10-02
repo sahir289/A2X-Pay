@@ -172,7 +172,7 @@ class WithdrawController {
           payoutId: req.params.id,
           amount: singleWithdrawData.amount,
           status: payload.status,
-          paymentId: payload.utr_id ? payload.utr_id : "",
+          utr_id: payload.utr_id ? payload.utr_id : "",
         }
         try {
           // Payout notify

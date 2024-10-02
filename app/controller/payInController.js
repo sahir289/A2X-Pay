@@ -672,7 +672,6 @@ class PayInController {
         amount: updatePayinRes?.confirmed,
         req_amount: amount,
         utr_id: (updatePayinRes.status === "SUCCESS" || updatePayinRes.status === "DISPUTE") ? updatePayinRes?.utr : ""
-
       };
      
       try {
