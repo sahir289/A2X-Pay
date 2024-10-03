@@ -956,7 +956,7 @@ class PayInController {
 
   async getAllPayInDataByVendor(req, res, next) {
     try {
-      let { vendorCode } = req.query;
+      let { vendorCode, startDate, endDate } = req.query;
 
       if (vendorCode == null) {
         vendorCode = [];
@@ -965,7 +965,9 @@ class PayInController {
       }
 
       const payInDataRes = await payInServices.getAllPayInDataByVendor(
-        vendorCode
+        vendorCode,
+        startDate,
+        endDate,
       );
 
       return DefaultResponse(
@@ -975,6 +977,7 @@ class PayInController {
         payInDataRes
       );
     } catch (error) {
+      console.log(error);
       next(error);
     }
   }

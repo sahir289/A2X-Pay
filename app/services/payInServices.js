@@ -252,8 +252,20 @@ class PayInService {
     return data;
   }
 
-  async getAllPayInDataByVendor(vendorCode) {
+  async getAllPayInDataByVendor(vendorCode, startDate, endDate) {
     let bankIds = [];
+    let dateFilter = {};
+    // if both start and end date provided then apply range filter
+    if(startDate && endDate){
+      const end = new Date(endDate);
+      end.setDate(end.getDate() + 1)
+      dateFilter = {
+        createdAt: {
+          gte: new Date(startDate),
+          lte: end,
+        },
+      }
+    }
     if (vendorCode) {
       const data = await prisma.bankAccount.findMany({
         where: {
@@ -278,6 +290,7 @@ class PayInService {
       where: {
         status: "SUCCESS",
         ...filter,
+        ...dateFilter,
       },
     });
 
@@ -287,6 +300,7 @@ class PayInService {
         vendor_code: Array.isArray(vendorCode)
           ? { in: vendorCode }
           : vendorCode,
+          ...dateFilter,
       },
     });
 
@@ -297,6 +311,7 @@ class PayInService {
           vendor_code: Array.isArray(vendorCode)
             ? { in: vendorCode }
             : vendorCode,
+            ...dateFilter,
         },
       },
     });
