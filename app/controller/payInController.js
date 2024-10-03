@@ -55,8 +55,6 @@ class PayInController {
         }
       }
 
-
-
       const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(
         getMerchantApiKeyByCode?.id
       );
@@ -79,7 +77,8 @@ class PayInController {
         // Uncomment and use your service to generate PayIn URL
         const generatePayInUrlRes = await payInServices.generatePayInUrl(
           getMerchantApiKeyByCode,
-          payInData
+          payInData,
+          bankAccountLinkRes[0] // to add the bank_id when url is generated from api
         );
         let updateRes;
         if (isTest && (isTest === 'true' || isTest === true)) {
@@ -95,6 +94,7 @@ class PayInController {
             payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
             payInId: generatePayInUrlRes?.id,
             merchantOrderId: merchant_order_id,
+            
           };
         }
 
@@ -118,7 +118,8 @@ class PayInController {
 
         const generatePayInUrlRes = await payInServices.generatePayInUrl(
           getMerchantApiKeyByCode,
-          payInData
+          payInData,
+          bankAccountLinkRes[0] // to add the bank_id when url is generated from api
         );
         const updateRes = {
           expirationDate: generatePayInUrlRes?.expirationDate,

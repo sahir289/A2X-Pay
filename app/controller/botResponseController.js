@@ -95,10 +95,12 @@ class BotResponseController {
               payInData
             );
 
-            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-              checkPayInUtr[0]?.bank_acc_id,
-              parseFloat(amount)
-            );
+            if (checkPayInUtr[0]?.bank_acc_id) {
+              const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                checkPayInUtr[0]?.bank_acc_id,
+                parseFloat(amount)
+              );
+            }
             const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
 
             const updateMerchantData = await merchantRepo?.updateMerchant(checkPayInUtr[0]?.merchant_id, amount)
@@ -107,7 +109,7 @@ class BotResponseController {
               merchantOrderId: updatePayInDataRes?.merchant_order_id,
               payinId: updatePayInDataRes?.id,
               amount: updatePayInDataRes?.confirmed,
-              utr_id:updatePayInDataRes?.utr
+              utr_id: updatePayInDataRes?.utr
             };
             try {
               //when we get the correct notify url;
@@ -142,8 +144,8 @@ class BotResponseController {
               merchantOrderId: updatePayInDataRes?.merchant_order_id,
               payinId: updatePayInDataRes?.id,
               amount: updatePayInDataRes?.confirmed,
-              req_amount:updatePayInDataRes?.amount,
-              utr_id:updatePayInDataRes?.utr
+              req_amount: updatePayInDataRes?.amount,
+              utr_id: updatePayInDataRes?.utr
             };
 
             try {
@@ -153,7 +155,7 @@ class BotResponseController {
             }
           }
         }
-        
+
         // Notify all connected clients about the new entry
         io.emit("new-entry", {
           message: 'New entry added',
