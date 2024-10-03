@@ -83,9 +83,7 @@ class Withdraw {
       },
     });
     const totalRecords = await prisma.payout.count({
-      where,
-      skip,
-      take,
+      where
     });
 
     return {
