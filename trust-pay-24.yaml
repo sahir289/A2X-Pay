@@ -1,0 +1,567 @@
+openapi: 3.0.0
+info:
+  title: TrustPay24-Staging Integration API
+  version: 1.0.0
+  description: This document provides the complete steps and APIs to integrate the Trust-Pay Payment Gateway into a merchant's website.
+  contact:
+    name: Benjamin Leonardo
+    email: benjamin32935255@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://localhost:8080
+    description: Local server
+paths:
+  /v1/payin:
+    post:
+      summary: Generates a PayIn URL for the payment process.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: merchantCode provided by Trust-Pay
+                  example: "MERCHANT123"
+                user_id:
+                  type: string
+                  description: unique user identifier as per merchant
+                  example: "USER456"
+                ot:
+                  type: string
+                  description: Always pass y or n
+                  example: "y"
+                amount:
+                  type: integer
+                  description: required amount, must be within Pay-in limits assigned to merchant
+                  example: 100
+                merchant_order_id:
+                  type: string
+                  description: unique order identifier as per merchant
+                  example: "ORDER789"
+                phoneNumber:
+                  type: integer
+                  description: phone number of user, optional but valid
+                  example: 1234567890
+                email:
+                  type: string
+                  description: email of user, optional but valid
+                  example: "user@example.com"
+                username:
+                  type: string
+                  description: username as per merchant, optional
+                  example: "merchantUser"
+                returnURL:
+                  type: string
+                  description: URL provided by the merchant, must be https.
+                  example: "https://merchant.com/return"
+                isTest:
+                  type: boolean
+                  description: if checking in test mode
+                  example: true
+                payInId:
+                  type: string
+                  description: unique user identifier for the payment
+                  example: "PAYIN001"
+              required:
+                - code
+                - user_id
+                - ot
+      responses:
+        "200":
+          description: Successful response with the PayIn URL.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  expirationDate:
+                    type: string
+                    format: date-time
+                    description: Expiration date of the PayIn URL.
+                  payInUrl:
+                    type: string
+                    description: URL to redirect the user for payment.
+                  payInId:
+                    type: string
+                    description: ID of the generated PayIn.
+                  merchantOrderId:
+                    type: string
+                    description: Merchant order ID associated with the payment.
+        "404":
+          description: Merchant not found or invalid API key.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message detailing the issue.
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message detailing the internal error.
+      security:
+        - api_key: []
+      tags:
+        - payment
+  paths:
+  /v1/create-payout:
+    post:
+      summary: Creates a new payout for the merchant.
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+          description: "Merchant API key for identifying the merchant."
+        - name: callbackUrl
+          in: query
+          required: true
+          description: "Merchant's callback URL to receive notifications after payout."
+          schema:
+            type: string
+            format: uri
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: "Merchant code provided by Trust-Pay."
+                user_id:
+                  type: string
+                  description: "Unique user identifier."
+                bank_name:
+                  type: string
+                  description: "Bank name of the player."
+                acc_no:
+                  type: string
+                  description: "Bank account number of the player."
+                acc_holder_name:
+                  type: string
+                  description: "Bank account holder's name of the player."
+                ifsc_code:
+                  type: string
+                  description: "IFSC code of the player's bank account."
+                amount:
+                  type: string
+                  description: "Payout amount."
+                notifyURL:
+                  type: string
+                  description: "Notification URL provided by the merchant."
+                  example: "https://merchant.com/notify"
+                phoneNumber:
+                  type: integer
+                  description: "Phone number of the user."
+                  example: 1234567890
+                email:
+                  type: string
+                  description: "Email of the user."
+                  example: "user@example.com"
+                username:
+                  type: string
+                  description: "Username as per merchant."
+                payInId:
+                  type: string
+                  description: "Unique user identifier for the payment."
+                vendor_code:
+                    type: string
+                    nullable: true
+                    description: Vendor code associated with the payout, if applicable.
+                    example: null  
+                
+              required:
+                - code
+                - user_id
+                - bank_name
+                - acc_no
+                - acc_holder_name
+                - ifsc_code
+                - amount
+      responses:
+        "201":
+          description: "Payout created successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Payout created successfully"
+        "400":
+          description: "Invalid request payload."
+        "500":
+          description: "Internal server error."
+      callbacks:
+        payoutCallback:
+          url:
+            post:
+              summary: "Callback to notify the merchant after payout completion."
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        payoutId:
+                          type: string
+                          description: "The ID of the created payout."
+                        status:
+                          type: string
+                          description: "Status of the payout."
+                          enum: [SUCCESS, FAILED]
+                        message:
+                          type: string
+                          description: "Message describing the payout status."
+              responses:
+                '200':
+                  description: "Callback received successfully"
+                '400':
+                  description: "Invalid data in callback"
+                '500':
+                  description: "Server error in callback"
+  /v1/check-payin-status:
+    post:
+      summary: Checks the status of a PayIn transaction.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payinId:
+                  type: string
+                  description: Unique identifier for the payment.
+                  example: "payin_12345"
+                merchantCode:
+                  type: string
+                  description: Merchant code provided by Trust-Pay.
+                  example: "MERCHANT_CODE"
+                merchantOrderId:
+                  type: string
+                  description: Unique user identifier as per merchant.
+                  example: "order_12345"
+              required:
+                - payinId
+                - merchantCode
+                - merchantOrderId
+      responses:
+        "200":
+          description: PayIn status fetched successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Payin status fetched successfully"
+                  status:
+                    type: string
+                    description: Current status of the PayIn.
+                    example: "SUCCESS"
+                  merchantOrderId:
+                    type: string
+                    description: Merchant order ID associated with the PayIn.
+                    example: "order_12345"
+                  amount:
+                    type: number
+                    description: Amount confirmed for the transaction.
+                    example: 1000
+                  payinId:
+                    type: string
+                    description: Unique identifier for the payment.
+                    example: "payin_12345"
+                  req_amount:
+                    type: number
+                    description: Requested amount for the PayIn.
+                    example: 1000
+                  utr_id:
+                    type: string
+                    description: Unique Transaction Reference ID if applicable.
+                    example: "utr_67890"
+        "400":
+          description: Invalid request. Data type mismatch or incomplete request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  error:
+                    type: string
+                    example: "Invalid request. Data type mismatch or incomplete request"
+        "404":
+          description: Merchant not found or invalid API key.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  error:
+                    type: string
+                    example: "Merchant does not exist or payin not found"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message detailing the internal error.
+      security:
+        - api_key: []
+      tags:
+        - payment
+  /v1/payin-assignment:
+    post:
+      summary: Assigns a PayIn transaction to a bank account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payInId:
+                  type: string
+                  description: Unique identifier for the PayIn transaction.
+                  example: "payin_12345"
+                merchantCode:
+                  type: string
+                  description: Merchant code provided by Trust-Pay.
+                  example: "MERCHANT_CODE"
+                merchantOrderId:
+                  type: string
+                  description: Unique user identifier as per merchant.
+                  example: "order_12345"
+              required:
+                - payInId
+                - merchantCode
+                - merchantOrderId
+      responses:
+        "200":
+          description: PayIn assigned successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Payin assigned successfully"
+                  bankAccountName:
+                    type: string
+                    description: Name of the bank account.
+                    example: "Trust Bank"
+                  amount:
+                    type: number
+                    description: Amount associated with the PayIn.
+                    example: 1000
+                  payinId:
+                    type: string
+                    description: Unique identifier for the payment.
+                    example: "payin_12345"
+                  totalTime:
+                    type: number
+                    description: Total time for the PayIn process.
+                    example: 3600
+                  time-remaining:
+                    type: number
+                    description: Time remaining until expiration in seconds.
+                    example: 300
+                  upiLink:
+                    type: string
+                    description: UPI link for the transaction.
+                    example: "upi://pay?pa=merchant@upi&pn=Merchant%20Name"
+                  bankAcIfsc:
+                    type: string
+                    description: IFSC code of the bank account.
+                    example: "HDFC0001234"
+                  merchantOrderId:
+                    type: string
+                    description: Merchant order ID associated with the PayIn.
+                    example: "order_12345"
+                  bankAccountNumber:
+                    type: string
+                    description: Bank account number.
+                    example: "123456789012"
+        "400":
+          description: Invalid request. Data type mismatch or incomplete request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  code:
+                    type: string
+                    example: "invalid-request"
+                  message:
+                    type: string
+                    example: "Invalid request. Data type mismatch or incomplete request"
+        "404":
+          description: Merchant not found or invalid API key.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  code:
+                    type: string
+                    example: "merchant-not-found"
+                  message:
+                    type: string
+                    example: "Merchant does not exist"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message detailing the internal error.
+      security:
+        - api_key: []
+      tags:
+        - payment
+  /v1/check-payout-status:
+    post:
+      summary: Checks the status of a payout transaction.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payoutId:
+                  type: string
+                  description: Unique identifier for the payout.
+                  example: "payout_12345"
+                merchantCode:
+                  type: string
+                  description: Merchant code provided by Trust-Pay.
+                  example: "MERCHANT_CODE"
+                merchantOrderId:
+                  type: string
+                  description: Unique user identifier as per merchant.
+                  example: "order_12345"
+              required:
+                - payoutId
+                - merchantCode
+                - merchantOrderId
+      responses:
+        "200":
+          description: Payout status fetched successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Payout status fetched successfully"
+                  status:
+                    type: string
+                    description: Current status of the payout.
+                    example: "SUCCESS"
+                  merchantOrderId:
+                    type: string
+                    description: Merchant order ID associated with the payout.
+                    example: "order_12345"
+                  amount:
+                    type: number
+                    description: Amount confirmed for the transaction.
+                    example: 1000
+                  payoutId:
+                    type: string
+                    description: Unique identifier for the payout.
+                    example: "payout_12345"
+                  utr_id:
+                    type: string
+                    description: Unique Transaction Reference ID if applicable.
+                    example: "utr_67890"
+        "400":
+          description: Invalid request. Data type mismatch or incomplete request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  error:
+                    type: string
+                    example: "Invalid request. Data type mismatch or incomplete request"
+        "404":
+          description: Merchant not found or invalid API key.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  code:
+                    type: string
+                    example: "merchant-not-found"
+                  message:
+                    type: string
+                    example: "Merchant does not exist"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message detailing the internal error.
+      security:
+        - api_key: []
+      tags:
+        - payment
+
+components:
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: x-api-key
+      in: header

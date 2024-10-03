@@ -6,6 +6,8 @@ import router from "./app/routes/index.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import config from "./config.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerDocs from "../A2X-Pay/swagger.js";
 
 const app = express();
 app.use(cookieParser())
@@ -16,6 +18,15 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+
+
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} request made to: ${req.url}`);
+    next(); // Proceed to the next middleware or route handler
+});
+
 
 // Use routes
 app.use("/", router);
@@ -58,4 +69,6 @@ export { io };
 
 httpServer.listen(PORT, () => {
     console.log(`app is running on Port ${PORT}`);
+    console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
+
 });
