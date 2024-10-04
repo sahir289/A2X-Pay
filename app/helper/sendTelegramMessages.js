@@ -178,15 +178,15 @@ export async function sendTelegramDashboardReportMessage(
 
 <b>Diposit:</b>
 ${formatTransactions(payIns)}
-<b>Total PayIn: ${formatCurrency(totalPayIn)}</b>
+<b>Total Diposit: ${formatCurrency(totalPayIn)}</b>
 
 <b>Withdraw:</b>
 ${formatTransactions(payOuts)}
-<b>Total PayOut: ${formatCurrency(totalPayOut)}</b>
+<b>Total Withdrawal: ${formatCurrency(totalPayOut)}</b>
 
-<b>Bank Accounts:</b>
+<b> Successful Transactions:</b>
 ${formatTransactions(bankPayIns)}
-<b>Total Bank Deposit: ${formatCurrency(totalBankPayIn)}</b>
+<b>Total Successful Transactions: ${formatCurrency(totalBankPayIn)}</b>
 
 <b>Net Flow: ${formatCurrency(totalPayIn - totalPayOut)}</b>
 `;
