@@ -1,5 +1,6 @@
 import cron from "node-cron";
 import { prisma } from "../client/prisma.js";
+import { sendTelegramDashboardReportMessage } from "../helper/sendTelegramMessages.js";
 // Schedule a task to run every hour
 cron.schedule("0 * * * *", () => gatherAllData("H"));
 // Schedule a task to run every day at 12 AM
@@ -139,6 +140,17 @@ const gatherAllData = async (type = "N") => {
     console.log(`\Bank Accounts (${currentDate}) \n`);
     console.log(formattedBankPayIns.join("\n"));
     console.log(`\nTotal: ${formatePrice(totalBankPayIn)} \n`);
+    await sendTelegramDashboardReportMessage(
+      "4593574370",
+      payIns, 
+      payOuts, 
+      bankPayIns,
+      type === "H" ? "Hourly Report" : "Daily Report",
+      startDate,
+      endDate, 
+      "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc",
+      
+);
   } catch (err) {
     console.log("========= CRON ERROR =========");
     console.error(err);
