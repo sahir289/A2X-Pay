@@ -143,67 +143,51 @@ export async function sendBankNotAssignedAlertTelegram(chatId, getMerchantApiKey
         console.error('Error sending bank not assigned alert to Telegram:', error);
     }
 }
-
 export async function sendTelegramDashboardReportMessage(
     chatId,
-    payIns,
-    payOuts,
-    bankPayIns,
+    formattedPayIns,
+    formattedPayOuts, 
+    formattedBankPayIns, 
     reportType,
-    startDate,
-    endDate,     
-    TELEGRAM_BOT_TOKEN,
+    TELEGRAM_BOT_TOKEN
 ) {
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
-    };
+    const reportDate = reportType === "Hourly Report" ? "Hourly Report" : "Daily Report";
+    const currentDate = new Date().toISOString().split("T")[0];
+    
+    let message = `<b>${reportDate} (${currentDate})</b>\n\n`;
 
-    const formatTransactions = (transactions) => {
-        return transactions.map(t =>
-            `${t.merchant_id || t.bank_acc_id}: ${formatCurrency(t._sum.amount)} (${t._count.id})`
-        ).join('\n') || 'No transactions available';
-    };
+    // PayIns section
+    message += `<b>💰 Deposit (${currentDate})</b>\n\n`;
+    message += formattedPayIns.join("\n");
+    message += `\n\n`;
 
-   
-    // Calculate totals
-    const totalPayIn = payIns.reduce((sum, t) => sum + t._sum.amount, 0);
-    const totalPayOut = payOuts.reduce((sum, t) => sum + t._sum.amount, 0);
-    const totalBankPayIn = bankPayIns.reduce((sum, t) => sum + t._sum.amount, 0);
+    // PayOuts section
+    message += `<b>🏦 Withdraw (${currentDate})</b>\n\n`;
+    message += formattedPayOuts.join("\n");
+    message += `\n\n`;
 
-    // Create message content based on report type
-    const timePeriod = reportType === "H" ? "Hourly Report" : "24-Hour Report";
-    const message = `
-<b>${timePeriod}</b>
-<i>From ${startDate.toISOString()} to ${endDate.toISOString()}</i>
+    // Bank Accounts section
+    message += `<b>✅ Bank Accounts (${currentDate})</b>\n\n`;
+    message += formattedBankPayIns.join("\n");
+    message += `\n\n`;
 
-<b>Diposit:</b>
-${formatTransactions(payIns)}
-<b>Total Diposit: ${formatCurrency(totalPayIn)}</b>
+    // Log the formatted message
+    console.log("Formatted Telegram Message: \n", message);
 
-<b>Withdraw:</b>
-${formatTransactions(payOuts)}
-<b>Total Withdrawal: ${formatCurrency(totalPayOut)}</b>
-
-<b> Successful Transactions:</b>
-${formatTransactions(bankPayIns)}
-<b>Total Successful Transactions: ${formatCurrency(totalBankPayIn)}</b>
-
-<b>Net Flow: ${formatCurrency(totalPayIn - totalPayOut)}</b>
-`;
-
-    // Send message to Telegram
+    // Send the message to Telegram
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
     try {
         const response = await axios.post(sendMessageUrl, {
             chat_id: chatId,
             text: message,
             parse_mode: 'HTML',
         });
-
-        // Log successful response
         console.log('Message sent successfully:', response.data);
     } catch (error) {
-        // Log detailed error
+        console.error('Error sending message:', error.response ? error.response.data : error.message);
     }
 }
+
+
 
