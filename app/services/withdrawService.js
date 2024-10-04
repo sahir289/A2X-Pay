@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../client/prisma.js";
 class Withdraw {
   async createWithdraw(body) {
-    
+
     return await prisma.payout.create({
       data: {
         ...body,
@@ -63,7 +63,7 @@ class Withdraw {
     });
 
     if (code) {
-      where.Merchant = { code };
+      where.Merchant = { code: { in: code.split(',') } };
     }
 
     const data = await prisma.payout.findMany({
