@@ -6,6 +6,7 @@ import router from "./app/routes/index.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import config from "./config.js";
+import "./app/cron/index.js";
 
 const app = express();
 app.use(cookieParser())
