@@ -61,7 +61,7 @@ class PayInController {
       if (!bankAccountLinkRes || bankAccountLinkRes.length === 0) {console.log(urlExpiredBankNotAssignedRes);
         console.log(getMerchantApiKeyByCode);
         await sendBankNotAssignedAlertTelegram(
-          "4584431203",
+          "-4584431203",
           getMerchantApiKeyByCode,
           "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc"  
         )

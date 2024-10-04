@@ -141,7 +141,7 @@ const gatherAllData = async (type = "N") => {
     console.log(formattedBankPayIns.join("\n"));
     console.log(`\nTotal: ${formatePrice(totalBankPayIn)} \n`);
     await sendTelegramDashboardReportMessage(
-      "4593574370",
+      "-4593574370",
       payIns, 
       payOuts, 
       bankPayIns,
