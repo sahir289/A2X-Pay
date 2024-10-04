@@ -5,7 +5,8 @@ import payInRepo from "../repository/payInRepo.js";
 import { nanoid } from "nanoid";
 
 class PayInService {
-  async generatePayInUrl(getMerchantRes, payInData) {
+  async generatePayInUrl(getMerchantRes, payInData, bankAccountLinkRes) {
+    console.log("🚀 ~ PayInService ~ generatePayInUrl ~ bankAccountLinkRes:", bankAccountLinkRes)
     const _10_MINUTES = 1000 * 60 * 10;
     const expirationDate = Math.floor((new Date().getTime() + _10_MINUTES) / 1000);
 
@@ -23,7 +24,14 @@ class PayInService {
       merchant_id: getMerchantRes?.id,
       expirationDate,
     };
+    
+    if (payInData?.amount) {
+      data.bank_acc_id = bankAccountLinkRes?.bankAccountId
+    }
+
     const payInUrlRes = await payInRepo.generatePayInUrl(data);
+    console.log("🚀 ~ PayInService ~ generatePayInUrl ~ payInUrlRes:", payInUrlRes)
+    
     const updatePayInUrlRes = {
       ...payInUrlRes,
       expirationDate,

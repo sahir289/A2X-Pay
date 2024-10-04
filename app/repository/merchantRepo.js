@@ -44,7 +44,7 @@ class MerchantRepo {
         is_deleted: false, //get all merchant records which are not deleted
       }
     });
-    const totalRecords = await prisma.merchant.count({});
+    const totalRecords = await prisma.merchant.count({where: {is_deleted: false}});
 
     return {
       merchants,
