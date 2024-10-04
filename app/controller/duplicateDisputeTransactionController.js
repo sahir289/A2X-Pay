@@ -16,7 +16,7 @@ class DuplicateDisputeTransactionController {
             const oldPayInData = await payInServices.getPayInDetails(payInId);
             const duplicateDisputeTransactionRes = await duplicateDisputeTransactionService.handleDuplicateDisputeTransaction(payInId, apiData);
             await sendTelegramDisputeMessage(
-                "4503453524",
+                "-4503453524",
                 oldPayInData,
                 duplicateDisputeTransactionRes,
                 "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc",
