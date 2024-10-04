@@ -11,29 +11,16 @@ const gatherAllData = async (type = "N") => {
     const empty = "-- -- -- ";
     let startDate, endDate;
     if (type == "H") {
+      // last hour
       const date = new Date();
-      startDate = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        date.getHours(),
-        0,
-        0
-      );
-      endDate = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        date.getHours(),
-        59,
-        59
-      );
+      startDate = new Date(date.getTime() - 60 * 60 * 1000);
+      endDate = date;
     }
 
-    if(type == "N"){
-        // last 24 hours
-        endDate = new Date();
-        startDate = new Date(endDate.getTime() - 24 * 60 * 60 * 1000)
+    if (type == "N") {
+      // last 24 hours
+      endDate = new Date();
+      startDate = new Date(endDate.getTime() - 24 * 60 * 60 * 1000);
     }
 
     const merchants = await prisma.merchant.findMany({
@@ -118,19 +105,25 @@ const gatherAllData = async (type = "N") => {
     const formattedPayIns = payIns.map((payIn) => {
       const { merchant_id, _sum, _count } = payIn;
       totalPayIn += Number(_sum.amount);
-      return `${merchantCodeMap[merchant_id] || empty}: ${formatePrice(_sum.amount)} (${_count.id})`;
+      return `${merchantCodeMap[merchant_id] || empty}: ${formatePrice(
+        _sum.amount
+      )} (${_count.id})`;
     });
 
     const formattedPayOuts = payOuts.map((payIn) => {
       const { merchant_id, _sum, _count } = payIn;
       totalPayOut += Number(_sum.amount);
-      return `${merchantCodeMap[merchant_id] || empty}: ${formatePrice(_sum.amount)} (${_count.id})`;
+      return `${merchantCodeMap[merchant_id] || empty}: ${formatePrice(
+        _sum.amount
+      )} (${_count.id})`;
     });
 
     const formattedBankPayIns = bankPayIns.map((payIn) => {
       const { bank_acc_id, _sum, _count } = payIn;
       totalBankPayIn += Number(_sum.amount);
-      return `${bankNamesMap[bank_acc_id] || empty}: ${formatePrice(_sum.amount)} (${_count.id})`;
+      return `${bankNamesMap[bank_acc_id] || empty}: ${formatePrice(
+        _sum.amount
+      )} (${_count.id})`;
     });
 
     const currentDate = new Date().toISOString().split("T")[0];
@@ -142,19 +135,22 @@ const gatherAllData = async (type = "N") => {
     console.log(`\nPayOuts (${currentDate}) \n`);
     console.log(formattedPayOuts.join("\n"));
     console.log(`\nTotal: ${formatePrice(totalPayOut)} \n`);
-    // banks 
+    // banks
     console.log(`\Bank Accounts (${currentDate}) \n`);
     console.log(formattedBankPayIns.join("\n"));
     console.log(`\nTotal: ${formatePrice(totalBankPayIn)} \n`);
   } catch (err) {
-    console.log("========= CRON ERROR =========")
+    console.log("========= CRON ERROR =========");
     console.error(err);
-    console.log("==============================")
+    console.log("==============================");
   }
 };
 
 gatherAllData("N");
 
-const formatePrice = (price)=>{
-    return Number(price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+const formatePrice = (price) => {
+  return Number(price).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
