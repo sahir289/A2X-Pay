@@ -367,6 +367,15 @@ class PayInService {
     })
     return expirePayInUrlRes
   }
+  
+  async getPayInDetails(payInId) {
+    const data = await prisma.payin.findFirst({
+      where: {
+        id: payInId,
+      },
+    });
+    return data;
+  }
 }
 
 export default new PayInService();
