@@ -12,7 +12,7 @@ import swaggerDocs from "../A2X-Pay/swagger.js";
 const app = express();
 app.use(cookieParser())
 app.use(cors({
-    origin: [`${config?.reactFrontOrigin}`, `${config?.reactPaymentOrigin}`], // List all frontend URLs
+    // origin: [`${config?.reactFrontOrigin}`, `${config?.reactPaymentOrigin}`], // List all frontend URLs
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
     credentials: true
 }));

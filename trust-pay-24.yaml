@@ -13,9 +13,16 @@ servers:
   - url: http://localhost:8080
     description: Local server
 paths:
-  /v1/payin:
+ /v1/payin:
     post:
       summary: Generates a PayIn URL for the payment process.
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+          description: "Merchant API key for identifying the merchant."
       requestBody:
         required: true
         content:
@@ -116,7 +123,7 @@ paths:
         - api_key: []
       tags:
         - payment
-  paths:
+paths:
   /v1/create-payout:
     post:
       summary: Creates a new payout for the merchant.
@@ -558,10 +565,3 @@ paths:
         - api_key: []
       tags:
         - payment
-
-components:
-  securitySchemes:
-    api_key:
-      type: apiKey
-      name: x-api-key
-      in: header
