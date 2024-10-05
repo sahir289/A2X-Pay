@@ -141,18 +141,12 @@ const gatherAllData = async (type = "N") => {
     console.log(formattedBankPayIns.join("\n"));
     console.log(`\nTotal: ${formatePrice(totalBankPayIn)} \n`);
     await sendTelegramDashboardReportMessage(
-      "-7354795362",
+      "-4593574370",
       formattedPayIns, 
       formattedPayOuts,
       formattedBankPayIns,
       type === "H" ? "Hourly Report" : "Daily Report",
-      startDate,
-      endDate, 
-      "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc",
-      merchantCodeMap,
-      bankNamesMap,
-      
-      
+      "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc", 
 );
   } catch (err) {
     console.log("========= CRON ERROR =========");
