@@ -34,6 +34,20 @@ bankAccountRouter.get(
   bankAccountController.getMerchantBank
 );
 
+// Get Payin Bank Route
+bankAccountRouter.get(
+  "/payin-bank",
+  isAuthenticated,
+  bankAccountController.getMerchantBank
+);
+
+//Get Payout Bank Route
+bankAccountRouter.get(
+  "/get-payout-bank",
+  isAuthenticated,
+  bankAccountController.getPayoutBank
+);
+
 bankAccountRouter.get(
   "/getall-bank",
   isAuthenticated,

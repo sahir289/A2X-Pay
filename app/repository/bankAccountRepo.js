@@ -28,6 +28,26 @@ class BankAccountRepo {
     return bankRes;
   }
 
+  //Function to get Payin banks
+  async getPayinBank() {
+    const bankRes = await prisma.bankAccount.findMany({
+      where: {
+        bank_used_for: "payIn",
+      },
+    });
+    return bankRes;
+  }
+
+  //Function to get Payout banks
+  async getPayoutBank() {
+    const bankRes = await prisma.bankAccount.findMany({
+      where: {
+        bank_used_for: "payOut",
+      },
+    });
+    return bankRes;
+  }
+
   async getBankAccountByCode(code) {
     const bankAccRes = await prisma.bankAccount.findFirst({
       where: {
@@ -77,6 +97,7 @@ class BankAccountRepo {
     const ac_no = query.ac_no;
     const ac_name = query.ac_name;
     const upi_id = query.upi_id;
+    const bank_used_for = query.bank_used_for;
     const page = parseInt(query.page) || 1;
     const pageSize = parseInt(query.pageSize) || 10;
     const code = query?.code
@@ -93,6 +114,7 @@ class BankAccountRepo {
       ...(upi_id !== "" && {
         upi_id: { contains: upi_id, mode: "insensitive" },
       }),
+      ...(bank_used_for !== "" && {bank_used_for: bank_used_for }),
       ...(role !== "ADMIN" && code && { code }) ,
       ...(role !== "ADMIN" && vendor_code && { vendor_code: vendor_code }),
       ...(vendor_code && vendor_code && { vendor_code: vendor_code }) // For enabling vendor code filter only for ADMINS

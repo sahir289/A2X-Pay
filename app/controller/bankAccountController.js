@@ -57,6 +57,40 @@ class BankAccountController {
     }
   }
 
+  // Controller for getting Payin Banks
+  async getPayinBank(req, res, next) {
+    try {
+      checkValidation(req);
+      const bankAccountRes = await bankAccountRepo.getPayinBank();
+
+      return DefaultResponse(
+        res,
+        200,
+        "Payout Bank details get successfully",
+        bankAccountRes
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Controller for getting Payout Banks
+  async getPayoutBank(req, res, next) {
+    try {
+      checkValidation(req);
+      const bankAccountRes = await bankAccountRepo.getPayoutBank();
+
+      return DefaultResponse(
+        res,
+        200,
+        "Payout Bank details get successfully",
+        bankAccountRes
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getAllBankAccounts(req, res, next) {
     try {
       checkValidation(req);
