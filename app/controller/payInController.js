@@ -58,7 +58,13 @@ class PayInController {
       const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(
         getMerchantApiKeyByCode?.id
       );
-      if (!bankAccountLinkRes || bankAccountLinkRes.length === 0) {
+      if (!bankAccountLinkRes || bankAccountLinkRes.length === 0) {console.log(urlExpiredBankNotAssignedRes);
+        console.log(getMerchantApiKeyByCode);
+        await sendBankNotAssignedAlertTelegram(
+          "-4584431203",
+          getMerchantApiKeyByCode,
+          "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc"  
+        )
         throw new CustomError(
           404,
           "Bank Account has not been linked with Merchant"

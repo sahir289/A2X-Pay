@@ -1,5 +1,4 @@
 import axios from "axios";
-
 export async function sendTelegramMessage(chatId, data, TELEGRAM_BOT_TOKEN, replyToMessageId) {
     const message = `
       <b>UPI-AMOUNT:</b> ${data?.amount}
@@ -37,6 +36,7 @@ export async function sendSuccessMessageTelegram(chatId, merchantOrderIdTele, TE
         });
     } catch (error) {
         console.error('Error sending message to Telegram:', error);
+        
     }
 }
 
@@ -127,3 +127,67 @@ export async function sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(chatId, 
         console.error('Error sending message to Telegram:', error);
     }
 }
+
+export async function sendBankNotAssignedAlertTelegram(chatId, getMerchantApiKeyByCode, TELEGRAM_BOT_TOKEN) {
+    // Construct the alert message
+    const message = `<b>Bank not Assigned with :</b> ${getMerchantApiKeyByCode.code}`;
+
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+        await axios.post(sendMessageUrl, {
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML',
+        }); 
+    } catch (error) {
+        console.error('Error sending bank not assigned alert to Telegram:', error);
+    }
+}
+export async function sendTelegramDashboardReportMessage(
+    chatId,
+    formattedPayIns,
+    formattedPayOuts, 
+    formattedBankPayIns, 
+    reportType,
+    TELEGRAM_BOT_TOKEN
+) {
+    const reportDate = reportType === "Hourly Report" ? "Hourly Report" : "Daily Report";
+    const currentDate = new Date().toISOString().split("T")[0];
+    
+    let message = `<b>${reportDate} (${currentDate})</b>\n\n`;
+
+    // PayIns section
+    message += `<b>💰 Deposit (${currentDate})</b>\n\n`;
+    message += formattedPayIns.join("\n");
+    message += `\n\n`;
+
+    // PayOuts section
+    message += `<b>🏦 Withdraw (${currentDate})</b>\n\n`;
+    message += formattedPayOuts.join("\n");
+    message += `\n\n`;
+
+    // Bank Accounts section
+    message += `<b>✅ Bank Accounts (${currentDate})</b>\n\n`;
+    message += formattedBankPayIns.join("\n");
+    message += `\n\n`;
+
+    // Log the formatted message
+    console.log("Formatted Telegram Message: \n", message);
+
+    // Send the message to Telegram
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+    try {
+        const response = await axios.post(sendMessageUrl, {
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML',
+        });
+        console.log('Message sent successfully:', response.data);
+    } catch (error) {
+        console.error('Error sending message:', error.response ? error.response.data : error.message);
+    }
+}
+
+
+
