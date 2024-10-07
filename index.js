@@ -7,6 +7,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import config from "./config.js";
 import "./app/cron/index.js";
+import loggingMiddleware from "./app/middlewares/loggingMiddleware.js";
 
 const app = express();
 app.use(cookieParser())
@@ -17,10 +18,19 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(loggingMiddleware);
 
 // Use routes
 app.use("/", router);
+app.get('/test', (req, res) => {
+    res.send('This is a test endpoint.');
+});
 app.use(express.static('public'))
+app.use((err, req, res, next) => {
+    err(`Error occurred: ${err.message} - Request ID: ${req.id}`);
+    res.status(500).send('Internal Server Error');
+});
+
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
