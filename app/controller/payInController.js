@@ -177,7 +177,7 @@ class PayInController {
           req_amount: payinDataRes?.amount,
           utr_id: payinDataRes?.utr
         };
-        const notifyMerchant = await axios.post(payinDataRes[0]?.notify_url, notifyData);
+        const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
         throw new CustomError(403, "Session is expired");
       }
 
@@ -225,7 +225,7 @@ class PayInController {
           req_amount: payinDataRes?.amount,
           utr_id: payinDataRes?.utr
         };
-        const notifyMerchant = await axios.post(payinDataRes[0]?.notify_url, notifyData);
+        const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
         throw new CustomError(403, "Session is expired");
       }
 
@@ -245,7 +245,7 @@ class PayInController {
           req_amount: payinDataRes?.amount,
           utr_id: payinDataRes?.utr
         };
-        const notifyMerchant = await axios.post(payinDataRes[0]?.notify_url, notifyData);
+        const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
         throw new CustomError(404, "Bank is not assigned");
       }
 
@@ -295,7 +295,7 @@ class PayInController {
         req_amount: payinDataRes?.amount,
         utr_id: payinDataRes?.utr
       };
-      const notifyMerchant = await axios.post(payinDataRes[0]?.notify_url, notifyData);
+      const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
       return DefaultResponse(res, 200, "Payment Url is expires");
     } catch (error) {
       next(error);
