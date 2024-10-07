@@ -113,6 +113,7 @@ model BankAccount {
   ac_name       String
   ifsc          String
   bank_name     String
+  bank_used_for String?         @default("")
   is_qr         Boolean         @default(true)
   is_bank       Boolean         @default(true)
   min_payin     Decimal
@@ -154,6 +155,7 @@ model Payin {
   user_id              String
   bank_acc_id          String?
   bank_name            String?
+  to_bank              String?   @default("")
   payin_commission     Decimal?
   return_url           String
   notify_url           String
@@ -185,6 +187,7 @@ model Payout {
   acc_holder_name   String
   ifsc_code         String
   bank_name         String?
+  from_bank         String?  @default("")
   upi_id            String?
   utr_id            String?
   payout_commision  Decimal
