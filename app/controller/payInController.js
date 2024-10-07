@@ -168,6 +168,16 @@ class PayInController {
 
       if (currentTime > Number(urlValidationRes?.expirationDate)) {
         const urlExpired = await payInRepo.expirePayInUrl(payInId);
+        const payinDataRes = await payInRepo.getPayInData(payInId)
+        const notifyData = {
+          status: "DROPPED",
+          merchantOrderId: payinDataRes?.merchant_order_id,
+          payinId: payinDataRes?.id,
+          amount: null,
+          req_amount: payinDataRes?.amount,
+          utr_id: payinDataRes?.utr
+        };
+        const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
         throw new CustomError(403, "Session is expired");
       }
 
@@ -206,6 +216,16 @@ class PayInController {
 
       if (currentTime > Number(urlValidationRes?.expirationDate)) {
         const urlExpired = await payInRepo.expirePayInUrl(payInId);
+        const payinDataRes = await payInRepo.getPayInData(payInId)
+        const notifyData = {
+          status: "DROPPED",
+          merchantOrderId: payinDataRes?.merchant_order_id,
+          payinId: payinDataRes?.id,
+          amount: null,
+          req_amount: payinDataRes?.amount,
+          utr_id: payinDataRes?.utr
+        };
+        const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
         throw new CustomError(403, "Session is expired");
       }
 
@@ -216,6 +236,16 @@ class PayInController {
         const urlExpiredBankNotAssignedRes = await payInRepo.expirePayInUrl(
           payInId
         );
+        const payinDataRes = await payInRepo.getPayInData(payInId)
+        const notifyData = {
+          status: "DROPPED",
+          merchantOrderId: payinDataRes?.merchant_order_id,
+          payinId: payinDataRes?.id,
+          amount: null,
+          req_amount: payinDataRes?.amount,
+          utr_id: payinDataRes?.utr
+        };
+        const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
         throw new CustomError(404, "Bank is not assigned");
       }
 
@@ -256,6 +286,16 @@ class PayInController {
       const { payInId } = req.params;
 
       const expirePayinUrl = await payInRepo.expirePayInUrl(payInId);
+      const payinDataRes = await payInRepo.getPayInData(payInId)
+      const notifyData = {
+        status: "DROPPED",
+        merchantOrderId: payinDataRes?.merchant_order_id,
+        payinId: payinDataRes?.id,
+        amount: null,
+        req_amount: payinDataRes?.amount,
+        utr_id: payinDataRes?.utr
+      };
+      const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
       return DefaultResponse(res, 200, "Payment Url is expires");
     } catch (error) {
       next(error);
