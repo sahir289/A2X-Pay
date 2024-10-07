@@ -128,33 +128,33 @@ export async function sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(chatId, 
     }
 }
 
-export async function sendBankNotAssignedAlertTelegram(chatId, getMerchantApiKeyByCode, TELEGRAM_BOT_TOKEN) {
+export async function sendBankNotAssignedAlertTelegram(chatId, TELEGRAM_BOT_TOKEN) {
     // Construct the alert message
     const message = `<b>Bank not Assigned with :</b> ${getMerchantApiKeyByCode.code}`;
 
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     try {
-        await axios.post(sendMessageUrl, {
+       const response = await axios.post(sendMessageUrl, {
             chat_id: chatId,
             text: message,
             parse_mode: 'HTML',
-        }); 
+        });
     } catch (error) {
         console.error('Error sending bank not assigned alert to Telegram:', error);
     }
 }
+
 export async function sendTelegramDashboardReportMessage(
     chatId,
     formattedPayIns,
     formattedPayOuts, 
     formattedBankPayIns, 
-    reportType,
+    type,
     TELEGRAM_BOT_TOKEN
 ) {
-    const reportDate = reportType === "Hourly Report" ? "Hourly Report" : "Daily Report";
     const currentDate = new Date().toISOString().split("T")[0];
     
-    let message = `<b>${reportDate} (${currentDate})</b>\n\n`;
+    let message = `<b>${type} (${currentDate})</b>\n\n`;
 
     // PayIns section
     message += `<b>💰 Deposit (${currentDate})</b>\n\n`;
