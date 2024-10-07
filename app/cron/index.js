@@ -1,27 +1,37 @@
 import cron from "node-cron";
 import { prisma } from "../client/prisma.js";
 import { sendTelegramDashboardReportMessage } from "../helper/sendTelegramMessages.js";
-// Schedule a task to run every hour
-cron.schedule("0 * * * *", () => gatherAllData("H"));
-// Schedule a task to run every day at 12 AM
-cron.schedule("0 0 * * *", () => gatherAllData("N"));
 
-// H is hour and N is night.
+// Schedule task to run daily at 12 AM IST for the previous day's data
+cron.schedule("0 0 * * *", () => gatherAllData("N"), {
+  scheduled: true,
+  timezone: "Asia/Kolkata", // Set to India's timezone
+});
+
+// Schedule task to run every hour
+cron.schedule("0 * * * *", () => gatherAllData("H"), {
+  scheduled: true,
+  timezone: "Asia/Kolkata",
+});
+
+// H is hour and N is night (previous day).
 const gatherAllData = async (type = "N") => {
   try {
     const empty = "-- -- -- ";
     let startDate, endDate;
-    if (type == "H") {
-      // last hour
+
+    if (type === "H") {
+      // Last hour
       const date = new Date();
-      startDate = new Date(date.getTime() - 60 * 60 * 1000);
+      startDate = new Date(date.getTime() - 60 * 60 * 1000); // 1 hour ago
       endDate = date;
     }
 
-    if (type == "N") {
-      // last 24 hours
-      endDate = new Date();
-      startDate = new Date(endDate.getTime() - 24 * 60 * 60 * 1000);
+    if (type === "N") {
+      // Previous day's data
+      endDate = new Date(); // Current time
+      startDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() - 1, 0, 0, 0); // Start of previous day
+      endDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() - 1, 23, 59, 59); // End of previous day
     }
 
     const merchants = await prisma.merchant.findMany({
@@ -140,14 +150,16 @@ const gatherAllData = async (type = "N") => {
     console.log(`\Bank Accounts (${currentDate}) \n`);
     console.log(formattedBankPayIns.join("\n"));
     console.log(`\nTotal: ${formatePrice(totalBankPayIn)} \n`);
+    
     await sendTelegramDashboardReportMessage(
+      "-4593574370",
       "-4593574370",
       formattedPayIns, 
       formattedPayOuts,
       formattedBankPayIns,
-      type === "H" ? "Hourly Report" : "Daily Report",
-      "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc", 
-);
+      type === "H" ?  "Daily Report": "Hourly Report" ,
+      "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc"   
+    );
   } catch (err) {
     console.log("========= CRON ERROR =========");
     console.error(err);
@@ -155,7 +167,9 @@ const gatherAllData = async (type = "N") => {
   }
 };
 
-gatherAllData("N");
+// Optionally, you can invoke these functions for testing purposes
+// gatherAllData("N");
+// gatherAllData("H");
 
 const formatePrice = (price) => {
   return Number(price).toLocaleString("en-US", {
