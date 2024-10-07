@@ -8,8 +8,7 @@ import {
 import isAuthenticated from '../middlewares/authMiddleware.js';
 
 const settlementRouter = express();
-settlementRouter.use(isAuthenticated);
-settlementRouter.post('/create-settlement', settlementCreateValidator, settlementController.createSettlement);
-settlementRouter.get('/getall-settlement', settlementsGetValidator, settlementController.getSettlement);
-settlementRouter.put('/update-settlement/:id', settlementController.updateSettlement);
+settlementRouter.post('/create-settlement', settlementCreateValidator,isAuthenticated, settlementController.createSettlement);
+settlementRouter.get('/getall-settlement', settlementsGetValidator,isAuthenticated, settlementController.getSettlement);
+settlementRouter.put('/update-settlement/:id',isAuthenticated, settlementController.updateSettlement);
 export default settlementRouter;

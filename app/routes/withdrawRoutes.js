@@ -25,29 +25,26 @@ withdrawRouter.post(
   withdrawController.checkPayoutStatus
 );
 
-// From here authentication is started.
-withdrawRouter.use(isAuthenticated);
-
 
 withdrawRouter.get(
   "/getall-payout",
-  settlementsGetValidator,
+  settlementsGetValidator,isAuthenticated,
   withdrawController.getWithdraw
 );
 
-withdrawRouter.put("/update-payout/:id", withdrawController.updateWithdraw);
+withdrawRouter.put("/update-payout/:id",isAuthenticated, withdrawController.updateWithdraw);
 
 
 withdrawRouter.put(
   "/update-vendor-code",
-  updateVendorCodeValidator,
+  updateVendorCodeValidator,isAuthenticated,
   withdrawController.updateVendorCode
 );
 
 //new payout router
 withdrawRouter.post(
   "/get-all-payouts",
-  payOutInAllDataValidator,
+  payOutInAllDataValidator,isAuthenticated,
   withdrawController.getAllPayOutDataWithRange
 );
 export default withdrawRouter;
