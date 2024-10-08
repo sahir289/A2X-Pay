@@ -78,7 +78,7 @@ class PayInRepo {
                 status: { not: 'DUPLICATE' }
             });
         }
-        if (upi_short_code !== "nill") {
+        if (upi_short_code !== "nil") {
             conditions.push({ upi_short_code: upi_short_code });
         }
 
