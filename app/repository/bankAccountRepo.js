@@ -59,7 +59,6 @@ class BankAccountRepo {
   }
 
   async updateBankAccountBalance(bankAccId, amount) {
-    console.log("🚀 ~ BankAccountRepo ~ updateBankAccountBalance ~ bankAccId:", bankAccId)
     const bankAccRes = await prisma.bankAccount.findUnique({
       where: {
         id: bankAccId,

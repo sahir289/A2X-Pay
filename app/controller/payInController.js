@@ -979,7 +979,6 @@ class PayInController {
   async getAllPayInDataByMerchant(req, res, next) {
     try {
       let { merchantCode, startDate, endDate } = req.query;
-
       if (merchantCode == null) {
         merchantCode = [];
       } else if (typeof merchantCode === "string") {
