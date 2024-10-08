@@ -1,8 +1,8 @@
+import config from "../../config";
 const { CloudWatchLogsClient, PutLogEventsCommand, CreateLogGroupCommand, CreateLogStreamCommand, DescribeLogStreamsCommand, DescribeLogGroupsCommand } = require("@aws-sdk/client-cloudwatch-logs");
 const { createLogger, format, transports } = require('winston');
 const WinstonCloudWatch = require('winston-cloudwatch');
-
-const environment = process.env.NODE_ENV || 'staging'; // Default to 'staging'
+const environment = config.nodeProductionLogs || 'staging'; // Default to 'staging'
 const cloudWatchClient = new CloudWatchLogsClient({ region: 'eu-north-1' });
 
 // Set log group and stream names based on environment
