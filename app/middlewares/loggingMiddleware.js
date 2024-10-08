@@ -1,5 +1,6 @@
-import { info, error } from '../utils/log.cjs'; // Adjust the path if needed
+// import { info, error } from '../utils/log.cjs'; // Adjust the path if needed
 import { randomUUID } from 'crypto';
+import {info}  from "../utils/logger.js"
 
 const loggingMiddleware = (req, res, next) => {
   const start = Date.now();
