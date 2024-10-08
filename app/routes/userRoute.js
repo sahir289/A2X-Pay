@@ -11,6 +11,12 @@ userRouter.get('/getall-users', isAuthenticated, userController.getAllUser)
 
 userRouter.put('/update-status', isAuthenticated, userController.updateUser)
 
+userRouter.post('/request-reset-password', userController.requestResetPassword);
+
+userRouter.post('/reset-password', userController.resetPassword);
+
+
+
 
 
 export default userRouter;

@@ -48,6 +48,9 @@ model User {
   id           String        @id @default(uuid())
   fullName     String
   userName     String        @unique
+  email        String        @default(" ") // Use an empty string or a placeholder as the default
+  otp          String?           // OTP can be null if not generated
+  otpExpiry    DateTime?        // OTP expiry can be null when no OTP is active
   password     String
   isEnabled    Boolean       @default(true)
   tg_handle    String?
