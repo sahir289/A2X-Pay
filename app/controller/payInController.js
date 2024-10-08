@@ -58,14 +58,15 @@ class PayInController {
       const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(
         getMerchantApiKeyByCode?.id
       );
-      if (!bankAccountLinkRes || bankAccountLinkRes.length === 0) {
+      let payinBankAccountLinkRes = bankAccountLinkRes?.filter((res) => (res?.bankAccount?.bank_used_for === "payIn" && res?.bankAccount?.is_enabled === true));
+      if (!bankAccountLinkRes || bankAccountLinkRes.length === 0 || payinBankAccountLinkRes.length === 0) {
         throw new CustomError(
           404,
           "Bank Account has not been linked with Merchant"
         );
       }
 
-      if (!bankAccountLinkRes || bankAccountLinkRes.length === 0) {
+      if (!bankAccountLinkRes || bankAccountLinkRes.length === 0 || payinBankAccountLinkRes.length === 0) {
         await sendBankNotAssignedAlertTelegram(
           "-4584431203",
           getMerchantApiKeyByCode,
@@ -232,7 +233,8 @@ class PayInController {
       const getBankDetails = await bankAccountRepo?.getMerchantBankById(
         urlValidationRes?.merchant_id
       );
-      if (!getBankDetails || getBankDetails.length === 0) {
+      let payinBankAccountLinkRes = getBankDetails?.filter((res) => (res?.bankAccount?.bank_used_for === "payIn" && res?.bankAccount?.is_enabled === true));
+      if (!getBankDetails || getBankDetails.length === 0 || payinBankAccountLinkRes.length === 0) {
         const urlExpiredBankNotAssignedRes = await payInRepo.expirePayInUrl(
           payInId
         );
@@ -251,7 +253,7 @@ class PayInController {
 
       // Filter for the enabled bank accounts
       const enabledBanks = getBankDetails?.filter(
-        (bank) => bank?.bankAccount?.is_enabled
+        (bank) => bank?.bankAccount?.is_enabled && bank?.bankAccount?.bank_used_for === "payIn"
       );
 
       if (enabledBanks.length === 0) {

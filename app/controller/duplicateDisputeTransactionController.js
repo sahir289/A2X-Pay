@@ -14,13 +14,12 @@ class DuplicateDisputeTransactionController {
                 status: "SUCCESS",
             }
             const oldPayInData = await payInServices.getPayInDetails(payInId);
-            const duplicateDisputeTransactionRes = await duplicateDisputeTransactionService.handleDuplicateDisputeTransaction(payInId, apiData);
+            const duplicateDisputeTransactionRes = await duplicateDisputeTransactionService.handleDuplicateDisputeTransaction(payInId, apiData, oldPayInData.status);
             await sendTelegramDisputeMessage(
                 "-4503453524",
                 oldPayInData,
                 duplicateDisputeTransactionRes,
                 "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc",
-                // message?.message_id
               );
             return DefaultResponse(res, 200, "Transaction updated successfully", duplicateDisputeTransactionRes);
         } catch (error) {

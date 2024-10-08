@@ -44,7 +44,7 @@ class MerchantRepo {
       //   is_deleted: false, //get all merchant records which are not deleted
       // }
     });
-    const totalRecords = await prisma.merchant.count({where: {is_deleted: false}});
+    const totalRecords = await prisma.merchant.count({});
 
     return {
       merchants,
@@ -109,6 +109,62 @@ class MerchantRepo {
     });
 
     return merchantRes;
+  }
+
+  async getAllMerchantsData(query) {
+    const page = parseInt(query.page) || 1;
+    const pageSize = parseInt(query.pageSize) || 15;
+
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
+    const merchants = await prisma.merchant.findMany({
+      skip: skip,
+      take: take,
+    });
+    let merchantData = [];
+
+    for (const element of merchants) {
+      element.payInData = await prisma.payin.findMany({
+        where: {
+          status: "SUCCESS",
+          Merchant: {
+            code: element?.code,
+          },
+        },
+      });
+
+      element.payOutData = await prisma.payout.findMany({
+        where: {
+          status: "SUCCESS",
+          Merchant: {
+            code: element?.code,
+          },
+        },
+      });
+
+      element.settlementData = await prisma.settlement.findMany({
+        where: {
+            status: "SUCCESS",
+            Merchant: {
+              code: element?.code,
+            },
+        },
+      });
+
+      merchantData.push(element);
+    }
+    
+    const totalRecords = await prisma.merchant.count({});
+
+    return {
+      merchantData,
+      pagination: {
+        page,
+        pageSize,
+        total: totalRecords,
+      },
+    };
   }
 }
 
