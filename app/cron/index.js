@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { prisma } from "../client/prisma.js";
 import { sendTelegramDashboardReportMessage } from "../helper/sendTelegramMessages.js";
+import config from "../../config.js";
 
 // Schedule task to run daily at 12 AM IST for the previous day's data
 // Schedule a task to run every hour
@@ -65,8 +66,6 @@ const gatherAllData = async (type = "N") => {
         },
       },
     });
-
-    // Only fetch successful pay-outs
     const payOuts = await prisma.payout.groupBy({
       by: ["merchant_id"],
       _sum: {
@@ -93,7 +92,7 @@ const gatherAllData = async (type = "N") => {
         id: true,
       },
       where: {
-        status: "SUCCESS", // Only successful transactions
+        status: "SUCCESS", 
         createdAt: {
           gte: startDate,
           lte: endDate,
@@ -135,23 +134,24 @@ const gatherAllData = async (type = "N") => {
       .filter(Boolean);
 
     const currentDate = new Date().toISOString().split("T")[0];
-    // Pay In
-    console.log(`\nPayIns (${currentDate}) \n`);
-    console.log(formattedPayIns.join("\n"));
-    // Pay Out
-    console.log(`\nPayOuts (${currentDate}) \n`);
-    console.log(formattedPayOuts.join("\n"));
-    // Bank Accounts
-    console.log(`\nBank Accounts (${currentDate}) \n`);
-    console.log(formattedBankPayIns.join("\n"));
+    // // Pay In
+    // console.log(`\nPayIns (${currentDate}) \n`);
+    // console.log(formattedPayIns.join("\n"));
+    // // Pay Out
+    // console.log(`\nPayOuts (${currentDate}) \n`);
+    // console.log(formattedPayOuts.join("\n"));
+    // // Bank Accounts
+    // console.log(`\nBank Accounts (${currentDate}) \n`);
+    // console.log(formattedBankPayIns.join("\n"));
 
     await sendTelegramDashboardReportMessage(
-      "-4593574370",
+      config?.telegramDashboardChatId,      
       formattedPayIns,
       formattedPayOuts,
       formattedBankPayIns,
       type === "H" ? "Hourly Report" : "Daily Report",
-      "YOUR_TELEGRAM_BOT_TOKEN"   
+      config?.telegramBotToken,
+
     );
   } catch (err) {
     console.log("========= CRON ERROR =========");
@@ -159,10 +159,6 @@ const gatherAllData = async (type = "N") => {
     console.log("==============================");
   }
 };
-
-gatherAllData("N");
-gatherAllData("H");
-
 const formatePrice = (price) => {
   return Number(price).toLocaleString("en-US", {
     minimumFractionDigits: 2,

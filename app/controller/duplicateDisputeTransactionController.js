@@ -3,6 +3,7 @@ import duplicateDisputeTransactionService from "../services/duplicateDisputeTran
 import { checkValidation } from "../helper/validationHelper.js";
 import payInServices from "../services/payInServices.js";
 import { sendTelegramDisputeMessage } from "../helper/sendTelegramMessages.js";
+import config from "../../config.js";
 
 class DuplicateDisputeTransactionController {
     async handleDuplicateDisputeTransaction(req, res, next) {
@@ -16,11 +17,10 @@ class DuplicateDisputeTransactionController {
             const oldPayInData = await payInServices.getPayInDetails(payInId);
             const duplicateDisputeTransactionRes = await duplicateDisputeTransactionService.handleDuplicateDisputeTransaction(payInId, apiData);
             await sendTelegramDisputeMessage(
-                "-4503453524",
+                config?.telegramDuplicateDisputeChatId,
                 oldPayInData,
                 duplicateDisputeTransactionRes,
-                "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc",
-                // message?.message_id
+                config?.telegramDuplicateDisputeChatId
               );
             return DefaultResponse(res, 200, "Transaction updated successfully", duplicateDisputeTransactionRes);
         } catch (error) {

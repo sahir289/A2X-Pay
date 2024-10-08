@@ -67,9 +67,9 @@ class PayInController {
 
       if (!bankAccountLinkRes || bankAccountLinkRes.length === 0) {
         await sendBankNotAssignedAlertTelegram(
-          "-4584431203",
+          config?.telegramBankAlertChatId,
           getMerchantApiKeyByCode,
-          "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc",
+          config?.telegramBotToken,
         );
       }
 
@@ -1062,7 +1062,7 @@ class PayInController {
   }
 
   async telegramResHandler(req, res, next) {
-    const TELEGRAM_BOT_TOKEN = "7213263102:AAHaSjFaXaODoQM6Zxv1aoWmKNaA7YXPEnQ";
+    const TELEGRAM_BOT_TOKEN = config?.telegramOcrBotToken;
     try {
       const { message } = req.body;
       if (message?.photo) {

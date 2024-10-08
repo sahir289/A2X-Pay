@@ -2,11 +2,10 @@ import { info, error } from '../utils/log.cjs'; // Adjust the path if needed
 import { randomUUID } from 'crypto';
 
 const loggingMiddleware = (req, res, next) => {
-  const start = Date.now(); // Capture the request start time
-  req.id = randomUUID(); // Generate a unique ID for the request
-  res.locals.body = {}; // Initialize a body property in res.locals to capture response data
+  const start = Date.now();
+  req.id = randomUUID();
+  res.locals.body = {};
 
-  // Log the incoming request
   const incomingRequestLog = {
     level: 'info',
     message: 'Incoming request',
@@ -14,41 +13,39 @@ const loggingMiddleware = (req, res, next) => {
     url: req.url,
     requestId: req.id,
     timestamp: new Date().toISOString(),
-    body: req.body,
+    body: req.body, // Consider filtering out sensitive data
     params: req.params,
     query: req.query,
-    headers: req.headers,
+    headers: {
+      host: req.headers.host,
+      'user-agent': req.headers['user-agent'],
+    },
+    clientIp: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
   };
-  info(JSON.stringify(incomingRequestLog));
 
-  // Hook into the 'finish' event to log the response when it is sent
+  info(incomingRequestLog);
+
   res.on('finish', () => {
-    const duration = Date.now() - start; // Calculate response time
+    const duration = Date.now() - start;
     const { statusCode } = res;
 
-    // Check if response has a body
-    const responseBody = res.locals.body;
-
-    // Log the response details
     const logResponse = {
-      level: statusCode >= 400 ? 'error' : 'info', // Log as 'error' if status code is 400 or higher
+      level: statusCode >= 400 ? 'error' : 'info',
       message: 'Response sent',
       method: req.method,
       url: req.url,
       status: statusCode,
       duration: `${duration}ms`,
       requestId: req.id,
-      responseBody,
+      responseBody: res.locals.body,
       timestamp: new Date().toISOString(),
     };
 
-    info(JSON.stringify(logResponse));
+    info(logResponse);
   });
 
-  // Capture the original send function
   const originalSend = res.send.bind(res);
   res.send = (body) => {
-    // Store the response body in res.locals
     res.locals.body = body;
     return originalSend(body);
   };

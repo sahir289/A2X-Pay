@@ -207,10 +207,6 @@ export async function sendTelegramDashboardReportMessage(
     message += `<b>✅ Bank Accounts (${currentDate})</b>\n\n`;
     message += formattedBankPayIns.join("\n");
     message += `\n\n`;
-
-    // Log the formatted message
-    console.log("Formatted Telegram Message: \n", message);
-
     // Send the message to Telegram
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
@@ -220,7 +216,6 @@ export async function sendTelegramDashboardReportMessage(
             text: message,
             parse_mode: 'HTML',
         });
-        console.log('Message sent successfully:', response.data);
     } catch (error) {
         console.error('Error sending message:', error.response ? error.response.data : error.message);
     }
