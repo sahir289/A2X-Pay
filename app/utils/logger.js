@@ -18,7 +18,7 @@ const logGroupName = environment === 'production' ? '/trustpay-prod-log' : '/tru
 const logStreamName = environment === 'production' ? 'trustpay-prod-log-stream' : 'trustpay-stg-log-stream';
 
 // Create Winston logger
-const logger = createLogger({
+export const logger = createLogger({
     format: format.combine(
         format.timestamp(),
         format.json()

@@ -18,7 +18,6 @@ import {
   sendTelegramMessage,
 } from "../helper/sendTelegramMessages.js";
 import { calculateCommission } from "../helper/utils.js";
-import logger from "../utils/log.cjs"
 import { checkValidation } from "../helper/validationHelper.js";
 import { CustomError } from "../middlewares/errorHandler.js";
 import bankAccountRepo from "../repository/bankAccountRepo.js";
@@ -27,6 +26,7 @@ import merchantRepo from "../repository/merchantRepo.js";
 import payInRepo from "../repository/payInRepo.js";
 import payInServices from "../services/payInServices.js";
 import { sendBankNotAssignedAlertTelegram } from "../helper/sendTelegramMessages.js";
+import { logger } from "../utils/logger.js";
 
 // Construct __dirname manually
 const __filename = fileURLToPath(import.meta.url);
