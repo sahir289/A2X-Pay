@@ -29,6 +29,12 @@ merchantRouter.get(
   merchantController.getAllMerchants
 );
 
+merchantRouter.get(
+  "/getall-merchant-data",
+  isAuthenticated,
+  merchantController.getAllMerchantsData
+);
+
 merchantRouter.delete(
   "/delete-merchant",
   isAuthenticated,

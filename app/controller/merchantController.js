@@ -106,6 +106,27 @@ class MerchantController {
       next(error);
     }
   }
+
+  async getAllMerchantsData(req, res, next) {
+    try {
+      checkValidation(req);
+      const { id: userId } = req.user;
+
+      const query = req.query;
+
+      await userRepo.validateUserId(userId);
+
+      const merchants = await merchantRepo.getAllMerchantsData(query);
+      return DefaultResponse(
+        res,
+        200,
+        "Merchants fetched successfully",
+        merchants
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new MerchantController();

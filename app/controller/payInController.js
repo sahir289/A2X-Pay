@@ -230,7 +230,8 @@ class PayInController {
       const getBankDetails = await bankAccountRepo?.getMerchantBankById(
         urlValidationRes?.merchant_id
       );
-      if (!getBankDetails || getBankDetails.length === 0) {
+      let payinBankAccountLinkRes = getBankDetails?.filter((res) => (res?.bankAccount?.bank_used_for === "payIn" && res?.bankAccount?.is_enabled === true));
+      if (!getBankDetails || getBankDetails.length === 0 || payinBankAccountLinkRes.length === 0) {
         const urlExpiredBankNotAssignedRes = await payInRepo.expirePayInUrl(
           payInId
         );
@@ -250,7 +251,7 @@ class PayInController {
 
       // Filter for the enabled bank accounts
       const enabledBanks = getBankDetails?.filter(
-        (bank) => bank?.bankAccount?.is_enabled
+        (bank) => bank?.bankAccount?.is_enabled && bank?.bankAccount?.bank_used_for === "payIn"
       );
 
       if (enabledBanks.length === 0) {
@@ -996,7 +997,6 @@ class PayInController {
   async getAllPayInDataByMerchant(req, res, next) {
     try {
       let { merchantCode, startDate, endDate } = req.query;
-
       if (merchantCode == null) {
         merchantCode = [];
       } else if (typeof merchantCode === "string") {

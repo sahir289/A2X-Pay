@@ -48,7 +48,6 @@ export async function sendTelegramDisputeMessage(chatId, oldData, newData , TELE
             chat_id: chatId,
             text: message,
             parse_mode: 'HTML',
-            reply_to_message_id: replyToMessageId // Add this line to reply to a specific message
         });
     } catch (error) {
         console.error('Error sending message to Telegram:', error);

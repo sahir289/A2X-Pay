@@ -123,10 +123,7 @@ class Withdraw {
   async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    // this method will get the entire day of both dates
-    // from mid night 12 to mid night 12
-    start.setUTCHours(0, 0, 0, 0)
-    end.setUTCHours(23, 59, 59, 999)
+  
     const payOutData = await prisma.payout.findMany({
       where: {
         status,
@@ -135,7 +132,7 @@ class Withdraw {
             in: merchantCodes,
           },
         },
-        createdAt: {
+        updatedAt: {
           gte: start,
           lte: end,
         },
@@ -143,6 +140,9 @@ class Withdraw {
       include: {
         Merchant: true,
       },
+      orderBy:{
+        updatedAt:"asc"
+      }
     });
     return payOutData;
   }

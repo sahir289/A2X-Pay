@@ -15,7 +15,7 @@ class DuplicateDisputeTransactionController {
                 status: "SUCCESS",
             }
             const oldPayInData = await payInServices.getPayInDetails(payInId);
-            const duplicateDisputeTransactionRes = await duplicateDisputeTransactionService.handleDuplicateDisputeTransaction(payInId, apiData);
+            const duplicateDisputeTransactionRes = await duplicateDisputeTransactionService.handleDuplicateDisputeTransaction(payInId, apiData, oldPayInData.status);
             await sendTelegramDisputeMessage(
                 config?.telegramDuplicateDisputeChatId,
                 oldPayInData,
