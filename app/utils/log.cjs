@@ -2,9 +2,12 @@ const { CloudWatchLogsClient, PutLogEventsCommand, CreateLogGroupCommand, Create
 const { createLogger, format, transports } = require('winston');
 const WinstonCloudWatch = require('winston-cloudwatch');
 
+const environment = process.env.NODE_ENV || 'staging'; // Default to 'staging'
 const cloudWatchClient = new CloudWatchLogsClient({ region: 'eu-north-1' });
-const logGroupName = '/trustpay-stg-log';
-const logStreamName = 'trustpay-log-stream';
+
+// Set log group and stream names based on environment
+const logGroupName = environment === 'production' ? '/trustpay-prod-log' : '/trustpay-stg-log';
+const logStreamName = environment === 'production' ? 'trustpay-prod-log-stream' : 'trustpay-stg-log-stream';
 
 // Create Winston logger
 const logger = createLogger({
@@ -57,11 +60,17 @@ async function ensureLogStreamExists() {
     console.error(`Error ensuring log stream exists: ${error.message}`);
   }
 }
-
 // Function to log messages to CloudWatch manually using AWS SDK v3
 async function logMessageToCloudWatch(message) {
   await ensureLogGroupExists();
   await ensureLogStreamExists();
+
+  const maxLogMessageSize = 256 * 1024; // 256 KB
+
+  // Check message size and truncate if necessary
+  if (Buffer.byteLength(message) > maxLogMessageSize) {
+    message = message.slice(0, maxLogMessageSize - 3) + '...'; // Truncate and indicate it was truncated
+  }
 
   const params = {
     logGroupName,

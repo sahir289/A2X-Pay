@@ -165,17 +165,21 @@ export async function sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(chatId, 
     }
 }
 
-export async function sendBankNotAssignedAlertTelegram(chatId, TELEGRAM_BOT_TOKEN) {
+export async function sendBankNotAssignedAlertTelegram(chatId, getMerchantApiKeyByCode, TELEGRAM_BOT_TOKEN) {
     // Construct the alert message
     const message = `<b>Bank not Assigned with :</b> ${getMerchantApiKeyByCode.code}`;
 
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    
     try {
-       const response = await axios.post(sendMessageUrl, {
+        const response = await axios.post(sendMessageUrl, {
             chat_id: chatId,
             text: message,
             parse_mode: 'HTML',
         });
+        
+        // Optionally log the response from Telegram API
+        console.log('Telegram response:', response.data);
     } catch (error) {
         console.error('Error sending bank not assigned alert to Telegram:', error);
     }
@@ -216,6 +220,7 @@ export async function sendTelegramDashboardReportMessage(
             text: message,
             parse_mode: 'HTML',
         });
+        console.log('Telegram response:', response.data);
     } catch (error) {
         console.error('Error sending message:', error.response ? error.response.data : error.message);
     }
