@@ -78,7 +78,11 @@ class BankAccountController {
   async getPayoutBank(req, res, next) {
     try {
       checkValidation(req);
-      const bankAccountRes = await bankAccountRepo.getPayoutBank();
+      const { loggedInUserRole } = req.user
+
+      const { vendor_code } = req.query;
+
+      const bankAccountRes = await bankAccountRepo.getPayoutBank( vendor_code, loggedInUserRole );
 
       return DefaultResponse(
         res,
