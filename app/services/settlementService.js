@@ -49,8 +49,6 @@ class Settlement {
         })
         const totalRecords = await prisma.settlement.count({
             where,
-            skip,
-            take,
         })
 
         return {
