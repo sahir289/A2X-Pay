@@ -178,7 +178,7 @@ export async function sendBankNotAssignedAlertTelegram(chatId, getMerchantApiKey
         });
         
         // Optionally log the response from Telegram API
-        console.log('Telegram response:', response.data);
+      // console.log('Telegram Alert response:', response.data);
     } catch (error) {
         console.error('Error sending bank not assigned alert to Telegram:', error);
     }
@@ -187,29 +187,25 @@ export async function sendBankNotAssignedAlertTelegram(chatId, getMerchantApiKey
 export async function sendTelegramDashboardReportMessage(
     chatId,
     formattedPayIns,
-    formattedPayOuts, 
-    formattedBankPayIns, 
+    formattedPayOuts,
+    formattedBankPayIns,
     type,
     TELEGRAM_BOT_TOKEN
 ) {
     const currentDate = new Date().toISOString().split("T")[0];
-    
-    let message = `<b>${type} (${currentDate})</b>\n\n`;
 
-    // PayIns section
-    message += `<b>💰 Deposit (${currentDate})</b>\n\n`;
-    message += formattedPayIns.join("\n");
-    message += `\n\n`;
+    let message = `
+<b>${type} (${currentDate})</b>
 
-    // PayOuts section
-    message += `<b>🏦 Withdraw (${currentDate})</b>\n\n`;
-    message += formattedPayOuts.join("\n");
-    message += `\n\n`;
+<b>💰 Deposit (${currentDate})</b>
+${formattedPayIns.join("\n")}
 
-    // Bank Accounts section
-    message += `<b>✅ Bank Accounts (${currentDate})</b>\n\n`;
-    message += formattedBankPayIns.join("\n");
-    message += `\n\n`;
+<b>🏦 Withdraw (${currentDate})</b>
+${formattedPayOuts.join("\n")}
+
+<b>✅ Bank Accounts (${currentDate})</b>
+${formattedBankPayIns.join("\n")}
+    `;
     // Send the message to Telegram
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
@@ -219,7 +215,7 @@ export async function sendTelegramDashboardReportMessage(
             text: message,
             parse_mode: 'HTML',
         });
-        console.log('Telegram response:', response.data);
+       // console.log('Telegram Dashboard response:', response.data);
     } catch (error) {
         console.error('Error sending message:', error.response ? error.response.data : error.message);
     }
