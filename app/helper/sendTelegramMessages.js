@@ -219,7 +219,7 @@ ${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank a
             text: message,
             parse_mode: 'HTML',
         });
-        console.log('Telegram Dashboard response:', response.data);
+        //console.log('Telegram Dashboard response:', response.data);
     } catch (error) {
         console.error('Error sending Telegram message:', error.response?.data || error.message);
     }
