@@ -166,7 +166,7 @@ export async function sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(chatId, 
 
 export async function sendBankNotAssignedAlertTelegram(chatId, getMerchantApiKeyByCode, TELEGRAM_BOT_TOKEN) {
     // Construct the alert message
-    const message = `<b>Bank not Assigned with :</b> ${getMerchantApiKeyByCode.code}`;
+    const message = `<b>⛔ Bank not Assigned with :</b> ${getMerchantApiKeyByCode.code}`;
 
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     
@@ -189,23 +189,27 @@ export async function sendTelegramDashboardReportMessage(
     formattedPayIns,
     formattedPayOuts,
     formattedBankPayIns,
+    formattedBankPayOuts,
     type,
     TELEGRAM_BOT_TOKEN
 ) {
     const currentDate = new Date().toISOString().split("T")[0];
+    const message = `
+<b>${type} Report (${currentDate})</b>
 
-    let message = `
-<b>${type} (${currentDate})</b>
+<b>💰 Deposits</b>
+${formattedPayIns.length > 0 ? formattedPayIns.join("\n") : 'No deposits available.'}
 
-<b>💰 Deposit (${currentDate})</b>
-${formattedPayIns.join("\n")}
+<b>🏦 Withdrawals</b>
+${formattedPayOuts.length > 0 ? formattedPayOuts.join("\n") : 'No withdrawals available.'}
 
-<b>🏦 Withdraw (${currentDate})</b>
-${formattedPayOuts.join("\n")}
+<b>✅ Bank Account Deposits</b>
+${formattedBankPayIns.length > 0 ? formattedBankPayIns.join("\n") : 'No bank account deposits available.'}
 
-<b>✅ Bank Accounts (${currentDate})</b>
-${formattedBankPayIns.join("\n")}
+<b>✅ Bank Account Withdrawals</b>
+${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank account withdrawals available.'}
     `;
+
     // Send the message to Telegram
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
@@ -215,9 +219,9 @@ ${formattedBankPayIns.join("\n")}
             text: message,
             parse_mode: 'HTML',
         });
-       // console.log('Telegram Dashboard response:', response.data);
+        console.log('Telegram Dashboard response:', response.data);
     } catch (error) {
-        console.error('Error sending message:', error.response ? error.response.data : error.message);
+        console.error('Error sending Telegram message:', error.response?.data || error.message);
     }
 }
 

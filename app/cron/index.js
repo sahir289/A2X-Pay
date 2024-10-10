@@ -99,7 +99,22 @@ const gatherAllData = async (type = "N") => {
         },
       },
     });
-
+    const bankPayOuts = await prisma.payout.groupBy({
+      by: ['from_bank'],
+      _sum: {
+        amount: true,
+      },
+      _count: {
+        id: true,
+      },
+      where: {
+        status: "SUCCESS",
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });    
     const formattedPayIns = payIns
       .map((payIn) => {
         const { merchant_id, _sum, _count } = payIn;
@@ -133,22 +148,36 @@ const gatherAllData = async (type = "N") => {
       })
       .filter(Boolean);
 
+    const formattedBankPayOuts = bankPayOuts
+      .map((payOut) => {
+        const { from_bank, _sum, _count } = payOut;
+        if (from_bank) {
+          return `${from_bank}: ${formatePrice(_sum.amount)} (${_count.id})`;
+        }
+        return null;
+      })
+      .filter(Boolean);
+
     const currentDate = new Date().toISOString().split("T")[0];
-    // // Pay In
+    // Pay In
     // console.log(`\nPayIns (${currentDate}) \n`);
     // console.log(formattedPayIns.join("\n"));
     // // Pay Out
     // console.log(`\nPayOuts (${currentDate}) \n`);
     // console.log(formattedPayOuts.join("\n"));
     // // Bank Accounts
-    // console.log(`\nBank Accounts (${currentDate}) \n`);
+    // console.log(`\nBank Accounts PayIn(${currentDate}) \n`);
     // console.log(formattedBankPayIns.join("\n"));
+
+    // console.log(`\nBank Accounts PayOut(${currentDate}) \n`);
+    // console.log(formattedBankPayOuts.join("\n"));
 
     await sendTelegramDashboardReportMessage(
       config?.telegramDashboardChatId,      
       formattedPayIns,
       formattedPayOuts,
       formattedBankPayIns,
+      formattedBankPayOuts,
       type === "H" ? "Hourly Report" : "Daily Report",
       config?.telegramBotToken,
 
@@ -159,6 +188,9 @@ const gatherAllData = async (type = "N") => {
     console.log("==============================");
   }
 };
+
+// gatherAllData("H");
+// gatherAllData("N");
 const formatePrice = (price) => {
   return Number(price).toLocaleString("en-US", {
     minimumFractionDigits: 2,
