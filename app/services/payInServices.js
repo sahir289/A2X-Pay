@@ -184,7 +184,7 @@ class PayInService {
     if (endDate) {
       let end = new Date(endDate);
       
-      end.setDate(end.getDate() + 1);
+      // end.setDate(end.getDate() + 1);
       
       dateFilter.lte = end; // Less than or equal to endDate
     }
@@ -264,7 +264,7 @@ class PayInService {
     // if both start and end date provided then apply range filter
     if(startDate && endDate){
       const end = new Date(endDate);
-      end.setDate(end.getDate() + 1)
+      // end.setDate(end.getDate() + 1)
       dateFilter = {
         createdAt: {
           gte: new Date(startDate),
