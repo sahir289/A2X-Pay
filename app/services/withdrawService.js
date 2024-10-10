@@ -39,7 +39,8 @@ class Withdraw {
     merchant_order_id,
     user_id,
     sno,
-    payout_commision,
+    from_bank,
+    commission,
     utr_id,
     acc_holder_name
   ) {
@@ -52,7 +53,8 @@ class Withdraw {
       { col: "merchant_order_id", value: merchant_order_id },
       { col: "user_id", value: user_id },
       { col: "sno", value: sno },
-      { col: "payout_commision", value: payout_commision },
+      { col: "from_bank", value: from_bank },
+      { col: "payout_commision", value: commission },
       { col: "utr_id", value: utr_id },
       { col: "acc_holder_name", value: acc_holder_name },
       { col: "vendor_code", value: vendorCode },
