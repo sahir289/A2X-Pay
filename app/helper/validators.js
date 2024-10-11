@@ -14,7 +14,8 @@ const statusEnums = [
   "DISPUTE",
   "PENDING",
   "IMG_PENDING",
-  "REJECTED"
+  "REJECTED",
+  "REVERSED"
 ];
 
 export const permissionValidator = [
