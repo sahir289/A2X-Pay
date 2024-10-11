@@ -99,6 +99,22 @@ const gatherAllData = async (type = "N") => {
         },
       },
     });
+    const bankPayOuts = await prisma.payout.groupBy({
+      by: ['from_bank'],
+      _sum: {
+        amount: true,
+      },
+      _count: {
+        id: true,
+      },
+      where: {
+        status: "SUCCESS",
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });    
 
     const formattedPayIns = payIns
       .map((payIn) => {
@@ -133,6 +149,16 @@ const gatherAllData = async (type = "N") => {
       })
       .filter(Boolean);
 
+      const formattedBankPayOuts = bankPayOuts
+      .map((payOut) => {
+        const { from_bank, _sum, _count } = payOut;
+        if (from_bank) {
+          return `${from_bank}: ${formatePrice(_sum.amount)} (${_count.id})`;
+        }
+        return null;
+      })
+      .filter(Boolean);
+
     const currentDate = new Date().toISOString().split("T")[0];
     // // Pay In
     // console.log(`\nPayIns (${currentDate}) \n`);
@@ -144,11 +170,15 @@ const gatherAllData = async (type = "N") => {
     // console.log(`\nBank Accounts (${currentDate}) \n`);
     // console.log(formattedBankPayIns.join("\n"));
 
+    // console.log(`\nBank Accounts PayOut(${currentDate}) \n`);
+    // console.log(formattedBankPayOuts.join("\n"));
+
     await sendTelegramDashboardReportMessage(
       config?.telegramDashboardChatId,      
       formattedPayIns,
       formattedPayOuts,
       formattedBankPayIns,
+      formattedBankPayOuts,
       type === "H" ? "Hourly Report" : "Daily Report",
       config?.telegramBotToken,
 
@@ -159,6 +189,8 @@ const gatherAllData = async (type = "N") => {
     console.log("==============================");
   }
 };
+// gatherAllData("H");
+// gatherAllData("N");
 const formatePrice = (price) => {
   return Number(price).toLocaleString("en-US", {
     minimumFractionDigits: 2,
