@@ -25,6 +25,9 @@ import botResponseRepo from "../repository/botResponseRepo.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import payInRepo from "../repository/payInRepo.js";
 import payInServices from "../services/payInServices.js";
+import { sendBankNotAssignedAlertTelegram } from "../helper/sendTelegramMessages.js";
+import { logger } from "../utils/logger.js";
+
 // Construct __dirname manually
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,23 +57,15 @@ class PayInController {
           throw new CustomError(404, "Enter valid Api key");
         }
       }
-
-      const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(
-        getMerchantApiKeyByCode?.id
-      );
+      const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(getMerchantApiKeyByCode?.id);
       if (!bankAccountLinkRes || bankAccountLinkRes.length === 0) {
-        throw new CustomError(
-          404,
-          "Bank Account has not been linked with Merchant"
-        );
-      }
-
-      if (!bankAccountLinkRes || bankAccountLinkRes.length === 0) {
+        // Send alert if no bank account is linked
         await sendBankNotAssignedAlertTelegram(
-          "-4584431203",
+          config?.telegramBankAlertChatId,
           getMerchantApiKeyByCode,
-          "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc",
+          config?.telegramBotToken,
         );
+        throw new CustomError(404, "Bank Account has not been linked with Merchant");
       }
 
       if (!merchant_order_id && ot) {
@@ -155,7 +150,6 @@ class PayInController {
 
       const { payInId } = req.params;
       const currentTime = Math.floor(Date.now() / 1000);
-
       const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
 
       if (!urlValidationRes) {
@@ -177,7 +171,9 @@ class PayInController {
           req_amount: payinDataRes?.amount,
           utr_id: payinDataRes?.utr
         };
+        logger.info('Notifying merchant about expired URL', { notify_url: payinDataRes?.notify_url, notify_data: notifyData });
         const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
+        logger.warn('Session expired for PayIn URL', { payInId });
         throw new CustomError(403, "Session is expired");
       }
 
@@ -204,6 +200,8 @@ class PayInController {
       const { amount } = req.body;
       const currentTime = Math.floor(Date.now() / 1000);
 
+      logger.info('Request to assign bank to PayIn URL', { payInId, amount });
+
       const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
 
       if (!urlValidationRes) {
@@ -225,14 +223,15 @@ class PayInController {
           req_amount: payinDataRes?.amount,
           utr_id: payinDataRes?.utr
         };
+        logger.info('Notifying merchant about expired URL', { notify_url: payinDataRes?.notify_url, notify_data: notifyData });
         const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
         throw new CustomError(403, "Session is expired");
       }
-
       const getBankDetails = await bankAccountRepo?.getMerchantBankById(
         urlValidationRes?.merchant_id
       );
-      if (!getBankDetails || getBankDetails.length === 0) {
+      let payinBankAccountLinkRes = getBankDetails?.filter((res) => (res?.bankAccount?.bank_used_for === "payIn" && res?.bankAccount?.is_enabled === true));
+      if (!getBankDetails || getBankDetails.length === 0 || payinBankAccountLinkRes.length === 0) {
         const urlExpiredBankNotAssignedRes = await payInRepo.expirePayInUrl(
           payInId
         );
@@ -245,13 +244,14 @@ class PayInController {
           req_amount: payinDataRes?.amount,
           utr_id: payinDataRes?.utr
         };
+        logger.info('Notifying merchant about bank not assigned', { notify_url: payinDataRes?.notify_url, notify_data: notifyData });
         const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
         throw new CustomError(404, "Bank is not assigned");
       }
 
       // Filter for the enabled bank accounts
       const enabledBanks = getBankDetails?.filter(
-        (bank) => bank?.bankAccount?.is_enabled
+        (bank) => bank?.bankAccount?.is_enabled && bank?.bankAccount?.bank_used_for === "payIn"
       );
 
       if (enabledBanks.length === 0) {
@@ -261,6 +261,7 @@ class PayInController {
       // Randomly select one enabled bank account
       const randomIndex = Math.floor(Math.random() * enabledBanks.length);
       const selectedBankDetails = enabledBanks[randomIndex];
+      logger.info('Selected bank for assignment', { selectedBank: selectedBankDetails });
       const assignedBankToPayInUrlRes =
         await payInServices.assignedBankToPayInUrl(
           payInId,
@@ -275,10 +276,10 @@ class PayInController {
         assignedBankToPayInUrlRes
       );
     } catch (error) {
+      logger.error("Error assigning bank to PayIn URL:", error);
       next(error);
     }
   }
-
   // To Expire Url
   async expirePayInUrl(req, res, next) {
     try {
@@ -295,9 +296,15 @@ class PayInController {
         req_amount: payinDataRes?.amount,
         utr_id: payinDataRes?.utr
       };
+      logger.info('Sending notification to merchant', { notify_url: payinDataRes?.notify_url, notify_data: notifyData });
       const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
+      logger.info('Merchant notification response', {
+        status: notifyMerchant.status,
+        data: notifyMerchant.data,
+      });
       return DefaultResponse(res, 200, "Payment Url is expires");
     } catch (error) {
+      logger.error("Error expiring PayIn URL:", error);
       next(error);
     }
   }
@@ -725,11 +732,16 @@ class PayInController {
       };
      
       try {
+        logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
         //When we get the notify url we will add it.
         const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+        logger.info('Sending notification to merchant', {
+          status: notifyMerchant.status,
+          data: notifyMerchant.data,
+        })
 
       } catch (error) {
-        console.error("Error sending notification:", error);
+        logger.error("Error sending notification:", error);
       }
 
 
@@ -926,10 +938,16 @@ class PayInController {
         };
         try {
           //When we get the notify url we will add it.
+          logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+
           const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+          logger.info('Sending notification to merchant', {
+            status: notifyMerchant.status,
+            data: notifyMerchant.data,
+          })
           console.log("Notification sent:", notifyMerchant);
         } catch (error) {
-          console.error("Error sending notification:", error);
+          logger.error("Error sending notification:", error);
         }
         // }
 
@@ -979,7 +997,6 @@ class PayInController {
   async getAllPayInDataByMerchant(req, res, next) {
     try {
       let { merchantCode, startDate, endDate } = req.query;
-
       if (merchantCode == null) {
         merchantCode = [];
       } else if (typeof merchantCode === "string") {
@@ -1062,7 +1079,7 @@ class PayInController {
   }
 
   async telegramResHandler(req, res, next) {
-    const TELEGRAM_BOT_TOKEN = "7213263102:AAHaSjFaXaODoQM6Zxv1aoWmKNaA7YXPEnQ";
+    const TELEGRAM_BOT_TOKEN = config?.telegramOcrBotToken;
     try {
       const { message } = req.body;
       if (message?.photo) {
@@ -1194,12 +1211,16 @@ class PayInController {
                     utr_id: getPayInData?.utr
                   }
                   //When we get the notify url we will add it.
+                  logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
                   const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+                  logger.info('Sending notification to merchant', {
+                    status: notifyMerchant.status,
+                    data: notifyMerchant.data,
+                  })
                   console.log("Notification sent:", notifyMerchant);
                 } catch (error) {
-                  console.error("Error sending notification:", error);
+                  console.error("Error sending notification to merchant:", error);
                 }
-
                 return res.status(200).json({ message: "true" });
               } else {
                 await sendErrorMessageUtrNotFoundTelegramBot(
@@ -1281,7 +1302,13 @@ class PayInController {
                 }
                 try {
                   //When we get the notify url we will add it.
+                  logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+                  
                   const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+                  logger.info('Sending notification to merchant', {
+                    status: notifyMerchant.status,
+                    data: notifyMerchant.data,
+                  })
                   console.log("Notification sent:", notifyMerchant);
                 } catch (error) {
                   console.error("Error sending notification:", error);
@@ -1336,9 +1363,6 @@ class PayInController {
       next(error);
     }
   }
-
-
-
   // For test modal pop up
   async updatePaymentStatus(req, res, next) {
     try {
@@ -1351,7 +1375,6 @@ class PayInController {
         payInId,
         updatePayInData
       );
-
       const notifyData = {
         status: req.body.status === "TEST_SUCCESS" ? "success" : req.body.status === "TEST_DROPPED" ? "Dropped" : "",
         merchantOrderId: updatePayInRes?.merchant_order_id,
@@ -1360,8 +1383,12 @@ class PayInController {
       };
       //Notify the merchant
       try {
+        logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
         const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
-
+        logger.info('Sending notification to merchant', {
+          status: notifyMerchant.status,
+          data: notifyMerchant.data,
+        })
       } catch (error) {
         console.log("error", error)
       }

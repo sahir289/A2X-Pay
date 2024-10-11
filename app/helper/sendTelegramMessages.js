@@ -23,9 +23,9 @@ export async function sendTelegramDisputeMessage(chatId, oldData, newData , TELE
       <b><u>Dispute/Duplicate Entry:-</u></b> 
       <b>PayIn Id:</b>${oldData.id}
       <b>User Id:</b>${oldData.user_id}
-      <b>Merchant Order Id:</b>${oldData.merchantOrderId}
+      <b>Merchant Order Id:</b>${oldData.merchant_order_id}
       <b>Merchant Id:</b>${oldData.merchant_id}
-      <b>Amount:</b>${oldData.amount}
+      <b>⛔ Amount:</b>${oldData.amount}
       <b>UPI Short Code:</b>${oldData.upi_short_code}
       <b>UTR:</b>${oldData.user_submitted_utr}
       <b>Status:</b>${oldData.status}
@@ -33,9 +33,9 @@ export async function sendTelegramDisputeMessage(chatId, oldData, newData , TELE
       <b><u>New Entry:-</u></b> 
       <b>PayIn Id:</b>${newData.id}
       <b>User Id:</b>${newData.user_id}
-      <b>Merchant Order Id:</b>${newData.merchantOrderId}
+      <b>Merchant Order Id:</b>${newData.merchant_order_id}
       <b>Merchant Id:</b>${newData.merchant_id}
-      <b>Amount:</b>${newData.amount}
+      <b>✅ Amount:</b>${newData.amount}
       <b>UPI Short Code:</b>${newData.upi_short_code}
       <b>UTR:</b>${newData.user_submitted_utr}
       <b>Status:</b>${newData.status}
@@ -48,7 +48,6 @@ export async function sendTelegramDisputeMessage(chatId, oldData, newData , TELE
             chat_id: chatId,
             text: message,
             parse_mode: 'HTML',
-            reply_to_message_id: replyToMessageId // Add this line to reply to a specific message
         });
     } catch (error) {
         console.error('Error sending message to Telegram:', error);
@@ -165,17 +164,21 @@ export async function sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(chatId, 
     }
 }
 
-export async function sendBankNotAssignedAlertTelegram(chatId, TELEGRAM_BOT_TOKEN) {
+export async function sendBankNotAssignedAlertTelegram(chatId, getMerchantApiKeyByCode, TELEGRAM_BOT_TOKEN) {
     // Construct the alert message
-    const message = `<b>Bank not Assigned with :</b> ${getMerchantApiKeyByCode.code}`;
+    const message = `<b>⛔ Bank not Assigned with :</b> ${getMerchantApiKeyByCode.code}`;
 
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    
     try {
-       const response = await axios.post(sendMessageUrl, {
+        const response = await axios.post(sendMessageUrl, {
             chat_id: chatId,
             text: message,
             parse_mode: 'HTML',
         });
+        
+        // Optionally log the response from Telegram API
+      // console.log('Telegram Alert response:', response.data);
     } catch (error) {
         console.error('Error sending bank not assigned alert to Telegram:', error);
     }
@@ -184,32 +187,28 @@ export async function sendBankNotAssignedAlertTelegram(chatId, TELEGRAM_BOT_TOKE
 export async function sendTelegramDashboardReportMessage(
     chatId,
     formattedPayIns,
-    formattedPayOuts, 
-    formattedBankPayIns, 
+    formattedPayOuts,
+    formattedBankPayIns,
+    formattedBankPayOuts,
     type,
     TELEGRAM_BOT_TOKEN
 ) {
     const currentDate = new Date().toISOString().split("T")[0];
-    
-    let message = `<b>${type} (${currentDate})</b>\n\n`;
+    const message = `
+<b>${type} Report (${currentDate})</b>
 
-    // PayIns section
-    message += `<b>💰 Deposit (${currentDate})</b>\n\n`;
-    message += formattedPayIns.join("\n");
-    message += `\n\n`;
+<b>💰 Deposits</b>
+${formattedPayIns.length > 0 ? formattedPayIns.join("\n") : 'No deposits available.'}
 
-    // PayOuts section
-    message += `<b>🏦 Withdraw (${currentDate})</b>\n\n`;
-    message += formattedPayOuts.join("\n");
-    message += `\n\n`;
+<b>🏦 Withdrawals</b>
+${formattedPayOuts.length > 0 ? formattedPayOuts.join("\n") : 'No withdrawals available.'}
 
-    // Bank Accounts section
-    message += `<b>✅ Bank Accounts (${currentDate})</b>\n\n`;
-    message += formattedBankPayIns.join("\n");
-    message += `\n\n`;
+<b>✅ Bank Account Deposits</b>
+${formattedBankPayIns.length > 0 ? formattedBankPayIns.join("\n") : 'No bank account deposits available.'}
 
-    // Log the formatted message
-    console.log("Formatted Telegram Message: \n", message);
+<b>✅ Bank Account Withdrawals</b>
+${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank account withdrawals available.'}
+    `;
 
     // Send the message to Telegram
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -220,9 +219,9 @@ export async function sendTelegramDashboardReportMessage(
             text: message,
             parse_mode: 'HTML',
         });
-        console.log('Message sent successfully:', response.data);
+       // console.log('Telegram Dashboard response:', response.data);
     } catch (error) {
-        console.error('Error sending message:', error.response ? error.response.data : error.message);
+        console.error('Error sending Telegram message:', error.response?.data || error.message);
     }
 }
 

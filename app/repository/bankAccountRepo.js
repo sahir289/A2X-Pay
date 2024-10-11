@@ -39,11 +39,13 @@ class BankAccountRepo {
   }
 
   //Function to get Payout banks
-  async getPayoutBank() {
-    const bankRes = await prisma.bankAccount.findMany({
-      where: {
+  async getPayoutBank( vendor_code, loggedInUserRole ) {
+    const filters = {
+        ...(loggedInUserRole !== "ADMIN" && vendor_code && vendor_code !== "null" && { vendor_code : vendor_code }),
         bank_used_for: "payOut",
-      },
+    };
+    const bankRes = await prisma.bankAccount.findMany({
+      where: filters,
     });
     return bankRes;
   }
@@ -59,7 +61,6 @@ class BankAccountRepo {
   }
 
   async updateBankAccountBalance(bankAccId, amount) {
-    console.log("🚀 ~ BankAccountRepo ~ updateBankAccountBalance ~ bankAccId:", bankAccId)
     const bankAccRes = await prisma.bankAccount.findUnique({
       where: {
         id: bankAccId,

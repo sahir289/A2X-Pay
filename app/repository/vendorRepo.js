@@ -9,8 +9,9 @@ class VendorRepo {
     return vendor;
   }
 
-  async getAllVendors(vendor_code) {
+  async getAllVendors(id, vendor_code) {
     const filters = {
+      ...(id && { id: { equals: id } }),
       ...(vendor_code && { vendor_code: { equals: vendor_code } }),
     };
     const vendors = await prisma.vendor.findMany({

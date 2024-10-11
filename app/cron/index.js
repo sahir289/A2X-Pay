@@ -1,37 +1,28 @@
 import cron from "node-cron";
 import { prisma } from "../client/prisma.js";
 import { sendTelegramDashboardReportMessage } from "../helper/sendTelegramMessages.js";
+import config from "../../config.js";
 
 // Schedule task to run daily at 12 AM IST for the previous day's data
-cron.schedule("0 0 * * *", () => gatherAllData("N"), {
-  scheduled: true,
-  timezone: "Asia/Kolkata", // Set to India's timezone
-});
-
-// Schedule task to run every hour
-cron.schedule("0 * * * *", () => gatherAllData("H"), {
-  scheduled: true,
-  timezone: "Asia/Kolkata",
-});
+// Schedule a task to run every hour
+cron.schedule("0 * * * *", () => gatherAllData("H"));
+// Schedule a task to run every day at 12 AM
+cron.schedule("0 0 * * *", () => gatherAllData("N"));
 
 // H is hour and N is night (previous day).
 const gatherAllData = async (type = "N") => {
   try {
     const empty = "-- -- -- ";
     let startDate, endDate;
-
-    if (type === "H") {
-      // Last hour
+    if (type == "H") {
       const date = new Date();
-      startDate = new Date(date.getTime() - 60 * 60 * 1000); // 1 hour ago
+      startDate = new Date(date.getTime() - 60 * 60 * 1000);
       endDate = date;
     }
 
-    if (type === "N") {
-      // Previous day's data
-      endDate = new Date(); // Current time
-      startDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() - 1, 0, 0, 0); // Start of previous day
-      endDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() - 1, 23, 59, 59); // End of previous day
+    if (type == "N") {
+      endDate = new Date();
+      startDate = new Date(endDate.getTime() - 24 * 60 * 60 * 1000);
     }
 
     const merchants = await prisma.merchant.findMany({
@@ -48,18 +39,17 @@ const gatherAllData = async (type = "N") => {
       },
     });
 
-    // Map the merchant codes to their respective merchant_ids
     const merchantCodeMap = merchants.reduce((acc, merchant) => {
       acc[merchant.id] = merchant.code;
       return acc;
     }, {});
 
-    // Map the bank names to their respective bank ids
     const bankNamesMap = banks.reduce((acc, bank) => {
       acc[bank.id] = bank.ac_name;
       return acc;
     }, {});
 
+    // Only fetch successful pay-ins
     const payIns = await prisma.payin.groupBy({
       by: ["merchant_id"],
       _sum: {
@@ -69,13 +59,13 @@ const gatherAllData = async (type = "N") => {
         id: true,
       },
       where: {
+        status: "SUCCESS", 
         createdAt: {
           gte: startDate,
           lte: endDate,
         },
       },
     });
-
     const payOuts = await prisma.payout.groupBy({
       by: ["merchant_id"],
       _sum: {
@@ -85,6 +75,7 @@ const gatherAllData = async (type = "N") => {
         id: true,
       },
       where: {
+        status: "SUCCESS", 
         createdAt: {
           gte: startDate,
           lte: endDate,
@@ -101,64 +92,96 @@ const gatherAllData = async (type = "N") => {
         id: true,
       },
       where: {
-        status: "SUCCESS",
+        status: "SUCCESS", 
         createdAt: {
           gte: startDate,
           lte: endDate,
         },
       },
     });
+    const bankPayOuts = await prisma.payout.groupBy({
+      by: ['from_bank'],
+      _sum: {
+        amount: true,
+      },
+      _count: {
+        id: true,
+      },
+      where: {
+        status: "SUCCESS",
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });    
 
-    let totalPayIn = 0,
-      totalPayOut = 0,
-      totalBankPayIn = 0;
+    const formattedPayIns = payIns
+      .map((payIn) => {
+        const { merchant_id, _sum, _count } = payIn;
+        const merchantCode = merchantCodeMap[merchant_id];
+        if (merchantCode && _sum.amount > 0) {
+          return `${merchantCode}: ${formatePrice(_sum.amount)} (${_count.id})`;
+        }
+        return null;
+      })
+      .filter(Boolean);
 
-    const formattedPayIns = payIns.map((payIn) => {
-      const { merchant_id, _sum, _count } = payIn;
-      totalPayIn += Number(_sum.amount);
-      return `${merchantCodeMap[merchant_id] || empty}: ${formatePrice(
-        _sum.amount
-      )} (${_count.id})`;
-    });
+    const formattedPayOuts = payOuts
+      .map((payOut) => {
+        const { merchant_id, _sum, _count } = payOut;
+        const merchantCode = merchantCodeMap[merchant_id];
+        if (merchantCode) {
+          return `${merchantCode}: ${formatePrice(_sum.amount)} (${_count.id})`;
+        }
+        return null;
+      })
+      .filter(Boolean);
+    
+    const formattedBankPayIns = bankPayIns
+      .map((payIn) => {
+        const { bank_acc_id, _sum, _count } = payIn;
+        const bankName = bankNamesMap[bank_acc_id];
+        if (bankName) {
+          return `${bankName}: ${formatePrice(_sum.amount)} (${_count.id})`;
+        }
+        return null;
+      })
+      .filter(Boolean);
 
-    const formattedPayOuts = payOuts.map((payIn) => {
-      const { merchant_id, _sum, _count } = payIn;
-      totalPayOut += Number(_sum.amount);
-      return `${merchantCodeMap[merchant_id] || empty}: ${formatePrice(
-        _sum.amount
-      )} (${_count.id})`;
-    });
-
-    const formattedBankPayIns = bankPayIns.map((payIn) => {
-      const { bank_acc_id, _sum, _count } = payIn;
-      totalBankPayIn += Number(_sum.amount);
-      return `${bankNamesMap[bank_acc_id] || empty}: ${formatePrice(
-        _sum.amount
-      )} (${_count.id})`;
-    });
+      const formattedBankPayOuts = bankPayOuts
+      .map((payOut) => {
+        const { from_bank, _sum, _count } = payOut;
+        if (from_bank) {
+          return `${from_bank}: ${formatePrice(_sum.amount)} (${_count.id})`;
+        }
+        return null;
+      })
+      .filter(Boolean);
 
     const currentDate = new Date().toISOString().split("T")[0];
-    // pay in
-    console.log(`\nPayIns (${currentDate}) \n`);
-    console.log(formattedPayIns.join("\n"));
-    console.log(`\nTotal: ${formatePrice(totalPayIn)} \n`);
-    // pay out
-    console.log(`\nPayOuts (${currentDate}) \n`);
-    console.log(formattedPayOuts.join("\n"));
-    console.log(`\nTotal: ${formatePrice(totalPayOut)} \n`);
-    // banks
-    console.log(`\Bank Accounts (${currentDate}) \n`);
-    console.log(formattedBankPayIns.join("\n"));
-    console.log(`\nTotal: ${formatePrice(totalBankPayIn)} \n`);
-    
+    // // Pay In
+    // console.log(`\nPayIns (${currentDate}) \n`);
+    // console.log(formattedPayIns.join("\n"));
+    // // Pay Out
+    // console.log(`\nPayOuts (${currentDate}) \n`);
+    // console.log(formattedPayOuts.join("\n"));
+    // // Bank Accounts
+    // console.log(`\nBank Accounts (${currentDate}) \n`);
+    // console.log(formattedBankPayIns.join("\n"));
+
+    // console.log(`\nBank Accounts PayOut(${currentDate}) \n`);
+    // console.log(formattedBankPayOuts.join("\n"));
+
     await sendTelegramDashboardReportMessage(
-      "-4593574370",
-      "-4593574370",
-      formattedPayIns, 
+      config?.telegramDashboardChatId,      
+      formattedPayIns,
       formattedPayOuts,
       formattedBankPayIns,
-      type === "H" ?  "Daily Report": "Hourly Report" ,
-      "7851580395:AAHOsYd7Js-wv9sej_JP_WP8i_qJeMjMBTc"   
+      formattedBankPayOuts,
+      type === "H" ? "Hourly Report" : "Daily Report",
+      config?.telegramBotToken,
+
     );
   } catch (err) {
     console.log("========= CRON ERROR =========");
@@ -166,11 +189,8 @@ const gatherAllData = async (type = "N") => {
     console.log("==============================");
   }
 };
-
-// Optionally, you can invoke these functions for testing purposes
-// gatherAllData("N");
 // gatherAllData("H");
-
+// gatherAllData("N");
 const formatePrice = (price) => {
   return Number(price).toLocaleString("en-US", {
     minimumFractionDigits: 2,

@@ -6,7 +6,6 @@ import { nanoid } from "nanoid";
 
 class PayInService {
   async generatePayInUrl(getMerchantRes, payInData, bankAccountLinkRes) {
-    console.log("🚀 ~ PayInService ~ generatePayInUrl ~ bankAccountLinkRes:", bankAccountLinkRes)
     const _10_MINUTES = 1000 * 60 * 10;
     const expirationDate = Math.floor((new Date().getTime() + _10_MINUTES) / 1000);
 
@@ -30,7 +29,6 @@ class PayInService {
     }
 
     const payInUrlRes = await payInRepo.generatePayInUrl(data);
-    console.log("🚀 ~ PayInService ~ generatePayInUrl ~ payInUrlRes:", payInUrlRes)
     
     const updatePayInUrlRes = {
       ...payInUrlRes,
@@ -185,9 +183,9 @@ class PayInService {
     }
     if (endDate) {
       let end = new Date(endDate);
-
-      end.setDate(end.getDate() + 1);
-
+      
+      // end.setDate(end.getDate() + 1);
+      
       dateFilter.lte = end; // Less than or equal to endDate
     }
     const payInData = await prisma.payin.findMany({
@@ -266,7 +264,7 @@ class PayInService {
     // if both start and end date provided then apply range filter
     if(startDate && endDate){
       const end = new Date(endDate);
-      end.setDate(end.getDate() + 1)
+      // end.setDate(end.getDate() + 1)
       dateFilter = {
         createdAt: {
           gte: new Date(startDate),
@@ -331,17 +329,14 @@ class PayInService {
   async getAllPayInDataWithRange(merchantCodes, status, startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    // this method will get the entire day of both dates
-    // from mid night 12 to mid night 12
-    start.setUTCHours(0, 0, 0, 0)
-    end.setUTCHours(23, 59, 59, 999)
+  
     const condition = {
       Merchant: {
         code: {
           in: merchantCodes,
         }
       },
-      createdAt: {
+      updatedAt: {
         gte: start,
         lte: end,
       },
@@ -354,6 +349,9 @@ class PayInService {
       include: {
         Merchant: true,
       },
+      orderBy:{
+        updatedAt:"asc"
+      }
     });
     return payInData;
   }

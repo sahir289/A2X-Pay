@@ -39,7 +39,8 @@ class Withdraw {
     merchant_order_id,
     user_id,
     sno,
-    payout_commision,
+    from_bank,
+    commission,
     utr_id,
     acc_holder_name
   ) {
@@ -52,7 +53,8 @@ class Withdraw {
       { col: "merchant_order_id", value: merchant_order_id },
       { col: "user_id", value: user_id },
       { col: "sno", value: sno },
-      { col: "payout_commision", value: payout_commision },
+      { col: "from_bank", value: from_bank },
+      { col: "payout_commision", value: commission },
       { col: "utr_id", value: utr_id },
       { col: "acc_holder_name", value: acc_holder_name },
       { col: "vendor_code", value: vendorCode },
@@ -123,10 +125,7 @@ class Withdraw {
   async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    // this method will get the entire day of both dates
-    // from mid night 12 to mid night 12
-    start.setUTCHours(0, 0, 0, 0)
-    end.setUTCHours(23, 59, 59, 999)
+  
     const payOutData = await prisma.payout.findMany({
       where: {
         status,
@@ -135,7 +134,7 @@ class Withdraw {
             in: merchantCodes,
           },
         },
-        createdAt: {
+        updatedAt: {
           gte: start,
           lte: end,
         },
@@ -143,6 +142,9 @@ class Withdraw {
       include: {
         Merchant: true,
       },
+      orderBy:{
+        updatedAt:"asc"
+      }
     });
     return payOutData;
   }
