@@ -23,7 +23,7 @@ export async function sendTelegramDisputeMessage(chatId, oldData, newData , TELE
       <b><u>Dispute/Duplicate Entry:-</u></b> 
       <b>PayIn Id:</b>${oldData.id}
       <b>User Id:</b>${oldData.user_id}
-      <b>Merchant Order Id:</b>${oldData.merchantOrderId}
+      <b>Merchant Order Id:</b>${oldData.merchant_order_id}
       <b>Merchant Id:</b>${oldData.merchant_id}
       <b>⛔ Amount:</b>${oldData.amount}
       <b>UPI Short Code:</b>${oldData.upi_short_code}
@@ -33,7 +33,7 @@ export async function sendTelegramDisputeMessage(chatId, oldData, newData , TELE
       <b><u>New Entry:-</u></b> 
       <b>PayIn Id:</b>${newData.id}
       <b>User Id:</b>${newData.user_id}
-      <b>Merchant Order Id:</b>${newData.merchantOrderId}
+      <b>Merchant Order Id:</b>${newData.merchant_order_id}
       <b>Merchant Id:</b>${newData.merchant_id}
       <b>✅ Amount:</b>${newData.amount}
       <b>UPI Short Code:</b>${newData.upi_short_code}
