@@ -110,7 +110,8 @@ class WithdrawController {
         merchant_order_id,
         user_id,
         sno,
-        payout_commision,
+        from_bank,
+        commission,
         utr_id,
         acc_holder_name,
       } = req.query;
@@ -128,7 +129,8 @@ class WithdrawController {
         merchant_order_id,
         user_id,
         Number(sno),
-        payout_commision,
+        from_bank,
+        commission,
         utr_id,
         acc_holder_name
       );
