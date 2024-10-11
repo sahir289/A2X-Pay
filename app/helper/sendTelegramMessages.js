@@ -25,7 +25,7 @@ export async function sendTelegramDisputeMessage(chatId, oldData, newData , TELE
       <b>User Id:</b>${oldData.user_id}
       <b>Merchant Order Id:</b>${oldData.merchantOrderId}
       <b>Merchant Id:</b>${oldData.merchant_id}
-      <b>Amount:</b>${oldData.amount}
+      <b>⛔ Amount:</b>${oldData.amount}
       <b>UPI Short Code:</b>${oldData.upi_short_code}
       <b>UTR:</b>${oldData.user_submitted_utr}
       <b>Status:</b>${oldData.status}
@@ -35,7 +35,7 @@ export async function sendTelegramDisputeMessage(chatId, oldData, newData , TELE
       <b>User Id:</b>${newData.user_id}
       <b>Merchant Order Id:</b>${newData.merchantOrderId}
       <b>Merchant Id:</b>${newData.merchant_id}
-      <b>Amount:</b>${newData.amount}
+      <b>✅ Amount:</b>${newData.amount}
       <b>UPI Short Code:</b>${newData.upi_short_code}
       <b>UTR:</b>${newData.user_submitted_utr}
       <b>Status:</b>${newData.status}
