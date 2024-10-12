@@ -18,33 +18,33 @@ export async function sendTelegramMessage(chatId, data, TELEGRAM_BOT_TOKEN, repl
     }
 }
 
-export async function sendTelegramDisputeMessage(chatId, oldData, newData , TELEGRAM_BOT_TOKEN) {
+export async function sendTelegramDisputeMessage(chatId, oldData, newData, TELEGRAM_BOT_TOKEN, entryType) {
     const message = `
-      <b><u>Dispute/Duplicate Entry:-</u></b> 
-      <b>PayIn Id:</b>${oldData.id}
-      <b>User Id:</b>${oldData.user_id}
-      <b>Merchant Order Id:</b>${oldData.merchant_order_id}
-      <b>Merchant Id:</b>${oldData.merchant_id}
-      <b>⛔ Amount:</b>${oldData.amount}
-      <b>UPI Short Code:</b>${oldData.upi_short_code}
-      <b>UTR:</b>${oldData.user_submitted_utr}
-      <b>Status:</b>${oldData.status}
-      <b>Bank Name:</b>${oldData.bank_name}
-      <b><u>New Entry:-</u></b> 
-      <b>PayIn Id:</b>${newData.id}
-      <b>User Id:</b>${newData.user_id}
-      <b>Merchant Order Id:</b>${newData.merchant_order_id}
-      <b>Merchant Id:</b>${newData.merchant_id}
-      <b>✅ Amount:</b>${newData.amount}
-      <b>UPI Short Code:</b>${newData.upi_short_code}
-      <b>UTR:</b>${newData.user_submitted_utr}
-      <b>Status:</b>${newData.status}
-      <b>Bank Name:</b>${newData.bank_name}
-    `;
+    <b> <u>${entryType}:</u></b> 
+  <b>PayIn Id:</b> ${oldData.id}
+  <b>User Id:</b> ${oldData.user_id}
+  <b>Merchant Order Id:</b> ${oldData.merchant_order_id}
+  <b>Merchant Id:</b> ${oldData.merchant_id}
+  <b>⛔ Amount:</b> ${oldData.amount}
+  <b>💳 UPI Short Code:</b> ${oldData.upi_short_code}
+  <b>🧾 UTR:</b> ${oldData.user_submitted_utr}
+  <b>📋 Status:</b> ${oldData.status === 'DUPLICATE' ? '⛔ DUPLICATE' : oldData.status}
+  <b>🏦 Bank Name:</b> ${oldData.bank_name}
 
+  <b><u>New Entry:</u></b> 
+  <b>PayIn Id:</b> ${newData.id}
+  <b>User Id:</b> ${newData.user_id}
+  <b>Merchant Order Id:</b> ${newData.merchant_order_id}
+  <b>Merchant Id:</b> ${newData.merchant_id}
+  <b>✅ Amount:</b> ${newData.amount}
+  <b>💳 UPI Short Code:</b> ${newData.upi_short_code}
+  <b>🧾 UTR:</b> ${newData.user_submitted_utr}
+  <b>📋 Status:</b> ${newData.status === 'SUCCESS' ? '✅ SUCCESS' : newData.status}
+  <b>🏦 Bank Name:</b> ${newData.bank_name}
+`;
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     try {
-        await axios.post(sendMessageUrl, {
+        const response = await axios.post(sendMessageUrl, {
             chat_id: chatId,
             text: message,
             parse_mode: 'HTML',
@@ -53,8 +53,6 @@ export async function sendTelegramDisputeMessage(chatId, oldData, newData , TELE
         console.error('Error sending message to Telegram:', error);
     }
 }
-
-
 export async function sendSuccessMessageTelegram(chatId, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, replyToMessageId) {
     // Assuming `orderNo` is part of the `data` object
     const orderNo = merchantOrderIdTele;
@@ -195,7 +193,7 @@ export async function sendTelegramDashboardReportMessage(
 ) {
     const currentDate = new Date().toISOString().split("T")[0];
     const message = `
-<b>${type} Report (${currentDate})</b>
+<b>${type} (${currentDate})</b>
 
 <b>💰 Deposits</b>
 ${formattedPayIns.length > 0 ? formattedPayIns.join("\n") : 'No deposits available.'}
