@@ -852,6 +852,29 @@ class PayInController {
       if (usrSubmittedUtr?.utr !== "undefined") {
         const usrSubmittedUtrData = usrSubmittedUtr?.utr;
 
+        const isUtrExist = await payInRepo.getPayinDataByUsrSubmittedUtr(usrSubmittedUtrData)
+
+        if (isUtrExist.length > 0) {
+          const updatePayInData = {
+            amount,
+            status: "DUPLICATE",
+            is_notified: true,
+            user_submitted_utr: usrSubmittedUtrData,
+            is_url_expires: true,
+          };
+          const updatePayinRes = await payInRepo.updatePayInData(
+            payInId,
+            updatePayInData
+          );
+          const response = {
+            status: updatePayinRes.status,
+            amount,
+            transactionId: updatePayinRes?.merchant_order_id,
+            return_url: updatePayinRes?.return_url,
+          };
+          return DefaultResponse(res, 200, "Duplicate Payment Found", response);
+        }
+
         const getPayInData = await payInRepo.getPayInData(payInId);
         if (!getPayInData) {
           throw new CustomError(404, "Payment does not exist");
