@@ -30,11 +30,13 @@ class DuplicateDisputeTransactionController {
                 }
             }
             const duplicateDisputeTransactionRes = await duplicateDisputeTransactionService.handleDuplicateDisputeTransaction(payInId, apiData, oldPayInData.status);
+            const entryType = oldPayInData.status === 'DUPLICATE' ? 'Duplicate Entry' : 'Dispute Entry';
             await sendTelegramDisputeMessage(
                 config?.telegramDuplicateDisputeChatId,
                 oldPayInData,
                 duplicateDisputeTransactionRes,
-                config?.telegramBotToken
+                config?.telegramBotToken,
+                entryType,
               );
             return DefaultResponse(res, 200, "Transaction updated successfully", duplicateDisputeTransactionRes);
         } catch (error) {
