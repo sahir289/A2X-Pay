@@ -262,12 +262,16 @@ class PayInController {
       const randomIndex = Math.floor(Math.random() * enabledBanks.length);
       const selectedBankDetails = enabledBanks[randomIndex];
       logger.info('Selected bank for assignment', { selectedBank: selectedBankDetails });
-      const assignedBankToPayInUrlRes =
+      let assignedBankToPayInUrlRes =
         await payInServices.assignedBankToPayInUrl(
           payInId,
           selectedBankDetails,
           parseFloat(amount)
         );
+        
+        const payinDataResult = await payInRepo.getPayInData(payInId);
+        assignedBankToPayInUrlRes.merchant_min_payin = payinDataResult?.Merchant?.min_payin;
+        assignedBankToPayInUrlRes.merchant_max_payin = payinDataResult?.Merchant?.max_payin;
 
       return DefaultResponse(
         res,
