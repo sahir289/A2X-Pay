@@ -121,6 +121,7 @@ class BotResponseRepo {
     })
     return res;
   }
+
 }
 
 export default new BotResponseRepo();

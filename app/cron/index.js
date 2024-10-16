@@ -158,18 +158,18 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata")  => {
       })
       .filter(Boolean);
 
-    // Pay In
-    console.log(`\nPayIns (${currentDate}) \n`);
-    console.log(formattedPayIns.join("\n"));
-    // Pay Out
-    console.log(`\nPayOuts (${currentDate}) \n`);
-    console.log(formattedPayOuts.join("\n"));
-    // Bank Accounts PayIns
-    console.log(`\nBank Accounts (${currentDate}) \n`);
-    console.log(formattedBankPayIns.join("\n"));
-    // Bank Accounts PayOuts
-    console.log(`\nBank Accounts PayOut(${currentDate}) \n`);
-    console.log(formattedBankPayOuts.join("\n"));
+    // // Pay In
+    // console.log(`\nPayIns (${currentDate}) \n`);
+    // console.log(formattedPayIns.join("\n"));
+    // // Pay Out
+    // console.log(`\nPayOuts (${currentDate}) \n`);
+    // console.log(formattedPayOuts.join("\n"));
+    // // Bank Accounts PayIns
+    // console.log(`\nBank Accounts (${currentDate}) \n`);
+    // console.log(formattedBankPayIns.join("\n"));
+    // // Bank Accounts PayOuts
+    // console.log(`\nBank Accounts PayOut(${currentDate}) \n`);
+    // console.log(formattedBankPayOuts.join("\n"));
 
     await sendTelegramDashboardReportMessage(
       config?.telegramDashboardChatId,      

@@ -97,7 +97,7 @@ class PayInController {
             payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
             payInId: generatePayInUrlRes?.id,
             merchantOrderId: merchant_order_id,
-            
+
           };
         }
 
@@ -593,6 +593,12 @@ class PayInController {
         throw new CustomError(404, "Payment does not exist");
       }
 
+      const isBankExist = await bankAccountRepo?.getBankDataByBankId(getPayInData?.bank_acc_id)
+
+      if (!isBankExist) {
+        throw new CustomError(404, "Bank account does not exist");
+      }
+
       const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
 
       // check tht usrSubmittedUtr is previously used or not if it is thn send Duplicate utr.
@@ -625,7 +631,7 @@ class PayInController {
           amount,
           merchant_order_id: updatePayinRes?.merchant_order_id,
           return_url: updatePayinRes?.return_url,
-          utr_id:updatePayinRes?.utr
+          utr_id: updatePayinRes?.utr
         };
         return DefaultResponse(res, 200, responseMessage, response);
       }
@@ -644,9 +650,17 @@ class PayInController {
         // });
       }
 
+      
+
       const matchDataFromBotRes = await botResponseRepo.getBotResByUtr(
         usrSubmittedUtr
       );
+
+      // We check bank exist here as we have to add the data to the res no matter what comes.
+      const getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
+      if (!getBankDataByBotRes) {
+        throw new CustomError(404, "Bank does not exist")
+      }
 
       if (!matchDataFromBotRes) {
         payInData = {
@@ -669,6 +683,42 @@ class PayInController {
         };
         responseMessage = "Duplicate Payment Found";
       } else {
+
+        if (isBankExist?.Merchant_Bank?.length === 1) {
+
+          if (getBankDataByBotRes?.id !== isBankExist?.id) {
+            const payInData = {
+              confirmed: matchDataFromBotRes?.amount,
+              amount:amount,
+              status: "BANK_MISMATCH",
+              is_notified: true,
+              is_url_expires: true,
+              utr: matchDataFromBotRes?.utr,
+              user_submitted_utr:usrSubmittedUtr,
+              approved_at: new Date(),
+              duration:duration
+            };
+  
+            const updatePayInDataRes = await payInRepo.updatePayInData(
+              getPayInData.id,
+              payInData
+            );
+  
+            // We are adding the amount to the bank as we want to update the balance of the bank
+            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+              getBankDataByBotRes?.id,
+              parseFloat(amount)
+            );
+  
+            return DefaultResponse(
+              res,
+              200,
+              "Bank mismatch",
+              updatePayInDataRes
+            );
+          }
+        }
+
         const updateBotRes = await botResponseRepo.updateBotResponseByUtr(
           matchDataFromBotRes?.id,
           usrSubmittedUtr
@@ -730,7 +780,7 @@ class PayInController {
         req_amount: amount,
         utr_id: (updatePayinRes.status === "SUCCESS" || updatePayinRes.status === "DISPUTE") ? updatePayinRes?.utr : ""
       };
-     
+
       try {
         logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
         //When we get the notify url we will add it.
@@ -750,7 +800,7 @@ class PayInController {
         amount,
         merchant_order_id: updatePayinRes?.merchant_order_id,
         return_url: updatePayinRes?.return_url,
-        utr_id : updatePayinRes?.user_submitted_utr
+        utr_id: updatePayinRes?.user_submitted_utr
       };
 
       // if (payInData.status === "SUCCESS") {
@@ -950,7 +1000,7 @@ class PayInController {
           payInData
         );
 
-       
+
         const notifyData = {
           status: updatePayinRes?.status,
           merchantOrderId: updatePayinRes?.merchant_order_id,
@@ -1225,7 +1275,7 @@ class PayInController {
                 // ----> Notify url
                 try {
 
-                  const notifyData ={
+                  const notifyData = {
                     status: "SUCCESS",
                     merchantOrderId: getPayInData?.merchant_order_id,
                     payinId: getPayInData?.id,
@@ -1315,7 +1365,7 @@ class PayInController {
                 );
 
                 // Notify url--->
-                const notifyData ={
+                const notifyData = {
                   status: "SUCCESS",
                   merchantOrderId: getPayInData?.merchant_order_id,
                   payinId: getPayInData?.id,
@@ -1326,7 +1376,7 @@ class PayInController {
                 try {
                   //When we get the notify url we will add it.
                   logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-                  
+
                   const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
                   logger.info('Sending notification to merchant', {
                     status: notifyMerchant.status,

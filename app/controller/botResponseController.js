@@ -37,6 +37,7 @@ class BotResponseController {
           status,
           amount,
           utr,
+          bankName
         };
         if (isValidAmountCode) {
           updatedData.amount_code = amount_code;
@@ -59,57 +60,55 @@ class BotResponseController {
         );
         if (checkPayInUtr?.length > 0) {
 
-        // We check bank exist here as we have to add the data to the res no matter what comes.
-        const isBankExist = await botResponseRepo?.getBankDataByBankName(bankName)
-        if (!isBankExist) {
-          throw new CustomError(404, "Bank does not exist")
-        }
-
-        if (isBankExist?.Merchant_Bank.length === 1) {
-
-          if (checkPayInUtr[0].bank_acc_id !== isBankExist?.id) {
-            const payInData = {
-              confirmed: botRes?.amount,
-              status: "BANK_MISMATCH",
-              is_notified: true,
-              utr: botRes?.utr,
-              approved_at: new Date(),
-            };
-
-            const updatePayInDataRes = await payInRepo.updatePayInData(
-              checkPayInUtr[0]?.id,
-              payInData
-            );
-
-            // We are adding the amount to the bank as we want to update the balance of the bank
-            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-              isBankExist?.id,
-              parseFloat(amount)
-            );
-
-            return DefaultResponse(
-              res,
-              200,
-              "Bank mismatch",
-              updatePayInDataRes
-            );
+          // We check bank exist here as we have to add the data to the res no matter what comes.
+          const isBankExist = await botResponseRepo?.getBankDataByBankName(bankName)
+          if (!isBankExist) {
+            throw new CustomError(404, "Bank does not exist")
           }
 
-        }
+          if (isBankExist?.Merchant_Bank.length === 1) {
 
-        // check if duplicate and return error
-        const existingResponse = await prisma.telegramResponse.findMany({
-          where: {
-            utr,
-            is_used: true
+            if (checkPayInUtr[0].bank_acc_id !== isBankExist?.id) {
+              const payInData = {
+                confirmed: botRes?.amount,
+                status: "BANK_MISMATCH",
+                is_notified: true,
+                utr: botRes?.utr,
+                approved_at: new Date(),
+              };
+
+              const updatePayInDataRes = await payInRepo.updatePayInData(
+                checkPayInUtr[0]?.id,
+                payInData
+              );
+
+              // We are adding the amount to the bank as we want to update the balance of the bank
+              const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                isBankExist?.id,
+                parseFloat(amount)
+              );
+
+              return DefaultResponse(
+                res,
+                200,
+                "Bank mismatch",
+                updatePayInDataRes
+              );
+            }
+
           }
-        });
 
-        if (existingResponse?.length > 0) {
-          throw new CustomError(400, "The UTR already exists");
-        }
+          // check if duplicate and return error
+          const existingResponse = await prisma.telegramResponse.findMany({
+            where: {
+              utr,
+              is_used: true
+            }
+          });
 
-
+          if (existingResponse?.length > 0) {
+            throw new CustomError(400, "The UTR already exists");
+          }
           const getMerchantToGetPayinCommissionRes = await merchantRepo.getMerchantById(checkPayInUtr[0]?.merchant_id)
           const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
 

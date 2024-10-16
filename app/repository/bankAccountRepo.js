@@ -235,6 +235,18 @@ class BankAccountRepo {
 
     return bankAccRes;
   }
+
+  async getBankDataByBankId(bankId) {
+    const res = await prisma.bankAccount.findUnique({
+      where: {
+        id: bankId
+      },
+      include: {
+        Merchant_Bank: true
+      }
+    })
+    return res;
+  }
 }
 
 export default new BankAccountRepo();
