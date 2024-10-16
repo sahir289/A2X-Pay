@@ -268,10 +268,10 @@ class PayInController {
           selectedBankDetails,
           parseFloat(amount)
         );
-        
-        const payinDataResult = await payInRepo.getPayInData(payInId);
-        assignedBankToPayInUrlRes.merchant_min_payin = payinDataResult?.Merchant?.min_payin;
-        assignedBankToPayInUrlRes.merchant_max_payin = payinDataResult?.Merchant?.max_payin;
+
+      const payinDataResult = await payInRepo.getPayInData(payInId);
+      assignedBankToPayInUrlRes.merchant_min_payin = payinDataResult?.Merchant?.min_payin;
+      assignedBankToPayInUrlRes.merchant_max_payin = payinDataResult?.Merchant?.max_payin;
 
       return DefaultResponse(
         res,
@@ -654,16 +654,20 @@ class PayInController {
         // });
       }
 
-      
+
 
       const matchDataFromBotRes = await botResponseRepo.getBotResByUtr(
         usrSubmittedUtr
       );
 
-      // We check bank exist here as we have to add the data to the res no matter what comes.
-      const getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
-      if (!getBankDataByBotRes) {
-        throw new CustomError(404, "Bank does not exist")
+      // we are making sure that we get bank name then only we move forward
+      if (matchDataFromBotRes?.bankName) {
+        // We check bank exist here as we have to add the data to the res no matter what comes.
+        const getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
+
+        if (!getBankDataByBotRes) {
+          throw new CustomError(404, "Bank does not exist")
+        }
       }
 
       if (!matchDataFromBotRes) {
@@ -688,38 +692,39 @@ class PayInController {
         responseMessage = "Duplicate Payment Found";
       } else {
 
-        if (isBankExist?.Merchant_Bank?.length === 1) {
+        if (matchDataFromBotRes?.bankName) {
+          if (isBankExist?.Merchant_Bank?.length === 1) {
+            if (getBankDataByBotRes?.id !== isBankExist?.id) {
+              const payInData = {
+                confirmed: matchDataFromBotRes?.amount,
+                amount: amount,
+                status: "BANK_MISMATCH",
+                is_notified: true,
+                is_url_expires: true,
+                utr: matchDataFromBotRes?.utr,
+                user_submitted_utr: usrSubmittedUtr,
+                approved_at: new Date(),
+                duration: duration
+              };
 
-          if (getBankDataByBotRes?.id !== isBankExist?.id) {
-            const payInData = {
-              confirmed: matchDataFromBotRes?.amount,
-              amount:amount,
-              status: "BANK_MISMATCH",
-              is_notified: true,
-              is_url_expires: true,
-              utr: matchDataFromBotRes?.utr,
-              user_submitted_utr:usrSubmittedUtr,
-              approved_at: new Date(),
-              duration:duration
-            };
-  
-            const updatePayInDataRes = await payInRepo.updatePayInData(
-              getPayInData.id,
-              payInData
-            );
-  
-            // We are adding the amount to the bank as we want to update the balance of the bank
-            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-              getBankDataByBotRes?.id,
-              parseFloat(amount)
-            );
-  
-            return DefaultResponse(
-              res,
-              200,
-              "Bank mismatch",
-              updatePayInDataRes
-            );
+              const updatePayInDataRes = await payInRepo.updatePayInData(
+                getPayInData.id,
+                payInData
+              );
+
+              // We are adding the amount to the bank as we want to update the balance of the bank
+              const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                getBankDataByBotRes?.id,
+                parseFloat(amount)
+              );
+
+              return DefaultResponse(
+                res,
+                200,
+                "Bank mismatch",
+                updatePayInDataRes
+              );
+            }
           }
         }
 
