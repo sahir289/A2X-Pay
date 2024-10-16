@@ -31,6 +31,7 @@ enum Status {
   REJECTED
   TEST_SUCCESS
   TEST_DROPPED
+  BANK_MISMATCH
 }
 
 enum Currency {
@@ -94,7 +95,7 @@ model Merchant {
   is_test_mode      Boolean         @default(false)
   is_enabled        Boolean         @default(true)
   is_demo           Boolean         @default(false)
-  is_deleted        Boolean         @default(false)  // enable soft delete functionality
+  is_deleted        Boolean         @default(false) // enable soft delete functionality
   Merchant_Bank     Merchant_Bank[]
   Payin             Payin[]
   Payout            Payout[]
@@ -223,8 +224,9 @@ model TelegramResponse {
   sno         Int      @default(autoincrement())
   status      String?
   amount      Decimal?
-  amount_code String?  
+  amount_code String?
   utr         String?
+  bankName    String? // the bank name which is coming from the bot res/ bank
   is_used     Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -259,5 +261,5 @@ model VendorSettlement {
   createdBy       String? // id of the creater  
   vendor_code     String? // to store the vendor code who has created this bank acc.
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt 
+  updatedAt       DateTime @updatedAt
 }

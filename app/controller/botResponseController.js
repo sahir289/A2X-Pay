@@ -20,6 +20,8 @@ class BotResponseController {
       const amount = parseFloat(splitData[1]);
       const amount_code = splitData[2];
       const utr = splitData[3];
+      const bankName = splitData[4];
+
       // Validate amount, amount_code, and utr
       const isValidAmount = amount;
       const isValidAmountCode =
@@ -47,7 +49,53 @@ class BotResponseController {
           throw new CustomError(400, "Amount code already exist")
         }
 
+        // We are adding the data in the bot res.
         const botRes = await botResponseRepo.botResponse(updatedData);
+
+        // We are getting the payin data
+        const checkPayInUtr = await payInRepo.getPayInDataByUtrOrUpi(
+          utr,
+          amount_code,
+        );
+        if (checkPayInUtr?.length > 0) {
+
+        // We check bank exist here as we have to add the data to the res no matter what comes.
+        const isBankExist = await botResponseRepo?.getBankDataByBankName(bankName)
+        if (!isBankExist) {
+          throw new CustomError(404, "Bank does not exist")
+        }
+
+        if (isBankExist?.Merchant_Bank.length === 1) {
+
+          if (checkPayInUtr[0].bank_acc_id !== isBankExist?.id) {
+            const payInData = {
+              confirmed: botRes?.amount,
+              status: "BANK_MISMATCH",
+              is_notified: true,
+              utr: botRes?.utr,
+              approved_at: new Date(),
+            };
+
+            const updatePayInDataRes = await payInRepo.updatePayInData(
+              checkPayInUtr[0]?.id,
+              payInData
+            );
+
+            // We are adding the amount to the bank as we want to update the balance of the bank
+            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+              isBankExist?.id,
+              parseFloat(amount)
+            );
+
+            return DefaultResponse(
+              res,
+              200,
+              "Bank mismatch",
+              updatePayInDataRes
+            );
+          }
+
+        }
 
         // check if duplicate and return error
         const existingResponse = await prisma.telegramResponse.findMany({
@@ -62,12 +110,6 @@ class BotResponseController {
         }
 
 
-
-        const checkPayInUtr = await payInRepo.getPayInDataByUtrOrUpi(
-          utr,
-          amount_code,
-        );
-        if (checkPayInUtr?.length > 0) {
           const getMerchantToGetPayinCommissionRes = await merchantRepo.getMerchantById(checkPayInUtr[0]?.merchant_id)
           const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
 

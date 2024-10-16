@@ -75,8 +75,8 @@ class BotResponseRepo {
           amount_code: { contains: amount_code, mode: "insensitive" },
         }),
         ...(utr !== "" && { utr: utr }),
-        ...(is_used && { is_used: is_used === 'Used' ? true : is_used === 'Unused'? false : true }),
-      };  
+        ...(is_used && { is_used: is_used === 'Used' ? true : is_used === 'Unused' ? false : true }),
+      };
     } else {
       filter = {
         ...(sno > 0 && { sno: sno }),
@@ -86,15 +86,15 @@ class BotResponseRepo {
           amount_code: { contains: amount_code, mode: "insensitive" },
         }),
         ...(utr !== "" && { utr: utr }),
-      };    
+      };
     }
 
     const botRes = await prisma.telegramResponse.findMany({
       where: filter,
       skip: skip,
       take: take,
-      orderBy:{
-        sno:"desc"
+      orderBy: {
+        sno: "desc"
       }
     });
 
@@ -108,6 +108,18 @@ class BotResponseRepo {
         total: totalRecords,
       },
     };
+  }
+
+  async getBankDataByBankName(bankName) {
+    const res = await prisma.bankAccount.findFirst({
+      where: {
+        ac_name: bankName
+      },
+      include: {
+        Merchant_Bank: true
+      }
+    })
+    return res;
   }
 }
 
