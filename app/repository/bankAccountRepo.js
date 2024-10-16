@@ -142,12 +142,31 @@ class BankAccountRepo {
       return bank;
     });
 
+    const today = new Date();
+    const startOfToday = new Date(today.setHours(0, 0, 0, 0)); // start of the day (midnight)
+    const endOfToday = new Date(today.setHours(23, 59, 59, 999)); // end of the day
+    let bankAccResponse = [];
+
+    for (let bank of transformedBankAccRes) {
+      bank.payInData = await prisma.payin.findMany({
+        where: {
+          status: "SUCCESS",
+          bank_acc_id: bank?.id,
+          createdAt: {
+            gte: startOfToday, // greater than or equal to start of today
+            lte: endOfToday,   // less than or equal to end of today
+          }
+        },
+      })
+      bankAccResponse.push(bank);
+    }
+
     const totalRecords = await prisma.bankAccount.count({
       where: filter,
     });
 
     return {
-      bankAccRes: transformedBankAccRes,
+      bankAccRes: bankAccResponse,
       pagination: {
         page: parseInt(page),
         pageSize: take,
