@@ -182,6 +182,24 @@ class BankAccountController {
       next(error);
     }
   }
+
+  async getBankNickName(req, res, next) {
+    try {
+      checkValidation(req);
+      const { nick_name } = req.query;
+
+      const bankAccountRes = await bankAccountRepo.getBankNickName(nick_name);
+
+      return DefaultResponse(
+        res,
+        200,
+        "Bank Nick Name Already Exists",
+        bankAccountRes
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new BankAccountController();
