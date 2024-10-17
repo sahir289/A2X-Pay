@@ -54,6 +54,12 @@ bankAccountRouter.get(
   bankAccountController.getAllBankAccounts
 );
 
+bankAccountRouter.get(
+  "/find-bank-nickname",
+  isAuthenticated,
+  bankAccountController.getBankNickName
+);
+
 bankAccountRouter.delete(
   "/delete-bank-merchant",
   isAuthenticated,

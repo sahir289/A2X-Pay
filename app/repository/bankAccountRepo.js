@@ -238,6 +238,16 @@ class BankAccountRepo {
     return bankAccRes;
   }
 
+  async getBankNickName(nick_name) {
+    const bankRes = await prisma.bankAccount.findFirst({
+      where: {
+        ac_name: nick_name,
+      },
+    });
+
+    return bankRes;
+  }
+
   async getBankDataByBankId(bankId) {
     const res = await prisma.bankAccount.findUnique({
       where: {
