@@ -58,7 +58,10 @@ class PayInController {
         }
       }
       const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(getMerchantApiKeyByCode?.id);
-      if (!bankAccountLinkRes || bankAccountLinkRes.length === 0) {
+      const payInBankAccountLinkRes = bankAccountLinkRes?.filter(payInBank => payInBank?.bankAccount?.bank_used_for === "payIn");
+      const availableBankAccounts = payInBankAccountLinkRes?.filter(bank => ( bank?.bankAccount?.is_bank === true || bank?.bankAccount?.is_qr === true ) && bank?.bankAccount?.is_enabled === true);
+      console.log(availableBankAccounts);
+      if (!availableBankAccounts || availableBankAccounts.length === 0) {
         // Send alert if no bank account is linked
         await sendBankNotAssignedAlertTelegram(
           config?.telegramBankAlertChatId,
