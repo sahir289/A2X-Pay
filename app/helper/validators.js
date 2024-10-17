@@ -78,6 +78,7 @@ export const userCreateValidator = [
       "VENDOR",
       "VENDOR_OPERATIONS",
       "MERCHANT_OPERATIONS",
+      "MERCHANT_ADMIN"
     ])
     .withMessage(
       "Role must be one of ADMIN, CUSTOMER_SERVICE, TRANSACTIONS, OPERATIONS, MERCHANT,VENDOR,VENDOR_OPERATIONS"

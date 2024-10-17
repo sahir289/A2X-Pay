@@ -17,7 +17,7 @@ class UserController {
                 throw new CustomError(409, 'User with this username already exist')
             }
 
-            if (req.body.role ==="MERCHANT"){
+            if (req.body.role ==="MERCHANT" || req.body.role ==="MERCHANT_ADMIN"){
                 if(!req?.body?.code){
                     throw new CustomError(409, 'merchant code is required')
                 }

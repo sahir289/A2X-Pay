@@ -7,44 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  CUSTOMER_SERVICE
-  TRANSACTIONS
-  OPERATIONS
-  MERCHANT
-  VENDOR
-  VENDOR_OPERATIONS
-  MERCHANT_OPERATIONS
-}
-
-enum Status {
-  INITIATED
-  ASSIGNED
-  SUCCESS
-  DROPPED
-  DUPLICATE
-  DISPUTE
-  REVERSED
-  IMG_PENDING
-  PENDING
-  REJECTED
-  TEST_SUCCESS
-  TEST_DROPPED
-  BANK_MISMATCH
-}
-
-enum Currency {
-  INR
-}
-
-enum Method {
-  BANK
-  CASH
-  AED
-  CRYPTO
-}
-
 model User {
   id           String        @id @default(uuid())
   fullName     String
@@ -56,21 +18,21 @@ model User {
   last_login   DateTime?
   last_logout  DateTime?
   role         Role
-  code         String[] // Add a field to store the merchant code
-  vendor_code  String? // to store the vendor code who has created this bank acc.
-  accessTokens AccessToken[]
-  createdBy    String? // id of the creater 
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  createdBy    String?
+  vendor_code  String?
+  code         String[]
+  accessTokens AccessToken[]
 }
 
 model AccessToken {
   id          String   @id @default(uuid())
   accessToken String
-  user        User     @relation(fields: [userId], references: [id])
   userId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Merchant {
@@ -91,18 +53,18 @@ model Merchant {
   max_payout        String
   payout_commission Decimal
   payout_notify_url String?
-  balance           Decimal?
   is_test_mode      Boolean         @default(false)
   is_enabled        Boolean         @default(true)
   is_demo           Boolean         @default(false)
-  is_deleted        Boolean         @default(false) // enable soft delete functionality
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  balance           Decimal?
+  createdBy         String?
+  is_deleted        Boolean         @default(false)
   Merchant_Bank     Merchant_Bank[]
   Payin             Payin[]
   Payout            Payout[]
   Settlement        Settlement[]
-  createdBy         String? // id of the creater 
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
 }
 
 model BankAccount {
@@ -114,95 +76,93 @@ model BankAccount {
   ac_name       String
   ifsc          String
   bank_name     String
-  bank_used_for String?         @default("")
   is_qr         Boolean         @default(true)
   is_bank       Boolean         @default(true)
   min_payin     Decimal
   max_payin     Decimal
   is_enabled    Boolean         @default(true)
-  payin_count   Int //
-  balance       Decimal // this is the amount which has been deposited we have to consider it on per day basis
-  Merchant_Bank Merchant_Bank[]
-  createdBy     String? // id of the creater 
-  code          String? // to store the vendor code who has created this bank acc.
-  vendor_code   String? // to store the vendor code who has created this bank acc.
+  payin_count   Int
+  balance       Decimal
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+  createdBy     String?
+  code          String?
+  vendor_code   String?
+  bank_used_for String?         @default("")
+  Merchant_Bank Merchant_Bank[]
 }
 
 model Merchant_Bank {
   id            String      @id @default(uuid())
   merchantId    String
   bankAccountId String
-  merchant      Merchant    @relation(fields: [merchantId], references: [id])
   bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id])
+  merchant      Merchant    @relation(fields: [merchantId], references: [id])
 
   @@unique([merchantId, bankAccountId])
 }
 
 model Payin {
   id                   String    @id @default(uuid())
-  sno                  Int       @default(autoincrement())
-  upi_short_code       String // code added by us
+  upi_short_code       String
   qr_params            String?
   amount               Decimal
-  confirmed            Decimal? // data coming from bot.
   status               Status
   is_notified          Boolean   @default(false)
   user_submitted_utr   String?
-  utr                  String? // utr added by the bot.
   currency             Currency
   merchant_order_id    String
   user_id              String
   bank_acc_id          String?
-  bank_name            String?
-  to_bank              String?   @default("")
   payin_commission     Decimal?
   return_url           String
   notify_url           String
   user_submitted_image String?
   approved_at          DateTime?
   merchant_id          String
-  duration             String?
-  expirationDate       Int?
-  is_url_expires       Boolean   @default(false)
-  one_time_used        Boolean   @default(false)
-  Merchant             Merchant  @relation(fields: [merchant_id], references: [id])
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
+  utr                  String?
+  duration             String?
+  is_url_expires       Boolean   @default(false)
+  expirationDate       Int?
+  confirmed            Decimal?
+  sno                  Int       @default(autoincrement())
+  bank_name            String?
+  one_time_used        Boolean   @default(false)
+  to_bank              String?   @default("")
+  Merchant             Merchant  @relation(fields: [merchant_id], references: [id])
 }
 
 model Payout {
   id                String   @id @default(uuid())
-  sno               Int      @default(autoincrement())
   user_id           String
   amount            Decimal
   status            Status
   failed_reason     String?
   currency          Currency
   merchant_id       String
-  Merchant          Merchant @relation(fields: [merchant_id], references: [id])
   banck_account_id  String?
   merchant_order_id String
   acc_no            String
   acc_holder_name   String
   ifsc_code         String
   bank_name         String?
-  from_bank         String?  @default("")
   upi_id            String?
   utr_id            String?
-  payout_commision  Decimal
   notify_url        String?
   rejected_reason   String?
-  vendor_code       String? // to store the vendor code who has created this bank acc.
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  sno               Int      @default(autoincrement())
+  payout_commision  Decimal
+  vendor_code       String?
+  from_bank         String?  @default("")
+  Merchant          Merchant @relation(fields: [merchant_id], references: [id])
 }
 
 model Settlement {
-  id              Int      @id @default(autoincrement())
   merchant_id     String
-  Merchant        Merchant @relation(fields: [merchant_id], references: [id])
   status          Status
   amount          Decimal
   method          Method
@@ -211,43 +171,43 @@ model Settlement {
   ifsc            String?
   refrence_id     String?
   rejected_reason String?
-  wallet          String?
-  wallet_address  String?
-  createdBy       String? // id of the creater  
-  vendor_code     String? // to store the vendor code who has created this bank acc.
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  createdBy       String?
+  vendor_code     String?
+  wallet          String?
+  wallet_address  String?
+  Merchant        Merchant @relation(fields: [merchant_id], references: [id])
 }
 
 model TelegramResponse {
   id          String   @id @default(uuid())
-  sno         Int      @default(autoincrement())
   status      String?
   amount      Decimal?
   amount_code String?
   utr         String?
-  bankName    String? // the bank name which is coming from the bot res/ bank
   is_used     Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  sno         Int      @default(autoincrement())
+  bankName    String?
 }
 
 model Vendor {
-  id                Int      @id @default(autoincrement())
-  vendor_code       String?  @unique
+  id                Int                @id @default(autoincrement())
+  vendor_code       String?            @unique
   vendor_commission String?
   balance           String?
-  createdBy         String? // id of the creater  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  VendorSettlement VendorSettlement[]
+  createdBy         String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  VendorSettlement  VendorSettlement[]
 }
 
 model VendorSettlement {
   id              Int      @id @default(autoincrement())
   vendor_id       Int
-  Vendor          Vendor   @relation(fields: [vendor_id], references: [id])
   status          Status
   amount          Decimal
   method          Method
@@ -256,10 +216,50 @@ model VendorSettlement {
   ifsc            String?
   refrence_id     String?
   rejected_reason String?
-  wallet          String?
-  wallet_address  String?
-  createdBy       String? // id of the creater  
-  vendor_code     String? // to store the vendor code who has created this bank acc.
+  createdBy       String?
+  vendor_code     String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  wallet          String?
+  wallet_address  String?
+  Vendor          Vendor   @relation(fields: [vendor_id], references: [id])
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER_SERVICE
+  TRANSACTIONS
+  OPERATIONS
+  MERCHANT
+  VENDOR
+  VENDOR_OPERATIONS
+  MERCHANT_OPERATIONS
+  MERCHANT_ADMIN
+}
+
+enum Status {
+  ASSIGNED
+  SUCCESS
+  DROPPED
+  DUPLICATE
+  INITIATED
+  DISPUTE
+  REVERSED
+  IMG_PENDING
+  PENDING
+  REJECTED
+  TEST_SUCCESS
+  TEST_DROPPED
+  BANK_MISMATCH
+}
+
+enum Currency {
+  INR
+}
+
+enum Method {
+  BANK
+  CASH
+  AED
+  CRYPTO
 }
