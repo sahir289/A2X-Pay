@@ -34,7 +34,7 @@ bankAccountRouter.get(
   bankAccountController.getMerchantBank
 );
 
-// Get Payin Bank Route
+
 bankAccountRouter.get(
   "/payin-bank",
   isAuthenticated,
@@ -60,5 +60,7 @@ bankAccountRouter.delete(
   bankAccountController.deleteBankFromMerchant
 );
 
-
+bankAccountRouter.get("/getAll-Payin-bank",
+  isAuthenticated,
+  bankAccountController.getPayinBank)
 export default bankAccountRouter;

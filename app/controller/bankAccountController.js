@@ -66,7 +66,7 @@ class BankAccountController {
       return DefaultResponse(
         res,
         200,
-        "Payout Bank details get successfully",
+        "PayIn Bank details get successfully",
         bankAccountRes
       );
     } catch (error) {
