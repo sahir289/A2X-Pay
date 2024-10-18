@@ -165,12 +165,70 @@ class MerchantRepo {
       merchantData.push(element);
     }
 
+    const dataRes = merchantData?.map((record) => {
+      let payInAmount = 0;
+      let payInCommission = 0;
+      let payInCount = 0;
+      let payOutAmount = 0;
+      let payOutCommission = 0;
+      let payOutCount = 0;
+      let settlementAmount = 0;
+
+      // Calculate payInData totals
+      record.payInData?.forEach((data) => {
+        payInAmount += Number(data.amount);
+        payInCommission += Number(data.payin_commission);
+        payInCount += 1;
+      });
+
+      // Calculate payOutData totals
+      record.payOutData?.forEach((data) => {
+        payOutAmount += Number(data.amount);
+        payOutCommission += Number(data.payout_commision);
+        payOutCount += 1;
+      });
+
+      // Calculate settlementData total
+      record.settlementData?.forEach((data) => {
+        settlementAmount += Number(data.amount);
+      });
+
+      // Calculate the value (balance)
+      const value = payInAmount - (payOutAmount + (payInCommission + payOutCommission)) - settlementAmount;
+
+      // Return only the calculated balance
+      // Deleting specific keys
+      delete record.payInData;   // Deletes payInData key and value
+      delete record.payOutData;  // Deletes payOutData key and value
+      delete record.settlementData;
+      return {
+        ...record,// Adjust this to whatever unique identifier you have
+        balance: value // Add the calculated balance
+      };
+    });
+    const transformedData = dataRes.reduce((acc, item) => {
+      // Find children based on child_code and add them to the item
+      if (item.child_code && item.child_code.length) {
+        item.children = item.child_code.map(code => {
+          return dataRes.find(child => child.code === code);
+        }).filter(child => child);
+      }
+
+      // Only push the item if it's not a child of another item
+      if (!dataRes.some(parent => parent.child_code.includes(item.code))) {
+        acc.push(item);
+      }
+
+      return acc;
+    }, []);
     const totalRecords = await prisma.merchant.count({
       where: filters
     });
 
+
+
     return {
-      merchantData,
+      transformedData,
       pagination: {
         page,
         pageSize,
