@@ -8,22 +8,23 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  fullName     String
-  userName     String        @unique
-  password     String
-  isEnabled    Boolean       @default(true)
-  tg_handle    String?
-  tg_id        String?
-  last_login   DateTime?
-  last_logout  DateTime?
-  role         Role
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  createdBy    String?
-  vendor_code  String?
-  code         String[]
-  accessTokens AccessToken[]
+  id                String        @id @default(uuid())
+  fullName          String
+  userName          String        @unique
+  password          String
+  isEnabled         Boolean       @default(true)
+  tg_handle         String?
+  tg_id             String?
+  last_login        DateTime?
+  last_logout       DateTime?
+  role              Role
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  createdBy         String?
+  vendor_code       String?
+  code              String[]
+  merchantAdminCode String? // when the merchant admin is created we are going to add the merchant Code here to find the parent for another merchant.
+  accessTokens      AccessToken[]
 }
 
 model AccessToken {
@@ -61,6 +62,8 @@ model Merchant {
   balance           Decimal?
   createdBy         String?
   is_deleted        Boolean         @default(false)
+  is_merchant_Admin Boolean         @default(false)
+  child_code        String[] // we are adding the code of the merchant added by the merchant admin
   Merchant_Bank     Merchant_Bank[]
   Payin             Payin[]
   Payout            Payout[]

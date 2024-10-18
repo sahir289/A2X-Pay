@@ -117,10 +117,20 @@ class MerchantRepo {
 
     const skip = (page - 1) * pageSize;
     const take = pageSize;
+    const { code } = query
+
+    const filters = {
+      ...(code && {
+        code: Array.isArray(code)
+          ? { in: code }
+          : code,
+      })
+    }
 
     const merchants = await prisma.merchant.findMany({
       skip: skip,
       take: take,
+      where: filters
     });
     let merchantData = [];
 
@@ -145,17 +155,19 @@ class MerchantRepo {
 
       element.settlementData = await prisma.settlement.findMany({
         where: {
-            status: "SUCCESS",
-            Merchant: {
-              code: element?.code,
-            },
+          status: "SUCCESS",
+          Merchant: {
+            code: element?.code,
+          },
         },
       });
 
       merchantData.push(element);
     }
-    
-    const totalRecords = await prisma.merchant.count({});
+
+    const totalRecords = await prisma.merchant.count({
+      where: filters
+    });
 
     return {
       merchantData,
@@ -165,6 +177,31 @@ class MerchantRepo {
         total: totalRecords,
       },
     };
+  }
+
+  async updateIsMerchantAdminByCode(code) {
+    const res = await prisma.merchant.update({
+      where: {
+        code: code
+      },
+      data: {
+        is_merchant_Admin: true
+      }
+    })
+
+    return res
+  }
+
+  async updateParentMerchantChildCodeById(id, childCode) {
+    const res = await prisma.merchant.update({
+      where: {
+        id: id
+      },
+      data: {
+        child_code: childCode
+      }
+    })
+    return res;
   }
 }
 

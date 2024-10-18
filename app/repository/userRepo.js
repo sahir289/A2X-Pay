@@ -48,33 +48,56 @@ class UserRepo {
             ...(fullName && { fullName: { contains: fullName, mode: 'insensitive' } }),
             ...(userName && { userName: { contains: userName, mode: 'insensitive' } }),
             ...(loggedInUserRole !== "ADMIN" && createdBy && { createdBy }),
-            ...(loggedInUserRole === "ADMIN" && role && {  role: { equals: role } }),
+            ...(loggedInUserRole === "ADMIN" && role && { role: { equals: role } }),
         };
-    
+
         const users = await prisma.user.findMany({
             where: filters,
             skip: skip,
             take: take
         });
-    
+
         const totalRecords = await prisma.user.count({
             where: filters,
         });
-    
+
         return { users, totalRecords };
     }
-    async updateUser({id,status}) {
+
+    async updateUser({ id, status }) {
         const user = await prisma.user.update({
-            where:{
-                id:id
+            where: {
+                id: id
             },
             data: {
-                isEnabled:status
+                isEnabled: status
             }
         })
         return user;
     }
-    
+
+
+    async getMerchantAdminByUserId(userId) {
+        const user = await prisma.user.findFirst({
+            where: {
+                id: userId
+            }
+        })
+        return user
+    }
+
+    async updateUserCodeWithNewMerchantCode(userId, code) {
+        const res = await prisma.user.update({
+            where: {
+                id: userId
+            },
+            data: {
+                code: code
+            }
+        })
+
+        return res
+    }
 }
 
 export default new UserRepo()

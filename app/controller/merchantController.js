@@ -9,9 +9,11 @@ class MerchantController {
   async createMerchant(req, res, next) {
     try {
       checkValidation(req);
+      const userRole = req.user
       const data = req.body;
       const api_key = uuidv4();
       const secret_key = uuidv4();
+
       const isMerchantExist = await merchantRepo.getMerchantByCode(data?.code);
 
       if (isMerchantExist) {
@@ -23,9 +25,43 @@ class MerchantController {
         api_key,
         secret_key,
       };
+
       const merchantRes = await merchantRepo.createMerchant(updateData);
 
-      return DefaultResponse(res, 201, "Merchant is created successfully");
+
+      if (userRole.loggedInUserRole === "MERCHANT_ADMIN") {
+        const getMerchantAdmin = await userRepo?.getMerchantAdminByUserId(userRole?.id)
+        // Parent finding
+        const getMerchantUsingMerchantAdminCode = await merchantRepo?.getMerchantByCode(getMerchantAdmin?.merchantAdminCode)
+
+        // const updateMerchantChildCode = getMerchantUsingMerchantAdminCode.child_code.push(merchantRes?.code);
+        let childCodeArray = Array.isArray(getMerchantUsingMerchantAdminCode.child_code)
+          ? getMerchantUsingMerchantAdminCode.child_code
+          : [];
+
+        // Push the new code
+        childCodeArray.push(merchantRes?.code);
+
+        // Update the object with the modified array
+        const updateMerchantChildCode = childCodeArray;
+
+        const updateMerchant = await merchantRepo.updateParentMerchantChildCodeById(getMerchantUsingMerchantAdminCode?.id, updateMerchantChildCode)
+
+        //Update user code with new merchant code.
+        const updateUserCode = Array.isArray(getMerchantAdmin.code)
+          ? getMerchantAdmin.code
+          : [];
+
+        // Push the new code
+        updateUserCode.push(merchantRes?.code);
+
+        // Update the object with the modified array
+        const updateUserCodeWithChildCode = updateUserCode;
+
+        const updateUserCodeData = await userRepo.updateUserCodeWithNewMerchantCode(userRole?.id, updateUserCodeWithChildCode)
+
+      }
+      return DefaultResponse(res, 201, "Merchant is created successfully", merchantRes);
     } catch (error) {
       next(error);
     }

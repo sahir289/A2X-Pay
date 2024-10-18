@@ -4,6 +4,7 @@ import { CustomError, customError } from "../middlewares/errorHandler.js";
 import { DefaultResponse } from "../helper/customResponse.js"
 import userRepo from "../repository/userRepo.js";
 import userService from "../services/userService.js";
+import merchantRepo from "../repository/merchantRepo.js";
 
 class UserController {
     async createUser(req, res, next) {
@@ -17,8 +18,8 @@ class UserController {
                 throw new CustomError(409, 'User with this username already exist')
             }
 
-            if (req.body.role ==="MERCHANT" || req.body.role ==="MERCHANT_ADMIN"){
-                if(!req?.body?.code){
+            if (req.body.role === "MERCHANT" || req.body.role === "MERCHANT_ADMIN") {
+                if (!req?.body?.code) {
                     throw new CustomError(409, 'merchant code is required')
                 }
             }
@@ -30,6 +31,11 @@ class UserController {
                 password: hashedPassword
             }
 
+            if (req.body.role === "MERCHANT_ADMIN") {
+                updatedData.merchantAdminCode = String(req?.body?.code)
+
+                const updateMerchantAdmin = await merchantRepo?.updateIsMerchantAdminByCode(String(req?.body?.code))
+            }
             const userRes = await userRepo.createUserRepo(updatedData)
 
             return DefaultResponse(
@@ -52,7 +58,7 @@ class UserController {
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 15
 
-            const { name: fullName, userName, role ,createdBy} = req.query;
+            const { name: fullName, userName, role, createdBy } = req.query;
             const skip = (page - 1) * pageSize
             const take = pageSize
 
@@ -74,12 +80,12 @@ class UserController {
             checkValidation(req)
             const { id: userId } = req.user
 
-            const { id:updateUserId,status} = req.body;
+            const { id: updateUserId, status } = req.body;
 
-            await userRepo.validateUserId(userId) 
+            await userRepo.validateUserId(userId)
             await userRepo.validateUserId(updateUserId)
 
-            const users = await userRepo.updateUser({id:updateUserId,status})
+            const users = await userRepo.updateUser({ id: updateUserId, status })
 
             return DefaultResponse(
                 res,
