@@ -28,7 +28,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata")  => {
       endDate = currentDate.toDate();
       startDate = currentDate.clone().subtract(1, "days").startOf('day').toDate();
     }
-    console.log(`Gathering data from ${startDate} to ${endDate} for type ${type} in ${timezone}`);
+    //console.log(`Gathering data from ${startDate} to ${endDate} for type ${type} in ${timezone}`);
     const merchants = await prisma.merchant.findMany({
       select: {
         id: true,
