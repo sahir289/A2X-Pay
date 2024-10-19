@@ -59,7 +59,7 @@ class PayInController {
       }
       const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(getMerchantApiKeyByCode?.id);
       const payInBankAccountLinkRes = bankAccountLinkRes?.filter(payInBank => payInBank?.bankAccount?.bank_used_for === "payIn");
-      const availableBankAccounts = payInBankAccountLinkRes?.filter(bank => ( bank?.bankAccount?.is_bank === true || bank?.bankAccount?.is_qr === true ) && bank?.bankAccount?.is_enabled === true);
+      const availableBankAccounts = payInBankAccountLinkRes?.filter(bank => (bank?.bankAccount?.is_bank === true || bank?.bankAccount?.is_qr === true) && bank?.bankAccount?.is_enabled === true);
       console.log(availableBankAccounts);
       if (!availableBankAccounts || availableBankAccounts.length === 0) {
         // Send alert if no bank account is linked
@@ -663,10 +663,11 @@ class PayInController {
         usrSubmittedUtr
       );
 
+      let getBankDataByBotRes;
       // we are making sure that we get bank name then only we move forward
       if (matchDataFromBotRes?.bankName) {
         // We check bank exist here as we have to add the data to the res no matter what comes.
-        const getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
+        getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
 
         if (!getBankDataByBotRes) {
           throw new CustomError(404, "Bank does not exist")
@@ -721,11 +722,19 @@ class PayInController {
                 parseFloat(amount)
               );
 
+              const response = {
+                status: updatePayInDataRes.status,
+                amount,
+                merchant_order_id: updatePayInDataRes?.merchant_order_id,
+                return_url: updatePayInDataRes?.return_url,
+                utr_id: updatePayInDataRes?.user_submitted_utr
+              };
+
               return DefaultResponse(
                 res,
                 200,
                 "Bank mismatch",
-                updatePayInDataRes
+                response
               );
             }
           }
@@ -942,6 +951,13 @@ class PayInController {
           throw new CustomError(404, "Payment does not exist");
         }
 
+        //
+        const isBankExist = await bankAccountRepo?.getBankDataByBankId(getPayInData?.bank_acc_id)
+
+        if (!isBankExist) {
+          throw new CustomError(404, "Bank account does not exist");
+        }
+
         const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
         if (urlValidationRes?.is_url_expires === true) {
           throw new CustomError(403, "Url is expired");
@@ -952,6 +968,18 @@ class PayInController {
         );
         let payInData;
         let responseMessage;
+
+        //
+        let getBankDataByBotRes;
+        // we are making sure that we get bank name then only we move forward
+        if (matchDataFromBotRes?.bankName) {
+          // We check bank exist here as we have to add the data to the res no matter what comes.
+          getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
+
+          if (!getBankDataByBotRes) {
+            throw new CustomError(404, "Bank does not exist")
+          }
+        }
 
         if (!matchDataFromBotRes) {
           payInData = {
@@ -971,6 +999,50 @@ class PayInController {
           };
           responseMessage = "Duplicate Payment Found";
         } else {
+
+          if (matchDataFromBotRes?.bankName) {
+            if (isBankExist?.Merchant_Bank?.length === 1) {
+              if (getBankDataByBotRes?.id !== isBankExist?.id) {
+                const payInData = {
+                  confirmed: parseFloat(matchDataFromBotRes?.amount),
+                  amount: amount,
+                  status: "BANK_MISMATCH",
+                  is_notified: true,
+                  is_url_expires: true,
+                  utr: matchDataFromBotRes?.utr,
+                  user_submitted_utr: usrSubmittedUtr?.utr,
+                  approved_at: new Date(),
+                  
+                };
+
+                const updatePayInDataRes = await payInRepo.updatePayInData(
+                  getPayInData.id,
+                  payInData
+                );
+
+                // We are adding the amount to the bank as we want to update the balance of the bank
+                const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                  getBankDataByBotRes?.id,
+                  parseFloat(amount)
+                );
+
+                const response = {
+                  status: updatePayInDataRes.status,
+                  amount,
+                  merchant_order_id: updatePayInDataRes?.merchant_order_id,
+                  return_url: updatePayInDataRes?.return_url,
+                  utr_id: updatePayInDataRes?.user_submitted_utr
+                };
+
+                return DefaultResponse(
+                  res,
+                  200,
+                  "Bank mismatch",
+                  response
+                );
+              }
+            }
+          }
           await botResponseRepo.updateBotResponseByUtr(
             matchDataFromBotRes?.id,
             usrSubmittedUtrData
