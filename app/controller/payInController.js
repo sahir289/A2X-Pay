@@ -60,7 +60,6 @@ class PayInController {
       const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(getMerchantApiKeyByCode?.id);
       const payInBankAccountLinkRes = bankAccountLinkRes?.filter(payInBank => payInBank?.bankAccount?.bank_used_for === "payIn");
       const availableBankAccounts = payInBankAccountLinkRes?.filter(bank => (bank?.bankAccount?.is_bank === true || bank?.bankAccount?.is_qr === true) && bank?.bankAccount?.is_enabled === true);
-      console.log(availableBankAccounts);
       if (!availableBankAccounts || availableBankAccounts.length === 0) {
         // Send alert if no bank account is linked
         await sendBankNotAssignedAlertTelegram(
@@ -1102,7 +1101,6 @@ class PayInController {
             status: notifyMerchant.status,
             data: notifyMerchant.data,
           })
-          console.log("Notification sent:", notifyMerchant);
         } catch (error) {
           logger.error("Error sending notification:", error);
         }
@@ -1200,7 +1198,6 @@ class PayInController {
         payInDataRes
       );
     } catch (error) {
-      console.log(error);
       next(error);
     }
   }
@@ -1374,7 +1371,6 @@ class PayInController {
                     status: notifyMerchant.status,
                     data: notifyMerchant.data,
                   })
-                  console.log("Notification sent:", notifyMerchant);
                 } catch (error) {
                   console.error("Error sending notification to merchant:", error);
                 }
@@ -1466,7 +1462,6 @@ class PayInController {
                     status: notifyMerchant.status,
                     data: notifyMerchant.data,
                   })
-                  console.log("Notification sent:", notifyMerchant);
                 } catch (error) {
                   console.error("Error sending notification:", error);
                 }

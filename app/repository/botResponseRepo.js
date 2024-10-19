@@ -58,12 +58,13 @@ class BotResponseRepo {
     const amount = !isNaN(Number(query.amount)) ? Number(query.amount) : 0;
     const amount_code = query.amount_code;
     const utr = query.utr;
+    const bankName = query.bankName
     const page = parseInt(query.page) || 1;
     const pageSize = parseInt(query.pageSize) || 10;
-    
+
     const skip = (page - 1) * pageSize;
     const take = pageSize;
-    
+
     let filter = {}
     if (query.is_used) {
       const is_used = query.is_used;
@@ -75,6 +76,7 @@ class BotResponseRepo {
           amount_code: { contains: amount_code, mode: "insensitive" },
         }),
         ...(utr !== "" && { utr: utr }),
+        ...(bankName && { bankName: bankName }),
         ...(is_used && { is_used: is_used === 'Used' ? true : is_used === 'Unused' ? false : true }),
       };
     } else {
@@ -85,6 +87,7 @@ class BotResponseRepo {
         ...(amount_code !== "" && {
           amount_code: { contains: amount_code, mode: "insensitive" },
         }),
+        ...(bankName && { bankName: bankName }),
         ...(utr !== "" && { utr: utr }),
       };
     }
