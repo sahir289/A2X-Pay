@@ -209,7 +209,7 @@ class MerchantRepo {
     const transformedData = dataRes.reduce((acc, item) => {
       // Find children based on child_code and add them to the item
       if (item.child_code && item.child_code.length) {
-        item.children = item.child_code.map(code => {
+        item.childrenData = item.child_code.map(code => {
           return dataRes.find(child => child.code === code);
         }).filter(child => child);
       }
