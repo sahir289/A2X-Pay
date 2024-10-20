@@ -259,6 +259,15 @@ class BankAccountRepo {
     })
     return res;
   }
+
+  async updateBankDataDetails(data){
+    const bankRes = await prisma.bankAccount.update({
+      where: {
+        id: data.id
+      },
+      data:data
+    })    
+  }
 }
 
 export default new BankAccountRepo();
