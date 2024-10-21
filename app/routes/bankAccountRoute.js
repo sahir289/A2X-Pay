@@ -69,4 +69,10 @@ bankAccountRouter.delete(
 bankAccountRouter.get("/getAll-Payin-bank",
   isAuthenticated,
   bankAccountController.getPayinBank)
+
+bankAccountRouter.put(
+  "/update-bank-details",
+  isAuthenticated,
+  bankAccountController.updateBankAccountDetails
+);
 export default bankAccountRouter;

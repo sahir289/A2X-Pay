@@ -200,6 +200,24 @@ class BankAccountController {
       next(error);
     }
   }
+  async updateBankAccountDetails(req, res, next) {
+    try {
+      checkValidation(req);
+      const data = req.body;
+      const bankAccountRes = await bankAccountRepo.updateBankDataDetails(
+        data
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        "Bank Account state is updated successfully",
+        bankAccountRes
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new BankAccountController();
