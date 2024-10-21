@@ -110,9 +110,9 @@ export async function sendErrorMessageUtrNotFoundTelegramBot(chatId, UTR, TELEGR
     }
 }
 
-export async function sendAlreadyConfirmedMessageTelegramBot(chatId, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, replyToMessageId) {
+export async function sendAlreadyConfirmedMessageTelegramBot(chatId, utr, TELEGRAM_BOT_TOKEN, replyToMessageId) {
     // Construct the error message
-    const message = `✅ Order No. ${merchantOrderIdTele}  is already confirmed `;
+    const message = `✅ UTR ${utr} is already confirmed `;
 
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     try {

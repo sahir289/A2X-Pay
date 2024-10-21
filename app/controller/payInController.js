@@ -1313,7 +1313,7 @@ class PayInController {
             if (getPayInData?.is_notified === true) {
               await sendAlreadyConfirmedMessageTelegramBot(
                 message.chat.id,
-                merchantOrderIdTele,
+                dataRes?.utr,
                 TELEGRAM_BOT_TOKEN,
                 message?.message_id
               );
@@ -1378,7 +1378,7 @@ class PayInController {
               } else {
                 await sendErrorMessageUtrNotFoundTelegramBot(
                   message.chat.id,
-                  merchantOrderIdTele,
+                  dataRes?.utr,
                   TELEGRAM_BOT_TOKEN,
                   message?.message_id
                 );
@@ -1391,7 +1391,7 @@ class PayInController {
               if (!getTelegramResByUtr) {
                 await sendErrorMessageUtrNotFoundTelegramBot(
                   message.chat.id,
-                  merchantOrderIdTele,
+                  dataRes?.utr,
                   TELEGRAM_BOT_TOKEN,
                   message?.message_id
                 );
@@ -1401,7 +1401,7 @@ class PayInController {
               if (getTelegramResByUtr?.is_used === true) {
                 await sendAlreadyConfirmedMessageTelegramBot(
                   message.chat.id,
-                  merchantOrderIdTele,
+                  getTelegramResByUtr?.utr,
                   TELEGRAM_BOT_TOKEN,
                   message?.message_id
                 );
@@ -1470,7 +1470,7 @@ class PayInController {
               } else {
                 await sendErrorMessageNoDepositFoundTelegramBot(
                   message.chat.id,
-                  merchantOrderIdTele,
+                  dataRes?.utr,
                   TELEGRAM_BOT_TOKEN,
                   message?.message_id
                 );
