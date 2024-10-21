@@ -54,6 +54,9 @@ class MerchantRepo {
         pageSize,
         total: totalRecords,
       },
+      orderBy: {
+        is_deleted: 'desc',
+      },
     };
   }
 
