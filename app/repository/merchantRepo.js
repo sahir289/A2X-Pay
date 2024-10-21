@@ -40,9 +40,10 @@ class MerchantRepo {
     const merchants = await prisma.merchant.findMany({
       skip: skip,
       take: take,
-      // where: {
-      //   is_deleted: false, //get all merchant records which are not deleted
-      // }
+      orderBy: [
+        {is_deleted : 'asc'},
+        {createdAt: 'desc'}
+      ]
     });
     const totalRecords = await prisma.merchant.count({});
 
@@ -130,6 +131,10 @@ class MerchantRepo {
     const merchants = await prisma.merchant.findMany({
       skip: skip,
       take: take,
+      orderBy: [
+        {is_deleted : 'asc'},
+        {createdAt: 'desc'}
+      ],
       where: filters
     });
     let merchantData = [];
@@ -224,8 +229,6 @@ class MerchantRepo {
     const totalRecords = await prisma.merchant.count({
       where: filters
     });
-
-
 
     return {
       transformedData,
