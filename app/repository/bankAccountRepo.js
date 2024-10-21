@@ -126,6 +126,10 @@ class BankAccountRepo {
       where: filter,
       skip,
       take,
+      orderBy: [
+        { is_enabled: 'desc' },  
+        { createdAt: 'desc' }   
+      ],
       include: {
         Merchant_Bank: {
           include: {
@@ -158,7 +162,12 @@ class BankAccountRepo {
             gte: startOfToday, // greater than or equal to start of today
             lte: endOfToday,   // less than or equal to end of today
           }
+          
         },
+        orderBy: {
+          createdAt: 'desc',  // Ordering bank accounts by createdAt in descending order
+        },
+
       })
       bankAccResponse.push(bank);
     }
