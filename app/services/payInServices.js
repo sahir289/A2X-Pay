@@ -77,16 +77,25 @@ class PayInService {
   ) {
     const Data = await prisma.payin.updateMany({
       where: {
-        status: "INITIATED",
-        expirationDate: {
-          lt: Math.floor(new Date().getTime() / 1000), // Compare if expirationDate is less than the current time
-        },
+        OR: [
+          {
+            status: "INITIATED",
+            expirationDate: {
+              lt: Math.floor(new Date().getTime() / 1000), // Check if expirationDate is less than the current time
+            },
+          },
+          {
+            status: "ASSIGNED",
+            expirationDate: {
+              lt: Math.floor(new Date().getTime() / 1000)-1, 
+            },
+          },
+        ],
       },
       data: {
         status: "DROPPED",
       },
     });
-
     const now = new Date();
     const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString(); // Start of today
     const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString(); // End of today
