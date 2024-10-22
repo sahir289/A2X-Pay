@@ -106,7 +106,19 @@ class BankAccountRepo {
     const skip = (page - 1) * pageSize;
     const take = pageSize;
     const vendor_code= query?.vendor_code
-
+    const dateFilter = {};
+    const startDate = query?.startDate;
+    const endDate = query?.endDate;
+    if (startDate) {
+      dateFilter.gte = new Date(startDate); // Greater than or equal to startDate
+    }
+    if (endDate) {
+      let end = new Date(endDate);
+      
+      // end.setDate(end.getDate() + 1);
+      
+      dateFilter.lte = end; // Less than or equal to endDate
+    }
     const filter = {
       ...(ac_no !== "" && { ac_no: { contains: ac_no, mode: "insensitive" } }),
       ...(ac_name !== "" && {
@@ -142,9 +154,9 @@ class BankAccountRepo {
       return bank;
     });
 
-    const today = new Date();
-    const startOfToday = new Date(today.setHours(0, 0, 0, 0)); // start of the day (midnight)
-    const endOfToday = new Date(today.setHours(23, 59, 59, 999)); // end of the day
+    // const today = new Date();
+    // const startOfToday = new Date(today.setHours(0, 0, 0, 0)); // start of the day (midnight)
+    // const endOfToday = new Date(today.setHours(23, 59, 59, 999)); // end of the day
     let bankAccResponse = [];
 
     for (let bank of transformedBankAccRes) {
@@ -154,10 +166,7 @@ class BankAccountRepo {
             in: ["SUCCESS", "DISPUTE"],
           },
           bank_acc_id: bank?.id,
-          createdAt: {
-            gte: startOfToday, // greater than or equal to start of today
-            lte: endOfToday,   // less than or equal to end of today
-          }
+          createdAt: dateFilter,
         },
       })
       bankAccResponse.push(bank);

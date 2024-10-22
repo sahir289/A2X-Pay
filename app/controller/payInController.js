@@ -919,7 +919,7 @@ class PayInController {
         utr: resFromOcrPy?.data?.data?.transaction_id, //|| dataRes.utr
       };
 
-      if (usrSubmittedUtr?.utr !== "undefined") {
+      if (usrSubmittedUtr?.utr !== "undefined" && usrSubmittedUtr?.utr !== "null" && usrSubmittedUtr?.utr !== null && usrSubmittedUtr?.utr !== "") {
         const usrSubmittedUtrData = usrSubmittedUtr?.utr;
 
         const isUtrExist = await payInRepo.getPayinDataByUsrSubmittedUtr(usrSubmittedUtrData)
@@ -1279,11 +1279,14 @@ class PayInController {
           "http://34.196.43.192:11000/ocr",
           imgData
         );
+        // console.log(resFromOcrPy?.data?.data);
 
         // Merge the data from the API with the existing dataRes
         dataRes = {
           amount: resFromOcrPy?.data?.data?.amount, //|| dataRes.amount,
           utr: resFromOcrPy?.data?.data?.transaction_id, //|| dataRes.utr
+          bankName: resFromOcrPy?.data?.data?.bankName,
+          timeStamp: resFromOcrPy?.data?.data?.timeStamp,
         };
 
         await sendTelegramMessage(
