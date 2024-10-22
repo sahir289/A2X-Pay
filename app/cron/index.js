@@ -4,9 +4,16 @@ import { sendTelegramDashboardReportMessage } from "../helper/sendTelegramMessag
 import config from "../../config.js";
 import moment from "moment-timezone";
 
-cron.schedule("0 0 * * *", () => gatherAllData("N", "Asia/Kolkata")); // Runs daily at 12:00 AM IST
-cron.schedule("0 1-23 * * *", () => gatherAllData("H", "Asia/Kolkata")); // Runs hourly from 1:00 AM to 11:00 PM IST
-
+let canRunHourlyReports = false;
+cron.schedule("0 0 * * *", () => {
+  gatherAllData("N", "Asia/Kolkata");
+  canRunHourlyReports = true; 
+});
+cron.schedule("0 1-23 * * *", () => {
+  if (canRunHourlyReports) {
+    gatherAllData("H", "Asia/Kolkata"); 
+  }
+});
 const gatherAllData = async (type = "N", timezone = "Asia/Kolkata")  => {
   try {
     const empty = "-- -- -- ";
@@ -14,14 +21,14 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata")  => {
 
     const currentDate = moment().tz(timezone);
     if (type === "H") {
-      // Get the start and end times for the past hour in the specified timezone
+            // Get the start and end times for the past hour in the specified timezone
       startDate = currentDate.clone().subtract(1, "hour").toDate();
       endDate = currentDate.toDate();
     }
     if (type === "N") {
-      // Get the start and end times for the past 24 hours (or previous day)
+            // Get the start and end times for the past 24 hours (or previous day)
       endDate = currentDate.toDate();
-      startDate = currentDate.clone().subtract(24, "hours").toDate();
+      startDate = currentDate.clone().subtract(1, "days").startOf('day').toDate();
     }
     //console.log(`Gathering data from ${startDate} to ${endDate} for type ${type} in ${timezone}`);
     const merchants = await prisma.merchant.findMany({
@@ -187,8 +194,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata")  => {
     console.log("==============================");
   }
 };
-gatherAllData("H");
-gatherAllData("N");
+// gatherAllData("H");
+// gatherAllData("N");
 const formatePrice = (price) => {
   return Number(price).toLocaleString("en-US", {
     minimumFractionDigits: 2,
