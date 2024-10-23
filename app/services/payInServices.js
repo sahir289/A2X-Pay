@@ -42,7 +42,7 @@ class PayInService {
       amount: amount, // this amount is given by the user
       status: "ASSIGNED",
       bank_acc_id: bankDetails?.bankAccountId,
-      bank_name: bankDetails?.bankAccount?.bank_name,
+      bank_name: bankDetails?.bankAccount?.ac_name, // changed bank_name from bank_name to ac_name
     };
     const payInUrlUpdateRes = await payInRepo.updatePayInData(payInId, data);
     const getBankRes = await bankAccountRepo.getBankByBankAccId(
@@ -72,7 +72,7 @@ class PayInService {
     payInId,
     dur,
     status,
-    bankName,
+    accountName, // changed variable from bankName to accountName
     filterToday
   ) {
     const Data = await prisma.payin.updateMany({
@@ -146,8 +146,9 @@ class PayInService {
           lte: endOfDay,
         },
       }),
-      ...(bankName && {
-        bank_name: { contains: bankName, mode: "insensitive" },
+      // changed variable from bankName to accountName
+      ...(accountName && {
+        bank_name: { contains: accountName, mode: "insensitive" },
       }),
     };
     // const Data = await prisma.payin.findMany({
