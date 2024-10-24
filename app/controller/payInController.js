@@ -637,7 +637,7 @@ class PayInController {
           amount,
           merchant_order_id: updatePayinRes?.merchant_order_id,
           return_url: updatePayinRes?.return_url,
-          utr_id: updatePayinRes?.utr
+          utr_id: updatePayinRes?.utr !== null ? updatePayinRes?.utr : updatePayinRes?.user_submitted_utr
         };
         return DefaultResponse(res, 200, responseMessage, response);
       }
@@ -938,8 +938,9 @@ class PayInController {
           const response = {
             status: updatePayinRes.status,
             amount,
-            transactionId: updatePayinRes?.merchant_order_id,
+            merchant_order_id: updatePayinRes?.merchant_order_id,
             return_url: updatePayinRes?.return_url,
+            utr_id: updatePayinRes?.user_submitted_utr,
           };
           return DefaultResponse(res, 200, "Duplicate Payment Found", response);
         }
@@ -1111,7 +1112,7 @@ class PayInController {
               ? "Success"
               : payInData.status || "Not Found",
           amount,
-          transactionId: updatePayinRes?.merchant_order_id,
+          merchant_order_id: updatePayinRes?.merchant_order_id,
           return_url: updatePayinRes?.return_url,
         };
 
@@ -1137,7 +1138,7 @@ class PayInController {
         const response = {
           status: "Not Found",
           amount,
-          transactionId: updatePayinRes?.merchant_order_id,
+          merchant_order_id: updatePayinRes?.merchant_order_id,
           return_url: updatePayinRes?.return_url,
         };
         return DefaultResponse(res, 200, "Utr is not recognized", response);
