@@ -643,7 +643,7 @@ class PayInController {
       }
 
       if (isFront !== true) {
-        // is front is used to check it is comig from deposit img pending or not.
+        // is front is used to check it is coming from deposit img pending or not.
         if (urlValidationRes?.is_url_expires === true) {
           throw new CustomError(403, "Url is expired");
         }
@@ -655,7 +655,6 @@ class PayInController {
         //   if (err) console.error("Error deleting the file:", err);
         // });
       }
-
 
 
       const matchDataFromBotRes = await botResponseRepo.getBotResByUtr(
