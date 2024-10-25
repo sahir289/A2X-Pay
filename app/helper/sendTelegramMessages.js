@@ -5,7 +5,7 @@ export async function sendTelegramMessage(chatId, data, TELEGRAM_BOT_TOKEN, repl
       <b>UTR-IDS:</b> ${data?.utr}
     `;
 
-    if (data?.bankName || data?.timeStamp){
+    if (data?.bankName || data?.timeStamp) {
         message += `
         <b>Bank Name:</b> ${data?.bankName}
         <b>Time Stamp:</b> ${data?.timeStamp}
@@ -60,6 +60,7 @@ export async function sendTelegramDisputeMessage(chatId, oldData, newData, TELEG
         console.error('Error sending message to Telegram:', error);
     }
 }
+
 export async function sendSuccessMessageTelegram(chatId, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, replyToMessageId) {
     // Assuming `orderNo` is part of the `data` object
     const orderNo = merchantOrderIdTele;
@@ -77,10 +78,9 @@ export async function sendSuccessMessageTelegram(chatId, merchantOrderIdTele, TE
         });
     } catch (error) {
         console.error('Error sending message to Telegram:', error);
-        
+
     }
 }
-
 
 export async function sendErrorMessageTelegram(chatId, merchantOrderIdTele, TELEGRAM_BOT_TOKEN, replyToMessageId) {
     // Construct the error message
@@ -120,6 +120,48 @@ export async function sendErrorMessageUtrNotFoundTelegramBot(chatId, UTR, TELEGR
 export async function sendAlreadyConfirmedMessageTelegramBot(chatId, utr, TELEGRAM_BOT_TOKEN, replyToMessageId) {
     // Construct the error message
     const message = `✅ UTR ${utr} is already confirmed `;
+
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+        await axios.post(sendMessageUrl, {
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML',
+            reply_to_message_id: replyToMessageId // Add this line to reply to a specific message
+        });
+    } catch (error) {
+        console.error('Error sending message to Telegram:', error);
+    }
+}
+
+export async function sendAmountDisputeMessageTelegramBot(chatId, amount, disputedAmount,  TELEGRAM_BOT_TOKEN, replyToMessageId) {
+    // Construct the error message
+    const message = `
+        <h3><u>AMOUNT DISPUTED:</u></h3> 
+            <b>⛔ Amount:</b> ${disputedAmount}
+            <b>✅ Confirmed Amount:</b> ${amount}
+    `;
+
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+        await axios.post(sendMessageUrl, {
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML',
+            reply_to_message_id: replyToMessageId // Add this line to reply to a specific message
+        });
+    } catch (error) {
+        console.error('Error sending message to Telegram:', error);
+    }
+}
+
+export async function sendBankMismatchMessageTelegramBot(chatId, bankNameFromBank, bankNameFromMerchant,  TELEGRAM_BOT_TOKEN, replyToMessageId) {
+    // Construct the error message
+    const message = `
+        <h3><u>BANK MISMATCH :</u></h3> 
+            <b>⛔ Amount should be credited in :</b> ${bankNameFromMerchant}
+            <b>✅ Amount credited in :</b> ${bankNameFromBank}
+    `;
 
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     try {
@@ -174,16 +216,16 @@ export async function sendBankNotAssignedAlertTelegram(chatId, getMerchantApiKey
     const message = `<b>⛔ Bank not Assigned with :</b> ${getMerchantApiKeyByCode.code}`;
 
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    
+
     try {
         const response = await axios.post(sendMessageUrl, {
             chat_id: chatId,
             text: message,
             parse_mode: 'HTML',
         });
-        
+
         // Optionally log the response from Telegram API
-      // console.log('Telegram Alert response:', response.data);
+        // console.log('Telegram Alert response:', response.data);
     } catch (error) {
         console.error('Error sending bank not assigned alert to Telegram:', error);
     }
@@ -224,7 +266,7 @@ ${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank a
             text: message,
             parse_mode: 'HTML',
         });
-       // console.log('Telegram Dashboard response:', response.data);
+        // console.log('Telegram Dashboard response:', response.data);
     } catch (error) {
         console.error('Error sending Telegram message:', error.response?.data || error.message);
     }
