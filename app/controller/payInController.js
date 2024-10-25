@@ -695,8 +695,7 @@ class PayInController {
         };
         responseMessage = "Duplicate Payment Found";
       } else {
-
-        if (matchDataFromBotRes?.bankName) {
+        if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
           if (isBankExist?.Merchant_Bank?.length === 1) {
             if (getBankDataByBotRes?.id !== isBankExist?.id) {
               const payInData = {
