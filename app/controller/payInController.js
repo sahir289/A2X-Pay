@@ -1418,7 +1418,7 @@ class PayInController {
                 parseFloat(dataRes?.amount) ===
                 parseFloat(getTelegramResByUtr?.amount)
               ) {
-                if (dataRes?.bankName === getTelegramResByUtr?.bankName && dataRes?.bankName === getPayInData?.bank_name) {
+                // if (dataRes?.bankName === getTelegramResByUtr?.bankName && dataRes?.bankName === getPayInData?.bank_name) {
 
                   if (
                     parseFloat(getPayInData?.amount) === parseFloat(dataRes?.amount)
@@ -1435,7 +1435,6 @@ class PayInController {
                       );
 
                       updatePayInData = {
-                        confirmed: dataRes?.amount,
                         status: "DUPLICATE",
                         is_notified: true,
                         utr: dataRes.utr,
@@ -1600,65 +1599,65 @@ class PayInController {
 
                     return res.status(200).json({ message: "true" });
                   }
-                } else {
+                // } else {
 
-                  const payinCommission = await calculateCommission(
-                    dataRes?.amount,
-                    getPayInData.Merchant?.payin_commission
-                  );
+                //   const payinCommission = await calculateCommission(
+                //     dataRes?.amount,
+                //     getPayInData.Merchant?.payin_commission
+                //   );
 
-                  updatePayInData = {
-                    confirmed: dataRes?.amount,
-                    status: "BANK_MISMATCH",
-                    is_notified: true,
-                    utr: dataRes.utr,
-                    user_submitted_utr: dataRes?.utr,
-                    approved_at: new Date(),
-                    is_url_expires: true,
-                    payin_commission: payinCommission,
-                    user_submitted_image: null,
-                  };
-                  const updatePayInDataRes = await payInRepo.updatePayInData(
-                    getPayInData?.id,
-                    updatePayInData
-                  );
-                  await botResponseRepo.updateBotResponseByUtr(
-                    getTelegramResByUtr?.id,
-                    getTelegramResByUtr?.utr
-                  );
+                //   updatePayInData = {
+                //     confirmed: dataRes?.amount,
+                //     status: "BANK_MISMATCH",
+                //     is_notified: true,
+                //     utr: dataRes.utr,
+                //     user_submitted_utr: dataRes?.utr,
+                //     approved_at: new Date(),
+                //     is_url_expires: true,
+                //     payin_commission: payinCommission,
+                //     user_submitted_image: null,
+                //   };
+                //   const updatePayInDataRes = await payInRepo.updatePayInData(
+                //     getPayInData?.id,
+                //     updatePayInData
+                //   );
+                //   await botResponseRepo.updateBotResponseByUtr(
+                //     getTelegramResByUtr?.id,
+                //     getTelegramResByUtr?.utr
+                //   );
 
-                  await sendBankMismatchMessageTelegramBot(
-                    message.chat.id,
-                    dataRes?.bankName,
-                    getPayInData?.bank_name,
-                    TELEGRAM_BOT_TOKEN,
-                    message?.message_id
-                  );
+                //   await sendBankMismatchMessageTelegramBot(
+                //     message.chat.id,
+                //     dataRes?.bankName,
+                //     getPayInData?.bank_name,
+                //     TELEGRAM_BOT_TOKEN,
+                //     message?.message_id
+                //   );
 
-                  // Notify url--->
-                  const notifyData = {
-                    status: "BANK_MISMATCH",
-                    merchantOrderId: getPayInData?.merchant_order_id,
-                    payinId: getPayInData?.id,
-                    amount: getPayInData?.confirmed,
-                    req_amount: getPayInData?.amount,
-                    utr_id: getPayInData?.utr
-                  }
-                  try {
-                    //When we get the notify url we will add it.
-                    logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+                //   // Notify url--->
+                //   const notifyData = {
+                //     status: "BANK_MISMATCH",
+                //     merchantOrderId: getPayInData?.merchant_order_id,
+                //     payinId: getPayInData?.id,
+                //     amount: getPayInData?.confirmed,
+                //     req_amount: getPayInData?.amount,
+                //     utr_id: getPayInData?.utr
+                //   }
+                //   try {
+                //     //When we get the notify url we will add it.
+                //     logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
 
-                    const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-                    logger.info('Sending notification to merchant', {
-                      status: notifyMerchant.status,
-                      data: notifyMerchant.data,
-                    })
-                  } catch (error) {
-                    console.error("Error sending notification:", error);
-                  }
+                //     const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+                //     logger.info('Sending notification to merchant', {
+                //       status: notifyMerchant.status,
+                //       data: notifyMerchant.data,
+                //     })
+                //   } catch (error) {
+                //     console.error("Error sending notification:", error);
+                //   }
 
-                  return res.status(200).json({ message: "true" });
-                }
+                //   return res.status(200).json({ message: "true" });
+                // }
 
               } else {
                 await sendErrorMessageNoDepositFoundTelegramBot(

@@ -27,7 +27,7 @@ export async function sendTelegramMessage(chatId, data, TELEGRAM_BOT_TOKEN, repl
 
 export async function sendTelegramDisputeMessage(chatId, oldData, newData, TELEGRAM_BOT_TOKEN, entryType) {
     const message = `
-        <h3><u>${entryType}:</u></h3> 
+        <b><u>${entryType}:</u></b> 
             <b>📋 Status:</b> ${oldData.status === 'DUPLICATE' ? '⛔ DUPLICATE' : oldData.status}
             <b>🧾 UTR:</b> ${oldData.user_submitted_utr}
             <b>⛔ Amount:</b> ${oldData.amount}
@@ -38,7 +38,7 @@ export async function sendTelegramDisputeMessage(chatId, oldData, newData, TELEG
             <b>Merchant Id:</b> ${oldData.merchant_id}
             <b>User Id:</b> ${oldData.user_id}
 
-        <h3><u>New Entry:</u></h3> 
+        <b><u>New Entry:</u></b> 
             <b>📋 Status:</b> ${newData.status === 'SUCCESS' ? '✅ SUCCESS' : newData.status}
             <b>🧾 UTR:</b> ${newData.user_submitted_utr}
             <b>✅ Amount:</b> ${newData.amount}
@@ -137,7 +137,7 @@ export async function sendAlreadyConfirmedMessageTelegramBot(chatId, utr, TELEGR
 export async function sendAmountDisputeMessageTelegramBot(chatId, amount, disputedAmount,  TELEGRAM_BOT_TOKEN, replyToMessageId) {
     // Construct the error message
     const message = `
-        <h3><u>AMOUNT DISPUTED:</u></h3> 
+        <b><u>AMOUNT DISPUTED:</u></b> 
             <b>⛔ Amount:</b> ${disputedAmount}
             <b>✅ Confirmed Amount:</b> ${amount}
     `;
@@ -158,7 +158,7 @@ export async function sendAmountDisputeMessageTelegramBot(chatId, amount, disput
 export async function sendBankMismatchMessageTelegramBot(chatId, bankNameFromBank, bankNameFromMerchant,  TELEGRAM_BOT_TOKEN, replyToMessageId) {
     // Construct the error message
     const message = `
-        <h3><u>BANK MISMATCH :</u></h3> 
+        <b><u>BANK MISMATCH :</u></b> 
             <b>⛔ Amount should be credited in :</b> ${bankNameFromMerchant}
             <b>✅ Amount credited in :</b> ${bankNameFromBank}
     `;
