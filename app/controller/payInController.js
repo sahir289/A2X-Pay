@@ -1327,8 +1327,11 @@ class PayInController {
             let updatePayInData;
 
             if (getPayInData?.user_submitted_utr !== null) {
+              const getTelegramResByUtr = await botResponseRepo.getBotResByUtr(
+                dataRes?.utr
+              );
               if (
-                dataRes?.utr === getPayInData?.user_submitted_utr &&
+                (dataRes?.utr === getPayInData?.user_submitted_utr) && (dataRes?.utr === getTelegramResByUtr) &&
                 parseFloat(dataRes?.amount) === parseFloat(getPayInData?.amount)
               ) {
                 const payinCommission = await calculateCommission(
