@@ -117,4 +117,9 @@ payInRouter.get(
   "/get-payInDataVendor",
   payInController.getAllPayInDataByVendor
 );
+
+payInRouter.post(
+"/update-payment-notified-status/:payInId",
+  payInController.updatePaymentNotificationStatus
+);
 export default payInRouter;

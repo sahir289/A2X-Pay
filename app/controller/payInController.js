@@ -1780,9 +1780,7 @@ class PayInController {
         }
 
         let updatePayInData;
-        console.log('first')
         if (getPayInData) {
-          console.log('second')
           if (getBankResponseByUtr?.bankName !== getPayInData?.bank_name) {
 
             const payinCommission = calculateCommission(
@@ -1813,13 +1811,11 @@ class PayInController {
               getPayInData?.id,
               updatePayInData
             );
-            console.log('-----new')
 
             await botResponseRepo.updateBotResponseByUtr(
               getBankResponseByUtr?.id,
               getBankResponseByUtr?.utr
             );
-            console.log('=-=-=-==-')
 
             await sendBankMismatchMessageTelegramBot(
               message.chat.id,
@@ -1828,7 +1824,6 @@ class PayInController {
               TELEGRAM_BOT_TOKEN,
               message?.message_id
             );
-            console.log('00000000w')
 
             // Notify url--->
             const notifyData = {
@@ -1854,9 +1849,7 @@ class PayInController {
 
             return res.status(200).json({ message: "true" });
           }
-          console.log('fourth')
           if ((getPayInData?.user_submitted_utr === getBankResponseByUtr?.utr) && (getPayInData?.bank_name === getBankResponseByUtr?.bankName)) {
-            console.log('fifth')
             if (
               parseFloat(getPayInData?.amount) === parseFloat(getBankResponseByUtr?.amount)
             ) {
@@ -2059,7 +2052,7 @@ class PayInController {
         if (getPayInData?.is_notified === true) {
           await sendAlreadyConfirmedMessageTelegramBot(
             message.chat.id,
-            dataRes?.utr,
+            getBankResponseByUtr?.utr,
             TELEGRAM_BOT_TOKEN,
             message?.message_id
           );
@@ -2127,6 +2120,27 @@ class PayInController {
         res,
         200,
         "Payment status updated successfully",
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updatePaymentNotificationStatus(req, res, next) {
+    try {
+      checkValidation(req);
+      const { payInId } = req.params;
+      const updatePayInData = {
+        is_notified: true,
+      };
+      const updatePayInRes = await payInRepo.updatePayInData(
+        payInId,
+        updatePayInData
+      );
+      return DefaultResponse(
+        res,
+        200,
+        "Payment Notified successfully",
       );
     } catch (error) {
       next(error);
