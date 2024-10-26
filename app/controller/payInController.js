@@ -923,6 +923,13 @@ class PayInController {
         const usrSubmittedUtrData = usrSubmittedUtr?.utr;
 
         const isUtrExist = await payInRepo.getPayinDataByUsrSubmittedUtr(usrSubmittedUtrData)
+        const getPayInData = await payInRepo.getPayInData(payInId);
+
+        const durMs = new Date() - getPayInData.createdAt;
+        const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+        const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+        const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+        const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
         if (isUtrExist.length > 0) {
           const updatePayInData = {
@@ -931,6 +938,7 @@ class PayInController {
             is_notified: true,
             user_submitted_utr: usrSubmittedUtrData,
             is_url_expires: true,
+            duration: duration
           };
           const updatePayinRes = await payInRepo.updatePayInData(
             payInId,
@@ -946,7 +954,6 @@ class PayInController {
           return DefaultResponse(res, 200, "Duplicate Payment Found", response);
         }
 
-        const getPayInData = await payInRepo.getPayInData(payInId);
         if (!getPayInData) {
           throw new CustomError(404, "Payment does not exist");
         }
@@ -996,6 +1003,7 @@ class PayInController {
             is_notified: true,
             user_submitted_utr: usrSubmittedUtrData,
             is_url_expires: true,
+            duration: duration
           };
           responseMessage = "Duplicate Payment Found";
         } else {
@@ -1012,7 +1020,7 @@ class PayInController {
                   utr: matchDataFromBotRes?.utr,
                   user_submitted_utr: usrSubmittedUtr?.utr,
                   approved_at: new Date(),
-
+                  duration: duration,
                 };
 
                 const updatePayInDataRes = await payInRepo.updatePayInData(
@@ -1065,6 +1073,7 @@ class PayInController {
               utr: matchDataFromBotRes.utr,
               approved_at: new Date(),
               is_url_expires: true,
+              duration: duration
             };
             responseMessage = "Payment Done successfully";
           } else {
@@ -1075,6 +1084,7 @@ class PayInController {
               utr: matchDataFromBotRes.utr,
               approved_at: new Date(),
               is_url_expires: true,
+              duration: duration
             };
             responseMessage = "Dispute in Payment";
           }
@@ -1303,6 +1313,7 @@ class PayInController {
             const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(
               merchantOrderIdTele
             );
+
             if (!getPayInData) {
               await sendErrorMessageTelegram(
                 message.chat.id,
@@ -1339,6 +1350,12 @@ class PayInController {
                   getPayInData.Merchant?.payin_commission
                 );
 
+                const durMs = new Date() - getPayInData.createdAt;
+                const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+
                 updatePayInData = {
                   confirmed: dataRes?.amount,
                   status: "SUCCESS",
@@ -1348,6 +1365,8 @@ class PayInController {
                   is_url_expires: true,
                   payin_commission: payinCommission,
                   user_submitted_image: null,
+                  duration: duration,
+
                 };
                 const updatePayInDataRes = await payInRepo.updatePayInData(
                   getPayInData?.id,
@@ -1369,7 +1388,7 @@ class PayInController {
                     payinId: getPayInData?.id,
                     amount: getPayInData?.confirmed,
                     req_amount: getPayInData?.amount,
-                    utr_id: getPayInData?.utr
+                    utr_id: getPayInData?.utr,
                   }
                   //When we get the notify url we will add it.
                   logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
@@ -1436,6 +1455,12 @@ class PayInController {
                       getPayInData.Merchant?.payin_commission
                     );
 
+                    const durMs = new Date() - getPayInData.createdAt;
+                    const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                    const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                    const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                    const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+
                     updatePayInData = {
                       status: "DUPLICATE",
                       is_notified: true,
@@ -1445,6 +1470,7 @@ class PayInController {
                       is_url_expires: true,
                       payin_commission: payinCommission,
                       user_submitted_image: null,
+                      duration: duration
                     };
                     const updatePayInDataRes = await payInRepo.updatePayInData(
                       getPayInData?.id,
@@ -1469,7 +1495,8 @@ class PayInController {
                       payinId: getPayInData?.id,
                       amount: getPayInData?.confirmed,
                       req_amount: getPayInData?.amount,
-                      utr_id: getPayInData?.utr
+                      utr_id: getPayInData?.utr,
+                      duration: duration
                     }
                     try {
                       //When we get the notify url we will add it.
@@ -1492,6 +1519,12 @@ class PayInController {
                       getPayInData.Merchant?.payin_commission
                     );
 
+                    const durMs = new Date() - getPayInData.createdAt;
+                    const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                    const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                    const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                    const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+
                     updatePayInData = {
                       confirmed: dataRes?.amount,
                       status: "SUCCESS",
@@ -1502,6 +1535,7 @@ class PayInController {
                       is_url_expires: true,
                       payin_commission: payinCommission,
                       user_submitted_image: null,
+                      duration: duration
                     };
                     const updatePayInDataRes = await payInRepo.updatePayInData(
                       getPayInData?.id,
@@ -1549,6 +1583,12 @@ class PayInController {
                     getPayInData.Merchant?.payin_commission
                   );
 
+                  const durMs = new Date() - getPayInData.createdAt;
+                const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+
                   updatePayInData = {
                     confirmed: dataRes?.amount,
                     status: "DISPUTE",
@@ -1559,6 +1599,7 @@ class PayInController {
                     is_url_expires: true,
                     payin_commission: payinCommission,
                     user_submitted_image: null,
+                    duration: duration
                   };
                   const updatePayInDataRes = await payInRepo.updatePayInData(
                     getPayInData?.id,
@@ -1749,6 +1790,12 @@ class PayInController {
               getPayInData.Merchant?.payin_commission
             );
 
+            const durMs = new Date() - getPayInData.createdAt;
+                const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+
             updatePayInData = {
               confirmed: getBankResponseByUtr?.amount,
               status: "BANK_MISMATCH",
@@ -1759,6 +1806,7 @@ class PayInController {
               is_url_expires: true,
               payin_commission: payinCommission,
               user_submitted_image: null,
+              duration: duration
             };
 
             const updatePayInDataRes = await payInRepo.updatePayInData(
@@ -1823,6 +1871,12 @@ class PayInController {
                   getPayInData.Merchant?.payin_commission
                 );
 
+                const durMs = new Date() - getPayInData.createdAt;
+                const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+
                 updatePayInData = {
                   status: "DUPLICATE",
                   is_notified: true,
@@ -1832,6 +1886,7 @@ class PayInController {
                   is_url_expires: true,
                   payin_commission: payinCommission,
                   user_submitted_image: null,
+                  duration: duration
                 };
                 const updatePayInDataRes = await payInRepo.updatePayInData(
                   getPayInData?.id,
@@ -1878,6 +1933,11 @@ class PayInController {
                   getBankResponseByUtr?.amount,
                   getPayInData.Merchant?.payin_commission
                 );
+                const durMs = new Date() - getPayInData.createdAt;
+                const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
                 updatePayInData = {
                   confirmed: getBankResponseByUtr?.amount,
@@ -1888,6 +1948,7 @@ class PayInController {
                   is_url_expires: true,
                   payin_commission: payinCommission,
                   user_submitted_image: null,
+                  duration : duration
                 };
                 const updatePayInDataRes = await payInRepo.updatePayInData(
                   getPayInData?.id,
@@ -1932,6 +1993,12 @@ class PayInController {
                 getPayInData.Merchant?.payin_commission
               );
 
+              const durMs = new Date() - getPayInData.createdAt;
+                const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+
               updatePayInData = {
                 confirmed: getBankResponseByUtr?.amount,
                 status: "DISPUTE",
@@ -1942,6 +2009,7 @@ class PayInController {
                 is_url_expires: true,
                 payin_commission: payinCommission,
                 user_submitted_image: null,
+                duration: duration
               };
               const updatePayInDataRes = await payInRepo.updatePayInData(
                 getPayInData?.id,
