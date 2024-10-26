@@ -24,6 +24,7 @@ function config(Env) {
         telegramBankAlertChatId:Env?.TELEGRAM_BANK_ALERT_CHAT_ID,
         telegramDuplicateDisputeChatId:Env?.TELEGRAM_DISPUTE_DUPLICATE_CHAT_ID,
         telegramOcrBotToken:Env?.TELEGRAM_OCR_BOT_TOKEN,
+        telegramCheckUtrBotToken:Env?.TELEGRAM_CHECK_UTR_BOT_TOKEN,
         nodeProductionLogs:Env?.NODE_ENV
 
     };
