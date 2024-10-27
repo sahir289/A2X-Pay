@@ -272,7 +272,6 @@ ${formattedBankPayIns.length > 0 ? formattedBankPayIns.join("\n") : 'No bank acc
 <b>✅ Bank Account Withdrawals</b>
 ${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank account withdrawals available.'}
     `;
-    return
 
     // Send the message to Telegram
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -289,5 +288,20 @@ ${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank a
     }
 }
 
+export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(chatId, TELEGRAM_BOT_TOKEN, replyToMessageId) {
+    // Construct the error message
+    const message = `⛔ Please mention Merchant Order Id in Caption `;
 
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+        await axios.post(sendMessageUrl, {
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML',
+            reply_to_message_id: replyToMessageId // Add this line to reply to a specific message
+        });
+    } catch (error) {
+        console.error('Error sending message to Telegram:', error);
+    }
+}
 
