@@ -243,8 +243,23 @@ export async function sendTelegramDashboardReportMessage(
     TELEGRAM_BOT_TOKEN
 ) {
     const currentDate = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const istTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+
+    let hours = istTime.getHours();
+    let hoursmin1 = istTime.getHours();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const ampm1 = hoursmin1 >= 12 ? 'PM' : 'AM';
+
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    hoursmin1 = hoursmin1 % 12;
+    hoursmin1 = hoursmin1 ? hoursmin1 : 12;
+
+    const formattedTime = `${hoursmin1 - 1}${ampm1} - ${hours}${ampm}`;
+    const timeStamp = type === "H" ? formattedTime : currentDate;
     const message = `
-<b>${type} (${currentDate})</b>
+<b>${type} (${timeStamp})</b>
 
 <b>💰 Deposits</b>
 ${formattedPayIns.length > 0 ? formattedPayIns.join("\n") : 'No deposits available.'}
@@ -258,6 +273,7 @@ ${formattedBankPayIns.length > 0 ? formattedBankPayIns.join("\n") : 'No bank acc
 <b>✅ Bank Account Withdrawals</b>
 ${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank account withdrawals available.'}
     `;
+    return
 
     // Send the message to Telegram
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;

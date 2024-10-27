@@ -119,6 +119,11 @@ payInRouter.get(
   payInController.getAllPayInDataByVendor
 );
 
+payInRouter.post(
+"/update-payment-notified-status/:payInId",
+  payInController.updatePaymentNotificationStatus
+);
+
 //cronjob route for testing
 // payInRouter.get(
 //   "/initialize-cronjob",
