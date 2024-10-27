@@ -26,6 +26,7 @@ const upload = multer({
       cb(null, `uploads/${Date.now()}-${file.originalname}`); // Set the file path and name
     },
   }),
+  limits: { fileSize: 20 * 1024 * 1024 },
 });
 
 payInRouter.post(
