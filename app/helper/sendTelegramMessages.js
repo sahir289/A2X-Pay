@@ -5,9 +5,8 @@ export async function sendTelegramMessage(chatId, data, TELEGRAM_BOT_TOKEN, repl
       <b>UTR-IDS:</b> ${data?.utr}
     `;
 
-    if (data?.bankName || data?.timeStamp) {
+    if (data?.timeStamp) {
         message += `
-        <b>Bank Name:</b> ${data?.bankName}
         <b>Time Stamp:</b> ${data?.timeStamp}
       `;
     }

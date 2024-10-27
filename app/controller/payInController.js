@@ -910,7 +910,7 @@ class PayInController {
         image: base64Image,
       };
       const resFromOcrPy = await axios.post(
-        "http://34.196.43.192:11000/ocr",
+        "http://34.196.43.192:8000/ocr",
         imgData
       );
       // Merge the data from the API with the existing dataRes
@@ -1287,7 +1287,7 @@ class PayInController {
           image: base64Image,
         };
         const resFromOcrPy = await axios.post(
-          "http://34.196.43.192:11000/ocr",
+          "http://34.196.43.192:8000/ocr",
           imgData
         );
         // console.log(resFromOcrPy?.data?.data);
@@ -1296,8 +1296,8 @@ class PayInController {
         dataRes = {
           amount: resFromOcrPy?.data?.data?.amount, //|| dataRes.amount,
           utr: resFromOcrPy?.data?.data?.transaction_id, //|| dataRes.utr
-          bankName: resFromOcrPy?.data?.data?.bankName,
-          timeStamp: resFromOcrPy?.data?.data?.timeStamp,
+          bankName: resFromOcrPy?.data?.data?.bank_name,
+          timeStamp: resFromOcrPy?.data?.data?.timestamp,
         };
 
         await sendTelegramMessage(
