@@ -10,8 +10,6 @@ let canRunHourlyReports = false;
 cron.schedule("0 0 * * *", () => {
   gatherAllData("N", "Asia/Kolkata");
   canRunHourlyReports = true; 
-}, {
-  timezone: "Asia/Kolkata"
 });
 
 // Schedule the hourly task at every hour from 1:00 AM to 11:59 PM IST
@@ -19,14 +17,16 @@ cron.schedule("0 1-23 * * *", () => {
   if (canRunHourlyReports) {
     gatherAllData("H", "Asia/Kolkata"); 
   }
-}, {
-  timezone: "Asia/Kolkata"
 });
 
 const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
   try {
     const empty = "-- -- -- ";
     let startDate, endDate;
+
+    if (typeof timezone !== "string") {
+      timezone = "Asia/Kolkata";
+    }
 
     const currentDate = moment().tz(timezone);
     if (type === "H") {
@@ -150,3 +150,5 @@ const formatePrice = (price) => {
     maximumFractionDigits: 2,
   });
 };
+
+// export default gatherAllData;

@@ -14,6 +14,7 @@ import {
   validatePayInIdUrl,
   validatePayInProcess,
 } from "../helper/validators.js";
+import gatherAllData from "../cron/index.js";
 
 const payInRouter = express();
 
@@ -122,4 +123,11 @@ payInRouter.post(
 "/update-payment-notified-status/:payInId",
   payInController.updatePaymentNotificationStatus
 );
+
+//cronjob route for testing
+// payInRouter.get(
+//   "/initialize-cronjob",
+//   gatherAllData
+// );
+
 export default payInRouter;
