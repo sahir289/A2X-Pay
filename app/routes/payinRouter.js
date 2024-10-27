@@ -14,6 +14,7 @@ import {
   validatePayInIdUrl,
   validatePayInProcess,
 } from "../helper/validators.js";
+import gatherAllData from "../cron/index.js";
 
 const payInRouter = express();
 
@@ -117,4 +118,11 @@ payInRouter.get(
   "/get-payInDataVendor",
   payInController.getAllPayInDataByVendor
 );
+
+//cronjob route for testing
+// payInRouter.get(
+//   "/initialize-cronjob",
+//   gatherAllData
+// );
+
 export default payInRouter;
