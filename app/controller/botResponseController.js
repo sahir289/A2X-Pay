@@ -63,7 +63,31 @@ class BotResponseController {
           // We check bank exist here as we have to add the data to the res no matter what comes.
           const isBankExist = await botResponseRepo?.getBankDataByBankName(bankName)
           if (!isBankExist) {
-            throw new CustomError(404, "Bank does not exist")
+            const payInData = {
+              confirmed: botRes?.amount,
+              status: "BANK_MISMATCH",
+              is_notified: true,
+              utr: botRes?.utr,
+              approved_at: new Date(),
+            };
+
+            const updatePayInDataRes = await payInRepo.updatePayInData(
+              checkPayInUtr[0]?.id,
+              payInData
+            );
+
+            // We are adding the amount to the bank as we want to update the balance of the bank
+            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+              isBankExist?.id,
+              parseFloat(amount)
+            );
+
+            return DefaultResponse(
+              res,
+              200,
+              "Bank mismatch",
+              updatePayInDataRes
+            );
           }
 
           if (isBankExist?.Merchant_Bank.length === 1) {

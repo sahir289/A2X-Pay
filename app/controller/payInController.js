@@ -670,7 +670,43 @@ class PayInController {
         getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
 
         if (!getBankDataByBotRes) {
-          throw new CustomError(404, "Bank does not exist")
+          const payInData = {
+            confirmed: matchDataFromBotRes?.amount,
+            amount: amount,
+            status: "BANK_MISMATCH",
+            is_notified: true,
+            is_url_expires: true,
+            utr: matchDataFromBotRes?.utr,
+            user_submitted_utr: usrSubmittedUtr,
+            approved_at: new Date(),
+            duration: duration
+          };
+
+          const updatePayInDataRes = await payInRepo.updatePayInData(
+            getPayInData.id,
+            payInData
+          );
+
+          // We are adding the amount to the bank as we want to update the balance of the bank
+          const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+            getBankDataByBotRes?.id,
+            parseFloat(amount)
+          );
+
+          const response = {
+            status: updatePayInDataRes.status,
+            amount,
+            merchant_order_id: updatePayInDataRes?.merchant_order_id,
+            return_url: updatePayInDataRes?.return_url,
+            utr_id: updatePayInDataRes?.user_submitted_utr
+          };
+
+          return DefaultResponse(
+            res,
+            200,
+            "Bank mismatch",
+            response
+          );
         }
       }
 
@@ -984,7 +1020,43 @@ class PayInController {
           getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
 
           if (!getBankDataByBotRes) {
-            throw new CustomError(404, "Bank does not exist")
+            const payInData = {
+              confirmed: parseFloat(matchDataFromBotRes?.amount),
+              amount: amount,
+              status: "BANK_MISMATCH",
+              is_notified: true,
+              is_url_expires: true,
+              utr: matchDataFromBotRes?.utr,
+              user_submitted_utr: usrSubmittedUtr?.utr,
+              approved_at: new Date(),
+              duration: duration,
+            };
+
+            const updatePayInDataRes = await payInRepo.updatePayInData(
+              getPayInData.id,
+              payInData
+            );
+
+            // We are adding the amount to the bank as we want to update the balance of the bank
+            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+              getBankDataByBotRes?.id,
+              parseFloat(amount)
+            );
+
+            const response = {
+              status: updatePayInDataRes.status,
+              amount,
+              merchant_order_id: updatePayInDataRes?.merchant_order_id,
+              return_url: updatePayInDataRes?.return_url,
+              utr_id: updatePayInDataRes?.user_submitted_utr
+            };
+
+            return DefaultResponse(
+              res,
+              200,
+              "Bank mismatch",
+              response
+            );
           }
         }
 
