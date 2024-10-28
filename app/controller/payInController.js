@@ -1363,7 +1363,6 @@ class PayInController {
           "http://34.196.43.192:8000/ocr",
           imgData
         );
-        // console.log(resFromOcrPy?.data?.data);
 
         // Merge the data from the API with the existing dataRes
         dataRes = {
