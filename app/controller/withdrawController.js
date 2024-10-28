@@ -6,6 +6,7 @@ import { getAmountFromPerc } from "../helper/utils.js";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { CustomError } from "../middlewares/errorHandler.js";
+import { logger } from "../utils/logger.js";
 
 class WithdrawController {
   async createWithdraw(req, res, next) {
@@ -38,6 +39,10 @@ class WithdrawController {
         ),
         currency: "INR",
       });
+      logger.info('Payout created successfully', {
+        status: data.status,
+        data: data.data,
+      })
       return DefaultResponse(res, 201, "Payout created successfully", { merchantOrderId: data?.merchant_order_id, payoutId: data?.id, amount: data?.amount });
     } catch (err) {
       next(err);
@@ -68,13 +73,14 @@ class WithdrawController {
         merchantCode,
         merchantOrderId
       );
+      logger.info('Payout Status', {
+        status: data.status,
+        data: data.data,
+      })
 
       if (!data) {
         return DefaultResponse(res, 404, "Payout not found");
       }
-
-
-
 
       const response = {
         status: data.status,
@@ -134,6 +140,10 @@ class WithdrawController {
         utr_id,
         acc_holder_name
       );
+      logger.info('Get All Payout', {
+        status: data.status,
+        data: data.data,
+      })
       return DefaultResponse(res, 200, "Payout fetched successfully!", data);
     } catch (err) {
       next(err);
@@ -174,6 +184,11 @@ class WithdrawController {
       // Created payout callback feature
       const singleWithdrawData = await withdrawService.getWithdrawById(req.params.id);
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
+      const data = await withdrawService.updateWithdraw(req.params.id, payload);
+      logger.info('Payout Updated', {
+        status: data.status,
+        data: data.data,
+      })
 
       const merchantPayoutUrl = merchant.payout_notify_url;
       if (merchantPayoutUrl !== null) {
@@ -186,7 +201,12 @@ class WithdrawController {
         }
         try {
           // Payout notify
+          logger.info('Sending notification to merchant', { notify_url: merchantPayoutUrl, notify_data: merchantPayoutData });
           const response = await axios.post(`${merchantPayoutUrl}`, merchantPayoutData);
+          logger.info('Sending notification to merchant', {
+            status: response.status,
+            data: response.data,
+          })
           // Log response or take any action based on response
         } catch (error) {
           // Handle error for invalid/unreachable merchant URL
@@ -196,7 +216,6 @@ class WithdrawController {
           new CustomError(400, "Failed to notify merchant about payout"); // Or handle in a different way
         }
       }
-      const data = await withdrawService.updateWithdraw(req.params.id, payload);
       return DefaultResponse(res, 200, "Payout Updated!", data);
     } catch (err) {
       next(err);
@@ -221,6 +240,10 @@ class WithdrawController {
         startDate,
         endDate
       );
+      logger.info('Get all payout with range', {
+        status: payOutDataRes.status,
+        data: payOutDataRes.data,
+      })
 
       return DefaultResponse(
         res,
@@ -266,6 +289,10 @@ class WithdrawController {
         withdrawIds,
         vendorCodeValue
       );
+      logger.info('Vendor Code Updated', {
+        status: payOutDataRes.status,
+        data: payOutDataRes.data,
+      })
 
       return DefaultResponse(
         res,
