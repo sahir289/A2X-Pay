@@ -268,9 +268,6 @@ ${formattedBankPayIns.length > 0 ? formattedBankPayIns.join("\n") : 'No bank acc
 ${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank account withdrawals available.'}
     `;
 
-    console.log(message);
-    return
-
     // Send the message to Telegram
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
