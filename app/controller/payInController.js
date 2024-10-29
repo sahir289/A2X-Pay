@@ -947,7 +947,7 @@ class PayInController {
         image: base64Image,
       };
       const resFromOcrPy = await axios.post(
-        "http://52.90.182.161:8000/ocr",
+        "http://54.172.72.118:8000/ocr",
         imgData
       );
       // Merge the data from the API with the existing dataRes
@@ -1360,7 +1360,7 @@ class PayInController {
           image: base64Image,
         };
         const resFromOcrPy = await axios.post(
-          "http://52.90.182.161:8000/ocr",
+          "http://54.172.72.118:8000/ocr",
           imgData
         );
 
