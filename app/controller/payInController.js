@@ -1320,6 +1320,16 @@ class PayInController {
     const TELEGRAM_BOT_TOKEN = config?.telegramOcrBotToken;
     try {
       const { message } = req.body;
+
+      if(!message?.caption){
+        await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
+          message.chat.id,
+          TELEGRAM_BOT_TOKEN,
+          message?.message_id
+        );
+        return res.status(200).json({ message: "Please enter merchant orderId" });
+      }
+
       if (message?.photo) {
         const photoArray = message.photo;
         const fileId = photoArray[photoArray.length - 1]?.file_id;
@@ -1792,6 +1802,7 @@ class PayInController {
                 TELEGRAM_BOT_TOKEN,
                 message?.message_id
               );
+              return res.status(200).json({ message: "Please enter merchant orderId" });
             }
           } else {
             await sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(
@@ -1832,6 +1843,26 @@ class PayInController {
       const status = splitData[0];
       const merchantOrderId = splitData[1];
       const utr = splitData[2];
+
+      if(!merchantOrderId){
+        await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
+          message.chat.id,
+          TELEGRAM_BOT_TOKEN,
+          message?.message_id,
+          true // this check for message according to captions only
+        );
+        return res.status(200).json({ message: "Please enter merchant orderId" });
+      }
+
+      if(!utr){
+        await sendErrorMessageNoDepositFoundTelegramBot(
+          message.chat.id,
+          utr,
+          TELEGRAM_BOT_TOKEN,
+          message?.message_id
+        );
+        return res.status(200).json({ message: "Please enter UTR" });
+      }
 
       if (merchantOrderId && utr) {
 

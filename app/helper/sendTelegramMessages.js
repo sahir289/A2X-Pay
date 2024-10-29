@@ -133,7 +133,7 @@ export async function sendAlreadyConfirmedMessageTelegramBot(chatId, utr, TELEGR
     }
 }
 
-export async function sendAmountDisputeMessageTelegramBot(chatId, amount, disputedAmount,  TELEGRAM_BOT_TOKEN, replyToMessageId) {
+export async function sendAmountDisputeMessageTelegramBot(chatId, amount, disputedAmount, TELEGRAM_BOT_TOKEN, replyToMessageId) {
     // Construct the error message
     const message = `
         <b><u>AMOUNT DISPUTED:</u></b> 
@@ -154,7 +154,7 @@ export async function sendAmountDisputeMessageTelegramBot(chatId, amount, disput
     }
 }
 
-export async function sendBankMismatchMessageTelegramBot(chatId, bankNameFromBank, bankNameFromMerchant,  TELEGRAM_BOT_TOKEN, replyToMessageId) {
+export async function sendBankMismatchMessageTelegramBot(chatId, bankNameFromBank, bankNameFromMerchant, TELEGRAM_BOT_TOKEN, replyToMessageId) {
     // Construct the error message
     console.log(bankNameFromBank, 'medsssss')
 
@@ -288,9 +288,13 @@ ${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank a
     }
 }
 
-export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(chatId, TELEGRAM_BOT_TOKEN, replyToMessageId) {
+export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(chatId, TELEGRAM_BOT_TOKEN, replyToMessageId, withoutImage) {
     // Construct the error message
-    const message = `⛔ Please mention Merchant Order Id in Caption `;
+    if (withoutImage === true) {
+        message = `⛔ Please mention Merchant Order Id`; // If withoutImage is true, set this message
+    } else {
+        message = `⛔ Please mention Merchant Order Id in Caption`; // Default message
+    }
 
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     try {
