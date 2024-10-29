@@ -1840,7 +1840,13 @@ class PayInController {
         );
 
         if (!getBankResponseByUtr) {
-          throw new CustomError(404, "No UTR Found");
+          await sendErrorMessageNoDepositFoundTelegramBot(
+            message.chat.id,
+            utr,
+            TELEGRAM_BOT_TOKEN,
+            message?.message_id
+          );
+          return res.status(200).json({ message: "Utr does not exist" });
         }
 
         const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(
