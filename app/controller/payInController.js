@@ -1193,7 +1193,7 @@ class PayInController {
         const response = {
           status:
             payInData.status === "SUCCESS"
-              ? "Success"
+              ? "SUCCESS"
               : payInData.status || "Not Found",
           amount,
           merchant_order_id: updatePayinRes?.merchant_order_id,
@@ -1201,7 +1201,7 @@ class PayInController {
         };
 
         if (payInData.status === "SUCCESS") {
-          response.utr = updatePayinRes?.utr;
+          response.utr_id = updatePayinRes?.utr;
         }
 
         return DefaultResponse(res, 200, responseMessage, response);
