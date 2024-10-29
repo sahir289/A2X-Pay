@@ -5,9 +5,8 @@ export async function sendTelegramMessage(chatId, data, TELEGRAM_BOT_TOKEN, repl
       <b>UTR-IDS:</b> ${data?.utr}
     `;
 
-    if (data?.bankName || data?.timeStamp) {
+    if (data?.timeStamp) {
         message += `
-        <b>Bank Name:</b> ${data?.bankName}
         <b>Time Stamp:</b> ${data?.timeStamp}
       `;
     }
@@ -289,5 +288,20 @@ ${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank a
     }
 }
 
+export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(chatId, TELEGRAM_BOT_TOKEN, replyToMessageId) {
+    // Construct the error message
+    const message = `⛔ Please mention Merchant Order Id in Caption `;
 
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+        await axios.post(sendMessageUrl, {
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML',
+            reply_to_message_id: replyToMessageId // Add this line to reply to a specific message
+        });
+    } catch (error) {
+        console.error('Error sending message to Telegram:', error);
+    }
+}
 
