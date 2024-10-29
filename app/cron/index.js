@@ -144,6 +144,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
   }
 };
 
+// gatherAllData("H", "Asia/Kolkata")
+
 const formatePrice = (price) => {
   return Number(price).toLocaleString("en-US", {
     minimumFractionDigits: 2,
