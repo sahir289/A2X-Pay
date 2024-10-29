@@ -3,13 +3,8 @@ export async function sendTelegramMessage(chatId, data, TELEGRAM_BOT_TOKEN, repl
     const message = `
       <b>UPI-AMOUNT:</b> ${data?.amount}
       <b>UTR-IDS:</b> ${data?.utr}
+      <b>Time Stamp:</b> ${data?.timeStamp}
     `;
-
-    if (data?.timeStamp) {
-        message += `
-        <b>Time Stamp:</b> ${data?.timeStamp}
-      `;
-    }
 
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     try {
@@ -256,7 +251,7 @@ export async function sendTelegramDashboardReportMessage(
     hoursmin1 = hoursmin1 ? hoursmin1 : 12;
 
     const formattedTime = `${hoursmin1 - 1}${ampm1} - ${hours}${ampm}`;
-    const timeStamp = type === "H" ? formattedTime : currentDate;
+    const timeStamp = type === "Hourly Report" ? formattedTime : currentDate;
     const message = `
 <b>${type} (${timeStamp})</b>
 
@@ -272,6 +267,9 @@ ${formattedBankPayIns.length > 0 ? formattedBankPayIns.join("\n") : 'No bank acc
 <b>✅ Bank Account Withdrawals</b>
 ${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank account withdrawals available.'}
     `;
+
+    console.log(message);
+    return
 
     // Send the message to Telegram
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
