@@ -1320,7 +1320,6 @@ class PayInController {
     const TELEGRAM_BOT_TOKEN = config?.telegramOcrBotToken;
     try {
       const { message } = req.body;
-
       if(!message?.caption){
         await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
           message.chat.id,
