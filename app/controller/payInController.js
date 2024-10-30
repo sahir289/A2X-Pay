@@ -41,7 +41,7 @@ class PayInController {
     try {
       let payInData;
 
-      const { code, user_id, merchant_order_id, ot, isTest, amount, ap } = req.query;
+      const { code, user_id, merchant_order_id, ot, isTest, amount, ap, returnUrl } = req.query;
       // If query parameters are provided, use them
       const getMerchantApiKeyByCode = await merchantRepo.getMerchantByCode(
         code
@@ -58,6 +58,13 @@ class PayInController {
         if (req.headers["x-api-key"] !== getMerchantApiKeyByCode.api_key) {
           throw new CustomError(404, "Enter valid Api key");
         }
+      }
+      if (returnUrl) {
+        data = {
+          id: getMerchantApiKeyByCode.id,
+          return_url: returnUrl
+        }
+        await merchantRepo.updateMerchantData(data);
       }
       const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(getMerchantApiKeyByCode?.id);
       const payInBankAccountLinkRes = bankAccountLinkRes?.filter(payInBank => payInBank?.bankAccount?.bank_used_for === "payIn");
