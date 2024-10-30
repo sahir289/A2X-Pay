@@ -933,7 +933,7 @@ class PayInController {
     try {
       const { payInId } = req.params;
       const { amount } = req.query;
-
+      
       const command = new GetObjectCommand({
         Bucket: config.bucketName,
         Key: req.file?.key,

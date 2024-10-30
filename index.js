@@ -31,12 +31,7 @@ app.use((err, req, res, next) => {
     res.status(500).send('Internal Server Error');
 });
 
-
 const httpServer = createServer(app);
-
-// Set server timeout (5 minutes)
-httpServer.setTimeout(5 * 60 * 1000); // 3 minutes timeout for request handling
-
 const io = new Server(httpServer, {
     cors: {
         origin: [`${config?.reactFrontOrigin}`, `${config?.reactPaymentOrigin}`],
