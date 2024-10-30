@@ -34,8 +34,8 @@ app.use((err, req, res, next) => {
 
 const httpServer = createServer(app);
 
-// Set server timeout (3 minutes)
-httpServer.setTimeout(3 * 60 * 1000); // 3 minutes timeout for request handling
+// Set server timeout (5 minutes)
+httpServer.setTimeout(5 * 60 * 1000); // 3 minutes timeout for request handling
 
 const io = new Server(httpServer, {
     cors: {
