@@ -41,7 +41,7 @@ class PayInController {
     try {
       let payInData;
 
-      const { code, user_id, merchant_order_id, ot, isTest, amount, ap, returnUrl } = req.query;
+      const { code, user_id, merchant_order_id, ot, isTest, amount, returnUrl, ap } = req.query;
       // If query parameters are provided, use them
       const getMerchantApiKeyByCode = await merchantRepo.getMerchantByCode(
         code
@@ -60,7 +60,7 @@ class PayInController {
         }
       }
       if (returnUrl) {
-        data = {
+        const data = {
           id: getMerchantApiKeyByCode.id,
           return_url: returnUrl
         }
