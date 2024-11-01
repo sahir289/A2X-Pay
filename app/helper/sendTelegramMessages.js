@@ -247,10 +247,10 @@ export async function sendTelegramDashboardReportMessage(
 
     hours = hours % 12;
     hours = hours ? hours : 12;
-    hoursmin1 = hoursmin1 % 12;
+    hoursmin1 = hoursmin1 - 2 % 12;
     hoursmin1 = hoursmin1 ? hoursmin1 : 12;
 
-    const formattedTime = `${hoursmin1 - 1}${ampm1} - ${hours}${ampm}`;
+    const formattedTime = `${hoursmin1}${ampm1} - ${hours - 1}${ampm}`;
     const timeStamp = type === "Hourly Report" ? formattedTime : currentDate;
     const message = `
 <b>${type} (${timeStamp})</b>
@@ -285,10 +285,11 @@ ${formattedBankPayOuts.length > 0 ? formattedBankPayOuts.join("\n") : 'No bank a
 
 export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(chatId, TELEGRAM_BOT_TOKEN, replyToMessageId, withoutImage) {
     // Construct the error message
-    if (withoutImage === true) {
+    let message;
+    if (withoutImage) {
+        message = `⛔ Please mention Merchant Order Id in Caption`; 
+    } else if(withoutImage === undefined){
         message = `⛔ Please mention Merchant Order Id`; // If withoutImage is true, set this message
-    } else {
-        message = `⛔ Please mention Merchant Order Id in Caption`; // Default message
     }
 
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;

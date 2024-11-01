@@ -8,6 +8,7 @@ import { Server } from "socket.io";
 import config from "./config.js";
 import "./app/cron/index.js";
 import loggingMiddleware from "./app/middlewares/loggingMiddleware.js";
+import { logger } from "./app/utils/logger.js";
 
 const app = express();
 app.use(cookieParser())
@@ -27,7 +28,7 @@ app.get('/test', (req, res) => {
 });
 app.use(express.static('public'))
 app.use((err, req, res, next) => {
-    err(`Error occurred: ${err.message} - Request ID: ${req.id}`);
+    logger.error(`Error occurred: ${err.message} - Request ID: ${req.id}`);
     res.status(500).send('Internal Server Error');
 });
 
