@@ -1331,7 +1331,7 @@ class PayInController {
       const { message } = req.body;
       res.sendStatus(200);
       if (message) {
-        if (message?.text) {
+        if (message?.text === undefined) {
           await sendErrorMessageNoImageFoundTelegramBot(
             message.chat.id,
             TELEGRAM_BOT_TOKEN,
