@@ -288,9 +288,26 @@ export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(chatId, 
     let message;
     if (withoutImage) {
         message = `⛔ Please mention Merchant Order Id in Caption`; 
-    } else if(withoutImage === undefined){
+    } else {
         message = `⛔ Please mention Merchant Order Id`; // If withoutImage is true, set this message
     }
+
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+        await axios.post(sendMessageUrl, {
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML',
+            reply_to_message_id: replyToMessageId // Add this line to reply to a specific message
+        });
+    } catch (error) {
+        console.error('Error sending message to Telegram:', error);
+    }
+}
+
+export async function sendErrorMessageNoImageFoundTelegramBot(chatId, TELEGRAM_BOT_TOKEN, replyToMessageId) {
+    // Construct the error message
+    const message = `⛔ Please add screenshot of the Payment!`; 
 
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     try {

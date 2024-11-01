@@ -13,6 +13,7 @@ import {
   sendAmountDisputeMessageTelegramBot,
   sendBankMismatchMessageTelegramBot,
   sendErrorMessageNoDepositFoundTelegramBot,
+  sendErrorMessageNoImageFoundTelegramBot,
   sendErrorMessageNoMerchantOrderIdFoundTelegramBot,
   sendErrorMessageTelegram,
   sendErrorMessageUtrNotFoundTelegramBot,
@@ -1325,24 +1326,28 @@ class PayInController {
 
   async telegramResHandler(req, res, next) {
     const TELEGRAM_BOT_TOKEN = config?.telegramOcrBotToken;
-    console.log(TELEGRAM_BOT_TOKEN, "TELEGRAM_BOT_TOKEN")
 
     try {
       const { message } = req.body;
-      console.log(message?.caption);
       res.sendStatus(200);
       if (message) {
-        if (message?.caption === undefined) {
-          console.log("--=--=-=-", message.chat.id,
+        if (message?.text) {
+          await sendErrorMessageNoImageFoundTelegramBot(
+            message.chat.id,
             TELEGRAM_BOT_TOKEN,
-            message?.message_id)
+            message?.message_id
+          );
+          logger.error("Please add screenshot of the Payment!");
+          return;
+        }
+        if (message?.caption === undefined) {
           await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
             message.chat.id,
             TELEGRAM_BOT_TOKEN,
             message?.message_id
           );
-          logger.error("Please enter merchant orderId" );
-          return; 
+          logger.error("Please enter merchant orderId");
+          return;
           // res.status(200).json({ message: "Please enter merchant orderId" });
         }
 
@@ -1376,7 +1381,7 @@ class PayInController {
           } catch (error) {
             console.error("Error converting image to Base64:", error);
             logger.error("Error converting image to Base64");
-            return 
+            return
             // res
             //   .status(500)
             //   .json({ message: "Error processing the image" });
@@ -1423,7 +1428,7 @@ class PayInController {
                     message?.message_id
                   );
                   logger.error("Merchant order id does not exist")
-                  return 
+                  return
                   // res
                   //   .status(200)
                   //   .json({ message: "Merchant order id does not exist" });
@@ -1436,7 +1441,7 @@ class PayInController {
                     message?.message_id
                   );
                   logger.error("Utr is already used");
-                  return 
+                  return
                   // res.status(200).json({ message: "Utr is already used" });
                 }
 
@@ -1847,10 +1852,14 @@ class PayInController {
               .json({ message: "Utr or Amount not recognized" });
           }
         } else {
-          return res.status(200).json({ message: "No photo in the message" });
+          logger.error("No photo in the message");
+          return
+          // res.status(200).json({ message: "No photo in the message" });
         }
       } else {
-        return res.status(200).json({ message: "No message Found" });
+        logger.error("No message Found");
+        return
+        // res.status(200).json({ message: "No message Found" });
       }
     } catch (error) {
       next(error);
@@ -1859,15 +1868,16 @@ class PayInController {
 
   async telegramCheckUtrHandler(req, res, next) {
     const TELEGRAM_BOT_TOKEN = config?.telegramCheckUtrBotToken;
-    res.sendStatus(200);
 
     try {
       const { message } = req.body;
+      res.sendStatus(200);
+
       const data = message?.text;
       if (data) {
         const splitData = data.split(" ");
 
-        const status = splitData[0];
+        const command = splitData[0];
         const merchantOrderId = splitData[1];
         const utr = splitData[2];
 
@@ -1878,7 +1888,9 @@ class PayInController {
             message?.message_id,
             true // this check for message according to captions only
           );
-          return res.status(200).json({ message: "Please enter merchant orderId" });
+          logger.error("Please enter merchant orderId");
+          return
+          // res.status(200).json({ message: "Please enter merchant orderId" });
         }
 
         if (!utr) {
@@ -1888,7 +1900,9 @@ class PayInController {
             TELEGRAM_BOT_TOKEN,
             message?.message_id
           );
-          return res.status(200).json({ message: "Please enter UTR" });
+          logger.error("Please enter UTR");
+          return
+          // res.status(200).json({ message: "Please enter UTR" });
         }
 
         if (merchantOrderId && utr) {
@@ -1904,13 +1918,14 @@ class PayInController {
               TELEGRAM_BOT_TOKEN,
               message?.message_id
             );
-            return res.status(200).json({ message: "Utr does not exist" });
+            logger.error("Utr does not exist");
+            return
+            // res.status(200).json({ message: "Utr does not exist" });
           }
 
           const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(
             merchantOrderId
           );
-
 
           if (!getPayInData) {
             await sendErrorMessageTelegram(
