@@ -1869,18 +1869,18 @@ class PayInController {
 
   async telegramCheckUtrHandler(req, res, next) {
     const TELEGRAM_BOT_TOKEN = config?.telegramCheckUtrBotToken;
-
     try {
       const { message } = req.body;
+      const data = message?.text;
       res.sendStatus(200);
 
-      const data = message?.text;
       if (data) {
         const splitData = data.split(" ");
 
         const command = splitData[0];
         const merchantOrderId = splitData[1];
         const utr = splitData[2];
+
 
         if (merchantOrderId === undefined) {
           await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
@@ -1907,7 +1907,6 @@ class PayInController {
         }
 
         if (merchantOrderId && utr) {
-
           const getBankResponseByUtr = await botResponseRepo.getBotResByUtr(
             utr
           );
@@ -1939,7 +1938,6 @@ class PayInController {
               .status(200)
               .json({ message: "Merchant order id does not exist" });
           }
-
           let updatePayInData;
           if (getPayInData) {
             if (getBankResponseByUtr?.bankName !== getPayInData?.bank_name) {
@@ -1948,7 +1946,6 @@ class PayInController {
                 getBankResponseByUtr?.amount,
                 getPayInData.Merchant?.payin_commission
               );
-
               const durMs = new Date() - getPayInData.createdAt;
               const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
               const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
@@ -2010,7 +2007,10 @@ class PayInController {
 
               return res.status(200).json({ message: "true" });
             }
-            if ((getPayInData?.user_submitted_utr === getBankResponseByUtr?.utr) && (getPayInData?.bank_name === getBankResponseByUtr?.bankName)) {
+            
+            const updateUtrIfNull = getPayInData?.user_submitted_utr ? getPayInData?.user_submitted_utr : utr;
+            if (( updateUtrIfNull === getBankResponseByUtr?.utr) && (getPayInData?.bank_name === getBankResponseByUtr?.bankName)) {
+
               if (
                 parseFloat(getPayInData?.amount) === parseFloat(getBankResponseByUtr?.amount)
               ) {
@@ -2227,14 +2227,20 @@ class PayInController {
               TELEGRAM_BOT_TOKEN,
               message?.message_id
             );
-            return res.status(200).json({ message: "Utr is already used" });
+            logger.error("Utr is already used");
+            return 
+            // res.status(200).json({ message: "Utr is already used" });
           }
 
         } else {
-          return res.status(200).json({ message: "Merchant orderId or UTR is missing" });
+          logger.error("Merchant orderId or UTR is missing");
+          return 
+          // res.status(200).json({ message: "Merchant orderId or UTR is missing" });
         }
       } else {
-        return res.status(200).json({ message: "Message is missing" });
+        logger.error("Message is missing" );
+        return 
+        // res.status(200).json({ message: "Message is missing" });
       }
     } catch (error) {
       next(error);
