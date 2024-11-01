@@ -1331,23 +1331,24 @@ class PayInController {
       const { message } = req.body;
       res.sendStatus(200);
       if (message) {
-        if (message?.text === undefined) {
-          await sendErrorMessageNoImageFoundTelegramBot(
-            message.chat.id,
-            TELEGRAM_BOT_TOKEN,
-            message?.message_id
-          );
-          logger.error("Please add screenshot of the Payment!");
-          return;
-        }
         if (message?.caption === undefined) {
-          await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
-            message.chat.id,
-            TELEGRAM_BOT_TOKEN,
-            message?.message_id
-          );
-          logger.error("Please enter merchant orderId");
-          return;
+          if (message?.text) {
+            await sendErrorMessageNoImageFoundTelegramBot(
+              message.chat.id,
+              TELEGRAM_BOT_TOKEN,
+              message?.message_id
+            );
+            logger.error("Please add screenshot of the Payment!");
+            return;
+          } else {
+            await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
+              message.chat.id,
+              TELEGRAM_BOT_TOKEN,
+              message?.message_id
+            );
+            logger.error("Please enter merchant orderId");
+            return;
+          }
           // res.status(200).json({ message: "Please enter merchant orderId" });
         }
 
