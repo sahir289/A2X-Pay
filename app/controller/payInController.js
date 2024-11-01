@@ -1882,7 +1882,7 @@ class PayInController {
         const merchantOrderId = splitData[1];
         const utr = splitData[2];
 
-        if (!merchantOrderId) {
+        if (merchantOrderId === undefined) {
           await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
             message.chat.id,
             TELEGRAM_BOT_TOKEN,
@@ -1894,7 +1894,7 @@ class PayInController {
           // res.status(200).json({ message: "Please enter merchant orderId" });
         }
 
-        if (!utr) {
+        if (utr === undefined) {
           await sendErrorMessageNoDepositFoundTelegramBot(
             message.chat.id,
             utr,
