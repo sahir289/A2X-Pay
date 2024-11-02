@@ -1419,6 +1419,23 @@ class PayInController {
             imgData
           );
 
+          if(resFromOcrPy?.data?.status === "failure"){
+            
+            await sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(
+              message.chat.id,
+              TELEGRAM_BOT_TOKEN,
+              message?.message_id
+            );
+
+            const response = {
+              status: "Not Found",
+              amount,
+              merchant_order_id: updatePayinRes?.merchant_order_id,
+              return_url: updatePayinRes?.return_url,
+            };
+            return DefaultResponse(res, 200, "Utr is not recognized", response);
+          }
+
           // Merge the data from the API with the existing dataRes
           dataRes = {
             amount: resFromOcrPy?.data?.data?.amount, //|| dataRes.amount,
