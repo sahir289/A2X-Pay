@@ -1962,7 +1962,7 @@ class PayInController {
             //   .json({ message: "Merchant order id does not exist" });
           }
           let updatePayInData;
-          if (getPayInData) {
+          if (getPayInData && (getPayInData.status === "PENDING" || getPayInData.status === "DROPPED")) {
             if (getBankResponseByUtr?.bankName !== getPayInData?.bank_name) {
 
               const payinCommission = calculateCommission(
@@ -2239,6 +2239,16 @@ class PayInController {
               }
 
             }
+          }
+          else {
+            await sendAlreadyConfirmedMessageTelegramBot(
+              message.chat.id,
+              getBankResponseByUtr?.utr,
+              TELEGRAM_BOT_TOKEN,
+              message?.message_id
+            );
+            logger.error("Utr is already confirmed");
+            return 
           }
 
           if (getPayInData?.is_notified === true) {
