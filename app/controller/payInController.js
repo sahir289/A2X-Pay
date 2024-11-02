@@ -958,13 +958,35 @@ class PayInController {
         "http://54.172.72.118:8000/ocr",
         imgData
       );
+
+      if(resFromOcrPy?.data?.status === "failure"){
+        const imageUrl = `${req?.file?.key}`;
+        const payInData = {
+          amount,
+          status: "IMG_PENDING",
+          is_url_expires: true,
+          user_submitted_image: imageUrl,
+        };
+        const updatePayinRes = await payInRepo.updatePayInData(
+          payInId,
+          payInData
+        );
+        const response = {
+          status: "Not Found",
+          amount,
+          merchant_order_id: updatePayinRes?.merchant_order_id,
+          return_url: updatePayinRes?.return_url,
+        };
+        return DefaultResponse(res, 200, "Utr is not recognized", response);
+      }
+      
       // Merge the data from the API with the existing dataRes
       const usrSubmittedUtr = {
         amount: resFromOcrPy?.data?.data?.amount, //|| dataRes.amount,
         utr: resFromOcrPy?.data?.data?.transaction_id, //|| dataRes.utr
       };
 
-      if (usrSubmittedUtr?.utr !== "undefined" && usrSubmittedUtr?.utr !== "null" && usrSubmittedUtr?.utr !== null && usrSubmittedUtr?.utr !== "") {
+      if (usrSubmittedUtr?.utr !== undefined && usrSubmittedUtr?.utr !== "null" && usrSubmittedUtr?.utr !== null && usrSubmittedUtr?.utr !== "") {
         const usrSubmittedUtrData = usrSubmittedUtr?.utr;
 
         const isUtrExist = await payInRepo.getPayinDataByUsrSubmittedUtr(usrSubmittedUtrData)
