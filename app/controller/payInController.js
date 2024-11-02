@@ -1371,7 +1371,6 @@ class PayInController {
             logger.error("Please enter merchant orderId");
             return;
           }
-          // res.status(200).json({ message: "Please enter merchant orderId" });
         }
 
         if (message?.photo) {
