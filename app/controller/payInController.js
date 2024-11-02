@@ -1871,7 +1871,7 @@ class PayInController {
     const TELEGRAM_BOT_TOKEN = config?.telegramCheckUtrBotToken;
     try {
       const { message } = req.body;
-      const data = message?.text;
+      const data = message?.text ? message?.text : message?.caption;
       res.sendStatus(200);
 
       if (data) {
@@ -1934,9 +1934,11 @@ class PayInController {
               TELEGRAM_BOT_TOKEN,
               message?.message_id
             );
-            return res
-              .status(200)
-              .json({ message: "Merchant order id does not exist" });
+            logger.error("Merchant order id does not exist");
+            return 
+            // res
+            //   .status(200)
+            //   .json({ message: "Merchant order id does not exist" });
           }
           let updatePayInData;
           if (getPayInData) {
@@ -2005,7 +2007,8 @@ class PayInController {
                 console.error("Error sending notification:", error);
               }
 
-              return res.status(200).json({ message: "true" });
+              return 
+              // res.status(200).json({ message: "true" });
             }
             
             const updateUtrIfNull = getPayInData?.user_submitted_utr ? getPayInData?.user_submitted_utr : utr;
@@ -2080,7 +2083,8 @@ class PayInController {
                     console.error("Error sending notification:", error);
                   }
 
-                  return res.status(200).json({ message: "true" });
+                  return 
+                  // res.status(200).json({ message: "true" });
                 } else {
 
                   const payinCommission = calculateCommission(
@@ -2137,7 +2141,8 @@ class PayInController {
                   } catch (error) {
                     console.error("Error sending notification to merchant:", error);
                   }
-                  return res.status(200).json({ message: "true" });
+                  return 
+                  // res.status(200).json({ message: "true" });
                 }
 
               } else {
@@ -2204,7 +2209,8 @@ class PayInController {
                   console.error("Error sending notification:", error);
                 }
 
-                return res.status(200).json({ message: "true" });
+                return 
+                // res.status(200).json({ message: "true" });
               }
 
             }
@@ -2217,7 +2223,9 @@ class PayInController {
               TELEGRAM_BOT_TOKEN,
               message?.message_id
             );
-            return res.status(200).json({ message: "Utr is already used" });
+            logger.error("Utr is already confirmed");
+            return 
+            // res.status(200).json({ message: "Utr is already used" });
           }
 
           if (getBankResponseByUtr?.is_used === true) {
