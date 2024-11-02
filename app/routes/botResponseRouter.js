@@ -7,4 +7,6 @@ botResRouter.post("/create-message", botResponseController.botResponse);
 
 botResRouter.get("/get-message", botResponseController.getBotResponse);
 
+botResRouter.get("/get-bank-message", botResponseController.getBotResponseByBank);
+
 export default botResRouter;
