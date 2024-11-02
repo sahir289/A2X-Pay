@@ -261,6 +261,24 @@ class BotResponseController {
       next(error);
     }
   }
+
+  async getBotResponseByBank(req, res, next) {
+    try {
+      checkValidation(req);
+      const {bankName, startDate, endDate} = req.query;
+
+      const botRes = await botResponseRepo.getBankRecordsByBankName(bankName, startDate, endDate);
+
+      return DefaultResponse(
+        res,
+        200,
+        "Bot response fetched successful",
+        botRes
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new BotResponseController();

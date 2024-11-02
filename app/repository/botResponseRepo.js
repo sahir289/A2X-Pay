@@ -125,6 +125,25 @@ class BotResponseRepo {
     return res;
   }
 
+  async getBankRecordsByBankName(bankName, startDate, endDate) {
+    const dateFilter = {};
+    if (startDate) {
+      dateFilter.gte = new Date(startDate);
+    }
+    if (endDate) {
+      let end = new Date(endDate);
+      
+      dateFilter.lte = end;
+    }
+    const res = await prisma.telegramResponse.findMany({
+      where: {
+        bankName: bankName,
+        createdAt: dateFilter,
+      }
+    })
+    return res;
+  }
+
 }
 
 export default new BotResponseRepo();
