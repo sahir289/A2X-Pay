@@ -1468,9 +1468,7 @@ class PayInController {
                   );
                   logger.error("Merchant order id does not exist")
                   return
-                  // res
-                  //   .status(200)
-                  //   .json({ message: "Merchant order id does not exist" });
+                 
                 }
                 if (getPayInData?.is_notified === true) {
                   await sendAlreadyConfirmedMessageTelegramBot(
@@ -1481,7 +1479,6 @@ class PayInController {
                   );
                   logger.error("Utr is already used");
                   return
-                  // res.status(200).json({ message: "Utr is already used" });
                 }
 
                 let updatePayInData;
@@ -1491,9 +1488,11 @@ class PayInController {
                     dataRes?.utr
                   );
                   if (
-                    (dataRes?.utr === getPayInData?.user_submitted_utr) && (dataRes?.utr === getTelegramResByUtr?.utr)
+                    ((dataRes?.utr === getPayInData?.user_submitted_utr) && (dataRes?.utr === getTelegramResByUtr?.utr)) || ((dataRes?.utr === getTelegramResByUtr?.utr) && (getPayInData?.status === "PENDING")&& (getPayInData?.merchant_order_id === merchantOrderIdTele))
                   ) {
-                    if (parseFloat(dataRes?.amount) === parseFloat(getPayInData?.amount)){
+
+                    // Here, getTelegramResByUtr.amount is used instead of dataRes.amount to handle cases where the slip may have been altered in a fraud scenario
+                    if (parseFloat(getTelegramResByUtr?.amount) === parseFloat(getPayInData?.amount)){
                       const payinCommission = calculateCommission(
                         dataRes?.amount,
                         getPayInData.Merchant?.payin_commission
@@ -1571,6 +1570,7 @@ class PayInController {
                     );
                     return res.status(200).json({ message: "Utr does not exist" });
                   }
+                  
                 } else {
                   const getTelegramResByUtr = await botResponseRepo.getBotResByUtr(
                     dataRes?.utr
