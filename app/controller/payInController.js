@@ -1802,65 +1802,6 @@ class PayInController {
 
                       return res.status(200).json({ message: "true" });
                     }
-                    // } else {
-
-                    //   const payinCommission = await calculateCommission(
-                    //     dataRes?.amount,
-                    //     getPayInData.Merchant?.payin_commission
-                    //   );
-
-                    //   updatePayInData = {
-                    //     confirmed: dataRes?.amount,
-                    //     status: "BANK_MISMATCH",
-                    //     is_notified: true,
-                    //     utr: dataRes.utr,
-                    //     user_submitted_utr: dataRes?.utr,
-                    //     approved_at: new Date(),
-                    //     is_url_expires: true,
-                    //     payin_commission: payinCommission,
-                    //     user_submitted_image: null,
-                    //   };
-                    //   const updatePayInDataRes = await payInRepo.updatePayInData(
-                    //     getPayInData?.id,
-                    //     updatePayInData
-                    //   );
-                    //   await botResponseRepo.updateBotResponseByUtr(
-                    //     getTelegramResByUtr?.id,
-                    //     getTelegramResByUtr?.utr
-                    //   );
-
-                    //   await sendBankMismatchMessageTelegramBot(
-                    //     message.chat.id,
-                    //     dataRes?.bankName,
-                    //     getPayInData?.bank_name,
-                    //     TELEGRAM_BOT_TOKEN,
-                    //     message?.message_id
-                    //   );
-
-                    //   // Notify url--->
-                    //   const notifyData = {
-                    //     status: "BANK_MISMATCH",
-                    //     merchantOrderId: getPayInData?.merchant_order_id,
-                    //     payinId: getPayInData?.id,
-                    //     amount: getPayInData?.confirmed,
-                    //     req_amount: getPayInData?.amount,
-                    //     utr_id: getPayInData?.utr
-                    //   }
-                    //   try {
-                    //     //When we get the notify url we will add it.
-                    //     logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-
-                    //     const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-                    //     logger.info('Sending notification to merchant', {
-                    //       status: notifyMerchant.status,
-                    //       data: notifyMerchant.data,
-                    //     })
-                    //   } catch (error) {
-                    //     console.error("Error sending notification:", error);
-                    //   }
-
-                    //   return res.status(200).json({ message: "true" });
-                    // }
 
                   } else {
                     await sendErrorMessageNoDepositFoundTelegramBot(
@@ -1990,7 +1931,7 @@ class PayInController {
             //   .json({ message: "Merchant order id does not exist" });
           }
           let updatePayInData;
-          if (getPayInData && (getPayInData.status === "PENDING" || getPayInData.status === "DROPPED")) {
+          if (getPayInData && (getPayInData.status === "PENDING" || getPayInData.status === "DROPPED" || getPayInData.status === "ASSIGNED")) {
             if (getBankResponseByUtr?.bankName !== getPayInData?.bank_name) {
 
               const payinCommission = calculateCommission(
@@ -2220,6 +2161,7 @@ class PayInController {
                     confirmed: getBankResponseByUtr?.amount,
                     status: "SUCCESS",
                     is_notified: true,
+                    user_submitted_utr: getBankResponseByUtr.utr,
                     utr: getBankResponseByUtr.utr,
                     approved_at: new Date(),
                     is_url_expires: true,
@@ -2268,27 +2210,47 @@ class PayInController {
 
             }
           }
-          else {
-            await sendAlreadyConfirmedMessageTelegramBot(
-              message.chat.id,
-              getBankResponseByUtr?.utr,
-              TELEGRAM_BOT_TOKEN,
-              message?.message_id
-            );
-            logger.error("Utr is already confirmed");
-            return 
-          }
+          // else {
+          //   await sendAlreadyConfirmedMessageTelegramBot(
+          //     message.chat.id,
+          //     getBankResponseByUtr?.utr,
+          //     TELEGRAM_BOT_TOKEN,
+          //     message?.message_id
+          //   );
+          //   logger.error("Utr is already confirmed");
+          //   return 
+          // }
 
-          if (getPayInData?.is_notified === true) {
-            await sendAlreadyConfirmedMessageTelegramBot(
-              message.chat.id,
-              getBankResponseByUtr?.utr,
-              TELEGRAM_BOT_TOKEN,
-              message?.message_id
-            );
-            logger.error("Utr is already confirmed");
-            return 
-            // res.status(200).json({ message: "Utr is already used" });
+          else if (getPayInData?.is_notified === true) {
+            if (getPayInData?.status === 'BANK_MISMATCH'){
+              await sendBankMismatchMessageTelegramBot(
+                message.chat.id,
+                getBankResponseByUtr?.bankName,
+                getPayInData?.bank_name,
+                TELEGRAM_BOT_TOKEN,
+                message?.message_id
+              );
+            }
+            else if (getPayInData?.status === 'DISPUTE'){
+              await sendAmountDisputeMessageTelegramBot(
+                message.chat.id,
+                getBankResponseByUtr?.amount,
+                getPayInData?.amount,
+                TELEGRAM_BOT_TOKEN,
+                message?.message_id
+              );
+            }
+            else {
+              await sendAlreadyConfirmedMessageTelegramBot(
+                message.chat.id,
+                getBankResponseByUtr?.utr,
+                TELEGRAM_BOT_TOKEN,
+                message?.message_id
+              );
+              logger.error("Utr is already confirmed");
+              return 
+              // res.status(200).json({ message: "Utr is already used" });
+            }
           }
 
           if (getBankResponseByUtr?.is_used === true) {
