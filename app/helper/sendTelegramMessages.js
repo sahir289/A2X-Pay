@@ -151,7 +151,6 @@ export async function sendAmountDisputeMessageTelegramBot(chatId, amount, disput
 
 export async function sendBankMismatchMessageTelegramBot(chatId, bankNameFromBank, bankNameFromMerchant, TELEGRAM_BOT_TOKEN, replyToMessageId) {
     // Construct the error message
-    console.log(bankNameFromBank, 'medsssss')
 
     const message = `
         <b><u>BANK MISMATCH :</u></b> 

@@ -1618,7 +1618,7 @@ class PayInController {
 
                       if (isUsrSubmittedUtrUsed.length > 0) {
 
-                        const payinCommission = await calculateCommission(
+                        const payinCommission = calculateCommission(
                           dataRes?.amount,
                           getPayInData.Merchant?.payin_commission
                         );
@@ -1717,9 +1717,10 @@ class PayInController {
                             getTelegramResByUtr?.utr
                           );
   
-                          await sendSuccessMessageTelegram(
+                          await sendBankMismatchMessageTelegramBot(
                             message.chat.id,
-                            merchantOrderIdTele,
+                            getTelegramResByUtr?.bankName,
+                            getPayInData?.bank_name,
                             TELEGRAM_BOT_TOKEN,
                             message?.message_id
                           );
