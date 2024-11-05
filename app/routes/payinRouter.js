@@ -37,7 +37,7 @@ payInRouter.post(
 );
 
 payInRouter.post(
-"/update-payment-status/:payInId",
+  "/update-payment-status/:payInId",
   validatePayInIdUrl,
   payInController.updatePaymentStatus
 );
@@ -110,10 +110,10 @@ payInRouter.post(
 );
 
 // telegram resp ocr
-payInRouter.post("/tele-ocr", payInController.telegramResHandler)
+payInRouter.post("/tele-ocr", payInController.telegramResHandler);
 
 //telegram check utr
-payInRouter.post("/tele-check-utr", payInController.telegramCheckUtrHandler)
+payInRouter.post("/tele-check-utr", payInController.telegramCheckUtrHandler);
 
 payInRouter.get(
   "/get-payInDataVendor",
@@ -121,7 +121,7 @@ payInRouter.get(
 );
 
 payInRouter.post(
-"/update-payment-notified-status/:payInId",
+  "/update-payment-notified-status/:payInId",
   payInController.updatePaymentNotificationStatus
 );
 
