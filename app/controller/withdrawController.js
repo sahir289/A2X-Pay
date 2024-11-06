@@ -193,6 +193,7 @@ class WithdrawController {
       const merchantPayoutUrl = merchant.payout_notify_url;
       if (merchantPayoutUrl !== null) {
         let merchantPayoutData = {
+          code:merchant.code,
           merchantOrderId: singleWithdrawData.merchant_order_id,
           payoutId: req.params.id,
           amount: singleWithdrawData.amount,
@@ -202,8 +203,8 @@ class WithdrawController {
         try {
           // Payout notify
           logger.info('Sending notification to merchant', { notify_url: merchantPayoutUrl, notify_data: merchantPayoutData });
-          const response = await axios.post(`${merchantPayoutUrl}`, merchantPayoutData);
-          logger.info('Sending notification to merchant', {
+          const response = await axios.post(merchantPayoutUrl, merchantPayoutData);
+          logger.info('Notification to merchant sent Successfully', {
             status: response.status,
             data: response.data,
           })
