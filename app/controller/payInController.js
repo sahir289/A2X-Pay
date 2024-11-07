@@ -507,7 +507,7 @@ class PayInController {
               parseFloat(getBotDataRes?.amount)
             );
 
-          const payinCommission = await calculateCommission(
+          const payinCommission = calculateCommission(
             getBotDataRes?.amount,
             updateMerchantDataRes?.payin_commission
           );
@@ -516,6 +516,12 @@ class PayInController {
             parseFloat(getBotDataRes?.amount) ===
             parseFloat(getPayInData?.amount)
           ) {
+
+            const payinCommission = calculateCommission(
+              getBotDataRes?.amount,
+              updateMerchantDataRes?.payin_commission
+            );
+
             const updatePayInData = {
               confirmed: getBotDataRes?.amount,
               status: "SUCCESS",
@@ -816,12 +822,18 @@ class PayInController {
           getPayInData?.bank_acc_id,
           parseFloat(matchDataFromBotRes?.amount)
         );
-        const payinCommission = await calculateCommission(
+        const payinCommission = calculateCommission(
           matchDataFromBotRes?.amount,
           updateMerchantRes?.payin_commission
         );
 
         if (parseFloat(amount) === parseFloat(matchDataFromBotRes?.amount)) {
+
+          const payinCommission = calculateCommission(
+            getBotDataRes?.amount,
+            updateMerchantRes?.payin_commission
+          );
+
           payInData = {
             confirmed: matchDataFromBotRes?.amount,
             status: "SUCCESS",
@@ -1186,12 +1198,24 @@ class PayInController {
           );
 
           if (parseFloat(amount) === parseFloat(matchDataFromBotRes?.amount)) {
+
+            const updateMerchantDataRes = await merchantRepo.updateMerchant(
+              getPayInData?.merchant_id,
+              parseFloat(getBotDataRes?.amount)
+            );
+
+            const payinCommission = calculateCommission(
+              matchDataFromBotRes?.amount,
+              updateMerchantDataRes?.payin_commission
+            );
+
             payInData = {
               confirmed: matchDataFromBotRes?.amount,
               status: "SUCCESS",
               is_notified: true,
               user_submitted_utr: usrSubmittedUtrData,
               utr: matchDataFromBotRes.utr,
+              payin_commission: payinCommission,
               approved_at: new Date(),
               is_url_expires: true,
               duration: duration
