@@ -134,7 +134,7 @@ class BotResponseController {
             throw new CustomError(400, "The UTR already exists");
           }
           const getMerchantToGetPayinCommissionRes = await merchantRepo.getMerchantById(checkPayInUtr[0]?.merchant_id)
-          const payinCommission = await calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
+          const payinCommission = calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
 
           const durMs = new Date() - checkPayInUtr.at(0)?.createdAt;
           const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
@@ -145,6 +145,9 @@ class BotResponseController {
           if (checkPayInUtr.at(0)?.amount == amount
             // && checkPayInUtr.at(0)?.user_submitted_utr == utr
           ) {
+
+            const payinCommission = calculateCommission(botRes?.amount, getMerchantToGetPayinCommissionRes?.payin_commission);
+            
             const payInData = {
               confirmed: botRes?.amount,
               status: "SUCCESS",
