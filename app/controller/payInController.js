@@ -1381,13 +1381,13 @@ class PayInController {
           //   logger.error("Please add screenshot of the Payment!");
           //   return;
           // } else {
-            await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
-              message.chat.id,
-              TELEGRAM_BOT_TOKEN,
-              message?.message_id
-            );
-            logger.error("Please enter merchant orderId");
-            return;
+            // await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
+            //   message.chat.id,
+            //   TELEGRAM_BOT_TOKEN,
+            //   message?.message_id
+            // );
+            // logger.error("Please enter merchant orderId");
+            // return;
           // }
         }
 
