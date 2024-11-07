@@ -1372,15 +1372,15 @@ class PayInController {
       res.sendStatus(200);
       if (message) {
         if (message?.caption === undefined) {
-          if (message?.text) {
-            await sendErrorMessageNoImageFoundTelegramBot(
-              message.chat.id,
-              TELEGRAM_BOT_TOKEN,
-              message?.message_id
-            );
-            logger.error("Please add screenshot of the Payment!");
-            return;
-          } else {
+          // if (message?.text) {
+          //   await sendErrorMessageNoImageFoundTelegramBot(
+          //     message.chat.id,
+          //     TELEGRAM_BOT_TOKEN,
+          //     message?.message_id
+          //   );
+          //   logger.error("Please add screenshot of the Payment!");
+          //   return;
+          // } else {
             await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
               message.chat.id,
               TELEGRAM_BOT_TOKEN,
@@ -1388,7 +1388,7 @@ class PayInController {
             );
             logger.error("Please enter merchant orderId");
             return;
-          }
+          // }
         }
 
         if (message?.photo) {
