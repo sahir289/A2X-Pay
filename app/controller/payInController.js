@@ -1176,7 +1176,7 @@ class PayInController {
             matchDataFromBotRes?.id,
             usrSubmittedUtrData
           );
-          await merchantRepo.updateMerchant(
+          const updateMerchantDataRes = await merchantRepo.updateMerchant(
             getPayInData?.merchant_id,
             parseFloat(matchDataFromBotRes?.amount)
           );
@@ -1184,14 +1184,20 @@ class PayInController {
             getPayInData?.bank_acc_id,
             parseFloat(matchDataFromBotRes?.amount)
           );
-
+          const payinCommission = calculateCommission(
+            matchDataFromBotRes?.amount,
+            updateMerchantDataRes?.payin_commission
+          );
+          
           if (parseFloat(amount) === parseFloat(matchDataFromBotRes?.amount)) {
+
             payInData = {
               confirmed: matchDataFromBotRes?.amount,
               status: "SUCCESS",
               is_notified: true,
               user_submitted_utr: usrSubmittedUtrData,
               utr: matchDataFromBotRes.utr,
+              payin_commission: payinCommission,
               approved_at: new Date(),
               is_url_expires: true,
               duration: duration

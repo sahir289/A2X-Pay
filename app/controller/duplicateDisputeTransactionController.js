@@ -33,6 +33,7 @@ class DuplicateDisputeTransactionController {
                 apiData = {
                     ...req.body,
                     status: "SUCCESS",
+                    payin_commission: payinCommission,
                     duration: duration,
                 }
             }
