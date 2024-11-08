@@ -2127,7 +2127,6 @@ class PayInController {
             );
             logger.error("Utr does not exist");
             return
-            // res.status(200).json({ message: "Utr does not exist" });
           }
 
           const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(
@@ -2142,10 +2141,7 @@ class PayInController {
               message?.message_id
             );
             logger.error("Merchant order id does not exist");
-            return 
-            // res
-            //   .status(200)
-            //   .json({ message: "Merchant order id does not exist" });
+            return; 
           }
           let updatePayInData;
           if (getPayInData && (getPayInData.status === "PENDING" || getPayInData.status === "DROPPED" || getPayInData.status === "ASSIGNED")) {

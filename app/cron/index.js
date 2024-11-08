@@ -30,10 +30,11 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
 
     const currentDate = moment().tz(timezone);
     if (type === "H") {
-      // Get the start and end times for the past hour in the specified timezone
-      startDate = currentDate.clone().subtract(1, "hour").toDate();
-      endDate = currentDate.toDate();
-    }
+      // Set startDate to midnight (beginning of the day)
+      startDate = currentDate.clone().startOf('day').toDate();
+      // Set endDate to the end of the current hour
+      endDate = currentDate.clone().endOf('hour').toDate();
+   }
     if (type === "N") {
       // Get the start and end times for the past 24 hours (or previous day)
       endDate = currentDate.toDate();
@@ -68,7 +69,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
         createdAt: { gte: startDate, lte: endDate },
       },
     });
-
+        
     const payOuts = await prisma.payout.groupBy({
       by: ["merchant_id"],
       _sum: { amount: true },
