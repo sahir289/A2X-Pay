@@ -14,7 +14,7 @@ import {
   validatePayInIdUrl,
   validatePayInProcess,
 } from "../helper/validators.js";
-// import gatherAllData from "../cron/index.js";
+import gatherAllData from "../cron/index.js";
 
 const payInRouter = express();
 
@@ -126,9 +126,10 @@ payInRouter.post(
 );
 
 //cronjob route for testing
-// payInRouter.get(
-//   "/initialize-cronjob",
-//   gatherAllData
-// );
+// payInRouter.get("/initialize-cronjob", (req, res) => {
+//   console.log("Calling gatherAllData with type: H and timezone: Asia/Kolkata");
+//   gatherAllData("H", "Asia/Kolkata");
+//   res.send("Cron job initialized");
+// });
 
 export default payInRouter;
