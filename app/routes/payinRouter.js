@@ -126,10 +126,10 @@ payInRouter.post(
 );
 
 //cronjob route for testing
-// payInRouter.get("/initialize-cronjob", (req, res) => {
-//   console.log("Calling gatherAllData with type: H and timezone: Asia/Kolkata");
-//   gatherAllData("H", "Asia/Kolkata");
-//   res.send("Cron job initialized");
-// });
+payInRouter.get("/initialize-cronjob", (req, res) => {
+  console.log("Calling gatherAllData with type: H and timezone: Asia/Kolkata");
+  gatherAllData("H", "Asia/Kolkata");
+  res.send("Cron job initialized");
+});
 
 export default payInRouter;

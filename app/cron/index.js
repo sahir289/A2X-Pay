@@ -32,19 +32,24 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       timezone = "Asia/Kolkata";
     }
 
-    const currentDate = moment().utc().tz(timezone, true);
+    const currentDate = moment().tz(timezone, true);
 
     if (type === "H") {
       // Hourly Report: Start at 12 AM today, end at the current hour today
-      startDate = currentDate.clone().startOf('day').tz("Asia/Kolkata", true).toDate(); // Start of today at 12 AM
-      endDate = currentDate.clone().tz("Asia/Kolkata", true).toDate(); // Current time
+      startDate = currentDate.clone().startOf('day').toDate(); // Start of today at 12 AM
+      endDate = currentDate.clone().toDate(); // Current time
     }
     
     if (type === "N") {
       // Daily Report: Start at 12 AM yesterday, end at 11:59 PM yesterday
-      startDate = currentDate.clone().subtract(1, 'day').startOf('day').tz("Asia/Kolkata", true).toDate();  // Start of yesterday
-      endDate = currentDate.clone().subtract(1, 'day').endOf('day').tz("Asia/Kolkata", true).toDate(); // End of yesterday at 11:59 PM
+      startDate = currentDate.clone().subtract(1, 'day').startOf('day').toDate();  // Start of yesterday
+      endDate = currentDate.clone().subtract(1, 'day').endOf('day').toDate(); // End of yesterday at 11:59 PM
+      console.log(startDate, "dayyy")
+      console.log(endDate, "dayyy")
     }
+    // console.log(startDate, "startDarrr")
+    // console.log(endDate, "endDateendDate")
+
 
     const merchants = await prisma.merchant.findMany({
       select: { id: true, code: true },
