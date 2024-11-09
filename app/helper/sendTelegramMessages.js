@@ -290,7 +290,11 @@ export async function sendTelegramDashboardReportMessage(
   formattedBankPayIns,
   formattedBankPayOuts,
   type,
-  TELEGRAM_BOT_TOKEN
+  TELEGRAM_BOT_TOKEN,
+  totalDepositAmount,
+  totalWithdrawAmount,
+  totalBankDepositAmount,
+  totalBankWithdrawAmount
 ) {
   const currentDate = new Date().toISOString().split("T")[0];
   const now = new Date();
@@ -315,31 +319,39 @@ export async function sendTelegramDashboardReportMessage(
 
 <b>💰 Deposits</b>
 ${
-  formattedPayIns.length > 0
-    ? formattedPayIns.join("\n")
-    : "No deposits available."
+      formattedPayIns.length > 0
+        ? formattedPayIns.join("\n")
+        : "No deposits available."
 }
+
+<b>Total Deposits:</b> ${totalDepositAmount}
 
 <b>🏦 Withdrawals</b>
 ${
-  formattedPayOuts.length > 0
-    ? formattedPayOuts.join("\n")
-    : "No withdrawals available."
+      formattedPayOuts.length > 0
+        ? formattedPayOuts.join("\n")
+        : "No withdrawals available."
 }
+
+<b>Total Withdrawals:</b> ${totalWithdrawAmount}
 
 <b>✅ Bank Account Deposits</b>
 ${
-  formattedBankPayIns.length > 0
-    ? formattedBankPayIns.join("\n")
-    : "No bank account deposits available."
+      formattedBankPayIns.length > 0
+        ? formattedBankPayIns.join("\n")
+        : "No bank account deposits available."
 }
+
+<b>Total Bank Account Deposits:</b> ${totalBankDepositAmount}
 
 <b>✅ Bank Account Withdrawals</b>
 ${
-  formattedBankPayOuts.length > 0
-    ? formattedBankPayOuts.join("\n")
-    : "No bank account withdrawals available."
+      formattedBankPayOuts.length > 0
+        ? formattedBankPayOuts.join("\n")
+        : "No bank account withdrawals available."
 }
+
+<b>Total Bank Account Withdrawals:</b> ${totalBankWithdrawAmount}
     `;
 
   // Send the message to Telegram
