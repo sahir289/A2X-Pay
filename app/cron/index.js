@@ -23,6 +23,10 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
   try {
     const empty = "-- -- -- ";
     let startDate, endDate;
+    let totalDepositAmount = 0;
+    let totalWithdrawAmount = 0;
+    let totalBankDepositAmount = 0;
+    let totalBankWithdrawAmount = 0;
 
     if (typeof timezone !== "string") {
       timezone = "Asia/Kolkata";
@@ -69,6 +73,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
         createdAt: { gte: startDate, lte: endDate },
       },
     });
+
+    totalDepositAmount = payIns.reduce((sum, payIn) => sum + parseFloat(payIn._sum.amount || 0), 0);
         
     const payOuts = await prisma.payout.groupBy({
       by: ["merchant_id"],
@@ -80,6 +86,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       },
     });
 
+    totalWithdrawAmount = payOuts.reduce((sum, payOut) => sum + parseFloat(payOut._sum.amount || 0), 0);
+
     const bankPayIns = await prisma.payin.groupBy({
       by: ["bank_acc_id"],
       _sum: { amount: true },
@@ -90,6 +98,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       },
     });
 
+    totalBankDepositAmount = bankPayIns.reduce((sum, payIn) => sum + parseFloat(payIn._sum.amount || 0), 0);
+
     const bankPayOuts = await prisma.payout.groupBy({
       by: ['from_bank'],
       _sum: { amount: true },
@@ -99,6 +109,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
         createdAt: { gte: startDate, lte: endDate },
       },
     });    
+
+    totalBankWithdrawAmount = bankPayOuts.reduce((sum, payOut) => sum + parseFloat(payOut._sum.amount || 0), 0);
 
     const formattedPayIns = payIns
       .map((payIn) => {
@@ -139,6 +151,10 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       formattedBankPayOuts,
       type === "H" ? "Hourly Report" : "Daily Report",
       config?.telegramBotToken,
+      formatePrice(totalDepositAmount),
+      formatePrice(totalWithdrawAmount),
+      formatePrice(totalBankDepositAmount),
+      formatePrice(totalBankWithdrawAmount)
     );
   } catch (err) {
     console.error("========= CRON ERROR =========", err);
@@ -147,11 +163,15 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
 
 // gatherAllData("H", "Asia/Kolkata")
 
-const formatePrice = (price) => {
-  return Number(price).toLocaleString("en-US", {
+const formatePrice = (price, currencySymbol = "₹") => {
+  // return Number(price).toLocaleString("en-US", {
+  //   minimumFractionDigits: 2,
+  //   maximumFractionDigits: 2,
+  // });
+  return `${currencySymbol} ${Number(price).toLocaleString("en-US", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+    maximumFractionDigits: 2
+  })}`;
 };
 
-// export default gatherAllData;
+export default gatherAllData;
