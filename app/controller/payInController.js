@@ -2386,6 +2386,11 @@ class PayInController {
                     updatePayInData
                   );
 
+                  await botResponseRepo.updateBotResponseByUtr(
+                    getBankResponseByUtr?.id,
+                    getBankResponseByUtr?.utr
+                  );
+
                   await sendSuccessMessageTelegram(
                     message.chat.id,
                     merchantOrderId,
