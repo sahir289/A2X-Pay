@@ -2249,8 +2249,8 @@ class PayInController {
                   updatePayInData
                 );
                 await botResponseRepo.updateBotResponseByUtr(
-                  getTelegramResByUtr?.id,
-                  getTelegramResByUtr?.utr
+                  getBankResponseByUtr?.id,
+                  getBankResponseByUtr?.utr
                 );
 
                 await sendAmountDisputeMessageTelegramBot(
@@ -2284,7 +2284,6 @@ class PayInController {
                 }
 
                 return 
-                // res.status(200).json({ message: "true" });
               }
 
               if (
@@ -2416,7 +2415,6 @@ class PayInController {
                     console.error("Error sending notification to merchant:", error);
                   }
                   return 
-                  // res.status(200).json({ message: "true" });
                 }
 
               }
