@@ -15,7 +15,7 @@ class DuplicateDisputeTransactionController {
             let apiData = {}
             const oldPayInData = await payInServices.getPayInDetails(payInId);
             const merchantRes = await merchantRepo.getMerchantById(oldPayInData.merchant_id)
-            const payinCommission = await calculateCommission(oldPayInData?.amount, merchantRes?.payin_commission);
+            const payinCommission = calculateCommission(oldPayInData?.amount, merchantRes?.payin_commission);
             const durMs = new Date() - oldPayInData?.createdAt;
             const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
             const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');

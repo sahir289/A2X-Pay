@@ -2088,6 +2088,7 @@ class PayInController {
         const merchantOrderId = splitData[1];
         const utr = splitData[2];
 
+        if(command === '/checkutr'){
 
         if (merchantOrderId === undefined) {
           await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
@@ -2486,6 +2487,7 @@ class PayInController {
           return 
           // res.status(200).json({ message: "Merchant orderId or UTR is missing" });
         }
+      }
       } else {
         logger.error("Message is missing" );
         return 
