@@ -127,9 +127,16 @@ payInRouter.post(
 
 //cronjob route for testing
 payInRouter.get("/initialize-cronjob", (req, res) => {
-  console.log("Calling gatherAllData CRONJOB with type: H and timezone: Asia/Kolkata");
+  console.log(
+    "Calling gatherAllData CRONJOB with type: H and timezone: Asia/Kolkata"
+  );
   gatherAllData("H", "Asia/Kolkata");
   res.send("Cron job initialized");
 });
+
+payInRouter.put(
+  "/update-deposit-status/:id",
+  payInController.updateDepositStatus
+);
 
 export default payInRouter;

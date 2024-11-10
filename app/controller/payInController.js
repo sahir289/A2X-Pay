@@ -2566,6 +2566,34 @@ class PayInController {
     }
   }
 
+  async updateDepositStatus(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { bank_name } = req.body;
+        
+      const payInData = await payInRepo.getPayInDataByMerchantOrderId(id);
+  
+      if (!payInData) {
+        return DefaultResponse(res, 404, "PayIn data not found");
+      }
+      if (payInData.status !== "BANK_MISMATCH") {
+        return DefaultResponse(res, 400, "Status is not BANK_MISMATCH, no update applied");
+      }
+  
+      const updatePayInData = {
+        status: "SUCCESS",
+        bank_name: bank_name,
+        amount: payInData.confirmed,
+      };
+  
+      await payInRepo.updatePayInData(payInData.id, updatePayInData);
+  
+      return DefaultResponse(res, 200, "PayIn data updated successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }
 
 export default new PayInController();
