@@ -2588,7 +2588,16 @@ class PayInController {
         amount: payInData.confirmed,
       };
   
-      await payInRepo.updatePayInData(payInData.id, updatePayInData);
+      await payInRepo.updatePayInData(payInData?.id, updatePayInData);
+
+      const getBankResponseByUtr = await botResponseRepo.getBotResByUtr(
+        payInData?.utr
+      );
+
+      await botResponseRepo.updateBotResponseByUtr(
+        getBankResponseByUtr?.id,
+        getBankResponseByUtr?.utr
+      );
   
       return DefaultResponse(res, 200, "PayIn data updated successfully");
     } catch (error) {
