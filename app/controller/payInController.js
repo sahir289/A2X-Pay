@@ -1582,7 +1582,7 @@ class PayInController {
                       return res.status(200).json({ message: "true" });
                     } else {
                       // Here, getTelegramResByUtr.amount is used instead of dataRes.amount to handle cases where the slip may have been altered in a fraud scenario
-                      if (parseFloat(getTelegramResByUtr?.amount) === parseFloat(getPayInData?.amount)){
+                      if (parseFloat(getTelegramResByUtr?.amount) == parseFloat(dataRes?.amount)){
                         const payinCommission = calculateCommission(
                           dataRes?.amount,
                           getPayInData.Merchant?.payin_commission
@@ -1658,7 +1658,7 @@ class PayInController {
                         const duration = `${durHours}:${durMinutes}:${durSeconds}`;
   
                         updatePayInData = {
-                          confirmed: dataRes?.amount,
+                          confirmed: getTelegramResByUtr?.amount,
                           status: "DISPUTE",
                           is_notified: true,
                           utr: dataRes.utr,
@@ -1679,7 +1679,7 @@ class PayInController {
                         );
                         await sendAmountDisputeMessageTelegramBot(
                           message.chat.id,
-                          dataRes?.amount,
+                          getTelegramResByUtr?.amount,
                           getPayInData?.amount,
                           TELEGRAM_BOT_TOKEN,
                           message?.message_id
@@ -1967,7 +1967,7 @@ class PayInController {
                       const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
                       updatePayInData = {
-                        confirmed: dataRes?.amount,
+                        confirmed: getTelegramResByUtr?.amount,
                         status: "DISPUTE",
                         is_notified: true,
                         utr: dataRes.utr,
@@ -1989,7 +1989,7 @@ class PayInController {
 
                       await sendAmountDisputeMessageTelegramBot(
                         message.chat.id,
-                        dataRes?.amount,
+                        getTelegramResByUtr?.amount,
                         getPayInData?.amount,
                         TELEGRAM_BOT_TOKEN,
                         message?.message_id
