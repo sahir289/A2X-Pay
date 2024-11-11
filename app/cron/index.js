@@ -70,7 +70,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _sum: { amount: true },
       _count: { id: true },
       where: {
-        status: { in: ["SUCCESS", "DISPUTE"] }, 
+        status: "SUCCESS", 
         updatedAt: { gte: startDate, lte: endDate },
       },
     });
@@ -94,7 +94,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _sum: { amount: true },
       _count: { id: true },
       where: {
-        status: { in: ["SUCCESS", "DISPUTE"] }, 
+        status: "SUCCESS", 
         updatedAt: { gte: startDate, lte: endDate },
       },
     });

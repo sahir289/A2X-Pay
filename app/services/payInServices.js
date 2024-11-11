@@ -200,7 +200,7 @@ class PayInService {
     }
     const payInData = await prisma.payin.findMany({
       where: {
-        status: { in: ["SUCCESS", "DISPUTE"] },
+        status: "SUCCESS",
         Merchant: {
           code: Array.isArray(merchantCode) ? { in: merchantCode } : merchantCode,
         },
