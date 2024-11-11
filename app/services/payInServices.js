@@ -204,7 +204,7 @@ class PayInService {
         Merchant: {
           code: Array.isArray(merchantCode) ? { in: merchantCode } : merchantCode,
         },
-        createdAt: dateFilter,
+        updatedAt: dateFilter,
       }
       
     });
@@ -217,7 +217,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
-        createdAt: dateFilter,
+        updatedAt: dateFilter,
       },
     });
 
@@ -229,7 +229,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
-        createdAt: dateFilter,
+        updatedAt: dateFilter,
       },
     });
 
@@ -275,7 +275,7 @@ class PayInService {
       const end = new Date(endDate);
       // end.setDate(end.getDate() + 1)
       dateFilter = {
-        createdAt: {
+        updatedAt: {
           gte: new Date(startDate),
           lte: end,
         },

@@ -70,8 +70,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _sum: { amount: true },
       _count: { id: true },
       where: {
-        status: "SUCCESS", 
-        createdAt: { gte: startDate, lte: endDate },
+        status: { in: ["SUCCESS", "DISPUTE"] }, 
+        updatedAt: { gte: startDate, lte: endDate },
       },
     });
 
@@ -83,7 +83,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _count: { id: true },
       where: {
         status: "SUCCESS", 
-        createdAt: { gte: startDate, lte: endDate },
+        updatedAt: { gte: startDate, lte: endDate },
       },
     });
 
@@ -94,8 +94,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _sum: { amount: true },
       _count: { id: true },
       where: {
-        status: "SUCCESS", 
-        createdAt: { gte: startDate, lte: endDate },
+        status: { in: ["SUCCESS", "DISPUTE"] }, 
+        updatedAt: { gte: startDate, lte: endDate },
       },
     });
 
@@ -107,7 +107,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _count: { id: true },
       where: {
         status: "SUCCESS",
-        createdAt: { gte: startDate, lte: endDate },
+        updatedAt: { gte: startDate, lte: endDate },
       },
     });    
 
