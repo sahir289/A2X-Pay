@@ -44,12 +44,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       // Daily Report: Start at 12 AM yesterday, end at 11:59 PM yesterday
       startDate = currentDate.clone().subtract(1, 'day').startOf('day').toDate();  // Start of yesterday
       endDate = currentDate.clone().subtract(1, 'day').endOf('day').toDate(); // End of yesterday at 11:59 PM
-      console.log(startDate, "dayyy")
-      console.log(endDate, "dayyy")
     }
-    // console.log(startDate, "startDarrr")
-    // console.log(endDate, "endDateendDate")
-
 
     const merchants = await prisma.merchant.findMany({
       select: { id: true, code: true },
@@ -76,7 +71,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _count: { id: true },
       where: {
         status: "SUCCESS", 
-        createdAt: { gte: startDate, lte: endDate },
+        updatedAt: { gte: startDate, lte: endDate },
       },
     });
 
@@ -88,7 +83,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _count: { id: true },
       where: {
         status: "SUCCESS", 
-        createdAt: { gte: startDate, lte: endDate },
+        updatedAt: { gte: startDate, lte: endDate },
       },
     });
 
@@ -100,7 +95,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _count: { id: true },
       where: {
         status: "SUCCESS", 
-        createdAt: { gte: startDate, lte: endDate },
+        updatedAt: { gte: startDate, lte: endDate },
       },
     });
 
@@ -112,7 +107,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _count: { id: true },
       where: {
         status: "SUCCESS",
-        createdAt: { gte: startDate, lte: endDate },
+        updatedAt: { gte: startDate, lte: endDate },
       },
     });    
 

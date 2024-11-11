@@ -315,7 +315,7 @@ export async function sendTelegramDashboardReportMessage(
   const formattedTime = `${startHour}${startAmpm}-${endHour}${endAmpm}`;
   const timeStamp = type === "Hourly Report" ? formattedTime : currentDate;
   const message = `
-<b>${type} (${timeStamp})</b>
+<b>${type} (${timeStamp}) IST</b>
 
 <b>💰 Deposits</b>
 ${
