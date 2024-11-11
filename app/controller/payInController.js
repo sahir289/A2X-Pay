@@ -2145,7 +2145,7 @@ class PayInController {
             return; 
           }
           let updatePayInData;
-          if (getPayInData && (getPayInData.status === "PENDING" || getPayInData.status === "DROPPED" || getPayInData.status === "ASSIGNED")) {
+          if (getPayInData && (getPayInData?.status === "PENDING" || getPayInData?.status === "DROPPED" || getPayInData?.status === "ASSIGNED")) {
             if (getBankResponseByUtr?.bankName !== getPayInData?.bank_name) {
 
               const payinCommission = calculateCommission(
@@ -2216,6 +2216,7 @@ class PayInController {
             }
             
             const updateUtrIfNull = getPayInData?.user_submitted_utr ? getPayInData?.user_submitted_utr : utr;
+
             if (( updateUtrIfNull === getBankResponseByUtr?.utr) && (getPayInData?.bank_name === getBankResponseByUtr?.bankName)) {
 
               if (
@@ -2479,19 +2480,16 @@ class PayInController {
             );
             logger.error("Utr is already used");
             return 
-            // res.status(200).json({ message: "Utr is already used" });
           }
 
         } else {
           logger.error("Merchant orderId or UTR is missing");
           return 
-          // res.status(200).json({ message: "Merchant orderId or UTR is missing" });
         }
       }
       } else {
         logger.error("Message is missing" );
         return 
-        // res.status(200).json({ message: "Message is missing" });
       }
     } catch (error) {
       next(error);
@@ -2598,18 +2596,30 @@ class PayInController {
       if (payInData.status !== "BANK_MISMATCH") {
         return DefaultResponse(res, 400, "Status is not BANK_MISMATCH, no update applied");
       }
+
+      const getBankResponseByUtr = await botResponseRepo.getBotResByUtr(
+        payInData?.utr
+      );
+
+      const payinCommission = calculateCommission(
+        getBankResponseByUtr?.amount,
+        payInData?.Merchant?.payin_commission
+      );
+      const durMs = new Date() - getPayInData.createdAt;
+      const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+      const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+      const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+      const duration = `${durHours}:${durMinutes}:${durSeconds}`;
   
       const updatePayInData = {
         status: "SUCCESS",
         bank_name: bank_name,
         amount: payInData.confirmed,
+        payin_commission: payinCommission,
+        duration: duration,
       };
   
       await payInRepo.updatePayInData(payInData?.id, updatePayInData);
-
-      const getBankResponseByUtr = await botResponseRepo.getBotResByUtr(
-        payInData?.utr
-      );
 
       await botResponseRepo.updateBotResponseByUtr(
         getBankResponseByUtr?.id,
