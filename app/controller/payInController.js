@@ -2558,6 +2558,23 @@ class PayInController {
         payInId,
         updatePayInData
       );
+      const notifyData = {
+        status: req.body.status === "SUCCESS",
+        merchantOrderId: updatePayInRes?.merchant_order_id,
+        payinId: updatePayInRes?.id,
+        amount: updatePayInRes?.confirmed,
+      };
+      //Notify the merchant
+      try {
+        logger.info('Sending notification to merchant', { notify_url: updatePayInRes.notify_url, notify_data: notifyData });
+        const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
+        logger.info('Sending notification to merchant', {
+          status: notifyMerchant.status,
+          data: notifyMerchant.data,
+        })
+      } catch (error) {
+        console.log("error", error)
+      }
       return DefaultResponse(
         res,
         200,
