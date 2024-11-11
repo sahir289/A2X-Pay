@@ -2596,7 +2596,6 @@ class PayInController {
       if (payInData.status !== "BANK_MISMATCH") {
         return DefaultResponse(res, 400, "Status is not BANK_MISMATCH, no update applied");
       }
-
       const getBankResponseByUtr = await botResponseRepo.getBotResByUtr(
         payInData?.utr
       );
@@ -2605,7 +2604,8 @@ class PayInController {
         getBankResponseByUtr?.amount,
         payInData?.Merchant?.payin_commission
       );
-      const durMs = new Date() - getPayInData.createdAt;
+
+      const durMs = new Date() - payInData?.createdAt;
       const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
       const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
       const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
