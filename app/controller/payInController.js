@@ -2557,7 +2557,7 @@ class PayInController {
         updatePayInData
       );
       const notifyData = {
-        status: req.body.status === "SUCCESS",
+        status: "SUCCESS",
         merchantOrderId: updatePayInRes?.merchant_order_id,
         payinId: updatePayInRes?.id,
         amount: updatePayInRes?.confirmed,
