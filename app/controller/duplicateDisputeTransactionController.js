@@ -54,6 +54,7 @@ class DuplicateDisputeTransactionController {
                     apiData = {
                         ...req.body,
                         status: "SUCCESS",
+                        confirmed: oldPayInData?.confirmed,
                         payin_commission: payinCommission,
                         duration: duration,
                     }
