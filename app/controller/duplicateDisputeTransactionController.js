@@ -44,6 +44,7 @@ class DuplicateDisputeTransactionController {
                     apiData = {
                         utr: oldPayInUtrData,
                         user_submitted_utr: oldPayInUtrData,
+                        confirmed: oldPayInData?.confirmed,
                         status: "SUCCESS",
                         payin_commission: payinCommission,
                         duration: duration,
