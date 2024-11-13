@@ -2659,12 +2659,30 @@ class PayInController {
         duration: duration,
       };
   
-      await payInRepo.updatePayInData(payInData?.id, updatePayInData);
+      const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
 
       await botResponseRepo.updateBotResponseByUtr(
         getBankResponseByUtr?.id,
         getBankResponseByUtr?.utr
       );
+
+      const notifyData = {
+        status: "SUCCESS",
+        merchantOrderId: updatePayInRes?.merchant_order_id,
+        payinId: updatePayInRes?.id,
+        amount: updatePayInRes?.confirmed,
+      };
+
+      try {
+        logger.info('Sending notification to merchant', { notify_url: updatePayInRes.notify_url, notify_data: notifyData });
+        const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
+        logger.info('Sending notification to merchant', {
+          status: notifyMerchant.status,
+          data: notifyMerchant.data,
+        })
+      } catch (error) {
+        console.log("error", error)
+      }
   
       return DefaultResponse(res, 200, "PayIn data updated successfully");
     } catch (error) {
