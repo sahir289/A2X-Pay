@@ -7,6 +7,7 @@ import { calculateCommission } from "../helper/utils.js";
 import config from "../../config.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import payInRepo from "../repository/payInRepo.js";
+import botResponseRepo from "../repository/botResponseRepo.js";
 
 class DuplicateDisputeTransactionController {
     async handleDuplicateDisputeTransaction(req, res, next) {
@@ -16,8 +17,11 @@ class DuplicateDisputeTransactionController {
             let apiData = {}
             const oldPayInData = await payInServices.getPayInDetails(payInId);
             const oldPayInUtrData = oldPayInData?.user_submitted_utr;
+            const getBankResponseByUtr = await botResponseRepo.getBotResByUtr(
+                oldPayInUtrData
+              );
             const merchantRes = await merchantRepo.getMerchantById(oldPayInData.merchant_id)
-            const payinCommission = calculateCommission(oldPayInData?.confirmed, merchantRes?.payin_commission);
+            const payinCommission = calculateCommission(getBankResponseByUtr?.amount, merchantRes?.payin_commission);
 
             const durMs = new Date() - oldPayInData?.createdAt;
             const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
@@ -44,7 +48,7 @@ class DuplicateDisputeTransactionController {
                     apiData = {
                         utr: oldPayInUtrData,
                         user_submitted_utr: oldPayInUtrData,
-                        confirmed: oldPayInData?.confirmed,
+                        confirmed: getBankResponseByUtr?.amount,
                         status: "SUCCESS",
                         payin_commission: payinCommission,
                         duration: duration,
@@ -54,7 +58,7 @@ class DuplicateDisputeTransactionController {
                     apiData = {
                         ...req.body,
                         status: "SUCCESS",
-                        confirmed: oldPayInData?.confirmed,
+                        confirmed: getBankResponseByUtr?.amount,
                         payin_commission: payinCommission,
                         duration: duration,
                     }

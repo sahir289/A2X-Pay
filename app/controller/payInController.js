@@ -1313,6 +1313,33 @@ class PayInController {
     }
   }
 
+  async getMerchantsNetBalance(req, res, next) {
+    try {
+      let { merchantCode } = req.query;
+    
+      const merchantCodes = Array.isArray(merchantCode)
+      ? merchantCode
+      : merchantCode.split(',');
+
+    if (merchantCodes.length === 0) {
+      return res.status(400).json({ error: 'No merchant codes provided' });
+    }
+
+      const payInDataRes = await payInServices.getMerchantsNetBalance(
+        merchantCodes
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        "PayIn data fetched successfully",
+        payInDataRes
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getAllPayInDataByVendor(req, res, next) {
     try {
       let { vendorCode, startDate, endDate } = req.query;
@@ -1493,11 +1520,13 @@ class PayInController {
                  
                 }
                 if (getPayInData?.is_notified === true) {
+                  const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
                     dataRes?.utr,
                     TELEGRAM_BOT_TOKEN,
-                    message?.message_id
+                    message?.message_id,
+                    existingPayinData
                   );
                   logger.error("Utr is already used");
                   return
@@ -1728,12 +1757,14 @@ class PayInController {
                       );
                     },
                     DUPLICATE: async () => {
-                      await sendAlreadyConfirmedMessageTelegramBot(
-                        message.chat.id,
-                        dataRes?.utr,
-                        TELEGRAM_BOT_TOKEN,
-                        message?.message_id
-                      );
+                      const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                  await sendAlreadyConfirmedMessageTelegramBot(
+                    message.chat.id,
+                    dataRes?.utr,
+                    TELEGRAM_BOT_TOKEN,
+                    message?.message_id,
+                    existingPayinData
+                  );
                     },
                     DISPUTE: async () => {
                       await sendAmountDisputeMessageTelegramBot(
@@ -1773,12 +1804,14 @@ class PayInController {
                     }
   
                     if (getTelegramResByUtr?.is_used === true) {
-                      await sendAlreadyConfirmedMessageTelegramBot(
-                        message.chat.id,
-                        getTelegramResByUtr?.utr,
-                        TELEGRAM_BOT_TOKEN,
-                        message?.message_id
-                      );
+                      const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                  await sendAlreadyConfirmedMessageTelegramBot(
+                    message.chat.id,
+                    dataRes?.utr,
+                    TELEGRAM_BOT_TOKEN,
+                    message?.message_id,
+                    existingPayinData
+                  );
                       return res.status(200).json({ message: "Utr is already used" });
                     }
   
@@ -1828,11 +1861,13 @@ class PayInController {
                             getTelegramResByUtr?.utr
                           );
   
+                          const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
                           await sendAlreadyConfirmedMessageTelegramBot(
                             message.chat.id,
                             dataRes?.utr,
                             TELEGRAM_BOT_TOKEN,
-                            message?.message_id
+                            message?.message_id,
+                            existingPayinData
                           );
   
                           // Notify url--->
@@ -2368,11 +2403,13 @@ class PayInController {
                     getBankResponseByUtr?.utr
                   );
 
+                  const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
-                    getBankResponseByUtr?.utr,
+                    dataRes?.utr,
                     TELEGRAM_BOT_TOKEN,
-                    message?.message_id
+                    message?.message_id,
+                    existingPayinData
                   );
 
                   // Notify url--->
@@ -2499,12 +2536,14 @@ class PayInController {
               );
             }
             else {
-              await sendAlreadyConfirmedMessageTelegramBot(
-                message.chat.id,
-                getBankResponseByUtr?.utr,
-                TELEGRAM_BOT_TOKEN,
-                message?.message_id
-              );
+              const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                  await sendAlreadyConfirmedMessageTelegramBot(
+                    message.chat.id,
+                    dataRes?.utr,
+                    TELEGRAM_BOT_TOKEN,
+                    message?.message_id,
+                    existingPayinData
+                  );
               logger.error("Utr is already confirmed");
               return 
               // res.status(200).json({ message: "Utr is already used" });
@@ -2512,12 +2551,14 @@ class PayInController {
           }
 
           if (getBankResponseByUtr?.is_used === true) {
-            await sendAlreadyConfirmedMessageTelegramBot(
-              message.chat.id,
-              getBankResponseByUtr?.utr,
-              TELEGRAM_BOT_TOKEN,
-              message?.message_id
-            );
+            const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                  await sendAlreadyConfirmedMessageTelegramBot(
+                    message.chat.id,
+                    dataRes?.utr,
+                    TELEGRAM_BOT_TOKEN,
+                    message?.message_id,
+                    existingPayinData
+                  );
             logger.error("Utr is already used");
             return 
           }

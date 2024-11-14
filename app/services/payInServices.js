@@ -7,7 +7,9 @@ import { nanoid } from "nanoid";
 class PayInService {
   async generatePayInUrl(getMerchantRes, payInData, bankAccountLinkRes) {
     const _10_MINUTES = 1000 * 60 * 10;
-    const expirationDate = Math.floor((new Date().getTime() + _10_MINUTES) / 1000);
+    const expirationDate = Math.floor(
+      (new Date().getTime() + _10_MINUTES) / 1000
+    );
 
     const data = {
       upi_short_code: nanoid(5), // code added by us
@@ -23,13 +25,13 @@ class PayInService {
       merchant_id: getMerchantRes?.id,
       expirationDate,
     };
-    
+
     if (payInData?.amount) {
-      data.bank_acc_id = bankAccountLinkRes?.bankAccountId
+      data.bank_acc_id = bankAccountLinkRes?.bankAccountId;
     }
 
     const payInUrlRes = await payInRepo.generatePayInUrl(data);
-    
+
     const updatePayInUrlRes = {
       ...payInUrlRes,
       expirationDate,
@@ -87,7 +89,7 @@ class PayInService {
           {
             status: "ASSIGNED",
             expirationDate: {
-              lt: Math.floor(new Date().getTime() / 1000)-1, 
+              lt: Math.floor(new Date().getTime() / 1000) - 1,
             },
           },
         ],
@@ -193,20 +195,21 @@ class PayInService {
     }
     if (endDate) {
       let end = new Date(endDate);
-      
+
       // end.setDate(end.getDate() + 1);
-      
+
       dateFilter.lte = end; // Less than or equal to endDate
     }
     const payInData = await prisma.payin.findMany({
       where: {
         status: "SUCCESS",
         Merchant: {
-          code: Array.isArray(merchantCode) ? { in: merchantCode } : merchantCode,
+          code: Array.isArray(merchantCode)
+            ? { in: merchantCode }
+            : merchantCode,
         },
         updatedAt: dateFilter,
-      }
-      
+      },
     });
 
     const payOutData = await prisma.payout.findMany({
@@ -236,13 +239,87 @@ class PayInService {
     return { payInOutData: { payInData, payOutData, settlementData } };
   }
 
+  async getMerchantsNetBalance(merchantCodes) {
+    const codesArray = Array.isArray(merchantCodes)
+      ? merchantCodes
+      : [merchantCodes];
+
+    const netBalanceResults = [];
+    let totalNetBalance = 0;
+
+    const payInData = await prisma.payin.aggregate({
+      where: {
+        status: "SUCCESS",
+        Merchant: {
+          code: { in: codesArray },
+        },
+      },
+      _sum: {
+        confirmed: true,
+        payin_commission: true,
+      },
+    });
+
+    const payOutData = await prisma.payout.aggregate({
+      where: {
+        status: "SUCCESS",
+        Merchant: {
+          code: { in: codesArray },
+        },
+      },
+      _sum: {
+        amount: true,
+        payout_commision: true,
+      },
+    });
+
+    const settlementData = await prisma.settlement.aggregate({
+      where: {
+        status: "SUCCESS",
+        Merchant: {
+          code: { in: codesArray },
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+
+    const deposit = payInData._sum.confirmed || 0;
+
+    const withdraw = payOutData._sum.amount || 0;
+
+    const commission =
+      ((payInData._sum.payin_commission || 0) / 100) * deposit +
+      ((payOutData._sum.payout_commision || 0) / 100) * withdraw;
+
+    const settlement = settlementData._sum.amount || 0;
+
+    const netBalance = deposit - commission - settlement - withdraw;
+
+    netBalanceResults.push({
+      deposit,
+      withdraw,
+      commission,
+      settlement,
+      netBalance,
+    });
+
+    totalNetBalance += netBalance;
+
+    return {
+      netBalanceResults,
+      totalNetBalance,
+    };
+  }
+
   async checkPayinStatus(payinId, merchantCode, merchantOrderId) {
     const data = await prisma.payin.findFirst({
       where: {
         id: payinId,
         // merchant_id: merchantCode,
         Merchant: {
-          code: merchantCode
+          code: merchantCode,
         },
         merchant_order_id: merchantOrderId,
       },
@@ -271,7 +348,7 @@ class PayInService {
     let bankIds = [];
     let dateFilter = {};
     // if both start and end date provided then apply range filter
-    if(startDate && endDate){
+    if (startDate && endDate) {
       const end = new Date(endDate);
       // end.setDate(end.getDate() + 1)
       dateFilter = {
@@ -279,7 +356,7 @@ class PayInService {
           gte: new Date(startDate),
           lte: end,
         },
-      }
+      };
     }
     if (vendorCode) {
       const data = await prisma.bankAccount.findMany({
@@ -306,7 +383,7 @@ class PayInService {
         status: { in: ["SUCCESS", "DISPUTE"] },
         ...filter,
         ...dateFilter,
-      }      
+      },
     });
 
     const payOutData = await prisma.payout.findMany({
@@ -315,7 +392,7 @@ class PayInService {
         vendor_code: Array.isArray(vendorCode)
           ? { in: vendorCode }
           : vendorCode,
-          ...dateFilter,
+        ...dateFilter,
       },
     });
 
@@ -326,7 +403,7 @@ class PayInService {
           vendor_code: Array.isArray(vendorCode)
             ? { in: vendorCode }
             : vendorCode,
-            ...dateFilter,
+          ...dateFilter,
         },
       },
     });
@@ -338,18 +415,18 @@ class PayInService {
   async getAllPayInDataWithRange(merchantCodes, status, startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-  
+
     const condition = {
       Merchant: {
         code: {
           in: merchantCodes,
-        }
+        },
       },
       updatedAt: {
         gte: start,
         lte: end,
       },
-    }
+    };
     if (status != "All") {
       condition.status = status;
     }
@@ -358,23 +435,24 @@ class PayInService {
       include: {
         Merchant: true,
       },
-      orderBy:{
-        updatedAt:"asc"
-      }
+      orderBy: {
+        updatedAt: "asc",
+      },
     });
     return payInData;
   }
   async oneTimeExpire(payInId) {
     const expirePayInUrlRes = await prisma.payin.update({
       where: {
-        id: payInId
-      }, data: {
+        id: payInId,
+      },
+      data: {
         one_time_used: true,
-      }
-    })
-    return expirePayInUrlRes
+      },
+    });
+    return expirePayInUrlRes;
   }
-  
+
   async getPayInDetails(payInId) {
     const data = await prisma.payin.findFirst({
       where: {
