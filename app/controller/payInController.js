@@ -1316,14 +1316,18 @@ class PayInController {
   async getMerchantsNetBalance(req, res, next) {
     try {
       let { merchantCode } = req.query;
-    
+
+      if (merchantCode == null) {
+        merchantCode = [];
+      }
+
       const merchantCodes = Array.isArray(merchantCode)
       ? merchantCode
       : merchantCode.split(',');
 
-    if (merchantCodes.length === 0) {
-      return res.status(400).json({ error: 'No merchant codes provided' });
-    }
+    // if (merchantCodes.length === 0) {
+    //   return res.status(400).json({ error: 'No merchant codes provided' });
+    // }
 
       const payInDataRes = await payInServices.getMerchantsNetBalance(
         merchantCodes
