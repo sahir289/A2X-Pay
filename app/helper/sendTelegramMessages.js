@@ -146,14 +146,13 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
   replyToMessageId,
   existingPayinData
 ) {
-  // Construct the error message 
-  console.log(existingPayinData, "existingPayinData")
-
+  const payinData = existingPayinData[1]
+  // Construct the error message
   let message;
-  if(existingPayinData?.status === 'SUCCESS'){
-    message = `✅ UTR ${utr} is already used with this orderId ${existingPayinData?.merchant_order_id}`;
+  if(payinData?.status === 'SUCCESS'){
+    message = `✅ UTR ${utr} is already used with this orderId ${payinData?.merchant_order_id}`;
   } else {
-    message = `🚨 UTR ${utr} is already approved for ${existingPayinData?.status} with this orderId ${existingPayinData?.merchant_order_id}`;
+    message = `🚨 UTR ${utr} is already approved for ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
   }
 
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
