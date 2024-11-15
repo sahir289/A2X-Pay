@@ -146,7 +146,7 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
   replyToMessageId,
   existingPayinData
 ) {
-  const payinData = existingPayinData[1]
+  const payinData = existingPayinData[1] ? existingPayinData[1] : existingPayinData[0];
   // Construct the error message
   let message;
   if(payinData?.status === 'SUCCESS'){
