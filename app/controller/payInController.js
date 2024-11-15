@@ -2194,7 +2194,6 @@ class PayInController {
           );
           logger.error("Please enter UTR");
           return
-          // res.status(200).json({ message: "Please enter UTR" });
         }
 
         if (merchantOrderId && utr) {
@@ -2297,21 +2296,18 @@ class PayInController {
               return 
               // res.status(200).json({ message: "true" });
             }
-            
             const updateUtrIfNull = getPayInData?.user_submitted_utr ? getPayInData?.user_submitted_utr : utr;
 
             if (( updateUtrIfNull === getBankResponseByUtr?.utr) && (getPayInData?.bank_name === getBankResponseByUtr?.bankName)) {
-
               if (
                 parseFloat(getPayInData?.amount) !== parseFloat(getBankResponseByUtr?.amount)
               ){
-
                 const payinCommission = calculateCommission(
                   getBankResponseByUtr?.amount,
                   getPayInData.Merchant?.payin_commission
                 );
 
-                const durMs = new Date() - getPayInData.createdAt;
+                const durMs = new Date() - getPayInData?.createdAt;
                 const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
                 const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
                 const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
@@ -2321,7 +2317,7 @@ class PayInController {
                   confirmed: getBankResponseByUtr?.amount,
                   status: "DISPUTE",
                   is_notified: true,
-                  utr: dataRes.utr,
+                  utr: getBankResponseByUtr?.utr,
                   user_submitted_utr: getBankResponseByUtr?.utr,
                   approved_at: new Date(),
                   is_url_expires: true,
