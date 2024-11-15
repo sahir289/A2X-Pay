@@ -285,22 +285,21 @@ class PayInService {
       },
     });
 
-    const deposit = payInData._sum.confirmed || 0;
+    const deposit = Number(payInData._sum.confirmed || 0);
+    const withdraw = Number(payOutData._sum.amount || 0);
+    const payInCommission = Number(payInData._sum.payin_commission || 0);
+    const payOutCommission = Number(payOutData._sum.payout_commision || 0);
+    const settlement = Number(settlementData._sum.amount || 0);
 
-    const withdraw = payOutData._sum.amount || 0;
-
-    const commission =
-      ((payInData._sum.payin_commission || 0) / 100) * deposit +
-      ((payOutData._sum.payout_commision || 0) / 100) * withdraw;
-
-    const settlement = settlementData._sum.amount || 0;
-
-    const netBalance = deposit - commission - settlement - withdraw;
+    const netBalance = deposit - (withdraw + payInCommission + payOutCommission) - settlement;  
+    const totalCommission = payInCommission + payOutCommission
 
     netBalanceResults.push({
       deposit,
       withdraw,
-      commission,
+      payInCommission,
+      payOutCommission,
+      totalCommission,
       settlement,
       netBalance,
     });
