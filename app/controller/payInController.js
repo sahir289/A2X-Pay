@@ -1525,6 +1525,7 @@ class PayInController {
                 }
                 if (getPayInData?.is_notified === true) {
                   const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                  console.log(existingPayinData, "hello")
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
                     dataRes?.utr,
@@ -1762,6 +1763,7 @@ class PayInController {
                     },
                     DUPLICATE: async () => {
                       const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                      console.log('second')
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
                     dataRes?.utr,
@@ -1809,6 +1811,8 @@ class PayInController {
   
                     if (getTelegramResByUtr?.is_used === true) {
                       const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                      console.log('third')
+
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
                     dataRes?.utr,
@@ -1866,6 +1870,8 @@ class PayInController {
                           );
   
                           const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                      console.log('fourth')
+
                           await sendAlreadyConfirmedMessageTelegramBot(
                             message.chat.id,
                             dataRes?.utr,
@@ -2541,6 +2547,7 @@ class PayInController {
             }
             else {
               const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+              console.log(existingPayinData, '0000')
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
                     dataRes?.utr,
