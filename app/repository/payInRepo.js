@@ -151,7 +151,10 @@ class PayInRepo {
     async getPayinDataByUsrSubmittedUtr(usrSubmittedUtr) {
         const payInRes = await prisma.payin.findMany({
             where: {
-                user_submitted_utr: usrSubmittedUtr
+                user_submitted_utr: usrSubmittedUtr,
+            },
+            orderBy: {
+                sno: "desc",
             },
         });
         return payInRes;
