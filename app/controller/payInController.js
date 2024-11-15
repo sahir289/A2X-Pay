@@ -755,8 +755,8 @@ class PayInController {
         responseMessage = "Duplicate Payment Found";
       } else {
         if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
-          if (isBankExist?.Merchant_Bank?.length === 1) {
-            if (getBankDataByBotRes?.id !== isBankExist?.id) {
+          // if (isBankExist?.Merchant_Bank?.length === 1) {
+            // if (getBankDataByBotRes?.id !== isBankExist?.id) {
               const payInData = {
                 confirmed: matchDataFromBotRes?.amount,
                 amount: amount,
@@ -768,6 +768,7 @@ class PayInController {
                 approved_at: new Date(),
                 duration: duration
               };
+              console.log(payInData);
 
               const updatePayInDataRes = await payInRepo.updatePayInData(
                 getPayInData.id,
@@ -799,8 +800,8 @@ class PayInController {
                 "Bank mismatch",
                 response
               );
-            }
-          }
+          //   }
+          // }
         }
 
         await botResponseRepo.updateBotResponseByUtr(
