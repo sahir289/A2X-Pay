@@ -1545,7 +1545,7 @@ class PayInController {
                     dataRes?.utr
                   );
                   if (
-                    ((dataRes?.utr === getPayInData?.user_submitted_utr) && (dataRes?.utr === getTelegramResByUtr?.utr)) || ((dataRes?.utr === getTelegramResByUtr?.utr) && (getPayInData?.status === "PENDING")&& (getPayInData?.merchant_order_id === merchantOrderIdTele))
+                    ((dataRes?.utr === getPayInData?.user_submitted_utr || dataRes?.utr === getPayInData?.utr) && (dataRes?.utr === getTelegramResByUtr?.utr)) || ((dataRes?.utr === getTelegramResByUtr?.utr) && (getPayInData?.status === "PENDING")&& (getPayInData?.merchant_order_id === merchantOrderIdTele))
                   ) {
                     if(getPayInData?.bank_name !== getTelegramResByUtr?.bankName){
                       const payinCommission = calculateCommission(
@@ -1743,6 +1743,7 @@ class PayInController {
                       }
                     }
                   } else {
+                    console.log("No Entry")
                     await sendErrorMessageUtrNotFoundTelegramBot(
                       message.chat.id,
                       dataRes?.utr,
@@ -1800,6 +1801,7 @@ class PayInController {
                       dataRes?.utr
                     );
                     if (!getTelegramResByUtr) {
+                      console.log("No Entry 2")
                       await sendErrorMessageUtrNotFoundTelegramBot(
                         message.chat.id,
                         dataRes?.utr,
