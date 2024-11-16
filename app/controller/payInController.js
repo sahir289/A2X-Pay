@@ -2213,6 +2213,8 @@ class PayInController {
             merchantOrderId
           );
 
+          const getPayInDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+
           if (!getPayInData) {
             await sendErrorMessageTelegram(
               message.chat.id,
@@ -2540,7 +2542,7 @@ class PayInController {
 
             }
           }
-          else if (getPayInData?.status === 'SUCCESS'){
+          else if (getPayInData?.status === 'SUCCESS' && getPayInDataByUtr?.status === 'SUCCESS'){
             const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
