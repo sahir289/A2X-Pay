@@ -635,263 +635,283 @@ class PayInController {
       const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
       const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
       const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+      const payinStatus = ['SUCCESS', 'DUPLICATE', 'DISPUTE', 'BANK_MISMATCH'];
 
-      if (isUsrSubmittedUtrUsed.length > 0) {
-        payInData = {
+      if (payinStatus.includes(getPayInData?.status)) {
+        let response = {
+          status: getPayInData.status,
           amount,
-          status: "DUPLICATE",
-          is_notified: true,
-          user_submitted_utr: usrSubmittedUtr,
-          is_url_expires: true,
-          user_submitted_image: null,
-          duration: duration,
+          merchant_order_id: getPayInData?.merchant_order_id,
+          return_url: getPayInData?.return_url,
+          utr_id: getPayInData?.user_submitted_utr
         };
-        responseMessage = "Duplicate Payment Found";
-        const updatePayinRes = await payInRepo.updatePayInData(
-          payInId,
-          payInData
-        );
-        const response = {
-          status: payInData.status,
-          amount,
-          merchant_order_id: updatePayinRes?.merchant_order_id,
-          return_url: updatePayinRes?.return_url,
-          utr_id: updatePayinRes?.utr !== null ? updatePayinRes?.utr : updatePayinRes?.user_submitted_utr
-        };
-        return DefaultResponse(res, 200, responseMessage, response);
-      }
 
-      if (isFront !== true) {
-        // is front is used to check it is coming from deposit img pending or not.
-        if (urlValidationRes?.is_url_expires === true) {
-          throw new CustomError(403, "Url is expired");
+        if (getPayInData?.status === "DUPLICATE") {
+          response.utr_id = getPayInData?.utr !== null ? getPayInData?.utr : getPayInData?.user_submitted_utr;
         }
+
+        const message = getPayInData?.status === "BANK_MISMATCH" ? "Bank mismatch" : responseMessage;
+
+        return DefaultResponse(res, 200, message, response);
       }
-
-      if (filePath) {
-        // we have to remove the img from the s3
-        // fs.unlink(`public/${filePath}`, (err) => {
-        //   if (err) console.error("Error deleting the file:", err);
-        // });
-      }
-
-
-      const matchDataFromBotRes = await botResponseRepo.getBotResByUtr(
-        usrSubmittedUtr
-      );
-
-      let getBankDataByBotRes;
-      // we are making sure that we get bank name then only we move forward
-      if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
-        // We check bank exist here as we have to add the data to the res no matter what comes.
-        
-        getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
-
-        if (!getBankDataByBotRes) {
-          const payInData = {
-            confirmed: matchDataFromBotRes?.amount,
-            amount: amount,
-            status: "BANK_MISMATCH",
+      else {
+        if (isUsrSubmittedUtrUsed.length > 0) {
+          payInData = {
+            amount,
+            status: "DUPLICATE",
             is_notified: true,
-            is_url_expires: true,
-            utr: matchDataFromBotRes?.utr,
             user_submitted_utr: usrSubmittedUtr,
-            approved_at: new Date(),
-            duration: duration
+            is_url_expires: true,
+            user_submitted_image: null,
+            duration: duration,
           };
-
-          const updatePayInDataRes = await payInRepo.updatePayInData(
-            getPayInData.id,
+          responseMessage = "Duplicate Payment Found";
+          const updatePayinRes = await payInRepo.updatePayInData(
+            payInId,
             payInData
           );
-
+          const response = {
+            status: payInData.status,
+            amount,
+            merchant_order_id: updatePayinRes?.merchant_order_id,
+            return_url: updatePayinRes?.return_url,
+            utr_id: updatePayinRes?.utr !== null ? updatePayinRes?.utr : updatePayinRes?.user_submitted_utr
+          };
+          return DefaultResponse(res, 200, responseMessage, response);
+        }
+  
+        if (isFront !== true) {
+          // is front is used to check it is coming from deposit img pending or not.
+          if (urlValidationRes?.is_url_expires === true) {
+            throw new CustomError(403, "Url is expired");
+          }
+        }
+  
+        if (filePath) {
+          // we have to remove the img from the s3
+          // fs.unlink(`public/${filePath}`, (err) => {
+          //   if (err) console.error("Error deleting the file:", err);
+          // });
+        }
+  
+  
+        const matchDataFromBotRes = await botResponseRepo.getBotResByUtr(
+          usrSubmittedUtr
+        );
+  
+        let getBankDataByBotRes;
+        // we are making sure that we get bank name then only we move forward
+        if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
+          // We check bank exist here as we have to add the data to the res no matter what comes.
+          
+          getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
+  
+          if (!getBankDataByBotRes) {
+            const payInData = {
+              confirmed: matchDataFromBotRes?.amount,
+              amount: amount,
+              status: "BANK_MISMATCH",
+              is_notified: true,
+              is_url_expires: true,
+              utr: matchDataFromBotRes?.utr,
+              user_submitted_utr: usrSubmittedUtr,
+              approved_at: new Date(),
+              duration: duration
+            };
+  
+            const updatePayInDataRes = await payInRepo.updatePayInData(
+              getPayInData.id,
+              payInData
+            );
+  
+            await botResponseRepo.updateBotResponseByUtr(
+              matchDataFromBotRes?.id,
+              usrSubmittedUtr
+            );
+  
+            // We are adding the amount to the bank as we want to update the balance of the bank
+            await bankAccountRepo.updateBankAccountBalance(
+              getBankDataByBotRes?.id,
+              parseFloat(amount)
+            );
+  
+            const response = {
+              status: updatePayInDataRes.status,
+              amount,
+              merchant_order_id: updatePayInDataRes?.merchant_order_id,
+              return_url: updatePayInDataRes?.return_url,
+              utr_id: updatePayInDataRes?.user_submitted_utr
+            };
+  
+            return DefaultResponse(
+              res,
+              200,
+              "Bank mismatch",
+              response
+            );
+          }
+        }
+  
+        if (!matchDataFromBotRes) {
+          payInData = {
+            amount,
+            status: "PENDING",
+            user_submitted_utr: usrSubmittedUtr,
+            is_url_expires: true,
+            user_submitted_image: null,
+          };
+          responseMessage = "Payment Not Found";
+        } else if (matchDataFromBotRes.is_used === true) {
+          payInData = {
+            amount,
+            status: "DUPLICATE",
+            is_notified: true,
+            user_submitted_utr: usrSubmittedUtr,
+            is_url_expires: true,
+            user_submitted_image: null,
+            duration: duration,
+          };
+          responseMessage = "Duplicate Payment Found";
+        } else {
+          if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
+            // if (isBankExist?.Merchant_Bank?.length === 1) {
+              // if (getBankDataByBotRes?.id !== isBankExist?.id) {
+                const payInData = {
+                  confirmed: matchDataFromBotRes?.amount,
+                  amount: amount,
+                  status: "BANK_MISMATCH",
+                  is_notified: true,
+                  is_url_expires: true,
+                  utr: matchDataFromBotRes?.utr,
+                  user_submitted_utr: usrSubmittedUtr,
+                  approved_at: new Date(),
+                  duration: duration
+                };
+  
+                const updatePayInDataRes = await payInRepo.updatePayInData(
+                  getPayInData.id,
+                  payInData
+                );
+  
+                await botResponseRepo.updateBotResponseByUtr(
+                  matchDataFromBotRes?.id,
+                  usrSubmittedUtr
+                );
+  
+                // We are adding the amount to the bank as we want to update the balance of the bank
+                await bankAccountRepo.updateBankAccountBalance(
+                  getBankDataByBotRes?.id,
+                  parseFloat(amount)
+                );
+  
+                const response = {
+                  status: updatePayInDataRes.status,
+                  amount,
+                  merchant_order_id: updatePayInDataRes?.merchant_order_id,
+                  return_url: updatePayInDataRes?.return_url,
+                  utr_id: updatePayInDataRes?.user_submitted_utr
+                };
+  
+                return DefaultResponse(
+                  res,
+                  200,
+                  "Bank mismatch",
+                  response
+                );
+            //   }
+            // }
+          }
+  
           await botResponseRepo.updateBotResponseByUtr(
             matchDataFromBotRes?.id,
             usrSubmittedUtr
           );
-
-          // We are adding the amount to the bank as we want to update the balance of the bank
-          await bankAccountRepo.updateBankAccountBalance(
-            getBankDataByBotRes?.id,
-            parseFloat(amount)
+  
+          const updateMerchantRes = await merchantRepo.updateMerchant(
+            getPayInData?.merchant_id,
+            parseFloat(matchDataFromBotRes?.amount)
           );
-
-          const response = {
-            status: updatePayInDataRes.status,
-            amount,
-            merchant_order_id: updatePayInDataRes?.merchant_order_id,
-            return_url: updatePayInDataRes?.return_url,
-            utr_id: updatePayInDataRes?.user_submitted_utr
-          };
-
-          return DefaultResponse(
-            res,
-            200,
-            "Bank mismatch",
-            response
+  
+          const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+            getPayInData?.bank_acc_id,
+            parseFloat(matchDataFromBotRes?.amount)
           );
+          const payinCommission = await calculateCommission(
+            matchDataFromBotRes?.amount,
+            updateMerchantRes?.payin_commission
+          );
+  
+          if (parseFloat(amount) === parseFloat(matchDataFromBotRes?.amount)) {
+            payInData = {
+              confirmed: matchDataFromBotRes?.amount,
+              status: "SUCCESS",
+              is_notified: true,
+              user_submitted_utr: usrSubmittedUtr,
+              utr: matchDataFromBotRes.utr,
+              approved_at: new Date(),
+              is_url_expires: true,
+              payin_commission: payinCommission,
+              user_submitted_image: null,
+              duration: duration,
+            };
+            responseMessage = "Payment Done successfully";
+          } else {
+            payInData = {
+              confirmed: matchDataFromBotRes?.amount,
+              status: "DISPUTE",
+              user_submitted_utr: usrSubmittedUtr,
+              utr: matchDataFromBotRes.utr,
+              approved_at: new Date(),
+              is_url_expires: true,
+              user_submitted_image: null,
+              duration: duration,
+            };
+            responseMessage = "Dispute in Payment";
+          }
         }
-      }
-
-      if (!matchDataFromBotRes) {
-        payInData = {
-          amount,
-          status: "PENDING",
-          user_submitted_utr: usrSubmittedUtr,
-          is_url_expires: true,
-          user_submitted_image: null,
+  
+        const updatePayinRes = await payInRepo.updatePayInData(
+          payInId,
+          payInData
+        );
+  
+        const notifyData = {
+          status: updatePayinRes.status,
+          merchantOrderId: updatePayinRes?.merchant_order_id,
+          payinId: payInId,
+          amount: updatePayinRes?.confirmed,
+          req_amount: amount,
+          utr_id: (updatePayinRes.status === "SUCCESS" || updatePayinRes.status === "DISPUTE") ? updatePayinRes?.utr : ""
         };
-        responseMessage = "Payment Not Found";
-      } else if (matchDataFromBotRes.is_used === true) {
-        payInData = {
+  
+        try {
+          logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+          //When we get the notify url we will add it.
+          const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+          logger.info('Sending notification to merchant', {
+            status: notifyMerchant.status,
+            data: notifyMerchant.data,
+          })
+  
+        } catch (error) {
+          logger.error("Error sending notification:", error);
+        }
+  
+  
+        const response = {
+          status: updatePayinRes.status,
           amount,
-          status: "DUPLICATE",
-          is_notified: true,
-          user_submitted_utr: usrSubmittedUtr,
-          is_url_expires: true,
-          user_submitted_image: null,
-          duration: duration,
+          merchant_order_id: updatePayinRes?.merchant_order_id,
+          return_url: updatePayinRes?.return_url,
+          utr_id: updatePayinRes?.user_submitted_utr
         };
-        responseMessage = "Duplicate Payment Found";
-      } else {
-        if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
-          // if (isBankExist?.Merchant_Bank?.length === 1) {
-            // if (getBankDataByBotRes?.id !== isBankExist?.id) {
-              const payInData = {
-                confirmed: matchDataFromBotRes?.amount,
-                amount: amount,
-                status: "BANK_MISMATCH",
-                is_notified: true,
-                is_url_expires: true,
-                utr: matchDataFromBotRes?.utr,
-                user_submitted_utr: usrSubmittedUtr,
-                approved_at: new Date(),
-                duration: duration
-              };
-
-              const updatePayInDataRes = await payInRepo.updatePayInData(
-                getPayInData.id,
-                payInData
-              );
-
-              await botResponseRepo.updateBotResponseByUtr(
-                matchDataFromBotRes?.id,
-                usrSubmittedUtr
-              );
-
-              // We are adding the amount to the bank as we want to update the balance of the bank
-              await bankAccountRepo.updateBankAccountBalance(
-                getBankDataByBotRes?.id,
-                parseFloat(amount)
-              );
-
-              const response = {
-                status: updatePayInDataRes.status,
-                amount,
-                merchant_order_id: updatePayInDataRes?.merchant_order_id,
-                return_url: updatePayInDataRes?.return_url,
-                utr_id: updatePayInDataRes?.user_submitted_utr
-              };
-
-              return DefaultResponse(
-                res,
-                200,
-                "Bank mismatch",
-                response
-              );
-          //   }
-          // }
-        }
-
-        await botResponseRepo.updateBotResponseByUtr(
-          matchDataFromBotRes?.id,
-          usrSubmittedUtr
-        );
-
-        const updateMerchantRes = await merchantRepo.updateMerchant(
-          getPayInData?.merchant_id,
-          parseFloat(matchDataFromBotRes?.amount)
-        );
-
-        const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-          getPayInData?.bank_acc_id,
-          parseFloat(matchDataFromBotRes?.amount)
-        );
-        const payinCommission = await calculateCommission(
-          matchDataFromBotRes?.amount,
-          updateMerchantRes?.payin_commission
-        );
-
-        if (parseFloat(amount) === parseFloat(matchDataFromBotRes?.amount)) {
-          payInData = {
-            confirmed: matchDataFromBotRes?.amount,
-            status: "SUCCESS",
-            is_notified: true,
-            user_submitted_utr: usrSubmittedUtr,
-            utr: matchDataFromBotRes.utr,
-            approved_at: new Date(),
-            is_url_expires: true,
-            payin_commission: payinCommission,
-            user_submitted_image: null,
-            duration: duration,
-          };
-          responseMessage = "Payment Done successfully";
-        } else {
-          payInData = {
-            confirmed: matchDataFromBotRes?.amount,
-            status: "DISPUTE",
-            user_submitted_utr: usrSubmittedUtr,
-            utr: matchDataFromBotRes.utr,
-            approved_at: new Date(),
-            is_url_expires: true,
-            user_submitted_image: null,
-            duration: duration,
-          };
-          responseMessage = "Dispute in Payment";
-        }
+  
+        // if (payInData.status === "SUCCESS") {
+        //   response.utr_id = updatePayinRes?.utr;
+        // }
+  
+        return DefaultResponse(res, 200, responseMessage, response);
       }
-
-      const updatePayinRes = await payInRepo.updatePayInData(
-        payInId,
-        payInData
-      );
-
-      const notifyData = {
-        status: updatePayinRes.status,
-        merchantOrderId: updatePayinRes?.merchant_order_id,
-        payinId: payInId,
-        amount: updatePayinRes?.confirmed,
-        req_amount: amount,
-        utr_id: (updatePayinRes.status === "SUCCESS" || updatePayinRes.status === "DISPUTE") ? updatePayinRes?.utr : ""
-      };
-
-      try {
-        logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-        //When we get the notify url we will add it.
-        const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-        logger.info('Sending notification to merchant', {
-          status: notifyMerchant.status,
-          data: notifyMerchant.data,
-        })
-
-      } catch (error) {
-        logger.error("Error sending notification:", error);
-      }
-
-
-      const response = {
-        status: payInData.status,
-        amount,
-        merchant_order_id: updatePayinRes?.merchant_order_id,
-        return_url: updatePayinRes?.return_url,
-        utr_id: updatePayinRes?.user_submitted_utr
-      };
-
-      // if (payInData.status === "SUCCESS") {
-      //   response.utr_id = updatePayinRes?.utr;
-      // }
-
-      return DefaultResponse(res, 200, responseMessage, response);
     } catch (error) {
       next(error);
     }
