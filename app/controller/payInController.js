@@ -1493,7 +1493,7 @@ class PayInController {
 
           // Merge the data from the API with the existing dataRes
           dataRes = {
-            amount: resFromOcrPy?.data?.data?.amount, //|| dataRes.amount,
+            amount: resFromOcrPy?.data?.data?.amount.replace(",",""), //|| dataRes.amount,
             utr: resFromOcrPy?.data?.data?.transaction_id, //|| dataRes.utr
             bankName: resFromOcrPy?.data?.data?.bank_name,
             timeStamp: resFromOcrPy?.data?.data?.timestamp,
