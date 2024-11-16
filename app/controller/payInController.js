@@ -2681,18 +2681,18 @@ class PayInController {
                 message?.message_id
               );
             }
-            else {
-              const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
-                  await sendAlreadyConfirmedMessageTelegramBot(
-                    message.chat.id,
-                    dataRes?.utr,
-                    TELEGRAM_BOT_TOKEN,
-                    message?.message_id,
-                    existingPayinData
-                  );
-              logger.error("Utr is already confirmed");
-              return 
-            }
+          }
+          else {
+            const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                await sendAlreadyConfirmedMessageTelegramBot(
+                  message.chat.id,
+                  dataRes?.utr,
+                  TELEGRAM_BOT_TOKEN,
+                  message?.message_id,
+                  existingPayinData
+                );
+            logger.error("Utr is already confirmed");
+            return 
           }
 
           if (getBankResponseByUtr?.is_used === true) {
