@@ -16,7 +16,7 @@ class DuplicateDisputeTransactionController {
             const { payInId } = req.params;
             let apiData = {}
             const oldPayInData = await payInServices.getPayInDetails(payInId);
-            const oldPayInUtrData = oldPayInData?.user_submitted_utr;
+            const oldPayInUtrData = oldPayInData?.user_submitted_utr ? oldPayInData.user_submitted_utr : oldPayInData.utr;
             const getBankResponseByUtr = await botResponseRepo.getBotResByUtr(
                 oldPayInUtrData
               );

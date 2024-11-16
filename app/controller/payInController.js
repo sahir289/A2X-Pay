@@ -1545,7 +1545,7 @@ class PayInController {
                     dataRes?.utr
                   );
                   if (
-                    ((dataRes?.utr === getPayInData?.user_submitted_utr) && (dataRes?.utr === getTelegramResByUtr?.utr)) || ((dataRes?.utr === getTelegramResByUtr?.utr) && (getPayInData?.status === "PENDING")&& (getPayInData?.merchant_order_id === merchantOrderIdTele))
+                    ((dataRes?.utr === getPayInData?.user_submitted_utr || dataRes?.utr === getPayInData?.utr) && (dataRes?.utr === getTelegramResByUtr?.utr)) || ((dataRes?.utr === getTelegramResByUtr?.utr) && (getPayInData?.status === "PENDING")&& (getPayInData?.merchant_order_id === merchantOrderIdTele))
                   ) {
                     if(getPayInData?.bank_name !== getTelegramResByUtr?.bankName){
                       const payinCommission = calculateCommission(
