@@ -2225,6 +2225,18 @@ class PayInController {
             logger.error("Merchant order id does not exist");
             return; 
           }
+          if (getPayInData?.status === 'SUCCESS'){
+            const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+                  await sendAlreadyConfirmedMessageTelegramBot(
+                    message.chat.id,
+                    getBankResponseByUtr?.utr,
+                    TELEGRAM_BOT_TOKEN,
+                    message?.message_id,
+                    existingPayinData
+                  );
+            logger.error("Utr is already confirmed");
+            return 
+          }
           let updatePayInData;
           if (getPayInData && (getPayInData?.status === "PENDING" || getPayInData?.status === "DROPPED" || getPayInData?.status === "ASSIGNED")) {
             if (getBankResponseByUtr?.bankName !== getPayInData?.bank_name) {
@@ -2542,18 +2554,18 @@ class PayInController {
 
             }
           }
-          else if (getPayInData?.status === 'SUCCESS'){
-            const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
-                  await sendAlreadyConfirmedMessageTelegramBot(
-                    message.chat.id,
-                    getBankResponseByUtr?.utr,
-                    TELEGRAM_BOT_TOKEN,
-                    message?.message_id,
-                    existingPayinData
-                  );
-            logger.error("Utr is already confirmed");
-            return 
-          }
+          // else if (getPayInData?.status === 'SUCCESS'){
+          //   const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+          //         await sendAlreadyConfirmedMessageTelegramBot(
+          //           message.chat.id,
+          //           getBankResponseByUtr?.utr,
+          //           TELEGRAM_BOT_TOKEN,
+          //           message?.message_id,
+          //           existingPayinData
+          //         );
+          //   logger.error("Utr is already confirmed");
+          //   return 
+          // }
 
           else if (getPayInData?.is_notified === true) {
             if (getPayInData?.status === 'BANK_MISMATCH'){
