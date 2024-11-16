@@ -768,7 +768,6 @@ class PayInController {
                 approved_at: new Date(),
                 duration: duration
               };
-              console.log(payInData);
 
               const updatePayInDataRes = await payInRepo.updatePayInData(
                 getPayInData.id,
@@ -2359,10 +2358,13 @@ class PayInController {
                     user_submitted_image: null,
                     duration: duration
                   };
-                  const updatePayInDataRes = await payInRepo.updatePayInData(
-                    getPayInData?.id,
-                    updatePayInData
-                  );
+
+                  // maybe need to uncomment this
+                  
+                  // const updatePayInDataRes = await payInRepo.updatePayInData(
+                  //   getPayInData?.id,
+                  //   updatePayInData
+                  // );
                   await botResponseRepo.updateBotResponseByUtr(
                     getBankResponseByUtr?.id,
                     getBankResponseByUtr?.utr
@@ -2400,7 +2402,6 @@ class PayInController {
                   }
 
                   return 
-                  // res.status(200).json({ message: "true" });
                 } else {
 
                   const payinCommission = calculateCommission(
