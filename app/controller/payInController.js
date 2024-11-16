@@ -2225,7 +2225,7 @@ class PayInController {
             logger.error("Merchant order id does not exist");
             return; 
           }
-          if (getPayInData?.status === 'SUCCESS'){
+          if (getPayInDataByUtr?.status === 'SUCCESS'){
             const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
@@ -2246,10 +2246,10 @@ class PayInController {
 
                   if (isUsrSubmittedUtrUsed.length > 0) {
 
-                    const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                    const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
                     await sendAlreadyConfirmedMessageTelegramBot(
                       message.chat.id,
-                      dataRes?.utr,
+                      getBankResponseByUtr?.utr,
                       TELEGRAM_BOT_TOKEN,
                       message?.message_id,
                       existingPayinData
@@ -2368,10 +2368,10 @@ class PayInController {
                     getBankResponseByUtr?.utr
                   );
 
-                  const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                  const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
-                    dataRes?.utr,
+                    getBankResponseByUtr?.utr,
                     TELEGRAM_BOT_TOKEN,
                     message?.message_id,
                     existingPayinData
@@ -2475,10 +2475,10 @@ class PayInController {
 
                 if (isUsrSubmittedUtrUsed.length > 0) {
 
-                  const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                  const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
-                    dataRes?.utr,
+                    getBankResponseByUtr?.utr,
                     TELEGRAM_BOT_TOKEN,
                     message?.message_id,
                     existingPayinData
