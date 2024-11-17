@@ -8,12 +8,14 @@ import config from "../../config.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import payInRepo from "../repository/payInRepo.js";
 import botResponseRepo from "../repository/botResponseRepo.js";
+import { logger } from "../utils/logger.js";
 
 class DuplicateDisputeTransactionController {
     async handleDuplicateDisputeTransaction(req, res, next) {
         try {
             checkValidation(req)
             const { payInId } = req.params;
+            const { merchant_order_id } = req.body; 
             let apiData = {}
             const oldPayInData = await payInServices.getPayInDetails(payInId);
             const oldPayInUtrData = oldPayInData?.user_submitted_utr ? oldPayInData.user_submitted_utr : oldPayInData.utr;
@@ -30,46 +32,63 @@ class DuplicateDisputeTransactionController {
             const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
             if (oldPayInData?.status === "DUPLICATE") {
-                let duplicateSuccess = false;
-                const allDeposits = await payInRepo.getPayinDataByUsrSubmittedUtr(oldPayInData?.user_submitted_utr);
-                    allDeposits?.map( async (value, index) => {
-                        if(value?.status !== 'SUCCESS' && value?.status !== 'DUPLICATE'){
-                            duplicateSuccess = true;
-
-                            apiData = {
-                                utr: req?.body?.utr,
-                                user_submitted_utr: req?.body?.utr,
-                                status: "DUPLICATE",
-                            }
-                            await payInRepo.updatePayInData(value?.id, apiData)
-                        }
-                    })
-                if(duplicateSuccess === true){
-                    apiData = {
-                        utr: oldPayInUtrData,
-                        user_submitted_utr: oldPayInUtrData,
-                        confirmed: getBankResponseByUtr?.amount,
-                        status: "SUCCESS",
-                        payin_commission: payinCommission,
-                        duration: duration,
-                    }
-                    duplicateSuccess = false;
-                } else {
-                    apiData = {
-                        ...req.body,
-                        status: "SUCCESS",
-                        confirmed: getBankResponseByUtr?.amount,
-                        payin_commission: payinCommission,
-                        duration: duration,
-                    }
-                }
-            }
-            else {
                 apiData = {
                     ...req.body,
                     status: "SUCCESS",
                     payin_commission: payinCommission,
                     duration: duration,
+                }
+            }
+            else {
+                if (merchant_order_id){
+                    const newPayInData = await payInRepo.getPayInDataByMerchantOrderId(merchant_order_id);
+                    const payInData = {
+                        confirmed: newPayInData?.amount,
+                        status: "SUCCESS",
+                        is_notified: true,
+                        user_submitted_utr: oldPayInData.utr,
+                        utr: oldPayInData.utr,
+                        approved_at: new Date(),
+                        is_url_expires: true,
+                        payin_commission: payinCommission,
+                        user_submitted_image: null,
+                        duration: duration,
+                    }
+                    const updatedPayInData = await payInRepo.updatePayInData(newPayInData?.id, payInData)
+                    const notifyData = {
+                        status: updatedPayInData?.status,
+                        merchantOrderId: updatedPayInData?.merchant_order_id,
+                        payinId: updatedPayInData?.id,
+                        amount: updatedPayInData?.confirmed,
+                        req_amount: updatedPayInData?.amount,
+                        utr_id: updatedPayInData?.utr
+                    };
+                
+                    try {
+                        logger.info('Sending notification to merchant', { notify_url: updatedPayInData?.notify_url, notify_data: notifyData });
+                        //When we get the notify url we will add it.
+                        const notifyMerchant = await axios.post(updatedPayInData?.notify_url, notifyData);
+                        logger.info('Sending notification to merchant', {
+                            status: notifyMerchant.status,
+                            data: notifyMerchant.data,
+                        })
+
+                    } catch (error) {
+                        logger.error("Error sending notification:", error);
+                    }
+
+                    apiData = {
+                        ...req.body,
+                        status: "DUPLICATE",
+                    }
+                }
+                else {
+                    apiData = {
+                        ...req.body,
+                        status: "SUCCESS",
+                        payin_commission: payinCommission,
+                        duration: duration,
+                    }
                 }
             }
             const duplicateDisputeTransactionRes = await duplicateDisputeTransactionService.handleDuplicateDisputeTransaction(payInId, apiData, oldPayInData.status);
