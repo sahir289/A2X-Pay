@@ -52,6 +52,19 @@ class BotResponseRepo {
     return updateBotRes;
   }
 
+  async updateBotResponseToUnusedUtr(id) {
+    const updateBotRes = await prisma.telegramResponse.update({
+      where: {
+        id: id,
+        // utr: utr,
+      },
+      data: {
+        is_used: false,
+      },
+    });
+    return updateBotRes;
+  }
+
   async getBotResponse(query) {
     const sno = !isNaN(Number(query.sno)) ? Number(query.sno) : 0;
     const status = query.status;
