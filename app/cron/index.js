@@ -4,19 +4,19 @@ import { sendTelegramDashboardReportMessage } from "../helper/sendTelegramMessag
 import config from "../../config.js";
 import moment from "moment-timezone";
 
-let canRunHourlyReports = false;
+// let canRunHourlyReports = false;
 
 // Schedule the daily task at 12:00 AM IST (midnight)
 cron.schedule("0 0 * * *", () => {
   gatherAllData("N", "Asia/Kolkata");
-  canRunHourlyReports = true; 
+  // canRunHourlyReports = true; 
 });
 
 // Schedule the hourly task at every hour from 1:00 AM to 11:59 PM IST
 cron.schedule("0 1-23 * * *", () => {
-  if (canRunHourlyReports) {
+  // if (canRunHourlyReports) {
     gatherAllData("H", "Asia/Kolkata"); 
-  }
+  // }
 });
 
 const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
