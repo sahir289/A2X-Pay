@@ -144,4 +144,9 @@ payInRouter.put(
   payInController.updateDepositStatus
 );
 
+payInRouter.put(
+  "/hard-reset-payment-status/:id",
+  payInController.hardResetDiposit
+);
+
 export default payInRouter;

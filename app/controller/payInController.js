@@ -2802,6 +2802,29 @@ class PayInController {
     }
   }
 
+  async hardResetDiposit(req, res, next) {
+    try {
+      const { id } = req.params;
+        
+      const payInData = await payInRepo.getPayInData(id);
+  
+      const updatePayInData = {
+        status: "ASSIGNED",
+        confirmed: null,
+        payin_commission: null,
+        utr: null,
+        user_submitted_utr: null,
+        duration: null,
+      };
+  
+      const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
+  
+      return DefaultResponse(res, 200, "Transaction Reset successfully", updatePayInRes);
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }
 
 export default new PayInController();
