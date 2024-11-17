@@ -2807,6 +2807,7 @@ class PayInController {
       const { id } = req.params;
         
       const payInData = await payInRepo.getPayInData(id);
+      const botRes = await botResponseRepo.getBotResByUtr(payInData.utr);
   
       const updatePayInData = {
         status: "ASSIGNED",
@@ -2816,6 +2817,8 @@ class PayInController {
         user_submitted_utr: null,
         duration: null,
       };
+
+      await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
   
       const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
   
