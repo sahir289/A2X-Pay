@@ -2177,7 +2177,7 @@ class PayInController {
   async telegramCheckUtrHandler(req, res, next) {
     const TELEGRAM_BOT_TOKEN = config?.telegramCheckUtrBotToken;
     try {
-      const { message } = req.body;
+      const { message, fromUI } = req.body;
       const data = message?.text ? message?.text : message?.caption;
       res.sendStatus(200);
 
@@ -2823,6 +2823,38 @@ class PayInController {
       const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
   
       return DefaultResponse(res, 200, "Transaction Reset successfully", updatePayInRes);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async resetDeposit(req, res, next) {
+    try {
+      const { amount_code } = req.body;
+        
+      const payInData = await payInRepo.getPayinDataByAmountCode(amount_code);
+      if (payInData?.status !== "SUCCESS") {
+        const utr = payInData?.utr ? payInData?.utr : payInData?.user_submitted_utr
+        const botRes = await botResponseRepo.getBotResByUtr(utr);
+    
+        const updatePayInData = {
+          status: "ASSIGNED",
+          confirmed: null,
+          payin_commission: null,
+          utr: null,
+          user_submitted_utr: null,
+          duration: null,
+        };
+  
+        await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
+    
+        const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
+    
+        return DefaultResponse(res, 200, "Transaction Reset successfully", updatePayInRes);
+      }
+      else {
+        return DefaultResponse(res, 400, "Status is SUCCESS, no update applied");
+      }
     } catch (error) {
       next(error);
     }
