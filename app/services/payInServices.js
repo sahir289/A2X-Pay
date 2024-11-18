@@ -129,7 +129,7 @@ class PayInService {
       }),
       ...(confirmed && { confirmed: { equals: confirmed } }),
       ...(amount && { amount: { equals: amount } }),
-      ...(utr && { utr: { equals: utr } }),
+      // ...(utr && { utr: { equals: utr } }),
       ...(dur && { duration: { contains: dur, mode: "insensitive" } }),
       ...(status && { status: { equals: status } }),
       ...(merchantCode && {

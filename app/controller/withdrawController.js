@@ -49,6 +49,141 @@ class WithdrawController {
     }
   }
 
+  async createBlazepeWithdraw(req, res) {
+    const headers = req.headers;
+    const body = req.body;
+
+    if (!headers.merchant_code || !headers.merchant_secret) {
+        return res.status(400).json({
+            success: false,
+            message: 'Missing required headers: merchant_code or merchant_secret',
+        });
+    }
+
+    if (headers.merchant_secret !== process.env.MERCHANT_SECRET) {
+        return res.status(401).json({
+            success: false,
+            message: 'Invalid merchant secret',
+        });
+    }
+
+    const requiredFields = [
+        'name',
+        'phone',
+        'bankAccount',
+        'ifsc',
+        'mode',
+        'amount',
+        'notifyUrl',
+        'merchantRefId',
+    ];
+
+    for (const field of requiredFields) {
+        if (!body[field]) {
+            return res.status(400).json({
+                success: false,
+                message: `Missing required field: ${field}`,
+            });
+        }
+    }
+
+    try {
+        const thirdPartyResponse = await axios.post('https://blazepe-api-url.com/api/m/payout', body, {
+            headers: {
+                merchant_code: headers.merchant_code,
+                merchant_secret: headers.merchant_secret,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = thirdPartyResponse.data;
+
+        // Check Response and Update Database
+        if (data.success) {
+            const {
+                amount,
+                payoutId,
+                transferId,
+                status,
+                message,
+                merchantRefId,
+            } = data.data;
+
+            //  will Update DB below
+
+            // const response = await withdrawService.updateWithdraw()
+            
+            return DefaultResponse(
+              res,
+              200,
+              "Payout status fetched successfully",
+              data
+            );
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'Third-party API returned an error',
+                error: data.message,
+            });
+        }
+    } catch (error) {
+        console.error('Error processing payout:', error.message);
+        throw new CustomError(404, "Error processing payout");
+    }
+};
+
+async checkBlazepePayoutStatus(req, res, next) {
+  try {
+    checkValidation(req);
+    const headers = req.headers;
+
+    if (!payoutId && !headers.merchantCode && !headers.merchantOrderId) {
+      return DefaultResponse(res, 400, {
+        status: "error",
+        error: "Invalid request. Data type mismatch or incomplete request",
+      });
+    }
+    const merchant = await merchantRepo.getMerchantByCode(headers.merchantCode);
+    if (!merchant) {
+      throw new CustomError(404, "Merchant does not exist");
+    }
+    if (req.headers["x-api-key"] !== merchant.api_key) {
+      throw new CustomError(404, "Enter valid Api key");
+    }
+
+    const data = await withdrawService.checkPayoutStatus(
+      payoutId,
+      headers.merchantCode,
+      merchantOrderId
+    );
+    logger.info('Payout Status', {
+      status: data.status,
+      data: data.data,
+    })
+
+    if (!data) {
+      return DefaultResponse(res, 404, "Payout not found");
+    }
+
+    const response = {
+      status: data.status,
+      merchantOrderId: data.merchant_order_id,
+      amount: data.amount,
+      payoutId: data.id,
+      utr_id: data?.status === "SUCCESS" ? data?.utr_id : ""
+    };
+
+    return DefaultResponse(
+      res,
+      200,
+      "Payout status fetched successfully",
+      response
+    );
+  } catch (err) {
+    next(err);
+  }
+}
+
   async checkPayoutStatus(req, res, next) {
     try {
       checkValidation(req);
