@@ -149,4 +149,9 @@ payInRouter.put(
   payInController.hardResetDiposit
 );
 
+payInRouter.post(
+  "/reset-payment/",
+  payInController.resetDeposit
+);
+
 export default payInRouter;
