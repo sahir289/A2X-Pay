@@ -74,7 +74,8 @@ export async function sendSuccessMessageTelegram(
   chatId,
   merchantOrderIdTele,
   TELEGRAM_BOT_TOKEN,
-  replyToMessageId
+  replyToMessageId,
+  fromUI
 ) {
   // Assuming `orderNo` is part of the `data` object
   const orderNo = merchantOrderIdTele;
@@ -82,16 +83,21 @@ export async function sendSuccessMessageTelegram(
   // Construct the message
   const message = `💵 Order No. ${orderNo} is confirmed! ✅`;
 
-  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  try {
-    await axios.post(sendMessageUrl, {
-      chat_id: chatId,
-      text: message,
-      parse_mode: "HTML",
-      reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
-    });
-  } catch (error) {
-    console.error("Error sending message to Telegram:", error);
+  if (!fromUI) {
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+      await axios.post(sendMessageUrl, {
+        chat_id: chatId,
+        text: message,
+        parse_mode: "HTML",
+        reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
+      });
+    } catch (error) {
+      console.error("Error sending message to Telegram:", error);
+    }
+  }
+  else {
+    return message;
   }
 }
 
@@ -99,21 +105,27 @@ export async function sendErrorMessageTelegram(
   chatId,
   merchantOrderIdTele,
   TELEGRAM_BOT_TOKEN,
-  replyToMessageId
+  replyToMessageId,
+  fromUI
 ) {
   // Construct the error message
   const message = `⛔ No Merchant Order ID ${merchantOrderIdTele} found. Please recheck input`;
 
-  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  try {
-    await axios.post(sendMessageUrl, {
-      chat_id: chatId,
-      text: message,
-      parse_mode: "HTML",
-      reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
-    });
-  } catch (error) {
-    console.error("Error sending message to Telegram:", error);
+  if (!fromUI) {
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+      await axios.post(sendMessageUrl, {
+        chat_id: chatId,
+        text: message,
+        parse_mode: "HTML",
+        reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
+      });
+    } catch (error) {
+      console.error("Error sending message to Telegram:", error);
+    }
+  }
+  else {
+    return message;
   }
 }
 
@@ -144,7 +156,8 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
   utr,
   TELEGRAM_BOT_TOKEN,
   replyToMessageId,
-  existingPayinData
+  existingPayinData,
+  fromUI
 ) {
   const payinData = existingPayinData[1] ? existingPayinData[1] : existingPayinData[0];
   // Construct the error message
@@ -155,16 +168,21 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
     message = `🚨 UTR ${utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
   }
 
-  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  try {
-    await axios.post(sendMessageUrl, {
-      chat_id: chatId,
-      text: message,
-      parse_mode: "HTML",
-      reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
-    });
-  } catch (error) {
-    console.error("Error sending message to Telegram:", error);
+  if (!fromUI) {
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+      await axios.post(sendMessageUrl, {
+        chat_id: chatId,
+        text: message,
+        parse_mode: "HTML",
+        reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
+      });
+    } catch (error) {
+      console.error("Error sending message to Telegram:", error);
+    }
+  }
+  else {
+    return message;
   }
 }
 
@@ -173,7 +191,8 @@ export async function sendAmountDisputeMessageTelegramBot(
   amount,
   disputedAmount,
   TELEGRAM_BOT_TOKEN,
-  replyToMessageId
+  replyToMessageId,
+  fromUI
 ) {
   // Construct the error message
   const message = `
@@ -182,17 +201,22 @@ export async function sendAmountDisputeMessageTelegramBot(
             <b>✅ Confirmed Amount:</b> ${amount}
     `;
 
-  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  try {
-    await axios.post(sendMessageUrl, {
-      chat_id: chatId,
-      text: message,
-      parse_mode: "HTML",
-      reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
-    });
-  } catch (error) {
-    console.error("Error sending message to Telegram:", error);
-  }
+    if (!fromUI) {
+      const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+      try {
+        await axios.post(sendMessageUrl, {
+          chat_id: chatId,
+          text: message,
+          parse_mode: "HTML",
+          reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
+        });
+      } catch (error) {
+        console.error("Error sending message to Telegram:", error);
+      }
+    }
+    else {
+      return message;
+    }
 }
 
 export async function sendBankMismatchMessageTelegramBot(
@@ -200,7 +224,8 @@ export async function sendBankMismatchMessageTelegramBot(
   bankNameFromBank,
   bankNameFromMerchant,
   TELEGRAM_BOT_TOKEN,
-  replyToMessageId
+  replyToMessageId,
+  fromUI
 ) {
   // Construct the error message
 
@@ -210,38 +235,49 @@ export async function sendBankMismatchMessageTelegramBot(
             <b>✅ Amount credited in :</b> ${bankNameFromBank}
     `;
 
-  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  try {
-    await axios.post(sendMessageUrl, {
-      chat_id: chatId,
-      text: message,
-      parse_mode: "HTML",
-      reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
-    });
-  } catch (error) {
-    console.error("Error sending message to Telegram:", error);
-  }
+    if (!fromUI) {
+      const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+      try {
+        await axios.post(sendMessageUrl, {
+          chat_id: chatId,
+          text: message,
+          parse_mode: "HTML",
+          reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
+        });
+      } catch (error) {
+        console.error("Error sending message to Telegram:", error);
+      }
+    }
+    else {
+      return message;
+    }
 }
 
 export async function sendErrorMessageNoDepositFoundTelegramBot(
   chatId,
   Utr,
   TELEGRAM_BOT_TOKEN,
-  replyToMessageId
+  replyToMessageId,
+  fromUI
 ) {
   // Construct the error message
-  const message = `⛔ No deposit with UTR ${Utr}  found. Please check  `;
+  const message = `⛔ No deposit with UTR ${Utr} found. Please check  `;
 
-  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  try {
-    await axios.post(sendMessageUrl, {
-      chat_id: chatId,
-      text: message,
-      parse_mode: "HTML",
-      reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
-    });
-  } catch (error) {
-    console.error("Error sending message to Telegram:", error);
+  if (!fromUI) {
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+      await axios.post(sendMessageUrl, {
+        chat_id: chatId,
+        text: message,
+        parse_mode: "HTML",
+        reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
+      });
+    } catch (error) {
+      console.error("Error sending message to Telegram:", error);
+    }
+  }
+  else {
+    return message;
   }
 }
 
@@ -383,7 +419,8 @@ export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
   chatId,
   TELEGRAM_BOT_TOKEN,
   replyToMessageId,
-  withoutImage
+  withoutImage,
+  fromUI
 ) {
   // Construct the error message
   let message;
@@ -393,16 +430,22 @@ export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
     message = `⛔ Please mention Merchant Order Id`; // If withoutImage is true, set this message
   }
 
-  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  try {
-    await axios.post(sendMessageUrl, {
-      chat_id: chatId,
-      text: message,
-      parse_mode: "HTML",
-      reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
-    });
-  } catch (error) {
-    console.error("Error sending message to Telegram:", error);
+  if (!fromUI){
+
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+      await axios.post(sendMessageUrl, {
+        chat_id: chatId,
+        text: message,
+        parse_mode: "HTML",
+        reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
+      });
+    } catch (error) {
+      console.error("Error sending message to Telegram:", error);
+    }
+  }
+  else {
+    return message;
   }
 }
 
