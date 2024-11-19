@@ -146,7 +146,7 @@ payInRouter.put(
 
 payInRouter.put(
   "/hard-reset-payment-status/:id",
-  payInController.hardResetDiposit
+  payInController.hardResetDeposit
 );
 
 payInRouter.post(

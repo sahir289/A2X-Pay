@@ -4,19 +4,15 @@ import { sendTelegramDashboardReportMessage } from "../helper/sendTelegramMessag
 import config from "../../config.js";
 import moment from "moment-timezone";
 
-// let canRunHourlyReports = false;
 
 // Schedule the daily task at 12:00 AM IST (midnight)
 cron.schedule("0 0 * * *", () => {
   gatherAllData("N", "Asia/Kolkata");
-  // canRunHourlyReports = true; 
 });
 
 // Schedule the hourly task at every hour from 1:00 AM to 11:59 PM IST
 cron.schedule("0 1-23 * * *", () => {
-  // if (canRunHourlyReports) {
     gatherAllData("H", "Asia/Kolkata"); 
-  // }
 });
 
 const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
@@ -165,10 +161,6 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
 // gatherAllData("H", "Asia/Kolkata")
 
 const formatePrice = (price, currencySymbol = "₹") => {
-  // return Number(price).toLocaleString("en-US", {
-  //   minimumFractionDigits: 2,
-  //   maximumFractionDigits: 2,
-  // });
   return `${currencySymbol} ${Number(price).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2

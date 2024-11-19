@@ -2882,13 +2882,15 @@ class PayInController {
     }
   }
 
-  async hardResetDiposit(req, res, next) {
+  async hardResetDeposit(req, res, next) {
     try {
       const { id } = req.params;
-
       const payInData = await payInRepo.getPayInData(id);
-      const botRes = await botResponseRepo.getBotResByUtr(payInData.utr);
-
+      if(!payInData){
+        throw new CustomError(404, "Payin data does not exist");
+      }
+      const botRes = await botResponseRepo.getBotResByUtr(payInData?.utr);
+  
       const updatePayInData = {
         status: "ASSIGNED",
         confirmed: null,
@@ -2925,8 +2927,12 @@ class PayInController {
           user_submitted_utr: null,
           duration: null,
         };
+        const getallPayinDataByUtr =  await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+        const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
 
-        await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
+        if(!hasSuccess){
+          await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
+        }
 
         const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
 

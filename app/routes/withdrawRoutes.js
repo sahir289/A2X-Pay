@@ -20,6 +20,16 @@ withdrawRouter.post(
 );
 
 withdrawRouter.post(
+  "/check-blazePe-status",
+  withdrawController.createBlazepeWithdraw
+);
+
+withdrawRouter.post(
+  "/create-blazePe-payout",
+  withdrawController.checkBlazepePayoutStatus
+);
+
+withdrawRouter.post(
   "/check-payout-status",
   validatePayOutId,
   withdrawController.checkPayoutStatus
