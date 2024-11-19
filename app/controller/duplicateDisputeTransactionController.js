@@ -77,6 +77,8 @@ class DuplicateDisputeTransactionController {
                         logger.error("Error sending notification:", error);
                     }
 
+                    delete req?.body?.merchant_order_id // deleted to avoid updating merchant_order_id in existing payin data
+                    
                     apiData = {
                         ...req.body,
                         status: "DUPLICATE",
