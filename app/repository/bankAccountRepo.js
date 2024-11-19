@@ -140,7 +140,7 @@ class BankAccountRepo {
       take,
       orderBy: [
         { is_enabled: 'desc' },  
-        { createdAt: 'desc' }   
+        { updatedAt: 'desc' }   
       ],
       include: {
         Merchant_Bank: {
@@ -170,11 +170,11 @@ class BankAccountRepo {
             in: ["SUCCESS", "DISPUTE"],
           },
           bank_acc_id: bank?.id,
-          createdAt: dateFilter,
+          updatedAt: dateFilter,
           
         },
         orderBy: {
-          createdAt: 'desc',  // Ordering bank accounts by createdAt in descending order
+          updatedAt: 'desc',  // Ordering bank accounts by createdAt in descending order
         },
 
       })
