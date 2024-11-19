@@ -2842,10 +2842,12 @@ class PayInController {
       const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
       const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
       const duration = `${durHours}:${durMinutes}:${durSeconds}`;
-
+      const getBank = await bankAccountRepo.getBankNickName(bank_name);
+  
       const updatePayInData = {
         status: "SUCCESS",
         bank_name: bank_name,
+        bank_acc_id: getBank.id,
         amount: payInData.confirmed,
         payin_commission: payinCommission,
         duration: duration,
@@ -2856,6 +2858,11 @@ class PayInController {
       await botResponseRepo.updateBotResponseByUtr(
         getBankResponseByUtr?.id,
         getBankResponseByUtr?.utr
+      );
+
+      await bankAccountRepo.updateBankAccountBalance(
+        getBank?.id,
+        parseFloat(payInData.confirmed)
       );
 
       const notifyData = {
