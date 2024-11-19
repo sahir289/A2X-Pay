@@ -44,16 +44,20 @@ class DuplicateDisputeTransactionController {
                     const newPayInData = await payInRepo.getPayInDataByMerchantOrderId(merchant_order_id);
                     const payInData = {
                         confirmed: newPayInData?.amount,
-                        status: "SUCCESS",
                         is_notified: true,
                         user_submitted_utr: oldPayInData.utr,
                         utr: oldPayInData.utr,
                         approved_at: new Date(),
                         is_url_expires: true,
-                        payin_commission: payinCommission,
                         user_submitted_image: null,
                         duration: duration,
+                        status: newPayInData.amount !== req?.body?.amount ? "DISPUTE" : "SUCCESS",
+                    };
+                    
+                    if (payInData.status === "SUCCESS") {
+                        payInData.payin_commission = payinCommission;
                     }
+                    
                     const updatedPayInData = await payInRepo.updatePayInData(newPayInData?.id, payInData)
                     const notifyData = {
                         status: updatedPayInData?.status,
