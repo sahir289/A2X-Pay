@@ -679,33 +679,33 @@ class PayInController {
           };
           return DefaultResponse(res, 200, responseMessage, response);
         }
-  
+
         if (isFront !== true) {
           // is front is used to check it is coming from deposit img pending or not.
           if (urlValidationRes?.is_url_expires === true) {
             throw new CustomError(403, "Url is expired");
           }
         }
-  
+
         if (filePath) {
           // we have to remove the img from the s3
           // fs.unlink(`public/${filePath}`, (err) => {
           //   if (err) console.error("Error deleting the file:", err);
           // });
         }
-  
-  
+
+
         const matchDataFromBotRes = await botResponseRepo.getBotResByUtr(
           usrSubmittedUtr
         );
-  
+
         let getBankDataByBotRes;
         // we are making sure that we get bank name then only we move forward
         if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
           // We check bank exist here as we have to add the data to the res no matter what comes.
-          
+
           getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
-  
+
           if (!getBankDataByBotRes) {
             const payInData = {
               confirmed: matchDataFromBotRes?.amount,
@@ -718,23 +718,23 @@ class PayInController {
               approved_at: new Date(),
               duration: duration
             };
-  
+
             const updatePayInDataRes = await payInRepo.updatePayInData(
               getPayInData.id,
               payInData
             );
-  
+
             await botResponseRepo.updateBotResponseByUtr(
               matchDataFromBotRes?.id,
               usrSubmittedUtr
             );
-  
+
             // We are adding the amount to the bank as we want to update the balance of the bank
             await bankAccountRepo.updateBankAccountBalance(
               getBankDataByBotRes?.id,
               parseFloat(amount)
             );
-  
+
             const response = {
               status: updatePayInDataRes.status,
               amount,
@@ -742,7 +742,7 @@ class PayInController {
               return_url: updatePayInDataRes?.return_url,
               utr_id: updatePayInDataRes?.user_submitted_utr
             };
-  
+
             return DefaultResponse(
               res,
               200,
@@ -751,7 +751,7 @@ class PayInController {
             );
           }
         }
-  
+
         if (!matchDataFromBotRes) {
           payInData = {
             amount,
@@ -775,63 +775,63 @@ class PayInController {
         } else {
           if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
             // if (isBankExist?.Merchant_Bank?.length === 1) {
-              // if (getBankDataByBotRes?.id !== isBankExist?.id) {
-                const payInData = {
-                  confirmed: matchDataFromBotRes?.amount,
-                  amount: amount,
-                  status: "BANK_MISMATCH",
-                  is_notified: true,
-                  is_url_expires: true,
-                  utr: matchDataFromBotRes?.utr,
-                  user_submitted_utr: usrSubmittedUtr,
-                  approved_at: new Date(),
-                  duration: duration
-                };
-  
-                const updatePayInDataRes = await payInRepo.updatePayInData(
-                  getPayInData.id,
-                  payInData
-                );
-  
-                await botResponseRepo.updateBotResponseByUtr(
-                  matchDataFromBotRes?.id,
-                  usrSubmittedUtr
-                );
-  
-                // We are adding the amount to the bank as we want to update the balance of the bank
-                await bankAccountRepo.updateBankAccountBalance(
-                  getBankDataByBotRes?.id,
-                  parseFloat(amount)
-                );
-  
-                const response = {
-                  status: updatePayInDataRes.status,
-                  amount,
-                  merchant_order_id: updatePayInDataRes?.merchant_order_id,
-                  return_url: updatePayInDataRes?.return_url,
-                  utr_id: updatePayInDataRes?.user_submitted_utr
-                };
-  
-                return DefaultResponse(
-                  res,
-                  200,
-                  "Bank mismatch",
-                  response
-                );
+            // if (getBankDataByBotRes?.id !== isBankExist?.id) {
+            const payInData = {
+              confirmed: matchDataFromBotRes?.amount,
+              amount: amount,
+              status: "BANK_MISMATCH",
+              is_notified: true,
+              is_url_expires: true,
+              utr: matchDataFromBotRes?.utr,
+              user_submitted_utr: usrSubmittedUtr,
+              approved_at: new Date(),
+              duration: duration
+            };
+
+            const updatePayInDataRes = await payInRepo.updatePayInData(
+              getPayInData.id,
+              payInData
+            );
+
+            await botResponseRepo.updateBotResponseByUtr(
+              matchDataFromBotRes?.id,
+              usrSubmittedUtr
+            );
+
+            // We are adding the amount to the bank as we want to update the balance of the bank
+            await bankAccountRepo.updateBankAccountBalance(
+              getBankDataByBotRes?.id,
+              parseFloat(amount)
+            );
+
+            const response = {
+              status: updatePayInDataRes.status,
+              amount,
+              merchant_order_id: updatePayInDataRes?.merchant_order_id,
+              return_url: updatePayInDataRes?.return_url,
+              utr_id: updatePayInDataRes?.user_submitted_utr
+            };
+
+            return DefaultResponse(
+              res,
+              200,
+              "Bank mismatch",
+              response
+            );
             //   }
             // }
           }
-  
+
           await botResponseRepo.updateBotResponseByUtr(
             matchDataFromBotRes?.id,
             usrSubmittedUtr
           );
-  
+
           const updateMerchantRes = await merchantRepo.updateMerchant(
             getPayInData?.merchant_id,
             parseFloat(matchDataFromBotRes?.amount)
           );
-  
+
           const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
             getPayInData?.bank_acc_id,
             parseFloat(matchDataFromBotRes?.amount)
@@ -840,7 +840,7 @@ class PayInController {
             matchDataFromBotRes?.amount,
             updateMerchantRes?.payin_commission
           );
-  
+
           if (parseFloat(amount) === parseFloat(matchDataFromBotRes?.amount)) {
             payInData = {
               confirmed: matchDataFromBotRes?.amount,
@@ -869,12 +869,12 @@ class PayInController {
             responseMessage = "Dispute in Payment";
           }
         }
-  
+
         const updatePayinRes = await payInRepo.updatePayInData(
           payInId,
           payInData
         );
-  
+
         const notifyData = {
           status: updatePayinRes.status,
           merchantOrderId: updatePayinRes?.merchant_order_id,
@@ -883,7 +883,7 @@ class PayInController {
           req_amount: amount,
           utr_id: (updatePayinRes.status === "SUCCESS" || updatePayinRes.status === "DISPUTE") ? updatePayinRes?.utr : ""
         };
-  
+
         try {
           logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
           //When we get the notify url we will add it.
@@ -892,12 +892,12 @@ class PayInController {
             status: notifyMerchant.status,
             data: notifyMerchant.data,
           })
-  
+
         } catch (error) {
           logger.error("Error sending notification:", error);
         }
-  
-  
+
+
         const response = {
           status: updatePayinRes.status,
           amount,
@@ -905,11 +905,11 @@ class PayInController {
           return_url: updatePayinRes?.return_url,
           utr_id: updatePayinRes?.user_submitted_utr
         };
-  
+
         // if (payInData.status === "SUCCESS") {
         //   response.utr_id = updatePayinRes?.utr;
         // }
-  
+
         return DefaultResponse(res, 200, responseMessage, response);
       }
     } catch (error) {
@@ -998,7 +998,7 @@ class PayInController {
         imgData
       );
 
-      if(resFromOcrPy?.data?.status === "failure"){
+      if (resFromOcrPy?.data?.status === "failure") {
         const imageUrl = `${req?.file?.key}`;
         const payInData = {
           amount,
@@ -1018,7 +1018,7 @@ class PayInController {
         };
         return DefaultResponse(res, 200, "Utr is not recognized", response);
       }
-      
+
       // Merge the data from the API with the existing dataRes
       const usrSubmittedUtr = {
         amount: resFromOcrPy?.data?.data?.amount, //|| dataRes.amount,
@@ -1209,7 +1209,7 @@ class PayInController {
             matchDataFromBotRes?.amount,
             updateMerchantDataRes?.payin_commission
           );
-          
+
           if (parseFloat(amount) === parseFloat(matchDataFromBotRes?.amount)) {
 
             payInData = {
@@ -1343,12 +1343,12 @@ class PayInController {
       }
 
       const merchantCodes = Array.isArray(merchantCode)
-      ? merchantCode
-      : merchantCode.split(',');
+        ? merchantCode
+        : merchantCode.split(',');
 
-    // if (merchantCodes.length === 0) {
-    //   return res.status(400).json({ error: 'No merchant codes provided' });
-    // }
+      // if (merchantCodes.length === 0) {
+      //   return res.status(400).json({ error: 'No merchant codes provided' });
+      // }
 
       const payInDataRes = await payInServices.getMerchantsNetBalance(
         merchantCodes
@@ -1439,13 +1439,13 @@ class PayInController {
           //   logger.error("Please add screenshot of the Payment!");
           //   return;
           // } else {
-            // await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
-            //   message.chat.id,
-            //   TELEGRAM_BOT_TOKEN,
-            //   message?.message_id
-            // );
-            // logger.error("Please enter merchant orderId");
-            // return;
+          // await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
+          //   message.chat.id,
+          //   TELEGRAM_BOT_TOKEN,
+          //   message?.message_id
+          // );
+          // logger.error("Please enter merchant orderId");
+          // return;
           // }
         }
 
@@ -1480,7 +1480,7 @@ class PayInController {
             console.error("Error converting image to Base64:", error);
             logger.error("Error converting image to Base64");
             return
-            
+
           }
 
           let dataRes;
@@ -1493,8 +1493,8 @@ class PayInController {
             imgData
           );
 
-          if(resFromOcrPy?.data?.status === "failure"){
-            
+          if (resFromOcrPy?.data?.status === "failure") {
+
             await sendErrorMessageUtrOrAmountNotFoundImgTelegramBot(
               message.chat.id,
               TELEGRAM_BOT_TOKEN,
@@ -1512,7 +1512,7 @@ class PayInController {
 
           // Merge the data from the API with the existing dataRes
           dataRes = {
-            amount: resFromOcrPy?.data?.data?.amount.replace(",",""), //|| dataRes.amount,
+            amount: resFromOcrPy?.data?.data?.amount.replace(",", ""), //|| dataRes.amount,
             utr: resFromOcrPy?.data?.data?.transaction_id, //|| dataRes.utr
             bankName: resFromOcrPy?.data?.data?.bank_name,
             timeStamp: resFromOcrPy?.data?.data?.timestamp,
@@ -1542,7 +1542,7 @@ class PayInController {
                   );
                   logger.error("Merchant order id does not exist")
                   return
-                 
+
                 }
                 if (getPayInData?.is_notified === true) {
                   const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
@@ -1564,9 +1564,9 @@ class PayInController {
                     dataRes?.utr
                   );
                   if (
-                    ((dataRes?.utr === getPayInData?.user_submitted_utr || dataRes?.utr === getPayInData?.utr) && (dataRes?.utr === getTelegramResByUtr?.utr)) || ((dataRes?.utr === getTelegramResByUtr?.utr) && (getPayInData?.status === "PENDING")&& (getPayInData?.merchant_order_id === merchantOrderIdTele))
+                    ((dataRes?.utr === getPayInData?.user_submitted_utr || dataRes?.utr === getPayInData?.utr) && (dataRes?.utr === getTelegramResByUtr?.utr)) || ((dataRes?.utr === getTelegramResByUtr?.utr) && (getPayInData?.status === "PENDING") && (getPayInData?.merchant_order_id === merchantOrderIdTele))
                   ) {
-                    if(getPayInData?.bank_name !== getTelegramResByUtr?.bankName){
+                    if (getPayInData?.bank_name !== getTelegramResByUtr?.bankName) {
                       const payinCommission = calculateCommission(
                         dataRes?.amount,
                         getPayInData.Merchant?.payin_commission
@@ -1634,18 +1634,18 @@ class PayInController {
                       return res.status(200).json({ message: "true" });
                     } else {
                       // Here, getTelegramResByUtr.amount is used instead of dataRes.amount to handle cases where the slip may have been altered in a fraud scenario
-                      if (parseFloat(getTelegramResByUtr?.amount) == parseFloat(dataRes?.amount)){
+                      if (parseFloat(getTelegramResByUtr?.amount) == parseFloat(dataRes?.amount)) {
                         const payinCommission = calculateCommission(
                           dataRes?.amount,
                           getPayInData.Merchant?.payin_commission
                         );
-    
+
                         const durMs = new Date() - getPayInData.createdAt;
                         const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
                         const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
                         const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
                         const duration = `${durHours}:${durMinutes}:${durSeconds}`;
-    
+
                         updatePayInData = {
                           confirmed: dataRes?.amount,
                           status: "SUCCESS",
@@ -1656,7 +1656,7 @@ class PayInController {
                           payin_commission: payinCommission,
                           user_submitted_image: null,
                           duration: duration,
-    
+
                         };
                         await payInRepo.updatePayInData(
                           getPayInData?.id,
@@ -1674,10 +1674,10 @@ class PayInController {
                           TELEGRAM_BOT_TOKEN,
                           message?.message_id
                         );
-    
+
                         // ----> Notify url
                         try {
-    
+
                           const notifyData = {
                             status: "SUCCESS",
                             merchantOrderId: getPayInData?.merchant_order_id,
@@ -1702,13 +1702,13 @@ class PayInController {
                           dataRes?.amount,
                           getPayInData.Merchant?.payin_commission
                         );
-  
+
                         const durMs = new Date() - getPayInData.createdAt;
                         const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
                         const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
                         const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
                         const duration = `${durHours}:${durMinutes}:${durSeconds}`;
-  
+
                         updatePayInData = {
                           confirmed: getTelegramResByUtr?.amount,
                           status: "DISPUTE",
@@ -1770,7 +1770,7 @@ class PayInController {
                     );
                     return res.status(200).json({ message: "Utr does not exist" });
                   }
-                  
+
                 } else {
                   const statusActions = {
                     SUCCESS: async () => {
@@ -1783,13 +1783,13 @@ class PayInController {
                     },
                     DUPLICATE: async () => {
                       const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
-                  await sendAlreadyConfirmedMessageTelegramBot(
-                    message.chat.id,
-                    dataRes?.utr,
-                    TELEGRAM_BOT_TOKEN,
-                    message?.message_id,
-                    existingPayinData
-                  );
+                      await sendAlreadyConfirmedMessageTelegramBot(
+                        message.chat.id,
+                        dataRes?.utr,
+                        TELEGRAM_BOT_TOKEN,
+                        message?.message_id,
+                        existingPayinData
+                      );
                     },
                     DISPUTE: async () => {
                       await sendAmountDisputeMessageTelegramBot(
@@ -1810,11 +1810,11 @@ class PayInController {
                       );
                     }
                   };
-                  
+
                   if (getPayInData?.status in statusActions) {
                     await statusActions[getPayInData.status]();
                   }
-                   else {
+                  else {
                     const getTelegramResByUtr = await botResponseRepo.getBotResByUtr(
                       dataRes?.utr
                     );
@@ -1827,46 +1827,46 @@ class PayInController {
                       );
                       return res.status(200).json({ message: "Utr does not exist" });
                     }
-  
+
                     if (getTelegramResByUtr?.is_used === true) {
                       const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
 
-                  await sendAlreadyConfirmedMessageTelegramBot(
-                    message.chat.id,
-                    dataRes?.utr,
-                    TELEGRAM_BOT_TOKEN,
-                    message?.message_id,
-                    existingPayinData
-                  );
+                      await sendAlreadyConfirmedMessageTelegramBot(
+                        message.chat.id,
+                        dataRes?.utr,
+                        TELEGRAM_BOT_TOKEN,
+                        message?.message_id,
+                        existingPayinData
+                      );
                       return res.status(200).json({ message: "Utr is already used" });
                     }
-  
+
                     if (
                       dataRes?.utr === getTelegramResByUtr?.utr &&
                       parseFloat(dataRes?.amount) ===
                       parseFloat(getTelegramResByUtr?.amount)
                     ) {
-  
+
                       if (
                         parseFloat(getPayInData?.amount) === parseFloat(dataRes?.amount)
                       ) {
-  
+
                         const isUsrSubmittedUtrUsed =
                           await payInRepo?.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
-  
+
                         if (isUsrSubmittedUtrUsed.length > 0) {
-  
+
                           const payinCommission = calculateCommission(
                             dataRes?.amount,
                             getPayInData.Merchant?.payin_commission
                           );
-  
+
                           const durMs = new Date() - getPayInData.createdAt;
                           const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
                           const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
                           const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
                           const duration = `${durHours}:${durMinutes}:${durSeconds}`;
-  
+
                           updatePayInData = {
                             status: "DUPLICATE",
                             is_notified: true,
@@ -1886,7 +1886,7 @@ class PayInController {
                             getTelegramResByUtr?.id,
                             getTelegramResByUtr?.utr
                           );
-  
+
                           const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
 
                           await sendAlreadyConfirmedMessageTelegramBot(
@@ -1896,7 +1896,7 @@ class PayInController {
                             message?.message_id,
                             existingPayinData
                           );
-  
+
                           // Notify url--->
                           const notifyData = {
                             status: "DUPLICATE",
@@ -1910,7 +1910,7 @@ class PayInController {
                           try {
                             //When we get the notify url we will add it.
                             logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-  
+
                             const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
                             logger.info('Sending notification to merchant', {
                               status: notifyMerchant.status,
@@ -1919,22 +1919,22 @@ class PayInController {
                           } catch (error) {
                             console.error("Error sending notification:", error);
                           }
-  
+
                           return res.status(200).json({ message: "true" });
                         }
-                        else { 
-                          if(getPayInData?.bank_name !== getTelegramResByUtr?.bankName){
+                        else {
+                          if (getPayInData?.bank_name !== getTelegramResByUtr?.bankName) {
                             const payinCommission = calculateCommission(
                               dataRes?.amount,
                               getPayInData.Merchant?.payin_commission
                             );
-    
+
                             const durMs = new Date() - getPayInData.createdAt;
                             const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
                             const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
                             const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
                             const duration = `${durHours}:${durMinutes}:${durSeconds}`;
-    
+
                             updatePayInData = {
                               confirmed: dataRes?.amount,
                               status: "BANK_MISMATCH",
@@ -1947,17 +1947,17 @@ class PayInController {
                               user_submitted_image: null,
                               duration: duration
                             };
-  
+
                             await payInRepo.updatePayInData(
                               getPayInData?.id,
                               updatePayInData
                             );
-  
+
                             await botResponseRepo.updateBotResponseByUtr(
                               getTelegramResByUtr?.id,
                               getTelegramResByUtr?.utr
                             );
-    
+
                             await sendBankMismatchMessageTelegramBot(
                               message.chat.id,
                               getTelegramResByUtr?.bankName,
@@ -1965,7 +1965,7 @@ class PayInController {
                               TELEGRAM_BOT_TOKEN,
                               message?.message_id
                             );
-    
+
                             // Notify url--->
                             const notifyData = {
                               status: "BANK_MISMATCH",
@@ -1978,7 +1978,7 @@ class PayInController {
                             try {
                               //When we get the notify url we will add it.
                               logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-    
+
                               const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
                               logger.info('Sending notification to merchant', {
                                 status: notifyMerchant.status,
@@ -1987,86 +1987,86 @@ class PayInController {
                             } catch (error) {
                               console.error("Error sending notification:", error);
                             }
-    
+
                             return res.status(200).json({ message: "true" });
                           } else {
-                      
-                          const payinCommission = calculateCommission(
-                            dataRes?.amount,
-                            getPayInData.Merchant?.payin_commission
-                          );
-  
-                          const durMs = new Date() - getPayInData.createdAt;
-                          const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
-                          const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
-                          const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
-                          const duration = `${durHours}:${durMinutes}:${durSeconds}`;
-  
-                          updatePayInData = {
-                            confirmed: dataRes?.amount,
-                            status: "SUCCESS",
-                            is_notified: true,
-                            utr: dataRes.utr,
-                            user_submitted_utr: dataRes?.utr,
-                            approved_at: new Date(),
-                            is_url_expires: true,
-                            payin_commission: payinCommission,
-                            user_submitted_image: null,
-                            duration: duration
-                          };
-                          await payInRepo.updatePayInData(
-                            getPayInData?.id,
-                            updatePayInData
-                          );
-                          await botResponseRepo.updateBotResponseByUtr(
-                            getTelegramResByUtr?.id,
-                            getTelegramResByUtr?.utr
-                          );
-  
-                          await sendSuccessMessageTelegram(
-                            message.chat.id,
-                            merchantOrderIdTele,
-                            TELEGRAM_BOT_TOKEN,
-                            message?.message_id
-                          );
-  
-                          // Notify url--->
-                          const notifyData = {
-                            status: "SUCCESS",
-                            merchantOrderId: getPayInData?.merchant_order_id,
-                            payinId: getPayInData?.id,
-                            amount: getPayInData?.confirmed,
-                            req_amount: getPayInData?.amount,
-                            utr_id: getPayInData?.utr
+
+                            const payinCommission = calculateCommission(
+                              dataRes?.amount,
+                              getPayInData.Merchant?.payin_commission
+                            );
+
+                            const durMs = new Date() - getPayInData.createdAt;
+                            const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                            const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                            const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                            const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+
+                            updatePayInData = {
+                              confirmed: dataRes?.amount,
+                              status: "SUCCESS",
+                              is_notified: true,
+                              utr: dataRes.utr,
+                              user_submitted_utr: dataRes?.utr,
+                              approved_at: new Date(),
+                              is_url_expires: true,
+                              payin_commission: payinCommission,
+                              user_submitted_image: null,
+                              duration: duration
+                            };
+                            await payInRepo.updatePayInData(
+                              getPayInData?.id,
+                              updatePayInData
+                            );
+                            await botResponseRepo.updateBotResponseByUtr(
+                              getTelegramResByUtr?.id,
+                              getTelegramResByUtr?.utr
+                            );
+
+                            await sendSuccessMessageTelegram(
+                              message.chat.id,
+                              merchantOrderIdTele,
+                              TELEGRAM_BOT_TOKEN,
+                              message?.message_id
+                            );
+
+                            // Notify url--->
+                            const notifyData = {
+                              status: "SUCCESS",
+                              merchantOrderId: getPayInData?.merchant_order_id,
+                              payinId: getPayInData?.id,
+                              amount: getPayInData?.confirmed,
+                              req_amount: getPayInData?.amount,
+                              utr_id: getPayInData?.utr
+                            }
+                            try {
+                              //When we get the notify url we will add it.
+                              logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+
+                              const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+                              logger.info('Sending notification to merchant', {
+                                status: notifyMerchant.status,
+                                data: notifyMerchant.data,
+                              })
+                            } catch (error) {
+                              console.error("Error sending notification:", error);
+                            }
+
+                            return res.status(200).json({ message: "true" });
                           }
-                          try {
-                            //When we get the notify url we will add it.
-                            logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-  
-                            const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-                            logger.info('Sending notification to merchant', {
-                              status: notifyMerchant.status,
-                              data: notifyMerchant.data,
-                            })
-                          } catch (error) {
-                            console.error("Error sending notification:", error);
-                          }
-  
-                          return res.status(200).json({ message: "true" });
                         }
-                      }
                       } else {
                         const payinCommission = calculateCommission(
                           dataRes?.amount,
                           getPayInData.Merchant?.payin_commission
                         );
-  
+
                         const durMs = new Date() - getPayInData.createdAt;
                         const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
                         const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
                         const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
                         const duration = `${durHours}:${durMinutes}:${durSeconds}`;
-  
+
                         updatePayInData = {
                           confirmed: getTelegramResByUtr?.amount,
                           status: "DISPUTE",
@@ -2087,7 +2087,7 @@ class PayInController {
                           getTelegramResByUtr?.id,
                           getTelegramResByUtr?.utr
                         );
-  
+
                         await sendAmountDisputeMessageTelegramBot(
                           message.chat.id,
                           getTelegramResByUtr?.amount,
@@ -2095,7 +2095,7 @@ class PayInController {
                           TELEGRAM_BOT_TOKEN,
                           message?.message_id
                         );
-  
+
                         // Notify url--->
                         const notifyData = {
                           status: "DISPUTE",
@@ -2108,7 +2108,7 @@ class PayInController {
                         try {
                           //When we get the notify url we will add it.
                           logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-  
+
                           const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
                           logger.info('Sending notification to merchant', {
                             status: notifyMerchant.status,
@@ -2117,10 +2117,10 @@ class PayInController {
                         } catch (error) {
                           console.error("Error sending notification:", error);
                         }
-  
+
                         return res.status(200).json({ message: "true" });
                       }
-  
+
                     } else {
                       await sendErrorMessageNoDepositFoundTelegramBot(
                         message.chat.id,
@@ -2179,7 +2179,9 @@ class PayInController {
     try {
       const { message, fromUI } = req.body;
       const data = message?.text ? message?.text : message?.caption;
-      res.sendStatus(200);
+      if (!fromUI) {
+        res.sendStatus(200);
+      }
 
       if (data) {
         const splitData = data.split(" ");
@@ -2188,179 +2190,135 @@ class PayInController {
         const merchantOrderId = splitData[1];
         const utr = splitData[2];
 
-        if(command === '/checkutr'){
+        if (command === '/checkutr') {
 
-        if (merchantOrderId === undefined) {
-          await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
-            message.chat.id,
-            TELEGRAM_BOT_TOKEN,
-            message?.message_id,
-            true // this check for message according to captions only
-          );
-          logger.error("Please enter merchant orderId");
-          return
-        }
-
-        if (utr === undefined) {
-          await sendErrorMessageNoDepositFoundTelegramBot(
-            message.chat.id,
-            utr,
-            TELEGRAM_BOT_TOKEN,
-            message?.message_id
-          );
-          logger.error("Please enter UTR");
-          return
-        }
-
-        if (merchantOrderId && utr) {
-          const getBankResponseByUtr = await botResponseRepo.getBotResByUtr(
-            utr
-          );
-
-          if (!getBankResponseByUtr) {
-            await sendErrorMessageNoDepositFoundTelegramBot(
-              message.chat.id,
-              utr,
+          if (merchantOrderId === undefined) {
+            const response = await sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
+              message?.chat?.id,
               TELEGRAM_BOT_TOKEN,
-              message?.message_id
+              message?.message_id,
+              true, // this check for message according to captions only
+              fromUI
             );
-            logger.error("Utr does not exist");
-            return
-          }
-
-          const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(
-            merchantOrderId
-          );
-
-          const getPayInDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
-
-          if (!getPayInData) {
-            await sendErrorMessageTelegram(
-              message.chat.id,
-              merchantOrderId,
-              TELEGRAM_BOT_TOKEN,
-              message?.message_id
-            );
-            logger.error("Merchant order id does not exist");
-            return; 
-          }
-          if (getPayInDataByUtr?.status === 'SUCCESS'){
-            const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
-                  await sendAlreadyConfirmedMessageTelegramBot(
-                    message.chat.id,
-                    getBankResponseByUtr?.utr,
-                    TELEGRAM_BOT_TOKEN,
-                    message?.message_id,
-                    existingPayinData
-                  );
-            logger.error("Utr is already confirmed");
-            return 
-          }
-          let updatePayInData;
-          if (getPayInData && (getPayInData?.status === "PENDING" || getPayInData?.status === "DROPPED" || getPayInData?.status === "ASSIGNED")) {
-            if (getBankResponseByUtr?.bankName !== getPayInData?.bank_name) {
-
-              const isUsrSubmittedUtrUsed =
-                  await payInRepo?.getPayinDataByUsrSubmittedUtr(utr);
-
-                  if (isUsrSubmittedUtrUsed.length > 0) {
-
-                    const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
-                    await sendAlreadyConfirmedMessageTelegramBot(
-                      message.chat.id,
-                      getBankResponseByUtr?.utr,
-                      TELEGRAM_BOT_TOKEN,
-                      message?.message_id,
-                      existingPayinData
-                    );
-                    logger.error("Utr is already confirmed");
-                    return 
-                  } else {
-
-              const payinCommission = calculateCommission(
-                getBankResponseByUtr?.amount,
-                getPayInData.Merchant?.payin_commission
-              );
-              const durMs = new Date() - getPayInData.createdAt;
-              const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
-              const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
-              const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
-              const duration = `${durHours}:${durMinutes}:${durSeconds}`;
-
-              updatePayInData = {
-                confirmed: getBankResponseByUtr?.amount,
-                status: "BANK_MISMATCH",
-                is_notified: true,
-                utr: getBankResponseByUtr.utr,
-                user_submitted_utr: getBankResponseByUtr?.utr,
-                approved_at: new Date(),
-                is_url_expires: true,
-                payin_commission: payinCommission,
-                user_submitted_image: null,
-                duration: duration
-              };
-
-              const updatePayInDataRes = await payInRepo.updatePayInData(
-                getPayInData?.id,
-                updatePayInData
-              );
-
-              await botResponseRepo.updateBotResponseByUtr(
-                getBankResponseByUtr?.id,
-                getBankResponseByUtr?.utr
-              );
-
-              await sendBankMismatchMessageTelegramBot(
-                message.chat.id,
-                getBankResponseByUtr?.bankName,
-                getPayInData?.bank_name,
-                TELEGRAM_BOT_TOKEN,
-                message?.message_id
-              );
-
-              // Notify url--->
-              const notifyData = {
-                status: "BANK_MISMATCH",
-                merchantOrderId: getPayInData?.merchant_order_id,
-                payinId: getPayInData?.id,
-                amount: getPayInData?.confirmed,
-                req_amount: getPayInData?.amount,
-                utr_id: getPayInData?.utr
-              }
-              try {
-                //When we get the notify url we will add it.
-                logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-
-                const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-                logger.info('Sending notification to merchant', {
-                  status: notifyMerchant.status,
-                  data: notifyMerchant.data,
-                })
-              } catch (error) {
-                console.error("Error sending notification:", error);
-              }
-
-              return 
+            logger.error("Please enter merchant orderId");
+            if (!fromUI) {
+              return;
+            }
+            else {
+              return res.status(200).json({ message: response });
             }
           }
-            const updateUtrIfNull = getPayInData?.user_submitted_utr ? getPayInData?.user_submitted_utr : utr;
 
-            if (( updateUtrIfNull === getBankResponseByUtr?.utr) && (getPayInData?.bank_name === getBankResponseByUtr?.bankName)) {
+          if (utr === undefined) {
+            const response = await sendErrorMessageNoDepositFoundTelegramBot(
+              message?.chat?.id,
+              utr,
+              TELEGRAM_BOT_TOKEN,
+              message?.message_id,
+              fromUI
+            );
+            logger.error("Please enter UTR");
+            if (!fromUI) {
+              return;
+            }
+            else {
+              return res.status(200).json({ message: response });
+            }
+          }
 
-              if (
-                parseFloat(getPayInData?.amount) === parseFloat(getBankResponseByUtr?.amount)
-              ) {
+          if (merchantOrderId && utr) {
+            const getBankResponseByUtr = await botResponseRepo.getBotResByUtr(
+              utr
+            );
+
+            if (!getBankResponseByUtr) {
+              const response = await sendErrorMessageNoDepositFoundTelegramBot(
+                message?.chat?.id,
+                utr,
+                TELEGRAM_BOT_TOKEN,
+                message?.message_id,
+                fromUI
+              );
+              logger.error("Utr does not exist");
+              if (!fromUI) {
+                return;
+              }
+              else {
+                return res.status(200).json({ message: response });
+              }
+            }
+
+            const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(
+              merchantOrderId
+            );
+
+            const getPayInDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+
+            if (!getPayInData) {
+              const response = await sendErrorMessageTelegram(
+                message?.chat?.id,
+                merchantOrderId,
+                TELEGRAM_BOT_TOKEN,
+                message?.message_id,
+                fromUI
+              );
+              logger.error("Merchant order id does not exist");
+              if (!fromUI) {
+                return;
+              }
+              else {
+                return res.status(200).json({ message: response });
+              }
+            }
+            if (getPayInDataByUtr?.status === 'SUCCESS') {
+              const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+              const response = await sendAlreadyConfirmedMessageTelegramBot(
+                message?.chat?.id,
+                getBankResponseByUtr?.utr,
+                TELEGRAM_BOT_TOKEN,
+                message?.message_id,
+                existingPayinData,
+                fromUI
+              );
+              logger.error("Utr is already confirmed");
+              if (!fromUI) {
+                return;
+              }
+              else {
+                return res.status(200).json({ message: response });
+              }
+            }
+            let updatePayInData;
+            if (getPayInData && (getPayInData?.status === "PENDING" || getPayInData?.status === "DROPPED" || getPayInData?.status === "ASSIGNED")) {
+              if (getBankResponseByUtr?.bankName !== getPayInData?.bank_name) {
 
                 const isUsrSubmittedUtrUsed =
                   await payInRepo?.getPayinDataByUsrSubmittedUtr(utr);
 
                 if (isUsrSubmittedUtrUsed.length > 0) {
 
+                  const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+                  const response = await sendAlreadyConfirmedMessageTelegramBot(
+                    message?.chat?.id,
+                    getBankResponseByUtr?.utr,
+                    TELEGRAM_BOT_TOKEN,
+                    message?.message_id,
+                    existingPayinData,
+                    fromUI
+                  );
+                  logger.error("Utr is already confirmed");
+                  if (!fromUI) {
+                    return;
+                  }
+                  else {
+                    return res.status(200).json({ message: response });
+                  }
+                } else {
+
                   const payinCommission = calculateCommission(
                     getBankResponseByUtr?.amount,
                     getPayInData.Merchant?.payin_commission
                   );
-
                   const durMs = new Date() - getPayInData.createdAt;
                   const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
                   const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
@@ -2368,9 +2326,10 @@ class PayInController {
                   const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
                   updatePayInData = {
-                    status: "DUPLICATE",
+                    confirmed: getBankResponseByUtr?.amount,
+                    status: "BANK_MISMATCH",
                     is_notified: true,
-                    utr: getBankResponseByUtr?.utr,
+                    utr: getBankResponseByUtr.utr,
                     user_submitted_utr: getBankResponseByUtr?.utr,
                     approved_at: new Date(),
                     is_url_expires: true,
@@ -2379,29 +2338,31 @@ class PayInController {
                     duration: duration
                   };
 
-                  // maybe need to uncomment this
-                  
-                  // const updatePayInDataRes = await payInRepo.updatePayInData(
-                  //   getPayInData?.id,
-                  //   updatePayInData
-                  // );
+                  const updatePayInDataRes = await payInRepo.updatePayInData(
+                    getPayInData?.id,
+                    updatePayInData
+                  );
+
                   await botResponseRepo.updateBotResponseByUtr(
                     getBankResponseByUtr?.id,
                     getBankResponseByUtr?.utr
                   );
 
-                  const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
-                  await sendAlreadyConfirmedMessageTelegramBot(
-                    message.chat.id,
-                    getBankResponseByUtr?.utr,
+                  const response = await sendBankMismatchMessageTelegramBot(
+                    message?.chat?.id,
+                    getBankResponseByUtr?.bankName,
+                    getPayInData?.bank_name,
                     TELEGRAM_BOT_TOKEN,
                     message?.message_id,
-                    existingPayinData
+                    fromUI
                   );
+                  if (fromUI) {
+                    return res.status(200).json({ message: response });
+                  }
 
                   // Notify url--->
                   const notifyData = {
-                    status: "DUPLICATE",
+                    status: "BANK_MISMATCH",
                     merchantOrderId: getPayInData?.merchant_order_id,
                     payinId: getPayInData?.id,
                     amount: getPayInData?.confirmed,
@@ -2421,227 +2382,346 @@ class PayInController {
                     console.error("Error sending notification:", error);
                   }
 
-                  return 
-                } else {
+                  return
+                }
+              }
+              const updateUtrIfNull = getPayInData?.user_submitted_utr ? getPayInData?.user_submitted_utr : utr;
 
-                  const payinCommission = calculateCommission(
-                    getBankResponseByUtr?.amount,
-                    getPayInData.Merchant?.payin_commission
-                  );
-                  const durMs = new Date() - getPayInData.createdAt;
-                  const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
-                  const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
-                  const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
-                  const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+              if ((updateUtrIfNull === getBankResponseByUtr?.utr) && (getPayInData?.bank_name === getBankResponseByUtr?.bankName)) {
 
-                  updatePayInData = {
-                    confirmed: getBankResponseByUtr?.amount,
-                    status: "SUCCESS",
-                    is_notified: true,
-                    user_submitted_utr: getBankResponseByUtr.utr,
-                    utr: getBankResponseByUtr.utr,
-                    approved_at: new Date(),
-                    is_url_expires: true,
-                    payin_commission: payinCommission,
-                    user_submitted_image: null,
-                    duration: duration
-                  };
-                  await payInRepo.updatePayInData(
-                    getPayInData?.id,
-                    updatePayInData
-                  );
+                if (
+                  parseFloat(getPayInData?.amount) === parseFloat(getBankResponseByUtr?.amount)
+                ) {
 
-                  await botResponseRepo.updateBotResponseByUtr(
-                    getBankResponseByUtr?.id,
-                    getBankResponseByUtr?.utr
-                  );
+                  const isUsrSubmittedUtrUsed =
+                    await payInRepo?.getPayinDataByUsrSubmittedUtr(utr);
 
-                  await sendSuccessMessageTelegram(
-                    message.chat.id,
-                    merchantOrderId,
-                    TELEGRAM_BOT_TOKEN,
-                    message?.message_id
-                  );
+                  if (isUsrSubmittedUtrUsed.length > 0) {
 
-                  // ----> Notify url
-                  try {
+                    const payinCommission = calculateCommission(
+                      getBankResponseByUtr?.amount,
+                      getPayInData.Merchant?.payin_commission
+                    );
 
+                    const durMs = new Date() - getPayInData.createdAt;
+                    const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                    const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                    const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                    const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+
+                    updatePayInData = {
+                      status: "DUPLICATE",
+                      is_notified: true,
+                      utr: getBankResponseByUtr?.utr,
+                      user_submitted_utr: getBankResponseByUtr?.utr,
+                      approved_at: new Date(),
+                      is_url_expires: true,
+                      payin_commission: payinCommission,
+                      user_submitted_image: null,
+                      duration: duration
+                    };
+
+                    // maybe need to uncomment this
+
+                    // const updatePayInDataRes = await payInRepo.updatePayInData(
+                    //   getPayInData?.id,
+                    //   updatePayInData
+                    // );
+                    await botResponseRepo.updateBotResponseByUtr(
+                      getBankResponseByUtr?.id,
+                      getBankResponseByUtr?.utr
+                    );
+
+                    const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+                    const response = await sendAlreadyConfirmedMessageTelegramBot(
+                      message?.chat?.id,
+                      getBankResponseByUtr?.utr,
+                      TELEGRAM_BOT_TOKEN,
+                      message?.message_id,
+                      existingPayinData,
+                      fromUI
+                    );
+                    if (fromUI) {
+                      return res.status(200).json({ message: response });
+                    }
+
+                    // Notify url--->
                     const notifyData = {
-                      status: "SUCCESS",
+                      status: "DUPLICATE",
                       merchantOrderId: getPayInData?.merchant_order_id,
                       payinId: getPayInData?.id,
                       amount: getPayInData?.confirmed,
                       req_amount: getPayInData?.amount,
                       utr_id: getPayInData?.utr
                     }
-                    //When we get the notify url we will add it.
-                    logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-                    const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-                    logger.info('Sending notification to merchant', {
-                      status: notifyMerchant.status,
-                      data: notifyMerchant.data,
-                    })
-                  } catch (error) {
-                    console.error("Error sending notification to merchant:", error);
+                    try {
+                      //When we get the notify url we will add it.
+                      logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+
+                      const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+                      logger.info('Sending notification to merchant', {
+                        status: notifyMerchant.status,
+                        data: notifyMerchant.data,
+                      })
+                    } catch (error) {
+                      console.error("Error sending notification:", error);
+                    }
+
+                    return
+                  } else {
+
+                    const payinCommission = calculateCommission(
+                      getBankResponseByUtr?.amount,
+                      getPayInData.Merchant?.payin_commission
+                    );
+                    const durMs = new Date() - getPayInData.createdAt;
+                    const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                    const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                    const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                    const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+
+                    updatePayInData = {
+                      confirmed: getBankResponseByUtr?.amount,
+                      status: "SUCCESS",
+                      is_notified: true,
+                      user_submitted_utr: getBankResponseByUtr.utr,
+                      utr: getBankResponseByUtr.utr,
+                      approved_at: new Date(),
+                      is_url_expires: true,
+                      payin_commission: payinCommission,
+                      user_submitted_image: null,
+                      duration: duration
+                    };
+                    await payInRepo.updatePayInData(
+                      getPayInData?.id,
+                      updatePayInData
+                    );
+
+                    await botResponseRepo.updateBotResponseByUtr(
+                      getBankResponseByUtr?.id,
+                      getBankResponseByUtr?.utr
+                    );
+
+                    const response = await sendSuccessMessageTelegram(
+                      message?.chat?.id,
+                      merchantOrderId,
+                      TELEGRAM_BOT_TOKEN,
+                      message?.message_id,
+                      fromUI
+                    );
+                    if (fromUI) {
+                      return res.status(200).json({ message: response });
+                    }
+
+                    // ----> Notify url
+                    try {
+
+                      const notifyData = {
+                        status: "SUCCESS",
+                        merchantOrderId: getPayInData?.merchant_order_id,
+                        payinId: getPayInData?.id,
+                        amount: getPayInData?.confirmed,
+                        req_amount: getPayInData?.amount,
+                        utr_id: getPayInData?.utr
+                      }
+                      //When we get the notify url we will add it.
+                      logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+                      const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+                      logger.info('Sending notification to merchant', {
+                        status: notifyMerchant.status,
+                        data: notifyMerchant.data,
+                      })
+                    } catch (error) {
+                      console.error("Error sending notification to merchant:", error);
+                    }
+                    return
                   }
-                  return 
+                }
+
+                if (
+                  parseFloat(getPayInData?.amount) !== parseFloat(getBankResponseByUtr?.amount)
+                ) {
+                  const isUsrSubmittedUtrUsed =
+                    await payInRepo?.getPayinDataByUsrSubmittedUtr(utr);
+
+                  if (isUsrSubmittedUtrUsed.length > 0) {
+
+                    const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+                    const response = await sendAlreadyConfirmedMessageTelegramBot(
+                      message?.chat?.id,
+                      getBankResponseByUtr?.utr,
+                      TELEGRAM_BOT_TOKEN,
+                      message?.message_id,
+                      existingPayinData,
+                      fromUI
+                    );
+                    logger.error("Utr is already confirmed");
+                    if (!fromUI) {
+                      return;
+                    }
+                    else {
+                      return res.status(200).json({ message: response });
+                    }
+                  } else {
+                    const payinCommission = calculateCommission(
+                      getBankResponseByUtr?.amount,
+                      getPayInData.Merchant?.payin_commission
+                    );
+
+                    const durMs = new Date() - getPayInData?.createdAt;
+                    const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                    const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                    const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                    const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+
+                    updatePayInData = {
+                      confirmed: getBankResponseByUtr?.amount,
+                      status: "DISPUTE",
+                      is_notified: true,
+                      utr: getBankResponseByUtr?.utr,
+                      user_submitted_utr: getBankResponseByUtr?.utr,
+                      approved_at: new Date(),
+                      is_url_expires: true,
+                      payin_commission: payinCommission,
+                      user_submitted_image: null,
+                      duration: duration
+                    };
+                    const updatePayInDataRes = await payInRepo.updatePayInData(
+                      getPayInData?.id,
+                      updatePayInData
+                    );
+                    await botResponseRepo.updateBotResponseByUtr(
+                      getBankResponseByUtr?.id,
+                      getBankResponseByUtr?.utr
+                    );
+
+                    const response = await sendAmountDisputeMessageTelegramBot(
+                      message?.chat?.id,
+                      getBankResponseByUtr?.amount,
+                      getPayInData?.amount,
+                      TELEGRAM_BOT_TOKEN,
+                      message?.message_id,
+                      fromUI
+                    );
+                    if (fromUI){
+                      return res.status(200).json({ message: response });
+                    }
+
+                    // Notify url--->
+                    const notifyData = {
+                      status: "DISPUTE",
+                      merchantOrderId: getPayInData?.merchant_order_id,
+                      payinId: getPayInData?.id,
+                      amount: getPayInData?.confirmed,
+                      req_amount: getPayInData?.amount,
+                      utr_id: getPayInData?.utr
+                    }
+                    try {
+                      //When we get the notify url we will add it.
+                      logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+
+                      const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+                      logger.info('Sending notification to merchant', {
+                        status: notifyMerchant.status,
+                        data: notifyMerchant.data,
+                      })
+                    } catch (error) {
+                      console.error("Error sending notification:", error);
+                    }
+
+                    return
+                  }
+                }
+
+              }
+            }
+            // else if (getPayInData?.status === 'SUCCESS'){
+            //   const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+            //         await sendAlreadyConfirmedMessageTelegramBot(
+            //           message?.chat?.id,
+            //           getBankResponseByUtr?.utr,
+            //           TELEGRAM_BOT_TOKEN,
+            //           message?.message_id,
+            //           existingPayinData
+            //         );
+            //   logger.error("Utr is already confirmed");
+            //   return 
+            // }
+
+            else if (getPayInData?.is_notified === true) {
+              if (getPayInData?.status === 'BANK_MISMATCH') {
+                const response = await sendBankMismatchMessageTelegramBot(
+                  message?.chat?.id,
+                  getBankResponseByUtr?.bankName,
+                  getPayInData?.bank_name,
+                  TELEGRAM_BOT_TOKEN,
+                  message?.message_id,
+                  fromUI
+                );
+                if (fromUI) {
+                  return res.status(200).json({ message: response });
                 }
               }
-
-              if (
-                parseFloat(getPayInData?.amount) !== parseFloat(getBankResponseByUtr?.amount)
-              ){
-                const isUsrSubmittedUtrUsed =
-                  await payInRepo?.getPayinDataByUsrSubmittedUtr(utr);
-
-                if (isUsrSubmittedUtrUsed.length > 0) {
-
-                  const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
-                  await sendAlreadyConfirmedMessageTelegramBot(
-                    message.chat.id,
-                    getBankResponseByUtr?.utr,
-                    TELEGRAM_BOT_TOKEN,
-                    message?.message_id,
-                    existingPayinData
-                  );
-                  logger.error("Utr is already confirmed");
-                  return 
-                } else {
-                const payinCommission = calculateCommission(
-                  getBankResponseByUtr?.amount,
-                  getPayInData.Merchant?.payin_commission
-                );
-
-                const durMs = new Date() - getPayInData?.createdAt;
-                const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
-                const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
-                const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
-                const duration = `${durHours}:${durMinutes}:${durSeconds}`;
-
-                updatePayInData = {
-                  confirmed: getBankResponseByUtr?.amount,
-                  status: "DISPUTE",
-                  is_notified: true,
-                  utr: getBankResponseByUtr?.utr,
-                  user_submitted_utr: getBankResponseByUtr?.utr,
-                  approved_at: new Date(),
-                  is_url_expires: true,
-                  payin_commission: payinCommission,
-                  user_submitted_image: null,
-                  duration: duration
-                };
-                const updatePayInDataRes = await payInRepo.updatePayInData(
-                  getPayInData?.id,
-                  updatePayInData
-                );
-                await botResponseRepo.updateBotResponseByUtr(
-                  getBankResponseByUtr?.id,
-                  getBankResponseByUtr?.utr
-                );
-
-                await sendAmountDisputeMessageTelegramBot(
-                  message.chat.id,
+              else if (getPayInData?.status === 'DISPUTE') {
+                const response = await sendAmountDisputeMessageTelegramBot(
+                  message?.chat?.id,
                   getBankResponseByUtr?.amount,
                   getPayInData?.amount,
                   TELEGRAM_BOT_TOKEN,
-                  message?.message_id
+                  message?.message_id,
+                  fromUI
                 );
-
-                // Notify url--->
-                const notifyData = {
-                  status: "DISPUTE",
-                  merchantOrderId: getPayInData?.merchant_order_id,
-                  payinId: getPayInData?.id,
-                  amount: getPayInData?.confirmed,
-                  req_amount: getPayInData?.amount,
-                  utr_id: getPayInData?.utr
+                if (fromUI) {
+                  return res.status(200).json({ message: response });
                 }
-                try {
-                  //When we get the notify url we will add it.
-                  logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-
-                  const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-                  logger.info('Sending notification to merchant', {
-                    status: notifyMerchant.status,
-                    data: notifyMerchant.data,
-                  })
-                } catch (error) {
-                  console.error("Error sending notification:", error);
+              }
+              else {
+                const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+                const response = await sendAlreadyConfirmedMessageTelegramBot(
+                  message?.chat?.id,
+                  getBankResponseByUtr?.utr,
+                  TELEGRAM_BOT_TOKEN,
+                  message?.message_id,
+                  existingPayinData,
+                  fromUI
+                );
+                logger.error("Utr is already confirmed");
+                if (!fromUI) {
+                  return;
                 }
-
-                return 
+                else {
+                  return res.status(200).json({ message: response });
+                }
               }
             }
 
-            }
-          }
-          // else if (getPayInData?.status === 'SUCCESS'){
-          //   const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
-          //         await sendAlreadyConfirmedMessageTelegramBot(
-          //           message.chat.id,
-          //           getBankResponseByUtr?.utr,
-          //           TELEGRAM_BOT_TOKEN,
-          //           message?.message_id,
-          //           existingPayinData
-          //         );
-          //   logger.error("Utr is already confirmed");
-          //   return 
-          // }
-
-          else if (getPayInData?.is_notified === true) {
-            if (getPayInData?.status === 'BANK_MISMATCH'){
-              await sendBankMismatchMessageTelegramBot(
-                message.chat.id,
-                getBankResponseByUtr?.bankName,
-                getPayInData?.bank_name,
-                TELEGRAM_BOT_TOKEN,
-                message?.message_id
-              );
-            }
-            else if (getPayInData?.status === 'DISPUTE'){
-              await sendAmountDisputeMessageTelegramBot(
-                message.chat.id,
-                getBankResponseByUtr?.amount,
-                getPayInData?.amount,
-                TELEGRAM_BOT_TOKEN,
-                message?.message_id
-              );
-            }
-            else {
+            if (getBankResponseByUtr?.is_used === true) {
               const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
-                  await sendAlreadyConfirmedMessageTelegramBot(
-                    message.chat.id,
-                    getBankResponseByUtr?.utr,
-                    TELEGRAM_BOT_TOKEN,
-                    message?.message_id,
-                    existingPayinData
-                  );
-              logger.error("Utr is already confirmed");
-              return 
+              const response = await sendAlreadyConfirmedMessageTelegramBot(
+                message?.chat?.id,
+                getBankResponseByUtr?.utr,
+                TELEGRAM_BOT_TOKEN,
+                message?.message_id,
+                existingPayinData,
+                fromUI
+              );
+              logger.error("Utr is already used");
+              if (!fromUI) {
+                return;
+              }
+              else {
+                return res.status(200).json({ message: response });
+              }
             }
-          }
 
-          if (getBankResponseByUtr?.is_used === true) {
-            const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
-                  await sendAlreadyConfirmedMessageTelegramBot(
-                    message.chat.id,
-                    getBankResponseByUtr?.utr,
-                    TELEGRAM_BOT_TOKEN,
-                    message?.message_id,
-                    existingPayinData
-                  );
-            logger.error("Utr is already used");
-            return 
+          } else {
+            logger.error("Merchant orderId or UTR is missing");
+            return
           }
-
-        } else {
-          logger.error("Merchant orderId or UTR is missing");
-          return 
         }
-      }
       } else {
-        logger.error("Message is missing" );
-        return 
+        logger.error("Message is missing");
+        return
       }
     } catch (error) {
       next(error);
@@ -2739,9 +2819,9 @@ class PayInController {
     try {
       const { id } = req.params;
       const { bank_name } = req.body;
-        
+
       const payInData = await payInRepo.getPayInDataByMerchantOrderId(id);
-  
+
       if (!payInData) {
         return DefaultResponse(res, 404, "PayIn data not found");
       }
@@ -2762,7 +2842,7 @@ class PayInController {
       const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
       const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
       const duration = `${durHours}:${durMinutes}:${durSeconds}`;
-  
+
       const updatePayInData = {
         status: "SUCCESS",
         bank_name: bank_name,
@@ -2770,7 +2850,7 @@ class PayInController {
         payin_commission: payinCommission,
         duration: duration,
       };
-  
+
       const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
 
       await botResponseRepo.updateBotResponseByUtr(
@@ -2795,7 +2875,7 @@ class PayInController {
       } catch (error) {
         console.log("error", error)
       }
-  
+
       return DefaultResponse(res, 200, "PayIn data updated successfully");
     } catch (error) {
       next(error);
@@ -2821,9 +2901,9 @@ class PayInController {
       };
 
       await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
-  
+
       const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
-  
+
       return DefaultResponse(res, 200, "Transaction Reset successfully", updatePayInRes);
     } catch (error) {
       next(error);
@@ -2833,12 +2913,12 @@ class PayInController {
   async resetDeposit(req, res, next) {
     try {
       const { amount_code } = req.body;
-        
+
       const payInData = await payInRepo.getPayinDataByAmountCode(amount_code);
       if (payInData?.status !== "SUCCESS") {
         const utr = payInData?.utr ? payInData?.utr : payInData?.user_submitted_utr
         const botRes = await botResponseRepo.getBotResByUtr(utr);
-    
+
         const updatePayInData = {
           status: "ASSIGNED",
           confirmed: null,
@@ -2855,7 +2935,7 @@ class PayInController {
         }
 
         const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
-    
+
         return DefaultResponse(res, 200, "Transaction Reset successfully", updatePayInRes);
       }
       else {
