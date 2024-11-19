@@ -2848,7 +2848,7 @@ class PayInController {
           duration: null,
         };
         const getallPayinDataByUtr =  await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
-        if(!getallPayinDataByUtr.status === 'SUCCESS'){
+        if(getallPayinDataByUtr?.status !== 'SUCCESS'){
           await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
         }
     
