@@ -2848,10 +2848,12 @@ class PayInController {
           duration: null,
         };
         const getallPayinDataByUtr =  await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
-        if(getallPayinDataByUtr?.status !== 'SUCCESS'){
+        const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
+
+        if(!hasSuccess){
           await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
         }
-    
+
         const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
     
         return DefaultResponse(res, 200, "Transaction Reset successfully", updatePayInRes);
