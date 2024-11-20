@@ -42,6 +42,9 @@ class DuplicateDisputeTransactionController {
             else {
                 if (merchant_order_id){
                     const newPayInData = await payInRepo.getPayInDataByMerchantOrderId(merchant_order_id);
+                    if (newPayInData.status === "SUCCESS") {
+                        return DefaultResponse(res, 400, `${merchant_order_id} is already in confirmed`);
+                    }
                     const payInData = {
                         confirmed: req?.body?.amount,
                         is_notified: true,
