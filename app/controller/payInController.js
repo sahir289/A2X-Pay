@@ -730,10 +730,10 @@ class PayInController {
             );
 
             // We are adding the amount to the bank as we want to update the balance of the bank
-            await bankAccountRepo.updateBankAccountBalance(
-              getBankDataByBotRes?.id,
-              parseFloat(amount)
-            );
+            // await bankAccountRepo.updateBankAccountBalance(
+            //   getBankDataByBotRes?.id,
+            //   parseFloat(amount)
+            // );
 
             const response = {
               status: updatePayInDataRes.status,
@@ -799,10 +799,10 @@ class PayInController {
             );
 
             // We are adding the amount to the bank as we want to update the balance of the bank
-            await bankAccountRepo.updateBankAccountBalance(
-              getBankDataByBotRes?.id,
-              parseFloat(amount)
-            );
+            // await bankAccountRepo.updateBankAccountBalance(
+            //   getBankDataByBotRes?.id,
+            //   parseFloat(amount)
+            // );
 
             const response = {
               status: updatePayInDataRes.status,
@@ -1108,10 +1108,10 @@ class PayInController {
             );
 
             // We are adding the amount to the bank as we want to update the balance of the bank
-            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-              getBankDataByBotRes?.id,
-              parseFloat(amount)
-            );
+            // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+            //   getBankDataByBotRes?.id,
+            //   parseFloat(amount)
+            // );
 
             const response = {
               status: updatePayInDataRes.status,
@@ -1171,10 +1171,10 @@ class PayInController {
                 );
 
                 // We are adding the amount to the bank as we want to update the balance of the bank
-                const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-                  getBankDataByBotRes?.id,
-                  parseFloat(amount)
-                );
+                // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                //   getBankDataByBotRes?.id,
+                //   parseFloat(amount)
+                // );
 
                 const response = {
                   status: updatePayInDataRes.status,
@@ -1241,7 +1241,6 @@ class PayInController {
           payInId,
           payInData
         );
-
 
         const notifyData = {
           status: updatePayinRes?.status,
