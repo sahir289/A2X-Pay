@@ -82,10 +82,16 @@ class DuplicateDisputeTransactionController {
                     }
 
                     delete req?.body?.merchant_order_id // deleted to avoid updating merchant_order_id in existing payin data
-                    
-                    apiData = {
-                        ...req.body,
-                        status: "DUPLICATE",
+                    if(newPayInData?.merchant_order_id === oldPayInData?.merchant_order_id){
+                        apiData = {
+                            ...req.body,
+                            status: "SUCCESS",
+                        }
+                    } else {
+                        apiData = {
+                            ...req.body,
+                            status: "DUPLICATE",
+                        }
                     }
                 }
                 else {
