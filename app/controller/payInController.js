@@ -356,7 +356,9 @@ class PayInController {
       }
 
       if (req.headers["x-api-key"] !== getMerchantApiKeyByCode.api_key) {
-        throw new CustomError(404, "Enter valid Api key");
+        if (req.headers["x-api-key"] !== getMerchantApiKeyByCode.public_api_key){
+          throw new CustomError(404, "Enter valid Api key");
+        }
       }
 
 
