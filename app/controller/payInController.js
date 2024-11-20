@@ -2846,15 +2846,15 @@ class PayInController {
       const getBank = await bankAccountRepo.getBankNickName(bank_name);
   
       const updatePayInData = {
-        status: getBankResponseByUtr.bankName != bank_name ? "BANK_MISMATCH" : payInData?.amount != payInData.confirmed ? "DISPUTE" : "SUCCESS",
+        status: getBankResponseByUtr.bankName != bank_name ? "BANK_MISMATCH" : parseFloat(payInData?.amount) !== parseFloat(payInData?.confirmed) ? "DISPUTE" : "SUCCESS",
         bank_name: bank_name,
         bank_acc_id: getBank.id,
-        amount: payInData.confirmed,
         duration: duration,
       };
-
+      
       if (updatePayInData.status === "SUCCESS") {
         updatePayInData.payin_commission = payinCommission;
+        updatePayInData.amount = payInData.confirmed;
       }
 
       const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
