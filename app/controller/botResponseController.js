@@ -107,10 +107,10 @@ class BotResponseController {
               );
 
               // We are adding the amount to the bank as we want to update the balance of the bank
-              const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-                isBankExist?.id,
-                parseFloat(amount)
-              );
+              // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+              //   isBankExist?.id,
+              //   parseFloat(amount)
+              // );
 
               return DefaultResponse(
                 res,
@@ -198,10 +198,10 @@ class BotResponseController {
               payInData
             );
 
-            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-              checkPayInUtr[0]?.bank_acc_id,
-              parseFloat(amount)
-            );
+            // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+            //   checkPayInUtr[0]?.bank_acc_id,
+            //   parseFloat(amount)
+            // );
 
 
             const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id);

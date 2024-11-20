@@ -166,9 +166,7 @@ class BankAccountRepo {
     for (let bank of transformedBankAccRes) {
       bank.payInData = await prisma.payin.findMany({
         where: {
-          status: {
-            in: ["SUCCESS", "DISPUTE"],
-          },
+          status: "SUCCESS",
           bank_acc_id: bank?.id,
           updatedAt: dateFilter,
           

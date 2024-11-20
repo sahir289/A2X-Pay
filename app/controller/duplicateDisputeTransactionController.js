@@ -43,7 +43,7 @@ class DuplicateDisputeTransactionController {
                 if (merchant_order_id){
                     const newPayInData = await payInRepo.getPayInDataByMerchantOrderId(merchant_order_id);
                     const payInData = {
-                        confirmed: newPayInData?.amount,
+                        confirmed: req?.body?.amount,
                         is_notified: true,
                         user_submitted_utr: oldPayInData.utr,
                         utr: oldPayInData.utr,
@@ -51,7 +51,7 @@ class DuplicateDisputeTransactionController {
                         is_url_expires: true,
                         user_submitted_image: null,
                         duration: duration,
-                        status: newPayInData.amount !== req?.body?.amount ? "DISPUTE" : "SUCCESS",
+                        status: newPayInData?.amount != req?.body?.amount ? "DISPUTE" : newPayInData?.bank_name != oldPayInData?.bank_name ? "BANK_MISMATCH" : "SUCCESS",
                     };
                     
                     if (payInData.status === "SUCCESS") {
