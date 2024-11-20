@@ -54,7 +54,7 @@ class DuplicateDisputeTransactionController {
                         is_url_expires: true,
                         user_submitted_image: null,
                         duration: duration,
-                        status: newPayInData?.amount != req?.body?.amount ? "DISPUTE" : newPayInData?.bank_name != oldPayInData?.bank_name ? "BANK_MISMATCH" : "SUCCESS",
+                        status: parseFloat(newPayInData?.amount) != parseFloat(req?.body?.amount) ? "DISPUTE" : newPayInData?.bank_name != oldPayInData?.bank_name ? "BANK_MISMATCH" : "SUCCESS",
                     };
                     
                     if (payInData.status === "SUCCESS") {
