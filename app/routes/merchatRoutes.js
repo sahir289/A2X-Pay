@@ -2,6 +2,11 @@ import express from "express";
 import merchantController from "../controller/merchantController.js";
 import { merchantCreateValidator } from "../helper/validators.js";
 import isAuthenticated from "../middlewares/authMiddleware.js";
+import { prisma } from '../client/prisma.js'
+
+import { v4 as uuidv4 } from "uuid";
+
+
 
 const merchantRouter = express();
 
@@ -40,5 +45,27 @@ merchantRouter.delete(
   isAuthenticated,
   merchantController.deleteMerchant
 )
+
+merchantRouter.post('/populate-api-keys', async (req, res) => {
+  try {
+    const merchants = await prisma.merchant.findMany({
+      where: { public_api_key: null }, 
+    });
+
+    for (const merchant of merchants) {
+      console.log('first')
+      const upd = await prisma.merchant.update({
+        where: { id: merchant.id },
+        data: { public_api_key: uuidv4() }, 
+      });
+      console.log(upd, "upd")
+    }
+
+    res.status(200).send('Successfully updated');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Failed to update');
+  }
+});
 
 export default merchantRouter;

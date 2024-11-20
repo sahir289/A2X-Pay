@@ -45,6 +45,7 @@ model Merchant {
   site_url          String
   api_key           String          @unique
   secret_key        String          @unique
+  public_api_key    String          @unique 
   notify_url        String?
   return_url        String
   min_payin         String
