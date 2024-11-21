@@ -129,7 +129,8 @@ class BotResponseRepo {
   async getBankDataByBankName(bankName) {
     const res = await prisma.bankAccount.findFirst({
       where: {
-        ac_name: bankName
+        ac_name: bankName,
+        is_enabled: true,
       },
       include: {
         Merchant_Bank: true
