@@ -1638,8 +1638,20 @@ class PayInController {
                     dataRes?.utr
                   );
                   if (
-                    ((dataRes?.utr === getPayInData?.user_submitted_utr || dataRes?.utr === getPayInData?.utr) && (dataRes?.utr === getTelegramResByUtr?.utr)) || ((dataRes?.utr === getTelegramResByUtr?.utr) && (getPayInData?.status === "PENDING") && (getPayInData?.merchant_order_id === merchantOrderIdTele))
+                    ((dataRes?.utr === getPayInData?.user_submitted_utr || dataRes?.utr === getPayInData?.utr) && (dataRes?.utr === getTelegramResByUtr?.utr)) || ((dataRes?.utr === getTelegramResByUtr?.utr) && (getPayInData?.status === "PENDING") && (getPayInData?.merchant_order_id === merchantOrderIdTele)) 
                   ) {
+
+                      if (getTelegramResByUtr.is_used){
+                        const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                        await sendAlreadyConfirmedMessageTelegramBot(
+                          message.chat.id,
+                          dataRes?.utr,
+                          TELEGRAM_BOT_TOKEN,
+                          message?.message_id,
+                          existingPayinData
+                        );
+                        return res.status(200).json({ message: "Utr is already used" });
+                      }
                     
                       // Here, getTelegramResByUtr.amount is used instead of dataRes.amount to handle cases where the slip may have been altered in a fraud scenario
                       if (parseFloat(getTelegramResByUtr?.amount) == parseFloat(dataRes?.amount) && parseFloat(dataRes?.amount) === parseFloat(getPayInData?.amount)) { // changes done here++++++++++
