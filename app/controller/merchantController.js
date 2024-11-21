@@ -12,6 +12,7 @@ class MerchantController {
       const userRole = req.user
       const data = req.body;
       const api_key = uuidv4();
+      const public_api_key = uuidv4();
       const secret_key = uuidv4();
 
       const isMerchantExist = await merchantRepo.getMerchantByCode(data?.code);
@@ -23,6 +24,7 @@ class MerchantController {
       const updateData = {
         ...data,
         api_key,
+        public_api_key,
         secret_key,
       };
 
