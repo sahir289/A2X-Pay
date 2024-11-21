@@ -498,3 +498,21 @@ export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
     console.error("Error sending message to Telegram:", error);
   }
 }
+
+export async function sendCheckUTRHistoryTelegramMessage(
+  chatId,
+  data,
+  TELEGRAM_BOT_TOKEN
+) {
+
+  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  try {
+    await axios.post(sendMessageUrl, {
+      chat_id: chatId,
+      text: data,
+      parse_mode: "HTML",
+    });
+  } catch (error) {
+    console.error("Error sending message to Telegram:", error);
+  }
+}
