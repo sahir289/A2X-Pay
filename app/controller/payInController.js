@@ -1559,9 +1559,12 @@ class PayInController {
                 }
 
                 let updatePayInData;
+
                 const getTelegramResByUtr = await botResponseRepo.getBotResByUtr(
                   dataRes?.utr
                 );
+
+                //Bank Mis Match via TELE OCR API
                 if (getPayInData?.bank_name !== getTelegramResByUtr?.bankName) {
                   const payinCommission = calculateCommission(
                     dataRes?.amount,
@@ -2296,7 +2299,7 @@ class PayInController {
               }
             }
             let updatePayInData;
-            if (getPayInData && (getPayInData?.status === "PENDING" || getPayInData?.status === "DROPPED" || getPayInData?.status === "ASSIGNED")) {
+            if (getPayInData && (getPayInData?.status === "PENDING" || getPayInData?.status === "DROPPED" || getPayInData?.status === "ASSIGNED" || (getPayInData.status === 'DUPLICATE' && !getBankResponseByUtr.is_used && getPayInData.user_submitted_utr !== utr))) {
               if (getBankResponseByUtr?.bankName !== getPayInData?.bank_name) {
 
                 const isUsrSubmittedUtrUsed =
@@ -2392,7 +2395,7 @@ class PayInController {
                   return
                 }
               }
-              const updateUtrIfNull = getPayInData?.user_submitted_utr ? getPayInData?.user_submitted_utr : utr;
+              const updateUtrIfNull = (getPayInData?.user_submitted_utr && getPayInData.status !== 'DUPLICATE') ? getPayInData?.user_submitted_utr : utr;
 
               if ((updateUtrIfNull === getBankResponseByUtr?.utr) && (getPayInData?.bank_name === getBankResponseByUtr?.bankName)) {
 
