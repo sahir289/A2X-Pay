@@ -475,3 +475,26 @@ export async function sendErrorMessageNoImageFoundTelegramBot(
     console.error("Error sending message to Telegram:", error);
   }
 }
+
+export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
+  chatId,
+  getPayInData,
+  TELEGRAM_BOT_TOKEN,
+  replyToMessageId
+) {
+  // Construct the error message
+  const message = `⛔ Merchant Order ID: ${getPayInData.merchant_order_id}
+  is Already Marked ${getPayInData.status} with UTR: ${getPayInData.user_submitted_utr}`;
+
+  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  try {
+    await axios.post(sendMessageUrl, {
+      chat_id: chatId,
+      text: message,
+      parse_mode: "HTML",
+      reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
+    });
+  } catch (error) {
+    console.error("Error sending message to Telegram:", error);
+  }
+}

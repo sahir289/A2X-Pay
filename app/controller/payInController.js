@@ -18,6 +18,7 @@ import {
   sendErrorMessageTelegram,
   sendErrorMessageUtrNotFoundTelegramBot,
   sendErrorMessageUtrOrAmountNotFoundImgTelegramBot,
+  sendMerchantOrderIDStatusDuplicateTelegramMessage,
   sendSuccessMessageTelegram,
   sendTelegramMessage,
 } from "../helper/sendTelegramMessages.js";
@@ -1545,7 +1546,7 @@ class PayInController {
                   return
 
                 }
-                if (getPayInData?.is_notified === true) {
+                if (getPayInData?.is_notified === true && getPayInData?.status === 'SUCCESS') {
                   const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
@@ -1556,6 +1557,18 @@ class PayInController {
                   );
                   logger.error("Utr is already used");
                   return
+                }
+                else{
+                  if(getPayInData?.status === 'DUPLICATE'){
+                    await sendMerchantOrderIDStatusDuplicateTelegramMessage(
+                      message.chat.id,
+                      getPayInData,
+                      TELEGRAM_BOT_TOKEN,
+                      message?.message_id,
+                    );
+                    logger.error("Merchant Order ID Status is duplicate");
+                    return
+                  }
                 }
 
                 let updatePayInData;
