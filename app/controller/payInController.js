@@ -1633,7 +1633,7 @@ class PayInController {
                       return res.status(200).json({ message: "true" });
                     } else {
                       // Here, getTelegramResByUtr.amount is used instead of dataRes.amount to handle cases where the slip may have been altered in a fraud scenario
-                      if (parseFloat(getTelegramResByUtr?.amount) == parseFloat(dataRes?.amount)) {
+                      if (parseFloat(getTelegramResByUtr?.amount) == parseFloat(dataRes?.amount) && parseFloat(dataRes?.amount) === parseFloat(getPayInData?.amount)) { // changes done here++++++++++
                         const payinCommission = calculateCommission(
                           dataRes?.amount,
                           getPayInData.Merchant?.payin_commission
