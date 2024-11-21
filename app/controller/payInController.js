@@ -12,6 +12,7 @@ import {
   sendAlreadyConfirmedMessageTelegramBot,
   sendAmountDisputeMessageTelegramBot,
   sendBankMismatchMessageTelegramBot,
+  sendCheckUTRHistoryTelegramMessage,
   sendErrorMessageNoDepositFoundTelegramBot,
   sendErrorMessageNoImageFoundTelegramBot,
   sendErrorMessageNoMerchantOrderIdFoundTelegramBot,
@@ -2216,6 +2217,13 @@ class PayInController {
       const data = message?.text ? message?.text : message?.caption;
       if (!fromUI) {
         res.sendStatus(200);
+      }
+      else {
+        await sendCheckUTRHistoryTelegramMessage(
+          config?.telegramCheckUTRHistoryChatId,
+          data,
+          config?.telegramBotToken,
+        );
       }
 
       if (data) {
