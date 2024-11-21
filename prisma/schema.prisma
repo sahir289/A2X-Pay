@@ -255,6 +255,7 @@ enum Status {
   TEST_SUCCESS
   TEST_DROPPED
   BANK_MISMATCH
+  FAILED
 }
 
 enum Currency {

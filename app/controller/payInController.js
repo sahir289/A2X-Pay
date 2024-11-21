@@ -2844,6 +2844,10 @@ class PayInController {
       const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
       const duration = `${durHours}:${durMinutes}:${durSeconds}`;
       const getBank = await bankAccountRepo.getBankNickName(bank_name);
+
+      console.log(parseFloat(payInData?.amount))
+      console.log(parseFloat(payInData?.confirmed))
+      console.log(parseFloat(payInData?.amount) !== parseFloat(payInData?.confirmed))
   
       const updatePayInData = {
         status: getBankResponseByUtr.bankName != bank_name ? "BANK_MISMATCH" : parseFloat(payInData?.amount) !== parseFloat(payInData?.confirmed) ? "DISPUTE" : "SUCCESS",
@@ -2864,29 +2868,27 @@ class PayInController {
         getBankResponseByUtr?.utr
       );
 
-      if (updatePayInData.status === "SUCCESS") {
-        await bankAccountRepo.updateBankAccountBalance(
-          getBank?.id,
-          parseFloat(payInData.confirmed)
-        );
+      await bankAccountRepo.updateBankAccountBalance(
+        getBank?.id,
+        parseFloat(payInData.confirmed)
+      );
 
-        const notifyData = {
-          status: "SUCCESS",
-          merchantOrderId: updatePayInRes?.merchant_order_id,
-          payinId: updatePayInRes?.id,
-          amount: updatePayInRes?.confirmed,
-        };
+      const notifyData = {
+        status: updatePayInRes?.status,
+        merchantOrderId: updatePayInRes?.merchant_order_id,
+        payinId: updatePayInRes?.id,
+        amount: updatePayInRes?.confirmed,
+      };
 
-        try {
-          logger.info('Sending notification to merchant', { notify_url: updatePayInRes.notify_url, notify_data: notifyData });
-          const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
-          logger.info('Sending notification to merchant', {
-            status: notifyMerchant.status,
-            data: notifyMerchant.data,
-          })
-        } catch (error) {
-          console.log("error", error)
-        }
+      try {
+        logger.info('Sending notification to merchant', { notify_url: updatePayInRes.notify_url, notify_data: notifyData });
+        const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
+        logger.info('Sending notification to merchant', {
+          status: notifyMerchant.status,
+          data: notifyMerchant.data,
+        })
+      } catch (error) {
+        console.log("error", error)
       }
 
       return DefaultResponse(res, 200, "PayIn data updated successfully");

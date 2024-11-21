@@ -1,6 +1,7 @@
 import payInRepo from "../repository/payInRepo.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import bankAccountRepo from "../repository/bankAccountRepo.js";
+import { logger } from "../utils/logger.js";
 
 class DuplicateDisputeTransactionService {
     async handleDuplicateDisputeTransaction(payInId, data, prevStatus) {
@@ -23,9 +24,9 @@ class DuplicateDisputeTransactionService {
         };
         
         try {
-            logger.info('Sending notification to merchant', { notify_url: updatedPayInData?.notify_url, notify_data: notifyData });
+            logger.info('Sending notification to merchant', { notify_url: duplicateDisputeTransactionData?.notify_url, notify_data: notifyData });
             //When we get the notify url we will add it.
-            const notifyMerchant = await axios.post(updatedPayInData?.notify_url, notifyData);
+            const notifyMerchant = await axios.post(duplicateDisputeTransactionData?.notify_url, notifyData);
             logger.info('Sending notification to merchant', {
                 status: notifyMerchant.status,
                 data: notifyMerchant.data,
