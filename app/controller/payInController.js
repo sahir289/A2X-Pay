@@ -1900,7 +1900,11 @@ class PayInController {
                     }
 
                     if (getTelegramResByUtr?.is_used === true) {
-                      const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                      let existingPayinData;
+                      existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                      if (existingPayinData.length === 0) {
+                        existingPayinData = await payInRepo.getPayinDataByUtr(dataRes?.utr);
+                      }
 
                       await sendAlreadyConfirmedMessageTelegramBot(
                         message.chat.id,
@@ -2328,7 +2332,11 @@ class PayInController {
               merchantOrderId
             );
 
-            const getPayInDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+            let getPayInDataByUtr;
+            getPayInDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+            if (getPayInDataByUtr.length === 0) {
+              getPayInDataByUtr = await payInRepo.getPayInDataByUtr(utr);
+            }
 
             if (!getPayInData) {
               const response = await sendErrorMessageTelegram(
