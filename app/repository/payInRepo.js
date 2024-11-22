@@ -160,6 +160,18 @@ class PayInRepo {
         return payInRes;
     }
 
+    async getPayinDataByUtr(utr) {
+        const payInRes = await prisma.payin.findMany({
+            where: {
+                utr: utr,
+            },
+            orderBy: {
+                sno: "desc",
+            },
+        });
+        return payInRes;
+    }
+
     async getPayinDataByAmountCode(amount_code) {
         const payInRes = await prisma.payin.findFirst({
             where: {

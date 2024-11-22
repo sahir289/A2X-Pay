@@ -664,7 +664,6 @@ class PayInController {
             amount,
             status: "DUPLICATE",
             is_notified: true,
-            user_submitted_utr: usrSubmittedUtr,
             is_url_expires: true,
             user_submitted_image: null,
             duration: duration,
@@ -718,7 +717,6 @@ class PayInController {
               is_notified: true,
               is_url_expires: true,
               utr: matchDataFromBotRes?.utr,
-              user_submitted_utr: usrSubmittedUtr,
               approved_at: new Date(),
               duration: duration
             };
@@ -770,7 +768,6 @@ class PayInController {
             amount,
             status: "DUPLICATE",
             is_notified: true,
-            user_submitted_utr: usrSubmittedUtr,
             is_url_expires: true,
             user_submitted_image: null,
             duration: duration,
@@ -787,7 +784,6 @@ class PayInController {
               is_notified: true,
               is_url_expires: true,
               utr: matchDataFromBotRes?.utr,
-              user_submitted_utr: usrSubmittedUtr,
               approved_at: new Date(),
               duration: duration
             };
@@ -850,7 +846,6 @@ class PayInController {
               confirmed: matchDataFromBotRes?.amount,
               status: "SUCCESS",
               is_notified: true,
-              user_submitted_utr: usrSubmittedUtr ? usrSubmittedUtr : "--",
               utr: matchDataFromBotRes.utr,
               approved_at: new Date(),
               is_url_expires: true,
@@ -863,7 +858,6 @@ class PayInController {
             payInData = {
               confirmed: matchDataFromBotRes?.amount,
               status: "DISPUTE",
-              user_submitted_utr: usrSubmittedUtr,
               utr: matchDataFromBotRes.utr,
               approved_at: new Date(),
               is_url_expires: true,
@@ -1046,7 +1040,6 @@ class PayInController {
             amount,
             status: "DUPLICATE",
             is_notified: true,
-            user_submitted_utr: usrSubmittedUtrData,
             is_url_expires: true,
             duration: duration
           };
@@ -1101,7 +1094,6 @@ class PayInController {
               is_notified: true,
               is_url_expires: true,
               utr: matchDataFromBotRes?.utr,
-              user_submitted_utr: usrSubmittedUtr?.utr,
               approved_at: new Date(),
               duration: duration,
             };
@@ -1147,7 +1139,6 @@ class PayInController {
             amount,
             status: "DUPLICATE",
             is_notified: true,
-            user_submitted_utr: usrSubmittedUtrData,
             is_url_expires: true,
             duration: duration
           };
@@ -1164,7 +1155,6 @@ class PayInController {
                   is_notified: true,
                   is_url_expires: true,
                   utr: matchDataFromBotRes?.utr,
-                  user_submitted_utr: usrSubmittedUtr?.utr,
                   approved_at: new Date(),
                   duration: duration,
                 };
@@ -1220,7 +1210,6 @@ class PayInController {
               confirmed: matchDataFromBotRes?.amount,
               status: "SUCCESS",
               is_notified: true,
-              user_submitted_utr: usrSubmittedUtrData ? usrSubmittedUtrData : "--",
               utr: matchDataFromBotRes.utr,
               payin_commission: payinCommission,
               approved_at: new Date(),
@@ -1232,7 +1221,6 @@ class PayInController {
             payInData = {
               confirmed: matchDataFromBotRes?.amount,
               status: "DISPUTE",
-              user_submitted_utr: usrSubmittedUtrData,
               utr: matchDataFromBotRes.utr,
               approved_at: new Date(),
               is_url_expires: true,
@@ -1535,6 +1523,19 @@ class PayInController {
                 const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(
                   merchantOrderIdTele
                 );
+                const getTelegramResByUtr = await botResponseRepo.getBotResByUtr(
+                  dataRes?.utr
+                );
+
+                if (!getTelegramResByUtr) {
+                  await sendErrorMessageNoDepositFoundTelegramBot(
+                    message.chat.id,
+                    dataRes?.utr,
+                    TELEGRAM_BOT_TOKEN,
+                    message?.message_id
+                  )
+                  return
+                }
 
                 if (!getPayInData) {
                   await sendErrorMessageTelegram(
@@ -1570,19 +1571,20 @@ class PayInController {
                     logger.error("Merchant Order ID Status is duplicate");
                     return
                   }
-                }
+                }``
 
                 let updatePayInData;
 
-                const getTelegramResByUtr = await botResponseRepo.getBotResByUtr(
-                  dataRes?.utr
-                );
 
                 //Bank Mis Match via TELE OCR API
                 if (getPayInData?.bank_name !== getTelegramResByUtr?.bankName) {
 
-                  if(getTelegramResByUtr?.is_used){
-                    const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                  if(getTelegramResByUtr?.is_used ){
+                    let existingPayinData
+                    existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                    if (existingPayinData.length == 0) {
+                      existingPayinData = await payInRepo.getPayinDataByUtr(dataRes?.utr);
+                    }
                     await sendAlreadyConfirmedMessageTelegramBot(
                       message.chat.id,
                       dataRes?.utr,
@@ -1610,7 +1612,6 @@ class PayInController {
                     status: "BANK_MISMATCH",
                     is_notified: true,
                     utr: dataRes.utr,
-                    user_submitted_utr: dataRes?.utr,
                     approved_at: new Date(),
                     is_url_expires: true,
                     payin_commission: payinCommission,
@@ -1773,7 +1774,6 @@ class PayInController {
                           status: "DISPUTE",
                           is_notified: true,
                           utr: dataRes.utr,
-                          user_submitted_utr: dataRes?.utr,
                           approved_at: new Date(),
                           is_url_expires: true,
                           payin_commission: payinCommission,
@@ -1930,7 +1930,6 @@ class PayInController {
                             status: "DUPLICATE",
                             is_notified: true,
                             utr: dataRes.utr,
-                            user_submitted_utr: dataRes?.utr,
                             approved_at: new Date(),
                             is_url_expires: true,
                             payin_commission: payinCommission,
@@ -1999,7 +1998,6 @@ class PayInController {
                               status: "BANK_MISMATCH",
                               is_notified: true,
                               utr: dataRes.utr,
-                              user_submitted_utr: dataRes?.utr,
                               approved_at: new Date(),
                               is_url_expires: true,
                               payin_commission: payinCommission,
@@ -2132,7 +2130,6 @@ class PayInController {
                           status: "DISPUTE",
                           is_notified: true,
                           utr: dataRes.utr,
-                          user_submitted_utr: dataRes?.utr,
                           approved_at: new Date(),
                           is_url_expires: true,
                           payin_commission: payinCommission,
@@ -2397,7 +2394,6 @@ class PayInController {
                     status: "BANK_MISMATCH",
                     is_notified: true,
                     utr: getBankResponseByUtr.utr,
-                    user_submitted_utr: getBankResponseByUtr?.utr,
                     approved_at: new Date(),
                     is_url_expires: true,
                     payin_commission: payinCommission,
@@ -2480,7 +2476,6 @@ class PayInController {
                       status: "DUPLICATE",
                       is_notified: true,
                       utr: getBankResponseByUtr?.utr,
-                      user_submitted_utr: getBankResponseByUtr?.utr,
                       approved_at: new Date(),
                       is_url_expires: true,
                       payin_commission: payinCommission,
@@ -2645,7 +2640,6 @@ class PayInController {
                       status: "DISPUTE",
                       is_notified: true,
                       utr: getBankResponseByUtr?.utr,
-                      user_submitted_utr: getBankResponseByUtr?.utr,
                       approved_at: new Date(),
                       is_url_expires: true,
                       payin_commission: payinCommission,
