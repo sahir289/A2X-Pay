@@ -664,6 +664,7 @@ class PayInController {
             amount,
             status: "DUPLICATE",
             is_notified: true,
+            user_submitted_utr: usrSubmittedUtr,
             is_url_expires: true,
             user_submitted_image: null,
             duration: duration,
@@ -768,6 +769,7 @@ class PayInController {
             amount,
             status: "DUPLICATE",
             is_notified: true,
+            user_submitted_utr: usrSubmittedUtr,
             is_url_expires: true,
             user_submitted_image: null,
             duration: duration,
@@ -1040,6 +1042,7 @@ class PayInController {
             amount,
             status: "DUPLICATE",
             is_notified: true,
+            user_submitted_utr: usrSubmittedUtr,
             is_url_expires: true,
             duration: duration
           };
@@ -1139,6 +1142,7 @@ class PayInController {
             amount,
             status: "DUPLICATE",
             is_notified: true,
+            user_submitted_utr: usrSubmittedUtr,
             is_url_expires: true,
             duration: duration
           };
