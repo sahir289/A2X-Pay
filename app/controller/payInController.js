@@ -718,6 +718,7 @@ class PayInController {
               is_notified: true,
               is_url_expires: true,
               utr: matchDataFromBotRes?.utr,
+              user_submitted_utr: usrSubmittedUtr,
               approved_at: new Date(),
               duration: duration
             };
@@ -786,6 +787,7 @@ class PayInController {
               is_notified: true,
               is_url_expires: true,
               utr: matchDataFromBotRes?.utr,
+              user_submitted_utr: usrSubmittedUtr,
               approved_at: new Date(),
               duration: duration
             };
@@ -849,6 +851,7 @@ class PayInController {
               status: "SUCCESS",
               is_notified: true,
               utr: matchDataFromBotRes.utr,
+              user_submitted_utr: usrSubmittedUtr,
               approved_at: new Date(),
               is_url_expires: true,
               payin_commission: payinCommission,
@@ -861,6 +864,7 @@ class PayInController {
               confirmed: matchDataFromBotRes?.amount,
               status: "DISPUTE",
               utr: matchDataFromBotRes.utr,
+              user_submitted_utr: usrSubmittedUtr,
               approved_at: new Date(),
               is_url_expires: true,
               user_submitted_image: null,
@@ -1097,6 +1101,7 @@ class PayInController {
               is_notified: true,
               is_url_expires: true,
               utr: matchDataFromBotRes?.utr,
+              user_submitted_utr: usrSubmittedUtr,
               approved_at: new Date(),
               duration: duration,
             };
@@ -1159,6 +1164,7 @@ class PayInController {
                   is_notified: true,
                   is_url_expires: true,
                   utr: matchDataFromBotRes?.utr,
+                  user_submitted_utr: usrSubmittedUtr,
                   approved_at: new Date(),
                   duration: duration,
                 };
@@ -1215,6 +1221,7 @@ class PayInController {
               status: "SUCCESS",
               is_notified: true,
               utr: matchDataFromBotRes.utr,
+              user_submitted_utr: usrSubmittedUtrData,
               payin_commission: payinCommission,
               approved_at: new Date(),
               is_url_expires: true,
@@ -1226,6 +1233,7 @@ class PayInController {
               confirmed: matchDataFromBotRes?.amount,
               status: "DISPUTE",
               utr: matchDataFromBotRes.utr,
+              user_submitted_utr: usrSubmittedUtrData,
               approved_at: new Date(),
               is_url_expires: true,
               duration: duration
