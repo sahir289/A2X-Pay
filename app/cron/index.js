@@ -17,7 +17,11 @@ cron.schedule("0 1-23 * * *", () => {
 const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
   try {
     const empty = "-- -- -- ";
-    let startDate, endDate, oneHourAgo;
+    let startDate,
+      endDate,
+      oneHourAgo,
+      successRatioPercentage,
+      hourlySuccessRatioPercentage;
     let totalDepositAmount = 0;
     let totalWithdrawAmount = 0;
     let totalBankDepositAmount = 0;
@@ -34,8 +38,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       startDate = currentDate.clone().startOf("day").toDate(); // Start of today at 12 AM
       endDate = currentDate.clone().toDate(); // Current time
 
-       // Calculate one hour date for hourly success ratio
-      oneHourAgo = currentDate.clone().subtract(1, "hour").toDate(); 
+      // Calculate one hour date for hourly success ratio
+      oneHourAgo = currentDate.clone().subtract(1, "hour").toDate();
     }
 
     if (type === "N") {
@@ -95,7 +99,6 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       return map;
     }, {});
 
-
     const hourlyPayinTransactions = await prisma.payin.groupBy({
       by: ["merchant_id"],
       _count: { id: true },
@@ -106,10 +109,13 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
 
     // console.log(oneHourAgo, "oneHourAgo", startDate, "startDate", hourlyPayinTransactions, "hourlyPayinTransactions")
 
-    const hourlyTransactionsMap = hourlyPayinTransactions.reduce((map, item) => {
-      map[item.merchant_id] = item._count.id;
-      return map;
-    }, {});
+    const hourlyTransactionsMap = hourlyPayinTransactions.reduce(
+      (map, item) => {
+        map[item.merchant_id] = item._count.id;
+        return map;
+      },
+      {}
+    );
 
     const payOuts = await prisma.payout.groupBy({
       by: ["merchant_id"],
@@ -161,25 +167,34 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
         const { merchant_id, _sum, _count } = payIn;
         const merchantCode = merchantCodeMap[merchant_id];
 
+        return merchantCode && _sum.amount > 0
+          ? `${merchantCode}: ${formatePrice(_sum.amount)} (${_count.id})`
+          : null;
+      })
+      .filter(Boolean);
+
+    const formattedRatios = payIns
+      .map((payIn) => {
+        const { merchant_id, _sum, _count } = payIn;
+        const merchantCode = merchantCodeMap[merchant_id];
+
         // total transactions
         const totalTransactions = totalTransactionsMap[merchant_id] || 0;
-        const successRatioPercentage =
+        successRatioPercentage =
           totalTransactions > 0
             ? ((_count.id / totalTransactions) * 100).toFixed(2) + "%"
             : "0%";
 
         // hourly transactions
         const hourlyTransactions = hourlyTransactionsMap[merchant_id] || 0;
-        const hourlySuccessRatioPercentage =
+        hourlySuccessRatioPercentage =
           hourlyTransactions > 0
             ? ((_count.id / hourlyTransactions) * 100).toFixed(2) + "%"
             : "0%";
 
         return merchantCode && _sum.amount > 0
-          ? `${merchantCode}: ${formatePrice(_sum.amount)} (${
-              _count.id
-            }) - Success Ratio: ${successRatioPercentage}, Hourly Success Ratio: ${hourlySuccessRatioPercentage}`
-            : null;
+          ? `${merchantCode}: Total: ${successRatioPercentage} -  Hourly: ${hourlySuccessRatioPercentage}`
+          : null;
       })
       .filter(Boolean);
 
@@ -223,7 +238,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       formatePrice(totalDepositAmount),
       formatePrice(totalWithdrawAmount),
       formatePrice(totalBankDepositAmount),
-      formatePrice(totalBankWithdrawAmount)
+      formatePrice(totalBankWithdrawAmount),
+      formattedRatios
     );
   } catch (err) {
     console.error("========= CRON ERROR =========", err);

@@ -347,7 +347,8 @@ export async function sendTelegramDashboardReportMessage(
   totalDepositAmount,
   totalWithdrawAmount,
   totalBankDepositAmount,
-  totalBankWithdrawAmount
+  totalBankWithdrawAmount,
+  formattedRatios
 ) {
   const currentDate = new Date().toISOString().split("T")[0];
   const now = new Date();
@@ -377,6 +378,12 @@ ${formattedPayIns.length > 0
     }
 
 <b>Total Deposits:</b> ${totalDepositAmount}
+
+<b> ✅ Success Ratio </b> 
+${formattedRatios.length > 0
+      ? formattedRatios.join("\n")
+      : "No Ratios available."
+    }
 
 <b>🏦 Withdrawals</b>
 ${formattedPayOuts.length > 0
