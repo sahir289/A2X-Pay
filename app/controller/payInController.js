@@ -1609,7 +1609,7 @@ class PayInController {
                     updatePayInData
                   );
 
-                  if(getTelegramResByUtr.is_used){
+                  if(getTelegramResByUtr?.is_used){
                     const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
                     await sendAlreadyConfirmedMessageTelegramBot(
                       message.chat.id,
