@@ -150,7 +150,7 @@ class BotResponseController {
               status: "SUCCESS",
               is_notified: true,
               utr: botRes?.utr,
-              user_submitted_utr: checkPayInUtr.at(0)?.user_submitted_utr ? checkPayInUtr.at(0)?.user_submitted_utr : botRes?.utr,
+              user_submitted_utr: checkPayInUtr.at(0)?.user_submitted_utr ? checkPayInUtr.at(0)?.user_submitted_utr : "--",
               approved_at: new Date(),
               duration: duration,
               payin_commission: payinCommission
