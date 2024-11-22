@@ -93,7 +93,7 @@ class DuplicateDisputeTransactionController {
                     } else {
                         apiData = {
                             ...req.body,
-                            status: "DUPLICATE",
+                            status: "FAILED",
                         }
                     }
                 }
