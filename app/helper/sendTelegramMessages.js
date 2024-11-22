@@ -355,7 +355,7 @@ export async function sendTelegramDashboardReportMessage(
     now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
   );
 
-  let startHour = istTime.getHours();
+  let startHour = istTime.getHours() - 1;
   let endHour = (startHour + 1) % 24; // Wrap around if it's 23 (to handle midnight)
 
   const startAmpm = startHour >= 12 ? "PM" : "AM";
