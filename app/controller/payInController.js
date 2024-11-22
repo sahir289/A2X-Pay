@@ -1609,10 +1609,34 @@ class PayInController {
                     updatePayInData
                   );
 
+                  if(getTelegramResByUtr.is_used){
+                    const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                    await sendAlreadyConfirmedMessageTelegramBot(
+                      message.chat.id,
+                      dataRes?.utr,
+                      TELEGRAM_BOT_TOKEN,
+                      message?.message_id,
+                      existingPayinData
+                    );
+                    logger.error("Utr is already used Bank MissMatch");
+                    return
+                  }
+
+                  if (getTelegramResByUtr){
                   await botResponseRepo.updateBotResponseByUtr(
                     getTelegramResByUtr?.id,
                     getTelegramResByUtr?.utr
                   );
+                }
+                else{
+                  await sendErrorMessageNoDepositFoundTelegramBot(
+                    message.chat.id,
+                    dataRes?.utr,
+                    TELEGRAM_BOT_TOKEN,
+                    message?.message_id
+                  )
+                  return
+                }
 
                   await sendBankMismatchMessageTelegramBot(
                     message.chat.id,
