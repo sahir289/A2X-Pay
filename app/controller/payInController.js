@@ -1580,6 +1580,20 @@ class PayInController {
 
                 //Bank Mis Match via TELE OCR API
                 if (getPayInData?.bank_name !== getTelegramResByUtr?.bankName) {
+
+                  if(getTelegramResByUtr?.is_used){
+                    const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                    await sendAlreadyConfirmedMessageTelegramBot(
+                      message.chat.id,
+                      dataRes?.utr,
+                      TELEGRAM_BOT_TOKEN,
+                      message?.message_id,
+                      existingPayinData
+                    );
+                    logger.error("Utr is already used Bank MissMatch");
+                    return
+                  }
+
                   const payinCommission = calculateCommission(
                     dataRes?.amount,
                     getPayInData.Merchant?.payin_commission
@@ -1608,19 +1622,6 @@ class PayInController {
                     getPayInData?.id,
                     updatePayInData
                   );
-
-                  if(getTelegramResByUtr?.is_used){
-                    const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
-                    await sendAlreadyConfirmedMessageTelegramBot(
-                      message.chat.id,
-                      dataRes?.utr,
-                      TELEGRAM_BOT_TOKEN,
-                      message?.message_id,
-                      existingPayinData
-                    );
-                    logger.error("Utr is already used Bank MissMatch");
-                    return
-                  }
 
                   if (getTelegramResByUtr){
                   await botResponseRepo.updateBotResponseByUtr(
