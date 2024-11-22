@@ -48,7 +48,7 @@ class DuplicateDisputeTransactionController {
                     const payInData = {
                         confirmed: req?.body?.amount,
                         is_notified: true,
-                        user_submitted_utr: oldPayInData.utr,
+                        user_submitted_utr: oldPayInData.user_submitted_utr,
                         utr: oldPayInData.utr,
                         approved_at: new Date(),
                         is_url_expires: true,
