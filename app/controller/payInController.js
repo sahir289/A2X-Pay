@@ -2968,13 +2968,9 @@ class PayInController {
       const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
       const duration = `${durHours}:${durMinutes}:${durSeconds}`;
       const getBank = await bankAccountRepo.getBankNickName(bank_name);
-
-      console.log(parseFloat(payInData?.amount))
-      console.log(parseFloat(payInData?.confirmed))
-      console.log(parseFloat(payInData?.amount) !== parseFloat(payInData?.confirmed))
   
       const updatePayInData = {
-        status: getBankResponseByUtr.bankName != bank_name ? "BANK_MISMATCH" : parseFloat(payInData?.amount) !== parseFloat(payInData?.confirmed) ? "DISPUTE" : "SUCCESS",
+        status: getBankResponseByUtr.bankName != bank_name ? "BANK_MISMATCH" : getBankResponseByUtr.is_used ? "DUPLICATE" : parseFloat(payInData?.amount) !== parseFloat(payInData?.confirmed) ? "DISPUTE" : "SUCCESS",
         bank_name: bank_name,
         bank_acc_id: getBank.id,
         duration: duration,
