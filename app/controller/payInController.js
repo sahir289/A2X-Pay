@@ -1561,7 +1561,11 @@ class PayInController {
 
                 }
                 if (getPayInData?.is_notified === true && getPayInData?.status === 'SUCCESS') {
-                  const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                  let existingPayinData
+                    existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                    if (existingPayinData.length == 0) {
+                      existingPayinData = await payInRepo.getPayinDataByUtr(dataRes?.utr);
+                    }
                   await sendAlreadyConfirmedMessageTelegramBot(
                     message.chat.id,
                     dataRes?.utr,
@@ -2335,7 +2339,7 @@ class PayInController {
             let getPayInDataByUtr;
             getPayInDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
             if (getPayInDataByUtr.length === 0) {
-              getPayInDataByUtr = await payInRepo.getPayInDataByUtr(utr);
+              getPayInDataByUtr = await payInRepo.getPayinDataByUtr(utr);
             }
 
             if (!getPayInData) {
@@ -2355,7 +2359,11 @@ class PayInController {
               }
             }
             if (getPayInDataByUtr?.status === 'SUCCESS') {
-              const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+              let existingPayinData;
+              existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+              if (existingPayinData.length === 0) {
+                existingPayinData = await payInRepo.getPayinDataByUtr(getBankResponseByUtr?.utr);
+              }
               const response = await sendAlreadyConfirmedMessageTelegramBot(
                 message?.chat?.id,
                 getBankResponseByUtr?.utr,
@@ -2756,7 +2764,11 @@ class PayInController {
                 }
               }
               else {
-                const existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+                let existingPayinData;
+                existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+                if (existingPayinData.length === 0) {
+                  existingPayinData = await payInRepo.getPayinDataByUtr(getBankResponseByUtr?.utr);
+                }
                 const response = await sendAlreadyConfirmedMessageTelegramBot(
                   message?.chat?.id,
                   getBankResponseByUtr?.utr,
