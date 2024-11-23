@@ -2396,8 +2396,13 @@ class PayInController {
             if (getPayInData && (getPayInData?.status === "PENDING" || getPayInData?.status === "DROPPED" || getPayInData?.status === "ASSIGNED" || (getPayInData.status === 'DUPLICATE' && !getBankResponseByUtr.is_used && getPayInData.user_submitted_utr !== utr))) {
               if (getBankResponseByUtr?.bankName !== getPayInData?.bank_name) {
 
-                const isUsrSubmittedUtrUsed =
+                let isUsrSubmittedUtrUsed
+                isUsrSubmittedUtrUsed =
                   await payInRepo?.getPayinDataByUsrSubmittedUtr(utr);
+                if (isUsrSubmittedUtrUsed.length === 0) {
+                  isUsrSubmittedUtrUsed =
+                    await payInRepo?.getPayinDataByUtr(utr);
+                }
 
                 if (isUsrSubmittedUtrUsed.length > 0) {
 
@@ -2655,8 +2660,13 @@ class PayInController {
                 if (
                   parseFloat(getPayInData?.amount) !== parseFloat(getBankResponseByUtr?.amount)
                 ) {
-                  const isUsrSubmittedUtrUsed =
+                  let isUsrSubmittedUtrUsed
+                  isUsrSubmittedUtrUsed =
                     await payInRepo?.getPayinDataByUsrSubmittedUtr(utr);
+                  if (isUsrSubmittedUtrUsed.length === 0) {
+                    isUsrSubmittedUtrUsed =
+                      await payInRepo?.getPayinDataByUtr(utr);
+                  }
 
                   if (isUsrSubmittedUtrUsed.length > 0) {
 
@@ -2968,9 +2978,24 @@ class PayInController {
       const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
       const duration = `${durHours}:${durMinutes}:${durSeconds}`;
       const getBank = await bankAccountRepo.getBankNickName(bank_name);
+
+      let getSuccessData
+      if (getBankResponseByUtr.is_used) {
+        let existingPayinData;
+        existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+        if (existingPayinData.length === 0) {
+          existingPayinData = await payInRepo.getPayinDataByUtr(getBankResponseByUtr?.utr);
+        }
+        if (existingPayinData.length > 1) {
+          getSuccessData = existingPayinData.filter(data => data.status === "SUCCESS")
+        }
+      }
+      else {
+        getSuccessData = [];
+      }
   
       const updatePayInData = {
-        status: getBankResponseByUtr.bankName != bank_name ? "BANK_MISMATCH" : getBankResponseByUtr.is_used ? "DUPLICATE" : parseFloat(payInData?.amount) !== parseFloat(payInData?.confirmed) ? "DISPUTE" : "SUCCESS",
+        status: getBankResponseByUtr?.bankName != bank_name ? "BANK_MISMATCH" : getSuccessData?.length > 0 ? "DUPLICATE" : parseFloat(payInData?.amount) !== parseFloat(payInData?.confirmed) ? "DISPUTE" : "SUCCESS",
         bank_name: bank_name,
         bank_acc_id: getBank.id,
         duration: duration,
