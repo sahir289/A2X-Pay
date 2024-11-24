@@ -180,20 +180,20 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
 
         // total transactions
         const totalTransactions = totalTransactionsMap[merchant_id] || 0;
-        successRatioPercentage =
+        const successRatioPercentage =
           totalTransactions > 0
-            ? ((_count.id / totalTransactions) * 100).toFixed(2) + "%"
+            ? Math.min(((_count.id / totalTransactions) * 100).toFixed(2), 100) + "%"
             : "0%";
 
         // hourly transactions
         const hourlyTransactions = hourlyTransactionsMap[merchant_id] || 0;
-        hourlySuccessRatioPercentage =
+        const hourlySuccessRatioPercentage =
           hourlyTransactions > 0
-            ? ((_count.id / hourlyTransactions) * 100).toFixed(2) + "%"
+            ? Math.min(((_count.id / hourlyTransactions) * 100).toFixed(2), 100) + "%"
             : "0%";
 
         return merchantCode && _sum.amount > 0
-          ? `${merchantCode}: Total: ${successRatioPercentage} -  Hourly: ${hourlySuccessRatioPercentage}`
+          ? `${merchantCode}: Total: ${successRatioPercentage} - Hourly: ${hourlySuccessRatioPercentage}`
           : null;
       })
       .filter(Boolean);
