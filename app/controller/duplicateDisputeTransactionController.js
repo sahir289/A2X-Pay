@@ -93,6 +93,7 @@ class DuplicateDisputeTransactionController {
                             status: "SUCCESS",
                         }
                     } else {
+                        delete req?.body?.amount
                         apiData = {
                             ...req.body,
                             status: "FAILED",
