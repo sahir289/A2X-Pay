@@ -57,6 +57,7 @@ model Merchant {
   payout_notify_url String?
   is_test_mode      Boolean         @default(false)
   is_enabled        Boolean         @default(true)
+  dispute_enabled   Boolean         @default(true)
   is_demo           Boolean         @default(false)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
