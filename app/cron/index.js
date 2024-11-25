@@ -95,7 +95,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
     });
 
     const totalTransactionsMap = totalPayinTransactions.reduce((map, item) => {
-      map[item.merchant_id] = item._count.id;
+      map[item.merchant_id] = item._count.id || 0;
       return map;
     }, {});
 
@@ -107,11 +107,9 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       },
     });
 
-    // console.log(oneHourAgo, "oneHourAgo", startDate, "startDate", hourlyPayinTransactions, "hourlyPayinTransactions")
-
     const hourlyTransactionsMap = hourlyPayinTransactions.reduce(
       (map, item) => {
-        map[item.merchant_id] = item._count.id;
+        map[item.merchant_id] = item._count.id || 0;
         return map;
       },
       {}
@@ -181,16 +179,16 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
         // total transactions
         const totalTransactions = totalTransactionsMap[merchant_id] || 0;
         const successRatioPercentage =
-          totalTransactions > 0
-            ? Math.min(((_count.id / totalTransactions) * 100).toFixed(2), 100) + "%"
-            : "0%";
+          totalTransactions === 0
+            ? "0%"
+            : Math.min(((_count.id / totalTransactions) * 100).toFixed(2), 100) + "%";
 
         // hourly transactions
         const hourlyTransactions = hourlyTransactionsMap[merchant_id] || 0;
         const hourlySuccessRatioPercentage =
-          hourlyTransactions > 0
-            ? Math.min(((_count.id / hourlyTransactions) * 100).toFixed(2), 100) + "%"
-            : "0%";
+          hourlyTransactions === 0
+            ? "0%"
+            : Math.min(((_count.id / hourlyTransactions) * 100).toFixed(2), 100) + "%";
 
         return merchantCode && _sum.amount > 0
           ? `${merchantCode}: Total: ${successRatioPercentage} - Hourly: ${hourlySuccessRatioPercentage}`
