@@ -116,7 +116,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       }
     
       map[merchantId].total += item._count.id; // increment total transactions
-      if (status === "SUCCESS" && status === "PENDING") {
+      if (status === "SUCCESS") {
         map[merchantId].success += item._count.id; // increment transactions
       }
     
@@ -219,7 +219,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
           // fetch all transactions
           const allPayins = await prisma.payin.findMany({
             where: { updatedAt: { gte: startDate } },
-            select: { merchant_id: true, updatedAt: true, status: true },
+            select: { merchant_id: true, updatedAt: true, status: true, user_submitted_utr: true },
           });
       
           // group transactions by merchant_id
@@ -228,6 +228,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
             map[payin.merchant_id].push({
               updatedAt: new Date(payin.updatedAt),
               status: payin.status,
+              user_submitted_utr: payin.user_submitted_utr,
             });
             return map;
           }, {});
@@ -253,7 +254,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
                 const total = filteredTransactions.length;
                 const success = filteredTransactions.filter(
                   (tx) => tx.status === "SUCCESS"
-                ).length;
+                ).length;   
       
                 const successRatio =
                   total === 0 ? "0.00%" : Math.min(((success / total) * 100).toFixed(2), 100) + "%";
@@ -261,12 +262,41 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       
                 return `${statusIcon} ${label}: ${success}/${total} = ${successRatio}`;
               })
-              .join("\n");
+              .join("\n")
+
+            const intervalDetailsUtr = intervals
+            .map(({ label, duration }) => {
+              const startTime = new Date(now - duration);
+    
+              // filter transactions within the interval
+              const filteredTransactions = merchantTransactions.filter(
+                (tx) => tx.updatedAt >= startTime
+              );
+    
+              const total = filteredTransactions.length;
+
+              const utrSubmission = filteredTransactions.filter(
+                (tx) => tx.user_submitted_utr && tx.user_submitted_utr.length > 0
+              ).length;      
+
+              const statusIcon = utrSubmission === 0 ? "⚠️" : "✅";
+
+              const utrSubmissionRatio =
+                total === 0 ? "0.00%" : Math.min(((utrSubmission / total) * 100).toFixed(2), 100) + "%";  
+    
+              return `${statusIcon} ${label}: ${utrSubmission}/${total} = ${utrSubmissionRatio}`;
+            })
+            .join("\n")
+
+            const fullMessage = {
+              intervalDetails,
+              intervalDetailsUtr
+            }
  
             await sendTelegramDashboardSuccessRatioMessage(
               config?.telegramDashboardChatId,
               merchant.code,
-              intervalDetails,
+              fullMessage,
               config?.telegramBotToken
             );
           }

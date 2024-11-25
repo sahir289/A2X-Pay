@@ -33,8 +33,9 @@ export async function sendTelegramDisputeMessage(
 ) {
   const message = `
         <b><u>${entryType}:</u></b> 
-            <b>📋 Status:</b> ${oldData.status === "DUPLICATE" ? "⛔ DUPLICATE" : oldData.status
-    }
+            <b>📋 Status:</b> ${
+              oldData.status === "DUPLICATE" ? "⛔ DUPLICATE" : oldData.status
+            }
             <b>🧾 UTR:</b> ${oldData.user_submitted_utr}
             <b>⛔ Amount:</b> ${oldData.amount}
             <b>💳 UPI Short Code:</b> ${oldData.upi_short_code}
@@ -45,8 +46,9 @@ export async function sendTelegramDisputeMessage(
             <b>User Id:</b> ${oldData.user_id}
 
         <b><u>New Entry:</u></b> 
-            <b>📋 Status:</b> ${newData.status === "SUCCESS" ? "✅ SUCCESS" : newData.status
-    }
+            <b>📋 Status:</b> ${
+              newData.status === "SUCCESS" ? "✅ SUCCESS" : newData.status
+            }
             <b>🧾 UTR:</b> ${newData.user_submitted_utr}
             <b>✅ Amount:</b> ${newData.amount}
             <b>💳 UPI Short Code:</b> ${newData.upi_short_code}
@@ -93,8 +95,7 @@ export async function sendSuccessMessageTelegram(
     } catch (error) {
       console.error("Error sending message to Telegram:", error);
     }
-  }
-  else {
+  } else {
     return message;
   }
 }
@@ -121,8 +122,7 @@ export async function sendErrorMessageTelegram(
     } catch (error) {
       console.error("Error sending message to Telegram:", error);
     }
-  }
-  else {
+  } else {
     return message;
   }
 }
@@ -157,10 +157,12 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
   existingPayinData,
   fromUI
 ) {
-  const payinData = existingPayinData[1] ? existingPayinData[1] : existingPayinData[0];
+  const payinData = existingPayinData[1]
+    ? existingPayinData[1]
+    : existingPayinData[0];
   // Construct the error message
   let message;
-  if (payinData?.status === 'SUCCESS') {
+  if (payinData?.status === "SUCCESS") {
     message = `✅ UTR ${utr} is already used with this orderId ${payinData?.merchant_order_id}`;
   } else {
     message = `🚨 UTR ${utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
@@ -178,8 +180,7 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
     } catch (error) {
       console.error("Error sending message to Telegram:", error);
     }
-  }
-  else {
+  } else {
     return message;
   }
 }
@@ -193,7 +194,7 @@ export async function sendAmountDisputeMessageTelegramBot(
   fromUI
 ) {
   // Construct the error message
-  let message
+  let message;
 
   if (!fromUI) {
     message = `
@@ -212,8 +213,7 @@ export async function sendAmountDisputeMessageTelegramBot(
     } catch (error) {
       console.error("Error sending message to Telegram:", error);
     }
-  }
-  else {
+  } else {
     message = `
         AMOUNT DISPUTED: 
             ⛔ Amount: ${disputedAmount}
@@ -233,7 +233,7 @@ export async function sendBankMismatchMessageTelegramBot(
 ) {
   // Construct the error message
 
-  let message
+  let message;
 
   if (!fromUI) {
     message = `
@@ -252,8 +252,7 @@ export async function sendBankMismatchMessageTelegramBot(
     } catch (error) {
       console.error("Error sending message to Telegram:", error);
     }
-  }
-  else {
+  } else {
     message = `
             BANK MISMATCH :
                 ⛔ Amount should be credited in : ${bankNameFromMerchant}
@@ -285,8 +284,7 @@ export async function sendErrorMessageNoDepositFoundTelegramBot(
     } catch (error) {
       console.error("Error sending message to Telegram:", error);
     }
-  }
-  else {
+  } else {
     return message;
   }
 }
@@ -372,40 +370,45 @@ export async function sendTelegramDashboardReportMessage(
 <b>${type} (${timeStamp}) IST</b>
 
 <b>💰 Deposits</b>
-${formattedPayIns.length > 0
-      ? formattedPayIns.join("\n")
-      : "No deposits available."
-    }
+${
+  formattedPayIns.length > 0
+    ? formattedPayIns.join("\n")
+    : "No deposits available."
+}
 
 <b>Total Deposits:</b> ${totalDepositAmount}
 
 <b> ✅ Success Ratio </b> 
-${formattedRatios.length > 0
-      ? formattedRatios.join("\n")
-      : "No Ratios available."
-    }
+${
+  formattedRatios.length > 0
+    ? formattedRatios.join("\n")
+    : "No Ratios available."
+}
 
 <b>🏦 Withdrawals</b>
-${formattedPayOuts.length > 0
-      ? formattedPayOuts.join("\n")
-      : "No withdrawals available."
-    }
+${
+  formattedPayOuts.length > 0
+    ? formattedPayOuts.join("\n")
+    : "No withdrawals available."
+}
 
 <b>Total Withdrawals:</b> ${totalWithdrawAmount}
 
 <b>✅ Bank Account Deposits</b>
-${formattedBankPayIns.length > 0
-      ? formattedBankPayIns.join("\n")
-      : "No bank account deposits available."
-    }
+${
+  formattedBankPayIns.length > 0
+    ? formattedBankPayIns.join("\n")
+    : "No bank account deposits available."
+}
 
 <b>Total Bank Account Deposits:</b> ${totalBankDepositAmount}
 
 <b>✅ Bank Account Withdrawals</b>
-${formattedBankPayOuts.length > 0
-      ? formattedBankPayOuts.join("\n")
-      : "No bank account withdrawals available."
-    }
+${
+  formattedBankPayOuts.length > 0
+    ? formattedBankPayOuts.join("\n")
+    : "No bank account withdrawals available."
+}
 
 <b>Total Bank Account Withdrawals:</b> ${totalBankWithdrawAmount}
     `;
@@ -431,10 +434,10 @@ ${formattedBankPayOuts.length > 0
 export async function sendTelegramDashboardSuccessRatioMessage(
   chatId,
   merchantCode,
-  intervalDetails,
+  fullMessage,
   TELEGRAM_BOT_TOKEN
 ) {
-  const message = `🔔<b>${merchantCode}</b> - PayIns SR 🔔\n${intervalDetails}`;
+  const message = `🔔<b>${merchantCode}</b> - SR 🔔\n \n <b>Payin SR:</b> \n${fullMessage.intervalDetails} \n \n<b>UTR SR:</b> \n${fullMessage.intervalDetailsUtr}`;
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
   try {
@@ -444,13 +447,9 @@ export async function sendTelegramDashboardSuccessRatioMessage(
       parse_mode: "HTML",
     });
   } catch (error) {
-    console.error(
-      `Error sending Telegram message for ${merchantCode}:`,
-      error
-    );
+    console.error(`Error sending Telegram message for ${merchantCode}:`, error);
   }
 }
-
 
 export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
   chatId,
@@ -468,7 +467,6 @@ export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
   }
 
   if (!fromUI) {
-
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     try {
       await axios.post(sendMessageUrl, {
@@ -480,8 +478,7 @@ export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
     } catch (error) {
       console.error("Error sending message to Telegram:", error);
     }
-  }
-  else {
+  } else {
     return message;
   }
 }
@@ -535,7 +532,6 @@ export async function sendCheckUTRHistoryTelegramMessage(
   data,
   TELEGRAM_BOT_TOKEN
 ) {
-
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
   try {
     await axios.post(sendMessageUrl, {
