@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { prisma } from "../client/prisma.js";
-import { sendTelegramDashboardReportMessage } from "../helper/sendTelegramMessages.js";
+import { sendTelegramDashboardReportMessage, sendTelegramDashboardSuccessRatioMessage } from "../helper/sendTelegramMessages.js";
 import config from "../../config.js";
 import moment from "moment-timezone";
 
@@ -100,20 +100,28 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
     }, {});
 
     const hourlyPayinTransactions = await prisma.payin.groupBy({
-      by: ["merchant_id"],
+      by: ["merchant_id", "status"],
       _count: { id: true },
       where: {
         updatedAt: { gte: oneHourAgo, lte: endDate },
       },
     });
 
-    const hourlyTransactionsMap = hourlyPayinTransactions.reduce(
-      (map, item) => {
-        map[item.merchant_id] = item._count.id || 0;
-        return map;
-      },
-      {}
-    );
+    const hourlyTransactionsMap = hourlyPayinTransactions.reduce((map, item) => {
+      const merchantId = item.merchant_id;
+      const status = item.status;
+      
+      if (!map[merchantId]) {
+        map[merchantId] = { total: 0, success: 0 };
+      }
+    
+      map[merchantId].total += item._count.id; // increment total transactions
+      if (status === "SUCCESS" && status === "PENDING") {
+        map[merchantId].success += item._count.id; // increment transactions
+      }
+    
+      return map;
+    }, {});
 
     const payOuts = await prisma.payout.groupBy({
       by: ["merchant_id"],
@@ -184,17 +192,90 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
             : Math.min(((_count.id / totalTransactions) * 100).toFixed(2), 100) + "%";
 
         // hourly transactions
-        const hourlyTransactions = hourlyTransactionsMap[merchant_id] || 0;
+        const hourlyTransactions = hourlyTransactionsMap[merchant_id] || { total: 0, success: 0 };
         const hourlySuccessRatioPercentage =
-          hourlyTransactions === 0
+          hourlyTransactions.total === 0
             ? "0%"
-            : Math.min(((_count.id / hourlyTransactions) * 100).toFixed(2), 100) + "%";
+            : Math.min(((hourlyTransactions.success / hourlyTransactions.total) * 100).toFixed(2), 100) + "%";
 
         return merchantCode && _sum.amount > 0
           ? `${merchantCode}: Total: ${successRatioPercentage} - Hourly: ${hourlySuccessRatioPercentage}`
           : null;
       })
       .filter(Boolean);
+
+      const formattedSuccessRatiosByMerchant = async () => {
+        try {
+          const now = new Date();
+          const intervals = [
+            { label: "Last 5m", duration: 5 * 60 * 1000 },
+            { label: "Last 15m", duration: 15 * 60 * 1000 },
+            { label: "Last 30m", duration: 30 * 60 * 1000 },
+            { label: "Last 1h", duration: 60 * 60 * 1000 },
+            { label: "Last 3h", duration: 3 * 60 * 60 * 1000 },
+            { label: "Last 24h", duration: 24 * 60 * 60 * 1000 },
+          ];
+      
+          // fetch all transactions
+          const allPayins = await prisma.payin.findMany({
+            where: { updatedAt: { gte: startDate } },
+            select: { merchant_id: true, updatedAt: true, status: true },
+          });
+      
+          // group transactions by merchant_id
+          const transactionsByMerchant = allPayins.reduce((map, payin) => {
+            if (!map[payin.merchant_id]) map[payin.merchant_id] = [];
+            map[payin.merchant_id].push({
+              updatedAt: new Date(payin.updatedAt),
+              status: payin.status,
+            });
+            return map;
+          }, {});
+      
+          // filter merchants to include only those with transactions available
+          const merchantsWithTransactions = merchants.filter((merchant) =>
+            transactionsByMerchant[merchant.id]
+          );
+      
+          // process only merchants with transactions available
+          for (const merchant of merchantsWithTransactions) {
+            const merchantTransactions = transactionsByMerchant[merchant.id];
+      
+            const intervalDetails = intervals
+              .map(({ label, duration }) => {
+                const startTime = new Date(now - duration);
+      
+                // filter transactions within the interval
+                const filteredTransactions = merchantTransactions.filter(
+                  (tx) => tx.updatedAt >= startTime
+                );
+      
+                const total = filteredTransactions.length;
+                const success = filteredTransactions.filter(
+                  (tx) => tx.status === "SUCCESS"
+                ).length;
+      
+                const successRatio =
+                  total === 0 ? "0.00%" : Math.min(((success / total) * 100).toFixed(2), 100) + "%";
+                const statusIcon = success === 0 ? "⚠️" : "✅";
+      
+                return `${statusIcon} ${label}: ${success}/${total} = ${successRatio}`;
+              })
+              .join("\n");
+ 
+            await sendTelegramDashboardSuccessRatioMessage(
+              config?.telegramDashboardChatId,
+              merchant.code,
+              intervalDetails,
+              config?.telegramBotToken
+            );
+          }
+        } catch (error) {
+          console.error("Error calculating interval success ratios:", error.message);
+        }
+      };     
+      
+      formattedSuccessRatiosByMerchant();
 
     const formattedPayOuts = payOuts
       .map((payOut) => {
