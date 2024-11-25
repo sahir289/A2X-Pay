@@ -428,6 +428,30 @@ ${formattedBankPayOuts.length > 0
   }
 }
 
+export async function sendTelegramDashboardSuccessRatioMessage(
+  chatId,
+  merchantCode,
+  intervalDetails,
+  TELEGRAM_BOT_TOKEN
+) {
+  const message = `🔔<b>${merchantCode}</b> - PayIns SR 🔔\n${intervalDetails}`;
+  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+  try {
+    const response = await axios.post(sendMessageUrl, {
+      chat_id: chatId,
+      text: message,
+      parse_mode: "HTML",
+    });
+  } catch (error) {
+    console.error(
+      `Error sending Telegram message for ${merchantCode}:`,
+      error
+    );
+  }
+}
+
+
 export async function sendErrorMessageNoMerchantOrderIdFoundTelegramBot(
   chatId,
   TELEGRAM_BOT_TOKEN,
