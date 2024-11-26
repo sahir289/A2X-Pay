@@ -1,0 +1,73 @@
+
+import { DefaultResponse } from "../helper/customResponse.js";
+import { checkValidation } from "../helper/validationHelper.js";
+import lienRepo from "../repository/lienRepo.js";
+import merchantRepo from "../repository/merchantRepo.js";
+
+class LienController {
+    async createLien(req, res, next) {
+        try {
+            checkValidation(req);
+            const merchant = await merchantRepo.getMerchantByCode(req.body.code);
+            if (!merchant) {
+                throw new CustomError(404, 'Merchant does not exist')
+            }
+            delete req.body.code;
+            let lienData = {
+                merchant_id: merchant.id,
+                amount: req.body.amount,
+                merchant_order_id: req.body.merchant_order_id,
+                when: req.body.when,
+                user_id: req.body.user_id
+            }
+
+            const lien = await lienRepo.createLien(lienData);
+
+            return DefaultResponse(
+                res,
+                201,
+                "Lien created successful",
+                lien
+            );
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getLienResponse(req, res, next) {
+        try {
+            const {
+                sno,
+                amount,
+                merchant_order_id,
+                merchantCode,
+                user_id,
+            } = req.query;
+            const page = parseInt(req.query.page) || 1;
+            const pageSize = parseInt(req.query.pageSize) || 20;
+            const skip = (page - 1) * pageSize;
+            const take = pageSize;
+
+            const lien = await lienRepo.getLien(
+                skip,
+                take,
+                parseInt(sno),
+                amount,
+                merchant_order_id,
+                merchantCode,
+                user_id
+            );
+
+            return DefaultResponse(
+                res,
+                200,
+                "Lien fetched successful",
+                lien
+            );
+        } catch (error) {
+            next(error);
+        }
+    }
+}
+
+export default new LienController();

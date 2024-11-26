@@ -70,6 +70,7 @@ model Merchant {
   Payin             Payin[]
   Payout            Payout[]
   Settlement        Settlement[]
+  Lien            Lien[]
 }
 
 model BankAccount {
@@ -228,6 +229,19 @@ model VendorSettlement {
   wallet          String?
   wallet_address  String?
   Vendor          Vendor   @relation(fields: [vendor_id], references: [id])
+}
+
+model Lien {
+  id                String   @id @default(uuid())
+  merchant_id       String
+  merchant_order_id String
+  user_id           String
+  amount            Decimal
+  when              DateTime  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  sno               Int      @default(autoincrement())
+  Merchant          Merchant @relation(fields: [merchant_id], references: [id])
 }
 
 enum Role {

@@ -236,7 +236,18 @@ class PayInService {
       },
     });
 
-    return { payInOutData: { payInData, payOutData, settlementData } };
+    const lienData = await prisma.lien.findMany({
+      where: {
+        Merchant: {
+          code: Array.isArray(merchantCode)
+            ? { in: merchantCode }
+            : merchantCode,
+        },
+        updatedAt: dateFilter,
+      },
+    });
+
+    return { payInOutData: { payInData, payOutData, settlementData, lienData } };
   }
 
   async getMerchantsNetBalance(merchantCodes) {
@@ -407,7 +418,18 @@ class PayInService {
       },
     });
 
-    return { payInOutData: { payInData, payOutData, settlementData } };
+    const lienData = await prisma.vendorSettlement.findMany({
+      where: {
+        Vendor: {
+          vendor_code: Array.isArray(vendorCode)
+            ? { in: vendorCode }
+            : vendorCode,
+          ...dateFilter,
+        },
+      },
+    });
+
+    return { payInOutData: { payInData, payOutData, settlementData, lienData } };
   }
 
   //new service for pay in data
