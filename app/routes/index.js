@@ -11,6 +11,7 @@ import payoutRouter from "./withdrawRoutes.js";
 import vendorRouter from "./vendor.js";
 import vendorSettlementRouter from "./vendorSettlementRoute.js";
 import duplicateDisputeTransactionRouter from "./duplicateDisputeTransactionRoute.js";
+import lienRouter from "./lienRouter.js";
 
 const router = express();
 
@@ -29,6 +30,7 @@ router.use("/v1", botResRouter);
 router.use("/v1", settlementRouter);
 router.use("/v1", vendorSettlementRouter);
 router.use("/v1", duplicateDisputeTransactionRouter); // add router to handle duplicate and disputed transaction
+router.use("/v1", lienRouter);
 
 
 // Middleware for handling 404 errors
