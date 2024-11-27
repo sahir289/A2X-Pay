@@ -16,6 +16,7 @@ class DuplicateDisputeTransactionController {
             checkValidation(req)
             const { payInId } = req.params;
             const { merchant_order_id } = req.body; 
+            console.log(req.body)
             let apiData = {}
             const oldPayInData = await payInServices.getPayInDetails(payInId);
             const oldPayInUtrData = oldPayInData?.user_submitted_utr ? oldPayInData.user_submitted_utr : oldPayInData.utr;
@@ -23,7 +24,7 @@ class DuplicateDisputeTransactionController {
                 oldPayInUtrData
               );
             const merchantRes = await merchantRepo.getMerchantById(oldPayInData.merchant_id)
-            const payinCommission = calculateCommission(getBankResponseByUtr?.amount, merchantRes?.payin_commission);
+            const payinCommission = calculateCommission(req.body?.confirmed, merchantRes?.payin_commission);
 
             const durMs = new Date() - oldPayInData?.createdAt;
             const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
