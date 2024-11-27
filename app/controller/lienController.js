@@ -3,6 +3,7 @@ import { DefaultResponse } from "../helper/customResponse.js";
 import { checkValidation } from "../helper/validationHelper.js";
 import lienRepo from "../repository/lienRepo.js";
 import merchantRepo from "../repository/merchantRepo.js";
+import payInRepo from "../repository/payInRepo.js";
 
 class LienController {
     async createLien(req, res, next) {
@@ -11,6 +12,17 @@ class LienController {
             const merchant = await merchantRepo.getMerchantByCode(req.body.code);
             if (!merchant) {
                 throw new CustomError(404, 'Merchant does not exist')
+            }
+            const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(
+                req.body.merchant_order_id
+            );
+            if (!getPayInData) {
+                throw new CustomError(404, 'Merchant order id does not exist')
+            }
+            else {
+                if (getPayInData.merchant_order_id !== req.body.merchant_order_id){
+                    throw new CustomError(404, 'Please enter valid merchant order id')
+                }
             }
             delete req.body.code;
             let lienData = {
