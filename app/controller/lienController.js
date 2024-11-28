@@ -11,19 +11,44 @@ class LienController {
             checkValidation(req);
             const merchant = await merchantRepo.getMerchantByCode(req.body.code);
             if (!merchant) {
-                throw new CustomError(404, 'Merchant does not exist')
+                return DefaultResponse(
+                    res,
+                    404,
+                    "Merchant does not exist",
+                );
             }
             const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(
                 req.body.merchant_order_id
             );
             if (!getPayInData) {
-                throw new CustomError(404, 'Merchant order id does not exist')
+                return DefaultResponse(
+                    res,
+                    404,
+                    "Merchant order id does not exist",
+                );
             }
-            else {
-                if (getPayInData.merchant_order_id !== req.body.merchant_order_id){
-                    throw new CustomError(404, 'Please enter valid merchant order id')
-                }
+            else if (getPayInData.merchant_id !== merchant.code) {
+                return DefaultResponse(
+                    res,
+                    404,
+                    "Please enter valid merchant order id",
+                );
             }
+            else if (getPayInData.user_id !== req.body.user_id) {
+                return DefaultResponse(
+                    res,
+                    404,
+                    "Please enter valid user id",
+                );
+            }
+            // else if (parseFloat(getPayInData.amount) !== parseFloat(req.body.amount)) {
+            //     return DefaultResponse(
+            //         res,
+            //         404,
+            //         "Please enter valid amount",
+            //     );
+            // }
+
             delete req.body.code;
             let lienData = {
                 merchant_id: merchant.id,
