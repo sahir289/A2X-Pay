@@ -3049,7 +3049,8 @@ class PayInController {
       if(!payInData){
         throw new CustomError(404, "Payin data does not exist");
       }
-      const botRes = await botResponseRepo.getBotResByUtr(payInData?.utr);
+      const utr = payInData?.utr ? payInData?.utr : payInData?.user_submitted_utr
+      const botRes = await botResponseRepo.getBotResByUtr(utr);
   
       const updatePayInData = {
         status: "ASSIGNED",
@@ -3060,7 +3061,9 @@ class PayInController {
         duration: null,
       };
 
-      await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
+      if (botRes) {
+        await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
+      }
 
       const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
 
