@@ -27,7 +27,7 @@ class LienController {
                     "Merchant order id does not exist",
                 );
             }
-            else if (getPayInData.merchant_id !== merchant.code) {
+            else if (getPayInData.merchant_id !== merchant.id) {
                 return DefaultResponse(
                     res,
                     404,
