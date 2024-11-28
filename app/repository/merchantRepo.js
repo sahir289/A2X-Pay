@@ -222,6 +222,7 @@ class MerchantRepo {
       delete record.payInData;   // Deletes payInData key and value
       delete record.payOutData;  // Deletes payOutData key and value
       delete record.settlementData;
+      delete record.lienData;
       return {
         ...record,// Adjust this to whatever unique identifier you have
         balance: value // Add the calculated balance
