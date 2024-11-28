@@ -3062,7 +3062,12 @@ class PayInController {
       };
 
       if (botRes) {
-        await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
+        const getallPayinDataByUtr =  await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+        const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
+
+        if(!hasSuccess){
+          await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
+        }
       }
 
       const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
