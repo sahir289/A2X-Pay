@@ -264,6 +264,9 @@ class PayInService {
         Merchant: {
           code: { in: codesArray },
         },
+        approved_at: {
+          not: null,
+        },
       },
       _sum: {
         confirmed: true,
