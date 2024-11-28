@@ -2982,9 +2982,9 @@ class PayInController {
       let getSuccessData
       if (getBankResponseByUtr.is_used) {
         let existingPayinData;
-        existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
+        existingPayinData = await payInRepo.getPayinDataByUtr(getBankResponseByUtr?.utr);
         if (existingPayinData.length === 0) {
-          existingPayinData = await payInRepo.getPayinDataByUtr(getBankResponseByUtr?.utr);
+          existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(getBankResponseByUtr?.utr);
         }
         if (existingPayinData.length > 1) {
           getSuccessData = existingPayinData.filter(data => data.status === "SUCCESS")
