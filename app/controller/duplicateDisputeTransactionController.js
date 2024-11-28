@@ -16,7 +16,6 @@ class DuplicateDisputeTransactionController {
             checkValidation(req)
             const { payInId } = req.params;
             const { merchant_order_id } = req.body; 
-            console.log(req.body)
             let apiData = {}
             const oldPayInData = await payInServices.getPayInDetails(payInId);
             const oldPayInUtrData = oldPayInData?.user_submitted_utr ? oldPayInData.user_submitted_utr : oldPayInData.utr;
@@ -92,12 +91,15 @@ class DuplicateDisputeTransactionController {
                         apiData = {
                             ...req.body,
                             status: "SUCCESS",
+                            payin_commission: payinCommission,
+                            duration: duration,
                         }
                     } else {
                         delete req?.body?.amount
                         apiData = {
                             ...req.body,
                             status: "FAILED",
+                            duration: duration,
                         }
                     }
                 }
