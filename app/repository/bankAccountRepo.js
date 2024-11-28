@@ -168,11 +168,11 @@ class BankAccountRepo {
         where: {
           status: "SUCCESS",
           bank_acc_id: bank?.id,
-          updatedAt: dateFilter,
+          approved_at: dateFilter,
           
         },
         orderBy: {
-          updatedAt: 'desc',  // Ordering bank accounts by createdAt in descending order
+          approved_at: 'desc',  // Ordering bank accounts by createdAt in descending order
         },
 
       })
