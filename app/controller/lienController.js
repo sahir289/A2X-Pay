@@ -3,6 +3,7 @@ import { DefaultResponse } from "../helper/customResponse.js";
 import { checkValidation } from "../helper/validationHelper.js";
 import lienRepo from "../repository/lienRepo.js";
 import merchantRepo from "../repository/merchantRepo.js";
+import payInRepo from "../repository/payInRepo.js";
 
 class LienController {
     async createLien(req, res, next) {
@@ -10,8 +11,44 @@ class LienController {
             checkValidation(req);
             const merchant = await merchantRepo.getMerchantByCode(req.body.code);
             if (!merchant) {
-                throw new CustomError(404, 'Merchant does not exist')
+                return DefaultResponse(
+                    res,
+                    404,
+                    "Merchant does not exist",
+                );
             }
+            const getPayInData = await payInRepo.getPayInDataByMerchantOrderId(
+                req.body.merchant_order_id
+            );
+            if (!getPayInData) {
+                return DefaultResponse(
+                    res,
+                    404,
+                    "Merchant order id does not exist",
+                );
+            }
+            else if (getPayInData.merchant_id !== merchant.id) {
+                return DefaultResponse(
+                    res,
+                    404,
+                    "Please enter valid merchant order id",
+                );
+            }
+            else if (getPayInData.user_id !== req.body.user_id) {
+                return DefaultResponse(
+                    res,
+                    404,
+                    "Please enter valid user id",
+                );
+            }
+            // else if (parseFloat(getPayInData.amount) !== parseFloat(req.body.amount)) {
+            //     return DefaultResponse(
+            //         res,
+            //         404,
+            //         "Please enter valid amount",
+            //     );
+            // }
+
             delete req.body.code;
             let lienData = {
                 merchant_id: merchant.id,

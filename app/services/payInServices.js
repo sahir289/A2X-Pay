@@ -208,7 +208,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
-        updatedAt: dateFilter,
+        approved_at: dateFilter,
       },
     });
 
@@ -264,6 +264,9 @@ class PayInService {
         Merchant: {
           code: { in: codesArray },
         },
+        approved_at: {
+          not: null,
+        },
       },
       _sum: {
         confirmed: true,
@@ -296,13 +299,25 @@ class PayInService {
       },
     });
 
+    const lienData = await prisma.lien.aggregate({
+      where: {
+        Merchant: {
+          code: { in: codesArray },
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+
     const deposit = Number(payInData._sum.confirmed || 0);
     const withdraw = Number(payOutData._sum.amount || 0);
     const payInCommission = Number(payInData._sum.payin_commission || 0);
     const payOutCommission = Number(payOutData._sum.payout_commision || 0);
     const settlement = Number(settlementData._sum.amount || 0);
+    const lien = Number(lienData._sum.amount || 0);
 
-    const netBalance = deposit - (withdraw + payInCommission + payOutCommission) - settlement;  
+    const netBalance = deposit - withdraw - (payInCommission + payOutCommission) - settlement - lien;  
     const totalCommission = payInCommission + payOutCommission
 
     netBalanceResults.push({
@@ -312,6 +327,7 @@ class PayInService {
       payOutCommission,
       totalCommission,
       settlement,
+      lien,
       netBalance,
     });
 
@@ -390,9 +406,12 @@ class PayInService {
 
     const payInData = await prisma.payin.findMany({
       where: {
-        status: { in: ["SUCCESS", "DISPUTE"] },
+        status: "SUCCESS",
         ...filter,
-        ...dateFilter,
+        approved_at: {
+          gte: new Date(startDate),
+          lte: end,
+        },
       },
     });
 
@@ -442,24 +461,37 @@ class PayInService {
         code: {
           in: merchantCodes,
         },
-      },
-      updatedAt: {
-        gte: start,
-        lte: end,
-      },
+      }
     };
+
     if (status != "All") {
       condition.status = status;
     }
+
+    if (status === "SUCCESS") {
+      condition.approved_at = {
+        gte: start,
+        lte: end,
+      };
+    }
+    else {
+      condition.updatedAt = {
+        gte: start,
+        lte: end,
+      };
+    }
+
+    // Example of dynamic conditional ordering
     const payInData = await prisma.payin.findMany({
       where: condition,
       include: {
         Merchant: true,
       },
-      orderBy: {
-        updatedAt: "asc",
-      },
+      orderBy: status === "SUCCESS"
+        ? { approved_at: "asc" }
+        : { updatedAt: "asc" },
     });
+
     return payInData;
   }
   async oneTimeExpire(payInId) {

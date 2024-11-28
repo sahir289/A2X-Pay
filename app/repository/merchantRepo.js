@@ -170,6 +170,14 @@ class MerchantRepo {
         },
       });
 
+      element.lienData = await prisma.lien.findMany({
+        where: {
+          Merchant: {
+            code: element?.code,
+          },
+        },
+      });
+
       merchantData.push(element);
     }
 
@@ -181,6 +189,7 @@ class MerchantRepo {
       let payOutCommission = 0;
       let payOutCount = 0;
       let settlementAmount = 0;
+      let lienAmount = 0;
 
       // Calculate payInData totals
       record.payInData?.forEach((data) => {
@@ -200,15 +209,20 @@ class MerchantRepo {
       record.settlementData?.forEach((data) => {
         settlementAmount += Number(data.amount);
       });
+      
+      record.lienData?.forEach((data) => {
+        lienAmount += Number(data.amount);
+      });
 
       // Calculate the value (balance)
-      const value = payInAmount - (payOutAmount + (payInCommission + payOutCommission)) - settlementAmount;
+      const value = payInAmount - payOutAmount - (payInCommission + payOutCommission) - settlementAmount - lienAmount;
 
       // Return only the calculated balance
       // Deleting specific keys
       delete record.payInData;   // Deletes payInData key and value
       delete record.payOutData;  // Deletes payOutData key and value
       delete record.settlementData;
+      delete record.lienData;
       return {
         ...record,// Adjust this to whatever unique identifier you have
         balance: value // Add the calculated balance

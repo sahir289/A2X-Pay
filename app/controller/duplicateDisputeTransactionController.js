@@ -23,7 +23,7 @@ class DuplicateDisputeTransactionController {
                 oldPayInUtrData
               );
             const merchantRes = await merchantRepo.getMerchantById(oldPayInData.merchant_id)
-            const payinCommission = calculateCommission(getBankResponseByUtr?.amount, merchantRes?.payin_commission);
+            const payinCommission = calculateCommission(req.body?.confirmed ? req.body?.confirmed : req.body?.amount , merchantRes?.payin_commission);
 
             const durMs = new Date() - oldPayInData?.createdAt;
             const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
@@ -91,12 +91,15 @@ class DuplicateDisputeTransactionController {
                         apiData = {
                             ...req.body,
                             status: "SUCCESS",
+                            payin_commission: payinCommission,
+                            duration: duration,
                         }
                     } else {
                         delete req?.body?.amount
                         apiData = {
                             ...req.body,
                             status: "FAILED",
+                            duration: duration,
                         }
                     }
                 }
