@@ -75,10 +75,10 @@ class BotResponseController {
             );
 
             // We are adding the amount to the bank as we want to update the balance of the bank
-            const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-              isBankExist?.id,
-              parseFloat(amount)
-            );
+            // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+            //   isBankExist?.id,
+            //   parseFloat(amount)
+            // );
 
             return DefaultResponse(
               res,
@@ -88,37 +88,37 @@ class BotResponseController {
             );
           }
 
-          if (isBankExist?.Merchant_Bank.length === 1) {
+          // if (isBankExist?.Merchant_Bank.length === 1) {
 
-            if (checkPayInUtr[0].bank_acc_id !== isBankExist?.id) {
-              const payInData = {
-                confirmed: botRes?.amount,
-                status: "BANK_MISMATCH",
-                is_notified: true,
-                utr: botRes?.utr,
-                approved_at: new Date(),
-              };
+          if (checkPayInUtr[0].bank_acc_id !== isBankExist?.id) {
+            const payInData = {
+              confirmed: botRes?.amount,
+              status: "BANK_MISMATCH",
+              is_notified: true,
+              utr: botRes?.utr,
+              approved_at: new Date(),
+            };
 
-              const updatePayInDataRes = await payInRepo.updatePayInData(
-                checkPayInUtr[0]?.id,
-                payInData
-              );
+            const updatePayInDataRes = await payInRepo.updatePayInData(
+              checkPayInUtr[0]?.id,
+              payInData
+            );
 
-              // We are adding the amount to the bank as we want to update the balance of the bank
-              // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-              //   isBankExist?.id,
-              //   parseFloat(amount)
-              // );
+            // We are adding the amount to the bank as we want to update the balance of the bank
+            // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+            //   isBankExist?.id,
+            //   parseFloat(amount)
+            // );
 
-              return DefaultResponse(
-                res,
-                200,
-                "Bank mismatch",
-                updatePayInDataRes
-              );
-            }
-
+            return DefaultResponse(
+              res,
+              200,
+              "Bank mismatch",
+              updatePayInDataRes
+            );
           }
+
+          // }
 
           // check if duplicate and return error
           const existingResponse = await prisma.telegramResponse.findMany({
