@@ -237,7 +237,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
           const merchantsWithTransactions = merchants.filter((merchant) =>
             transactionsByMerchant[merchant.id]
           );
-      
+          const fullMessages = [];
           // process only merchants with transactions available
           for (const merchant of merchantsWithTransactions) {
             const merchantTransactions = transactionsByMerchant[merchant.id];
@@ -289,17 +289,19 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
             .join("\n")
 
             const fullMessage = {
+              merchantCode: merchant.code,
               intervalDetails,
               intervalDetailsUtr
             }
- 
-            await sendTelegramDashboardSuccessRatioMessage(
-              config?.telegramDashboardChatId,
-              merchant.code,
-              fullMessage,
-              config?.telegramBotToken
-            );
+            fullMessages.push(fullMessage)
           }
+          
+          await sendTelegramDashboardSuccessRatioMessage(
+            config?.telegramDashboardChatId,
+            // merchant.code,
+            fullMessages,
+            config?.telegramBotToken
+          );
         } catch (error) {
           console.error("Error calculating interval success ratios:", error.message);
         }

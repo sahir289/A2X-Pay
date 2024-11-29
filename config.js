@@ -20,6 +20,7 @@ function config(Env) {
         accessKeyS3:Env?.ACCESS_KEY,
         secretKeyS3:Env?.SECRET_ACCESS_KEY,
         telegramBotToken:Env?.TELEGRAM_BOT_TOKEN,
+        telegramAlertsBotToken:Env?.TELEGRAM_ALERTS_BOT_TOKEN,
         telegramDashboardChatId:Env?.TELEGRAM_DASHBOARD_CHAT_ID,
         telegramBankAlertChatId:Env?.TELEGRAM_BANK_ALERT_CHAT_ID,
         telegramDuplicateDisputeChatId:Env?.TELEGRAM_DISPUTE_DUPLICATE_CHAT_ID,

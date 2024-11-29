@@ -433,11 +433,19 @@ ${
 
 export async function sendTelegramDashboardSuccessRatioMessage(
   chatId,
-  merchantCode,
+  // merchantCode,
   fullMessage,
   TELEGRAM_BOT_TOKEN
 ) {
-  const message = `🔔<b>${merchantCode}</b> - SR 🔔\n \n <b>Payin SR:</b> \n${fullMessage.intervalDetails} \n \n<b>UTR SR:</b> \n${fullMessage.intervalDetailsUtr}`;
+  const message = fullMessage
+  .map(({ merchantCode, intervalDetails, intervalDetailsUtr }) => {
+    return `🔔<b>${merchantCode}</b> - SR 🔔\n\n<b>Payin SR:</b>\n${intervalDetails}\n\n<b>UTR SR:</b>\n${intervalDetailsUtr}`;
+  })
+  .join('\n\n');
+
+  // const geturl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates`;
+  // const resp = await axios.get(geturl);
+  // console.log('Get Updates Response:', resp);
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
   try {
@@ -447,7 +455,7 @@ export async function sendTelegramDashboardSuccessRatioMessage(
       parse_mode: "HTML",
     });
   } catch (error) {
-    console.error(`Error sending Telegram message for ${merchantCode}:`, error);
+    console.error(`Error sending Telegram success ratio alerts`, error);
   }
 }
 
