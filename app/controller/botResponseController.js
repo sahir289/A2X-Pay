@@ -80,6 +80,21 @@ class BotResponseController {
             //   parseFloat(amount)
             // );
 
+            const notifyData = {
+              status: "BANK_MISMATCH",
+              merchantOrderId: updatePayInDataRes?.merchant_order_id,
+              payinId: updatePayInDataRes?.id,
+              amount: updatePayInDataRes?.confirmed,
+              req_amount: updatePayInDataRes?.amount,
+              utr_id: updatePayInDataRes?.utr
+            };
+
+            try {
+              //when we get the correct notify url;
+              const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+            } catch (error) {
+            }
+
             return DefaultResponse(
               res,
               200,
@@ -109,6 +124,21 @@ class BotResponseController {
             //   isBankExist?.id,
             //   parseFloat(amount)
             // );
+
+            const notifyData = {
+              status: "BANK_MISMATCH",
+              merchantOrderId: updatePayInDataRes?.merchant_order_id,
+              payinId: updatePayInDataRes?.id,
+              amount: updatePayInDataRes?.confirmed,
+              req_amount: updatePayInDataRes?.amount,
+              utr_id: updatePayInDataRes?.utr
+            };
+
+            try {
+              //when we get the correct notify url;
+              const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+            } catch (error) {
+            }
 
             return DefaultResponse(
               res,
