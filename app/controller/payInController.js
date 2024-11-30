@@ -2477,17 +2477,17 @@ class PayInController {
                   // Notify url--->
                   const notifyData = {
                     status: "BANK_MISMATCH",
-                    merchantOrderId: getPayInData?.merchant_order_id,
-                    payinId: getPayInData?.id,
-                    amount: getPayInData?.confirmed,
-                    req_amount: getPayInData?.amount,
-                    utr_id: getPayInData?.utr
+                    merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                    payinId: updatePayInDataRes?.id,
+                    amount: updatePayInDataRes?.confirmed,
+                    req_amount: updatePayInDataRes?.amount,
+                    utr_id: updatePayInDataRes?.utr
                   }
                   try {
                     //When we get the notify url we will add it.
-                    logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+                    logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
 
-                    const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+                    const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
                     logger.info('Sending notification to merchant', {
                       status: notifyMerchant.status,
                       data: notifyMerchant.data,
@@ -2613,7 +2613,7 @@ class PayInController {
                       user_submitted_image: null,
                       duration: duration
                     };
-                    await payInRepo.updatePayInData(
+                    const updatePayInDataRes = await payInRepo.updatePayInData(
                       getPayInData?.id,
                       updatePayInData
                     );
@@ -2639,15 +2639,15 @@ class PayInController {
 
                       const notifyData = {
                         status: "SUCCESS",
-                        merchantOrderId: updatePayInData?.merchant_order_id,
-                        payinId: updatePayInData?.id,
-                        amount: updatePayInData?.confirmed,
-                        req_amount: updatePayInData?.amount,
-                        utr_id: updatePayInData?.utr
+                        merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                        payinId: updatePayInDataRes?.id,
+                        amount: updatePayInDataRes?.confirmed,
+                        req_amount: updatePayInDataRes?.amount,
+                        utr_id: updatePayInDataRes?.utr
                       }
                       //When we get the notify url we will add it.
-                      logger.info('Sending notification to merchant', { notify_url: updatePayInData.notify_url, notify_data: notifyData });
-                      const notifyMerchant = await axios.post(updatePayInData.notify_url, notifyData);
+                      logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
+                      const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
                       logger.info('Sending notification to merchant', {
                         status: notifyMerchant.status,
                         data: notifyMerchant.data,
@@ -2739,17 +2739,17 @@ class PayInController {
                     // Notify url--->
                     const notifyData = {
                       status: "DISPUTE",
-                      merchantOrderId: updatePayInData?.merchant_order_id,
-                      payinId: updatePayInData?.id,
-                      amount: updatePayInData?.confirmed,
-                      req_amount: updatePayInData?.amount,
-                      utr_id: updatePayInData?.utr
+                      merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                      payinId: updatePayInDataRes?.id,
+                      amount: updatePayInDataRes?.confirmed,
+                      req_amount: updatePayInDataRes?.amount,
+                      utr_id: updatePayInDataRes?.utr
                     }
                     try {
                       //When we get the notify url we will add it.
-                      logger.info('Sending notification to merchant', { notify_url: updatePayInData.notify_url, notify_data: notifyData });
+                      logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
 
-                      const notifyMerchant = await axios.post(updatePayInData.notify_url, notifyData);
+                      const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
                       logger.info('Sending notification to merchant', {
                         status: notifyMerchant.status,
                         data: notifyMerchant.data,
