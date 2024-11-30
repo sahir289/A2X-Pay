@@ -36,6 +36,7 @@ class DuplicateDisputeTransactionController {
                     ...req.body,
                     status: "SUCCESS",
                     payin_commission: payinCommission,
+                    approved_at: new Date(),
                     duration: duration,
                 }
             }
@@ -92,6 +93,7 @@ class DuplicateDisputeTransactionController {
                             ...req.body,
                             status: "SUCCESS",
                             payin_commission: payinCommission,
+                            approved_at: new Date(),
                             duration: duration,
                         }
                     } else {
@@ -108,6 +110,7 @@ class DuplicateDisputeTransactionController {
                         ...req.body,
                         status: "SUCCESS",
                         payin_commission: payinCommission,
+                        approved_at: new Date(),
                         duration: duration,
                     }
                 }

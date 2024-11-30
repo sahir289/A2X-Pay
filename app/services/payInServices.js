@@ -434,17 +434,17 @@ class PayInService {
       },
     });
 
-    const lienData = await prisma.vendorSettlement.findMany({
-      where: {
-        Vendor: {
-          vendor_code: Array.isArray(vendorCode)
-            ? { in: vendorCode }
-            : vendorCode,
-          ...dateFilter,
-        },
-      },
-    });
-    return { payInOutData: { payInData, payOutData, settlementData, lienData } };
+    // const lienData = await prisma.lien.findMany({
+    //   where: {
+    //     Vendor: {
+    //       vendor_code: Array.isArray(vendorCode)
+    //         ? { in: vendorCode }
+    //         : vendorCode,
+    //       ...dateFilter,
+    //     },
+    //   },
+    // });
+    return { payInOutData: { payInData, payOutData, settlementData } };
   }
 
   //new service for pay in data
