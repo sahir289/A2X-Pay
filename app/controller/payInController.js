@@ -1374,7 +1374,6 @@ class PayInController {
   async getAllPayInDataByVendor(req, res, next) {
     try {
       let { vendorCode, startDate, endDate } = req.query;
-
       if (vendorCode == null) {
         vendorCode = [];
       } else if (typeof vendorCode === "string") {

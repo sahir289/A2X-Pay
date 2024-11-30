@@ -395,7 +395,6 @@ class PayInService {
 
       bankIds = data?.map((item) => item.id);
     }
-
     const filter = {
       ...(vendorCode && {
         bank_acc_id: {
@@ -403,18 +402,16 @@ class PayInService {
         },
       }),
     };
-
     const payInData = await prisma.payin.findMany({
       where: {
         status: "SUCCESS",
         ...filter,
         approved_at: {
           gte: new Date(startDate),
-          lte: end,
+          lte: new Date(endDate),
         },
       },
     });
-
     const payOutData = await prisma.payout.findMany({
       where: {
         status: "SUCCESS",
@@ -447,7 +444,6 @@ class PayInService {
         },
       },
     });
-
     return { payInOutData: { payInData, payOutData, settlementData, lienData } };
   }
 
