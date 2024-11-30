@@ -1371,6 +1371,37 @@ class PayInController {
     }
   }
 
+  async getVendorsNetBalance(req, res, next) {
+    try {
+      let { vendorCode } = req.query;
+
+      if (vendorCode == null) {
+        vendorCode = [];
+      }
+
+      // const vendorCodes = Array.isArray(vendorCode)
+      //   ? vendorCode
+      //   : vendorCode.split(',');
+
+      // if (vendorCodes.length === 0) {
+      //   return res.status(400).json({ error: 'No merchant codes provided' });
+      // }
+
+      const payInDataRes = await payInServices.getVendorsNetBalance(
+        vendorCode
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        "PayIn data fetched successfully",
+        payInDataRes
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getAllPayInDataByVendor(req, res, next) {
     try {
       let { vendorCode, startDate, endDate } = req.query;

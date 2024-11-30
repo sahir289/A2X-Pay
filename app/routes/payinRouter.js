@@ -108,6 +108,11 @@ payInRouter.get(
   payInController.getMerchantsNetBalance
 );
 
+payInRouter.get(
+  "/get-vendors-net-balance",
+  payInController.getVendorsNetBalance
+);
+
 payInRouter.post(
   "/expire-one-time-payin-url/:id",
   payInExpireURLValidator,
