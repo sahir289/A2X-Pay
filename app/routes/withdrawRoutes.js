@@ -24,6 +24,13 @@ withdrawRouter.post(
   withdrawController.createBlazepeWithdraw
 );
 
+withdrawRouter.put(
+  "/activate-eko-service",
+  withdrawController.activateEkoService
+);
+
+withdrawRouter.post("create-payout-eko", withdrawController.createEkoWithdraw)
+
 withdrawRouter.post(
   "/create-blazePe-payout",
   withdrawController.checkBlazepePayoutStatus

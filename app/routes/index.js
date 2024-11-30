@@ -21,7 +21,6 @@ router.use("/v1", loginRouter)
 router.use("/v1", payInRouter);
 router.use("/v1", payoutRouter);
 
-
 router.use("/v1", userRouter);
 router.use("/v1", merchantRouter);
 router.use("/v1", vendorRouter);

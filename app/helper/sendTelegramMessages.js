@@ -346,7 +346,7 @@ export async function sendTelegramDashboardReportMessage(
   totalWithdrawAmount,
   totalBankDepositAmount,
   totalBankWithdrawAmount,
-  formattedRatios
+  // formattedRatios
 ) {
   const currentDate = new Date().toISOString().split("T")[0];
   const now = new Date();
@@ -377,13 +377,6 @@ ${
 }
 
 <b>Total Deposits:</b> ${totalDepositAmount}
-
-<b> ✅ Success Ratio </b> 
-${
-  formattedRatios.length > 0
-    ? formattedRatios.join("\n")
-    : "No Ratios available."
-}
 
 <b>🏦 Withdrawals</b>
 ${
@@ -422,7 +415,6 @@ ${
       text: message,
       parse_mode: "HTML",
     });
-    // console.log('Telegram Dashboard response:', response.data);
   } catch (error) {
     console.error(
       "Error sending Telegram message:",

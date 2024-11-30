@@ -297,7 +297,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
           }
           
           await sendTelegramDashboardSuccessRatioMessage(
-            config?.telegramDashboardChatId,
+            config?.telegramRatioAlertsChatId,
             // merchant.code,
             fullMessages,
             config?.telegramBotToken
@@ -350,7 +350,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       formatePrice(totalWithdrawAmount),
       formatePrice(totalBankDepositAmount),
       formatePrice(totalBankWithdrawAmount),
-      formattedRatios
+      // formattedRatios
     );
   } catch (err) {
     console.error("========= CRON ERROR =========", err);
