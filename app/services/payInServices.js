@@ -3,6 +3,7 @@ import bankAccountRepo from "../repository/bankAccountRepo.js";
 import botResponseRepo from "../repository/botResponseRepo.js";
 import payInRepo from "../repository/payInRepo.js";
 import { nanoid } from "nanoid";
+import { logger } from "../utils/logger.js";
 
 class PayInService {
   async generatePayInUrl(getMerchantRes, payInData, bankAccountLinkRes) {
@@ -452,44 +453,49 @@ class PayInService {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    const condition = {
-      Merchant: {
-        code: {
-          in: merchantCodes,
-        },
+    try {
+      const condition = {
+        Merchant: {
+          code: {
+            in: merchantCodes,
+          },
+        }
+      };
+  
+      if (status != "All") {
+        condition.status = status;
       }
-    };
-
-    if (status != "All") {
-      condition.status = status;
+  
+      if (status === "SUCCESS") {
+        condition.approved_at = {
+          gte: start,
+          lte: end,
+        };
+      }
+      else {
+        condition.updatedAt = {
+          gte: start,
+          lte: end,
+        };
+      }
+  
+      // Example of dynamic conditional ordering
+      const payInData = await prisma.payin.findMany({
+        where: condition,
+        include: {
+          Merchant: true,
+        },
+        orderBy: status === "SUCCESS"
+          ? { approved_at: "asc" }
+          : { updatedAt: "asc" },
+      });
+  
+      return payInData;
+    } catch (error) {
+      logger.error(error);
     }
-
-    if (status === "SUCCESS") {
-      condition.approved_at = {
-        gte: start,
-        lte: end,
-      };
-    }
-    else {
-      condition.updatedAt = {
-        gte: start,
-        lte: end,
-      };
-    }
-
-    // Example of dynamic conditional ordering
-    const payInData = await prisma.payin.findMany({
-      where: condition,
-      include: {
-        Merchant: true,
-      },
-      orderBy: status === "SUCCESS"
-        ? { approved_at: "asc" }
-        : { updatedAt: "asc" },
-    });
-
-    return payInData;
   }
+  
   async oneTimeExpire(payInId) {
     const expirePayInUrlRes = await prisma.payin.update({
       where: {
