@@ -340,6 +340,84 @@ class PayInService {
     };
   }
 
+  async getVendorsNetBalance(vendorCode) {
+    let bankIds = [];
+    if (vendorCode) {
+      const data = await prisma.bankAccount.findMany({
+        where: {
+          vendor_code: Array.isArray(vendorCode)
+            ? { in: vendorCode }
+            : vendorCode,
+        },
+      });
+
+      bankIds = data?.map((item) => item.id);
+    }
+    const filter = {
+      ...(vendorCode && {
+        bank_acc_id: {
+          in: bankIds,
+        },
+      }),
+    };
+    const payInData = await prisma.payin.findMany({
+      where: {
+        status: "SUCCESS",
+        ...filter,
+        approved_at: {
+          not: null,
+        },
+      },
+    });
+    const payOutData = await prisma.payout.findMany({
+      where: {
+        status: "SUCCESS",
+        vendor_code: Array.isArray(vendorCode)
+          ? { in: vendorCode }
+          : vendorCode,
+      },
+    });
+
+    const settlementData = await prisma.vendorSettlement.findMany({
+      where: {
+        status: "SUCCESS",
+        Vendor: {
+          vendor_code: Array.isArray(vendorCode)
+            ? { in: vendorCode }
+            : vendorCode,
+        },
+      },
+    });
+
+    let payInAmount = 0;
+    let payInCommission = 0;
+    let payInCount = 0;
+    let payOutAmount = 0;
+    let payOutCommission = 0;
+    let payOutCount = 0;
+    let settlementAmount = 0;
+
+    payInData?.forEach((data) => {
+      payInAmount += Number(data.amount);
+      payInCommission += Number(data.payin_commission);
+      payInCount += 1;
+    });
+
+    payOutData?.forEach((data) => {
+      payOutAmount += Number(data.amount);
+      payOutCommission += Number(data.payout_commision); // name changed to handle the spelling err.
+      payOutCount += 1;
+    });
+
+    settlementData?.forEach((data) => {
+      settlementAmount += Number(data.amount);
+    });
+
+    const netBalance = payInAmount - payOutAmount - settlementAmount;
+
+    return netBalance;
+  }
+
   async checkPayinStatus(payinId, merchantCode, merchantOrderId) {
     const data = await prisma.payin.findFirst({
       where: {
@@ -435,17 +513,17 @@ class PayInService {
       },
     });
 
-    const lienData = await prisma.vendorSettlement.findMany({
-      where: {
-        Vendor: {
-          vendor_code: Array.isArray(vendorCode)
-            ? { in: vendorCode }
-            : vendorCode,
-          ...dateFilter,
-        },
-      },
-    });
-    return { payInOutData: { payInData, payOutData, settlementData, lienData } };
+    // const lienData = await prisma.lien.findMany({
+    //   where: {
+    //     Vendor: {
+    //       vendor_code: Array.isArray(vendorCode)
+    //         ? { in: vendorCode }
+    //         : vendorCode,
+    //       ...dateFilter,
+    //     },
+    //   },
+    // });
+    return { payInOutData: { payInData, payOutData, settlementData } };
   }
 
   //new service for pay in data
