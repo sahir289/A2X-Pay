@@ -130,7 +130,6 @@ class BotResponseRepo {
     const res = await prisma.bankAccount.findFirst({
       where: {
         ac_name: bankName,
-        is_enabled: true,
       },
       include: {
         Merchant_Bank: true

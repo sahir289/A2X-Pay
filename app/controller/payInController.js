@@ -3380,7 +3380,7 @@ class PayInController {
       const { amount_code } = req.body;
 
       const payInData = await payInRepo.getPayinDataByAmountCode(amount_code);
-      if (payInData?.status !== "SUCCESS") {
+      if (payInData?.status !== "SUCCESS" || payInData?.status !== "FAILED") {
         const utr = payInData?.utr ? payInData?.utr : payInData?.user_submitted_utr
         const botRes = await botResponseRepo.getBotResByUtr(utr);
 
