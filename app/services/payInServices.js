@@ -349,7 +349,7 @@ class PayInService {
     const settlement = Number(settlementData._sum.amount || 0);
     const lien = Number(lienData._sum.amount || 0);
 
-    const netBalance = deposit - withdraw - (payInCommission + payOutCommission) - settlement - lien + reversedWithdraw + reversedPayOutCommission;  
+    const netBalance = deposit - withdraw - (payInCommission + payOutCommission - reversedPayOutCommission) - settlement - lien + reversedWithdraw;  
     const totalCommission = payInCommission + payOutCommission
 
     netBalanceResults.push({
@@ -466,7 +466,7 @@ class PayInService {
       settlementAmount += Number(data.amount);
     });
 
-    const netBalance = payInAmount - payOutAmount - settlementAmount + reversedPayOutAmount + reversedPayOutCommission;
+    const netBalance = payInAmount - payOutAmount - settlementAmount + reversedPayOutAmount;
 
     return netBalance;
   }
