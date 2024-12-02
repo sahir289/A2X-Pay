@@ -3355,7 +3355,11 @@ class PayInController {
       };
 
       if (botRes) {
-        const getallPayinDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+        let getallPayinDataByUtr
+        getallPayinDataByUtr = await payInRepo.getPayinDataByUtr(utr);
+        if (getallPayinDataByUtr.length === 0) {
+          getallPayinDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+        }
         const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
 
         if (!hasSuccess) {
@@ -3388,7 +3392,11 @@ class PayInController {
           user_submitted_utr: null,
           duration: null,
         };
-        const getallPayinDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+        let getallPayinDataByUtr
+        getallPayinDataByUtr = await payInRepo.getPayinDataByUtr(utr);
+        if (getallPayinDataByUtr.length === 0) {
+          getallPayinDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+        }
         const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
 
         if (!hasSuccess) {

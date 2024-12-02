@@ -158,6 +158,8 @@ model Payout {
   utr_id            String?
   notify_url        String?
   rejected_reason   String?
+  approved_at       DateTime?
+  rejected_at       DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   sno               Int      @default(autoincrement())

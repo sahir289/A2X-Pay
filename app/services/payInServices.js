@@ -215,13 +215,24 @@ class PayInService {
 
     const payOutData = await prisma.payout.findMany({
       where: {
-        status: "SUCCESS",
         Merchant: {
           code: Array.isArray(merchantCode)
             ? { in: merchantCode }
             : merchantCode,
         },
-        updatedAt: dateFilter,
+        approved_at: dateFilter,
+      },
+    });
+
+    const reversedPayOutData = await prisma.payout.findMany({
+      where: {
+        status: "REJECTED",
+        Merchant: {
+          code: Array.isArray(merchantCode)
+            ? { in: merchantCode }
+            : merchantCode,
+        },
+        rejected_at: dateFilter,
       },
     });
 
@@ -248,7 +259,7 @@ class PayInService {
       },
     });
 
-    return { payInOutData: { payInData, payOutData, settlementData, lienData } };
+    return { payInOutData: { payInData, payOutData, reversedPayOutData, settlementData, lienData } };
   }
 
   async getMerchantsNetBalance(merchantCodes) {
@@ -277,9 +288,27 @@ class PayInService {
 
     const payOutData = await prisma.payout.aggregate({
       where: {
-        status: "SUCCESS",
         Merchant: {
           code: { in: codesArray },
+        },
+        approved_at: {
+          not: null,
+        },
+      },
+      _sum: {
+        amount: true,
+        payout_commision: true,
+      },
+    });
+
+    const reversedPayOutData = await prisma.payout.aggregate({
+      where: {
+        status: "REJECTED",
+        Merchant: {
+          code: { in: codesArray },
+        },
+        rejected_at: {
+          not: null,
         },
       },
       _sum: {
@@ -313,12 +342,14 @@ class PayInService {
 
     const deposit = Number(payInData._sum.confirmed || 0);
     const withdraw = Number(payOutData._sum.amount || 0);
+    const reversedWithdraw = Number(reversedPayOutData._sum.amount || 0);
     const payInCommission = Number(payInData._sum.payin_commission || 0);
     const payOutCommission = Number(payOutData._sum.payout_commision || 0);
+    const reversedPayOutCommission = Number(reversedPayOutData._sum.payout_commision || 0);
     const settlement = Number(settlementData._sum.amount || 0);
     const lien = Number(lienData._sum.amount || 0);
 
-    const netBalance = deposit - withdraw - (payInCommission + payOutCommission) - settlement - lien;  
+    const netBalance = deposit - withdraw - (payInCommission + payOutCommission) - settlement - lien + reversedWithdraw + reversedPayOutCommission;  
     const totalCommission = payInCommission + payOutCommission
 
     netBalanceResults.push({
@@ -369,12 +400,27 @@ class PayInService {
         },
       },
     });
+    
     const payOutData = await prisma.payout.findMany({
       where: {
-        status: "SUCCESS",
         vendor_code: Array.isArray(vendorCode)
           ? { in: vendorCode }
           : vendorCode,
+        approved_at: {
+          not: null,
+        },
+      },
+    });
+
+    const reversedPayOutData = await prisma.payout.findMany({
+      where: {
+        status: "REJECTED",
+        vendor_code: Array.isArray(vendorCode)
+          ? { in: vendorCode }
+          : vendorCode,
+        rejected_at: {
+          not: null,
+        },
       },
     });
 
@@ -395,6 +441,8 @@ class PayInService {
     let payOutAmount = 0;
     let payOutCommission = 0;
     let payOutCount = 0;
+    let reversedPayOutAmount = 0;
+    let reversedPayOutCommission = 0;
     let settlementAmount = 0;
 
     payInData?.forEach((data) => {
@@ -409,11 +457,16 @@ class PayInService {
       payOutCount += 1;
     });
 
+    reversedPayOutData?.forEach((data) => {
+      reversedPayOutAmount += Number(data.amount);
+      reversedPayOutCommission += Number(data.payout_commision); // name changed to handle the spelling err.
+    });
+
     settlementData?.forEach((data) => {
       settlementAmount += Number(data.amount);
     });
 
-    const netBalance = payInAmount - payOutAmount - settlementAmount;
+    const netBalance = payInAmount - payOutAmount - settlementAmount + reversedPayOutAmount + reversedPayOutCommission;
 
     return netBalance;
   }
@@ -491,13 +544,29 @@ class PayInService {
         },
       },
     });
+    
     const payOutData = await prisma.payout.findMany({
       where: {
-        status: "SUCCESS",
         vendor_code: Array.isArray(vendorCode)
           ? { in: vendorCode }
           : vendorCode,
-        ...dateFilter,
+        approved_at: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
+      },
+    });
+
+    const reversedPayOutData = await prisma.payout.findMany({
+      where: {
+        status: "REJECTED",
+        vendor_code: Array.isArray(vendorCode)
+          ? { in: vendorCode }
+          : vendorCode,
+        rejected_at: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
       },
     });
 
@@ -523,7 +592,7 @@ class PayInService {
     //     },
     //   },
     // });
-    return { payInOutData: { payInData, payOutData, settlementData } };
+    return { payInOutData: { payInData, payOutData, settlementData, reversedPayOutData } };
   }
 
   //new service for pay in data
