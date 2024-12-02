@@ -3380,7 +3380,7 @@ class PayInController {
       const { amount_code } = req.body;
 
       const payInData = await payInRepo.getPayinDataByAmountCode(amount_code);
-      if (payInData?.status !== "SUCCESS" || payInData?.status !== "FAILED") {
+      if (payInData?.status !== "SUCCESS" && payInData?.status !== "FAILED") {
         const utr = payInData?.utr ? payInData?.utr : payInData?.user_submitted_utr
         const botRes = await botResponseRepo.getBotResByUtr(utr);
 
@@ -3408,7 +3408,7 @@ class PayInController {
         return DefaultResponse(res, 200, "Transaction Reset successfully", updatePayInRes);
       }
       else {
-        return DefaultResponse(res, 400, "Status is SUCCESS, no update applied");
+        return DefaultResponse(res, 400, "Transaction status is SUCCESS or FAILED, no update applied");
       }
     } catch (error) {
       next(error);
