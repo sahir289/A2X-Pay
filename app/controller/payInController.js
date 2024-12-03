@@ -3380,35 +3380,40 @@ class PayInController {
       const { amount_code } = req.body;
 
       const payInData = await payInRepo.getPayinDataByAmountCode(amount_code);
-      if (payInData?.status !== "SUCCESS" && payInData?.status !== "FAILED") {
-        const utr = payInData?.utr ? payInData?.utr : payInData?.user_submitted_utr
-        const botRes = await botResponseRepo.getBotResByUtr(utr);
+      if (payInData?.status !== "PENDING" && payInData?.status !== "IMG_PENDING") {
+        if (payInData?.status !== "SUCCESS" && payInData?.status !== "FAILED") {
+          const utr = payInData?.utr ? payInData?.utr : payInData?.user_submitted_utr
+          const botRes = await botResponseRepo.getBotResByUtr(utr);
 
-        const updatePayInData = {
-          status: "ASSIGNED",
-          confirmed: null,
-          payin_commission: null,
-          utr: null,
-          user_submitted_utr: null,
-          duration: null,
-        };
-        let getallPayinDataByUtr
-        getallPayinDataByUtr = await payInRepo.getPayinDataByUtr(utr);
-        if (getallPayinDataByUtr.length === 0) {
-          getallPayinDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+          const updatePayInData = {
+            status: "ASSIGNED",
+            confirmed: null,
+            payin_commission: null,
+            utr: null,
+            user_submitted_utr: null,
+            duration: null,
+          };
+          let getallPayinDataByUtr
+          getallPayinDataByUtr = await payInRepo.getPayinDataByUtr(utr);
+          if (getallPayinDataByUtr.length === 0) {
+            getallPayinDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+          }
+          const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
+
+          if (!hasSuccess) {
+            await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
+          }
+
+          const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
+
+          return DefaultResponse(res, 200, "Transaction Reset successfully", updatePayInRes);
         }
-        const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
-
-        if (!hasSuccess) {
-          await botResponseRepo?.updateBotResponseToUnusedUtr(botRes?.id);
+        else {
+          return DefaultResponse(res, 400, "Transaction status is SUCCESS or FAILED, no update applied");
         }
-
-        const updatePayInRes = await payInRepo.updatePayInData(payInData?.id, updatePayInData);
-
-        return DefaultResponse(res, 200, "Transaction Reset successfully", updatePayInRes);
       }
       else {
-        return DefaultResponse(res, 400, "Transaction status is SUCCESS or FAILED, no update applied");
+        return DefaultResponse(res, 400, "Transaction status is PENDING, no update applied");
       }
     } catch (error) {
       next(error);
