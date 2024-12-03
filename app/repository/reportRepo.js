@@ -14,9 +14,15 @@ class ReportRepo {
               
               UNION ALL
   
-              SELECT po."updatedAt", po."merchant_id", po."amount" AS "amount", po."payout_commision" AS "commission", 'Payout' AS "type"
+              SELECT po."approved_at", po."merchant_id", po."amount" AS "amount", po."payout_commision" AS "commission", 'Payout' AS "type"
               FROM public."Payout" po
-              WHERE po.status = 'SUCCESS'
+  
+              UNION ALL
+
+              SELECT rpo."rejected_at", rpo."merchant_id", rpo."amount" AS "amount", rpo."payout_commision" AS "commission", 'ReversedPayout' AS "type"
+              FROM public."Payout" rpo
+              WHERE rpo.status = 'REJECTED'
+              AND rpo.approved_at IS NOT NULL
   
               UNION ALL
   
@@ -44,6 +50,11 @@ class ReportRepo {
                   ROUND(SUM(CASE WHEN data."type" = 'Payout' THEN data."amount" ELSE 0 END), 2) AS "totalPayoutAmount",
                   ROUND(SUM(CASE WHEN data."type" = 'Payout' THEN data."commission" ELSE 0 END), 2) AS "payoutCommission",
   
+                  -- Reversed Payout Data
+                  COUNT(CASE WHEN data."type" = 'ReversedPayout' THEN data."amount" END) AS "reversedPayOutCount",
+                  ROUND(SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."amount" ELSE 0 END), 2) AS "reversedTotalPayoutAmount",
+                  ROUND(SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."commission" ELSE 0 END), 2) AS "reversedPayoutCommission",
+  
                   -- Settlement Data
                   COUNT(CASE WHEN data."type" = 'Settlement' THEN data."amount" END) AS "settlementCount",
                   ROUND(SUM(CASE WHEN data."type" = 'Settlement' THEN data."amount" ELSE 0 END), 2) AS "totalSettlementAmount",
@@ -62,7 +73,9 @@ class ReportRepo {
                           )
                       - 
                       SUM(CASE WHEN data."type" = 'Settlement' THEN data."amount" ELSE 0 END) - 
-                      SUM(CASE WHEN data."type" = 'Lien' THEN data."amount" ELSE 0 END), 
+                      SUM(CASE WHEN data."type" = 'Lien' THEN data."amount" ELSE 0 END) - 
+                      SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."amount" ELSE 0 END) -
+                      SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."commission" ELSE 0 END), 
                   2) AS "netBalance"
               FROM unified_data data
               JOIN public."Merchant" m ON data."merchant_id" = m."id"
