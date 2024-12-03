@@ -73,7 +73,7 @@ class ReportRepo {
                           )
                       - 
                       SUM(CASE WHEN data."type" = 'Settlement' THEN data."amount" ELSE 0 END) - 
-                      SUM(CASE WHEN data."type" = 'Lien' THEN data."amount" ELSE 0 END) - 
+                      SUM(CASE WHEN data."type" = 'Lien' THEN data."amount" ELSE 0 END) + 
                       SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."amount" ELSE 0 END) -
                       SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."commission" ELSE 0 END), 
                   2) AS "netBalance"
