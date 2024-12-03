@@ -74,6 +74,8 @@ class BotResponseController {
               payInData
             );
 
+            const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
+
             // We are adding the amount to the bank as we want to update the balance of the bank
             // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
             //   isBankExist?.id,
@@ -118,6 +120,8 @@ class BotResponseController {
               checkPayInUtr[0]?.id,
               payInData
             );
+
+            const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
 
             // We are adding the amount to the bank as we want to update the balance of the bank
             // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
