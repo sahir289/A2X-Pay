@@ -232,7 +232,9 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
-        approved_at: dateFilter,
+        approved_at: {
+          not: null,
+        },
         rejected_at: dateFilter,
       },
     });
@@ -571,8 +573,7 @@ class PayInService {
           ? { in: vendorCode }
           : vendorCode,
         approved_at: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
+          not: null,
         },
         rejected_at: {
           gte: new Date(startDate),
