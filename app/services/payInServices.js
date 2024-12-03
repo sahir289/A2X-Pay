@@ -232,6 +232,7 @@ class PayInService {
             ? { in: merchantCode }
             : merchantCode,
         },
+        approved_at: dateFilter,
         rejected_at: dateFilter,
       },
     });
@@ -306,6 +307,9 @@ class PayInService {
         status: "REJECTED",
         Merchant: {
           code: { in: codesArray },
+        },
+        approved_at: {
+          not: null,
         },
         rejected_at: {
           not: null,
@@ -418,6 +422,9 @@ class PayInService {
         vendor_code: Array.isArray(vendorCode)
           ? { in: vendorCode }
           : vendorCode,
+        approved_at: {
+          not: null,
+        },
         rejected_at: {
           not: null,
         },
@@ -563,6 +570,10 @@ class PayInService {
         vendor_code: Array.isArray(vendorCode)
           ? { in: vendorCode }
           : vendorCode,
+        approved_at: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
         rejected_at: {
           gte: new Date(startDate),
           lte: new Date(endDate),
