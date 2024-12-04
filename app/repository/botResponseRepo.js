@@ -39,6 +39,16 @@ class BotResponseRepo {
     return botRes;
   }
 
+  async getBotResDataByUtr(usrSubmittedUtr) {
+    const botRes = await prisma.telegramResponse.findMany({
+      where: {
+        utr: usrSubmittedUtr,
+      },
+    });
+
+    return botRes;
+  }
+
   async updateBotResponseByUtr(id) {
     const updateBotRes = await prisma.telegramResponse.update({
       where: {

@@ -60,10 +60,11 @@ class BotResponseController {
 
         if (checkPayInUtr?.length > 0) {
           if (amount_code && isValidAmountCode) {
-            const getDataByUtr = await botResponseRepo.getPayInDataByUtr(checkPayInUtr[0]?.utr ? checkPayInUtr[0]?.utr : checkPayInUtr[0]?.user_submitted_utr)
+            let dataUtr = checkPayInUtr[0]?.utr ? checkPayInUtr[0]?.utr : checkPayInUtr[0]?.user_submitted_utr
+            const getDataByUtr = await botResponseRepo.getBotResDataByUtr(dataUtr)
             const botUtrIsUsed = getDataByUtr?.some((item) => item.is_used);
             if (checkPayInUtr[0]?.status in acceptedStatus && botUtrIsUsed) {
-              throw new CustomError(400, `The entry with ${amount_code} Amount Code is already ${checkPayInUtr[0]?.status} with ${checkPayInUtr[0]?.utr ? checkPayInUtr[0]?.utr : checkPayInUtr[0]?.user_submitted_utr} UTR`);
+              throw new CustomError(400, `The entry with ${amount_code} Amount Code is already ${checkPayInUtr[0]?.status} with ${dataUtr} UTR`);
             }
             else {
               // We check bank exist here as we have to add the data to the res no matter what comes.
