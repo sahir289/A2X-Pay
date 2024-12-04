@@ -28,6 +28,19 @@ function config(Env) {
         telegramCheckUTRHistoryChatId:Env?.TELEGRAM_CHECK_UTR_HISTORY_CHAT_ID,
         telegramOcrBotToken:Env?.TELEGRAM_OCR_BOT_TOKEN,
         telegramCheckUtrBotToken:Env?.TELEGRAM_CHECK_UTR_BOT_TOKEN,
+        ekoPaymentsActivateUrl:Env?.EKO_PAYMENTS_ACTIVATE_URL,
+        ekoPaymentsInitiateUrl:Env?.EKO_PAYMENTS_INITIATE_URL,
+        ekoPaymentsStatusUrl:Env?.EKO_PAYMENTS_STATUS_URL,
+        ekoWalletBalanceEnquiryUrl:Env?.EKO_WALLET_BALANCE_INQUIRY_URL,
+        ekoRegisteredMobileNo:Env?.EKO_REGISTERED_MOBILE_NO,
+        ekoAccessKey:Env?.EKO_ACCESS_AUTHENTICATOR_KEY,
+        ekoServiceCode:Env?.EKO_SERVICE_CODE,
+        ekoUserCode:Env?.EKO_USER_CODE,
+        ekoInitiatorId:Env?.EKO_INITIATOR_ID,
+        ekoDeveloperKey:Env?.EKO_DEVELOPER_KEY,
+        ipInfoApiKey:Env?.IP_INFO_API_KEY,
+        latitudeBlock:Env?.BLOCK_LAT,
+        longitudeBlock:Env?.BLOCK_LONG,
         nodeProductionLogs:Env?.NODE_ENV
 
     };

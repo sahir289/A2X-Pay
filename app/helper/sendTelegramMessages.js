@@ -435,9 +435,6 @@ export async function sendTelegramDashboardSuccessRatioMessage(
   })
   .join('\n\n');
 
-  // const geturl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates`;
-  // const resp = await axios.get(geturl);
-  // console.log('Get Updates Response:', resp);
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
   try {

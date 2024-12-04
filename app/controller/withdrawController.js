@@ -8,6 +8,7 @@ import axios from "axios";
 import { CustomError } from "../middlewares/errorHandler.js";
 import { logger } from "../utils/logger.js";
 import crypto from 'crypto';
+import config from "../../config.js";
 // import apis from '@api/apis';
 
 class WithdrawController {
@@ -186,36 +187,28 @@ class WithdrawController {
     }
   }
 
-  async activateEkoService(req, res, next) {
+  async activateEkoService(req, res) {
 
-    const secretKeyTimestamp = String(Date.now());
-    const key = 'd2fe1d99-6298-4af2-8cc5-d97dcf46df30';
-    const keyBuffer = Buffer.from(key, 'utf-8');
-    const messageBuffer = Buffer.from(secretKeyTimestamp, 'utf-8');
+    const key = config?.ekoAccessKey;
+    const encodedKey = Buffer.from(key).toString('base64');
 
-    // Create an HMAC using SHA-256
-    const hmac = crypto.createHmac('sha256', keyBuffer);
-    hmac.update(messageBuffer);
-    const dig = hmac.digest();
-
-    // Encode the HMAC digest to Base64
-    const secretKey = dig.toString('base64');
+    const secretKeyTimestamp = Date.now();
+    const secretKey = crypto.createHmac('sha256', encodedKey).update(secretKeyTimestamp.toString()).digest('base64');
 
     console.log('Secret Key:', secretKey);
     console.log('Secret Timestamp:', secretKeyTimestamp);
 
     const encodedParams = new URLSearchParams();
-    encodedParams.set('service_code', '45');
-    encodedParams.set('user_code', '20810200');
-    encodedParams.set('initiator_id', '9962981729');  
-    encodedParams.set('service_code', '45');
+    encodedParams.set('service_code', config?.ekoServiceCode);
+    encodedParams.set('user_code', config?.ekoUserCode);
+    encodedParams.set('initiator_id', config?.ekoInitiatorId);  
 
-    const url = 'https://staging.eko.in/ekoapi/v1/user/service/activate';
+    const url = config?.ekoPaymentsActivateUrl;
     const options = {
       method: 'PUT',
       headers: {
         accept: 'application/json',
-        developer_key: 'becbbce45f79c6f5109f848acd540567',
+        developer_key: config?.ekoDeveloperKey,
         'secret-key': secretKey,
         'secret-key-timestamp': secretKeyTimestamp,
         'content-type': 'application/x-www-form-urlencoded'
@@ -223,70 +216,222 @@ class WithdrawController {
       body: encodedParams
   };
     try{
-      console.log('before fetching');
-      // const data = await fetch(url, options)
-      const data = fetch(url, options)
-      .then(res => res.json())
-      .then(json => console.log(json))
-      .catch(err => console.error(err));
-      console.log(data, "after fetching'")
-      return res.send(data);
+      const response = await fetch(url, options);
+      const responseText = await response.text();
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (err) {
+        logger.error(err);
+        parsedData = responseText;
+      }
+
+      return DefaultResponse(
+      res,
+      response.ok ? 200 : response.status,
+      parsedData?.message,
+      parsedData
+    );
       
     }catch (error){
       logger.error(error)
     }
   }
 
-  async createEkoWithdraw(req, res, next){
-    const {payload} = req.body;
+  async createEkoWithdraw(req, res) {
+    const {amount, client_ref_id, recipient_name, ifsc, account, sender_name, } = req.body;
 
-    const secretKeyTimestamp = String(Date.now());
-    const key = 'd2fe1d99-6298-4af2-8cc5-d97dcf46df30';
-    const developer_key = 'becbbce45f79c6f5109f848acd540567';
-    const keyBuffer = Buffer.from(key, 'utf-8');
-    const messageBuffer = Buffer.from(secretKeyTimestamp, 'utf-8');
+    const key = config?.ekoAccessKey;
+    const encodedKey = Buffer.from(key).toString('base64');
 
-    // Create an HMAC using SHA-256
-    const hmac = crypto.createHmac('sha256', keyBuffer);
-    hmac.update(messageBuffer);
-    const dig = hmac.digest();
+    const secretKeyTimestamp = Date.now();
+    const secretKey = crypto.createHmac('sha256', encodedKey).update(secretKeyTimestamp.toString()).digest('base64');
 
-    // Encode the HMAC digest to Base64
-    const secretKey = dig.toString('base64');
-
-    console.log('Secret Key:', secretKey);
-    console.log('Secret Timestamp:', secretKeyTimestamp);
-
-    try {
-
-      apis.initiateFundTransfer({
-        initiator_id: 'string',
-        client_ref_id: 'string',
-        service_code: 45,
-        payment_mode: 0,
-        recipient_name: 'string',
-        account: 'string',
-        ifsc: 'string',
-        amount: 0,
-        source: 'NEWCONNECT',
-        sender_name: 'string',
-        tag: 'string',
-        latlong: 'string',
-        beneficiary_account_type: 0
-      }, {
-        user_code: 'usercodewillcreate',
-        developer_key: developer_key,
+    const encodedParams = new URLSearchParams();
+    encodedParams.set('service_code', config?.ekoServiceCode);
+    encodedParams.set('initiator_id', config?.ekoInitiatorId); 
+    encodedParams.set('amount', amount);
+    encodedParams.set('payment_mode', '5');
+    encodedParams.set('client_ref_id', client_ref_id);
+    encodedParams.set('recipient_name', recipient_name);
+    encodedParams.set('ifsc', ifsc);
+    encodedParams.set('account', account);
+    encodedParams.set('sender_name', sender_name);
+    encodedParams.set('source', 'NEWCONNECT');
+    encodedParams.set('tag', 'Logistic');
+    encodedParams.set('beneficiary_account_type', 1); 
+    
+    const url = `${config?.ekoPaymentsInitiateUrl}:${config?.ekoUserCode}/settlement`;
+    const options = {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        developer_key: config?.ekoDeveloperKey,
         'secret-key': secretKey,
-        'secret-key-timestamp': secretKeyTimestamp
-      })
-        .then(({ data }) => console.log(data))
-        .catch(err => console.error(err));
+        'secret-key-timestamp': secretKeyTimestamp,
+        'content-type': 'application/x-www-form-urlencoded'
+      },
+      body: encodedParams
+  };
 
+    try{
+      const response = await fetch(url, options);
+      const responseText = await response.text();
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (err) {
+        logger.error(err);
+        parsedData = responseText;
+      }
+
+      return DefaultResponse(
+      res,
+      response.ok ? 200 : response.status,
+      parsedData?.message,
+      parsedData
+    );
     } catch (error) {
       logger.error(error);
     }
+  }
 
-    
+  async ekoPayoutStatus(req, res) {
+    const {id} = req.params; // here id wil be client_ref_id (unique)
+    const key = config?.ekoAccessKey;
+    const encodedKey = Buffer.from(key).toString('base64');
+
+    const secretKeyTimestamp = Date.now();
+    const secretKey = crypto.createHmac('sha256', encodedKey).update(secretKeyTimestamp.toString()).digest('base64');
+
+    const url = `${config?.ekoPaymentsStatusUrl}${id}?initiator_id=${config?.ekoInitiatorId}`;
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        developer_key: config?.ekoDeveloperKey,
+        'secret-key': secretKey,
+        'secret-key-timestamp': secretKeyTimestamp,
+        'content-type': 'application/x-www-form-urlencoded'
+      },
+  };
+
+    try{
+      const response = await fetch(url, options);
+      const responseText = await response.text();
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (err) {
+        logger.error(err);
+        parsedData = responseText;
+      }
+
+      return DefaultResponse(
+      res,
+      response.ok ? 200 : response.status,
+      parsedData?.message,
+      parsedData
+    );
+    } catch (error) {
+      logger.error(error);
+    }
+  }
+
+  async ekoWalletBalanceEnquiry(req, res) {
+    const key = config?.ekoAccessKey;
+    const encodedKey = Buffer.from(key).toString('base64');
+
+    const secretKeyTimestamp = Date.now();
+    const secretKey = crypto.createHmac('sha256', encodedKey).update(secretKeyTimestamp.toString()).digest('base64');
+
+    const url = `${config?.ekoWalletBalanceEnquiryUrl}:${config?.ekoRegisteredMobileNo}/balance?initiator_id=${config?.ekoInitiatorId}&user_code=${config?.ekoUserCode}`;
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        developer_key: config?.ekoDeveloperKey,
+        'secret-key': secretKey,
+        'secret-key-timestamp': secretKeyTimestamp,
+        'content-type': 'application/x-www-form-urlencoded'
+      },
+  };
+
+    try{
+      const response = await fetch(url, options);
+      const responseText = await response.text();
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (err) {
+        logger.error(err);
+        parsedData = responseText;
+      }
+
+      return DefaultResponse(
+      res,
+      response.ok ? 200 : response.status,
+      parsedData?.message,
+      parsedData
+    );
+    } catch (error) {
+      logger.error(error);
+    }
+  }
+
+  async ekoTransactionStatusCallback(req, res, next) {
+    const payload = req.body;
+    const {
+      tx_status,
+      amount,
+      payment_mode,
+      txstatus_desc,
+      fee,
+      gst,
+      sender_name,
+      tid,
+      beneficiary_account_type,
+      client_ref_id,
+      old_tx_status,
+      old_tx_status_desc,
+      bank_ref_num,
+      ifsc,
+      recipient_name,
+      account,
+      timestamp,
+    } = payload;
+    try {
+      const parsedData = {
+        tx_status,
+        amount,
+        payment_mode,
+        txstatus_desc,
+        fee,
+        gst,
+        sender_name,
+        tid,
+        client_ref_id,
+        old_tx_status,
+        old_tx_status_desc,
+        bank_ref_num,
+        ifsc,
+        recipient_name,
+        account,
+        timestamp,
+      };
+
+      const data = await updateWithdraw(req, res)
+      console.log(data, "data")
+      logger.log(`Transaction ID: ${tid}, Status: ${txstatus_desc}, Amount: ${amount}`);
+      console.log(parsedData)
+      return res.status(200).send('Success');
+    } catch (err) {
+      next(err);
+    }
   }
 
   async checkPayoutStatus(req, res, next) {
@@ -421,6 +566,11 @@ class WithdrawController {
         // .catch(err=>{
         //     payload.status = "REVERSED";
         // })
+      }
+
+      if(req?.body?.method === 'eko'){
+        const data = await createEkoWithdraw(req, res)
+        console.log(data, "data")
       }
 
       // Created payout callback feature

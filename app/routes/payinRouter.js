@@ -15,6 +15,7 @@ import {
   validatePayInProcess,
 } from "../helper/validators.js";
 import gatherAllData from "../cron/index.js";
+import locationRestrictMiddleware from "../middlewares/locationRestrictMiddleware.js";
 
 const payInRouter = express();
 
@@ -56,6 +57,7 @@ payInRouter.post(
 
 payInRouter.get(
   "/validate-payIn-url/:payInId",
+  locationRestrictMiddleware,
   validatePayInIdUrl,
   payInController.validatePayInUrl
 );

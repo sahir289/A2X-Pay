@@ -29,7 +29,25 @@ withdrawRouter.put(
   withdrawController.activateEkoService
 );
 
-withdrawRouter.post("create-payout-eko", withdrawController.createEkoWithdraw)
+withdrawRouter.post(
+  "/initiate-payout-eko",
+  withdrawController.createEkoWithdraw
+);
+
+withdrawRouter.get(
+  "/status-payout-eko/:id",
+  withdrawController.ekoPayoutStatus
+);
+
+withdrawRouter.get(
+  "/eko-wallet-balance-enquiry",
+  withdrawController.ekoWalletBalanceEnquiry
+);
+
+withdrawRouter.post(
+  "/transaction-status-callback-eko",
+  withdrawController.ekoTransactionStatusCallback
+);
 
 withdrawRouter.post(
   "/create-blazePe-payout",
@@ -42,26 +60,31 @@ withdrawRouter.post(
   withdrawController.checkPayoutStatus
 );
 
-
 withdrawRouter.get(
   "/getall-payout",
-  settlementsGetValidator,isAuthenticated,
+  settlementsGetValidator,
+  isAuthenticated,
   withdrawController.getWithdraw
 );
 
-withdrawRouter.put("/update-payout/:id",isAuthenticated, withdrawController.updateWithdraw);
-
+withdrawRouter.put(
+  "/update-payout/:id",
+  isAuthenticated,
+  withdrawController.updateWithdraw
+);
 
 withdrawRouter.put(
   "/update-vendor-code",
-  updateVendorCodeValidator,isAuthenticated,
+  updateVendorCodeValidator,
+  isAuthenticated,
   withdrawController.updateVendorCode
 );
 
 //new payout router
 withdrawRouter.post(
   "/get-all-payouts",
-  payOutInAllDataValidator,isAuthenticated,
+  payOutInAllDataValidator,
+  isAuthenticated,
   withdrawController.getAllPayOutDataWithRange
 );
 export default withdrawRouter;
