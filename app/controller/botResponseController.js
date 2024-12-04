@@ -63,7 +63,7 @@ class BotResponseController {
             let dataUtr = checkPayInUtr[0]?.utr ? checkPayInUtr[0]?.utr : checkPayInUtr[0]?.user_submitted_utr
             const getDataByUtr = await botResponseRepo.getBotResDataByUtr(dataUtr)
             const botUtrIsUsed = getDataByUtr?.some((item) => item.is_used);
-            if (checkPayInUtr[0]?.status in acceptedStatus && botUtrIsUsed) {
+            if (acceptedStatus.includes(checkPayInUtr[0]?.status) && botUtrIsUsed) {
               throw new CustomError(400, `The entry with ${amount_code} Amount Code is already ${checkPayInUtr[0]?.status} with ${dataUtr} UTR`);
             }
             else {
