@@ -125,26 +125,45 @@ class Withdraw {
   async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-  
-    const payOutData = await prisma.payout.findMany({
-      where: {
-        status,
-        Merchant: {
-          code: {
-            in: merchantCodes,
-          },
-        },
-        updatedAt: {
-          gte: start,
-          lte: end,
+    
+    const condition = {
+      Merchant: {
+        code: {
+          in: merchantCodes,
         },
       },
+      status: status,
+    };
+
+    if (status === "SUCCESS") {
+      condition.approved_at = {
+        gte: start,
+        lte: end,
+      };
+    }
+    if (status === "REJECTED") {
+      condition.rejected_at = {
+        gte: start,
+        lte: end,
+      };
+    }
+    else {
+      condition.updatedAt = {
+        gte: start,
+        lte: end,
+      };
+    }
+  
+    const payOutData = await prisma.payout.findMany({
+      where: condition,
       include: {
         Merchant: true,
       },
-      orderBy:{
-        updatedAt:"asc"
-      }
+      orderBy: status === "SUCCESS"
+          ? { approved_at: "asc" }
+          : status === "REJECTED"
+          ? { rejected_at: "asc" }
+          : { updatedAt: "asc" },
     });
     return payOutData;
   }

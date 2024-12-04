@@ -544,11 +544,13 @@ class WithdrawController {
       };
       if (req.body.utr_id) {
         payload.status = "SUCCESS";
+        payload.approved_at = new Date()
       }
       if (req.body.rejected_reason) {
         // TODO: confirm the status
         payload.status = "REJECTED";
         payload.rejected_reason = req.body.rejected_reason;
+        payload.rejected_at = new Date()
       }
       if ([req.body.status].includes("INITIATED")) {
         payload.utr_id = "";
@@ -611,7 +613,7 @@ class WithdrawController {
       }
       return DefaultResponse(res, 200, "Payout Updated!", data);
     } catch (err) {
-      next(err);
+      console.log(err)
     }
   }
 

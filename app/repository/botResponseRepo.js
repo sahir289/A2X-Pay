@@ -39,6 +39,16 @@ class BotResponseRepo {
     return botRes;
   }
 
+  async getBotResDataByUtr(usrSubmittedUtr) {
+    const botRes = await prisma.telegramResponse.findMany({
+      where: {
+        utr: usrSubmittedUtr,
+      },
+    });
+
+    return botRes;
+  }
+
   async updateBotResponseByUtr(id) {
     const updateBotRes = await prisma.telegramResponse.update({
       where: {
@@ -130,7 +140,6 @@ class BotResponseRepo {
     const res = await prisma.bankAccount.findFirst({
       where: {
         ac_name: bankName,
-        is_enabled: true,
       },
       include: {
         Merchant_Bank: true
