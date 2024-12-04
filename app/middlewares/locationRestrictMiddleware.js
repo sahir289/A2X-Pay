@@ -8,12 +8,23 @@ const locationRestrictMiddleware = async (req, res, next) => {
     const radiusKm = 50;
   
     try {
+        console.log(userIp, "userIp", restrictedLocation.latitude, "userLat", restrictedLocation.longitude, "userLon")
       const { data } = await axios.get(`https://ipinfo.io/${userIp}?token=${config?.ipInfoApiKey}`);
-      const [userLat, userLon] = data.loc.split(',').map(Number);
+      const loc = data?.loc;
 
-      if (isLocationBlocked(userLat, userLon, restrictedLocation.latitude, restrictedLocation.longitude, radiusKm)) {
-        logger.error("Access restricted in your region.");
-        return res.status(403).send('Access restricted in your region.');
+      if (loc) {
+        const [userLat, userLon] = loc.split(',').map(Number);
+
+        if (!isNaN(userLat) && !isNaN(userLon)) {
+            if (isLocationBlocked(userLat, userLon, restrictedLocation.latitude, restrictedLocation.longitude, radiusKm)) {
+            logger.error("Access restricted in your region.");
+            return res.status(403).send('Access restricted in your region.');
+            }
+        } else {
+            logger.warn("Invalid latitude/longitude data received.");
+        }
+      } else {
+        logger.warn("Location data not available for the IP.");
       }
       next();
     } catch (error) {
