@@ -9,26 +9,26 @@ const locationRestrictMiddleware = async (req, res, next) => {
   
     try {
         console.log(userIp, "userIp", restrictedLocation.latitude, "userLat", restrictedLocation.longitude, "userLon")
-      const { data } = await axios.get(`https://ipinfo.io/${userIp}?token=${config?.ipInfoApiKey}`);
-      if(!data){
-        next();
-      }
-      const loc = data?.loc;
+    //   const { data } = await axios.get(`https://ipinfo.io/${userIp}?token=${config?.ipInfoApiKey}`);
+    //   if(!data){
+    //     next();
+    //   }
+    //   const loc = data?.loc;
 
-      if (loc) {
-        const [userLat, userLon] = loc.split(',').map(Number);
+    //   if (loc) {
+    //     const [userLat, userLon] = loc.split(',').map(Number);
 
-        if (!isNaN(userLat) && !isNaN(userLon)) {
-            if (isLocationBlocked(userLat, userLon, restrictedLocation.latitude, restrictedLocation.longitude, radiusKm)) {
-            logger.error("Access restricted in your region.");
-            return res.status(403).send('Access restricted in your region.');
-            }
-        } else {
-            logger.warn("Invalid latitude/longitude data received.");
-        }
-      } else {
-        logger.warn("Location data not available for the IP.");
-      }
+    //     if (!isNaN(userLat) && !isNaN(userLon)) {
+    //         if (isLocationBlocked(userLat, userLon, restrictedLocation.latitude, restrictedLocation.longitude, radiusKm)) {
+    //         logger.error("Access restricted in your region.");
+    //         return res.status(403).send('Access restricted in your region.');
+    //         }
+    //     } else {
+    //         logger.warn("Invalid latitude/longitude data received.");
+    //     }
+    //   } else {
+    //     logger.warn("Location data not available for the IP.");
+    //   }
       next();
     } catch (error) {
       logger.error('Error fetching location data:', error);
