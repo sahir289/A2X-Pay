@@ -149,14 +149,34 @@ class MerchantRepo {
           Merchant: {
             code: element?.code,
           },
+          approved_at: {
+            not: null,
+          },
         },
       });
 
       element.payOutData = await prisma.payout.findMany({
         where: {
-          status: "SUCCESS",
           Merchant: {
             code: element?.code,
+          },
+          approved_at: {
+            not: null,
+          },
+        },
+      });
+
+      element.reversedPayOutData = await prisma.payout.findMany({
+        where: {
+          status: "REJECTED",
+          Merchant: {
+            code: element?.code,
+          },
+          approved_at: {
+            not: null,
+          },
+          rejected_at: {
+            not: null,
           },
         },
       });
@@ -187,6 +207,8 @@ class MerchantRepo {
       let payInCount = 0;
       let payOutAmount = 0;
       let payOutCommission = 0;
+      let reversedPayOutAmount = 0;
+      let reversedPayOutCommission = 0;
       let payOutCount = 0;
       let settlementAmount = 0;
       let lienAmount = 0;
@@ -205,6 +227,12 @@ class MerchantRepo {
         payOutCount += 1;
       });
 
+      // Calculate reversedPayOutData totals
+      record.reversedPayOutData?.forEach((data) => {
+        reversedPayOutAmount += Number(data.amount);
+        reversedPayOutCommission += Number(data.payout_commision);
+      });
+
       // Calculate settlementData total
       record.settlementData?.forEach((data) => {
         settlementAmount += Number(data.amount);
@@ -215,7 +243,7 @@ class MerchantRepo {
       });
 
       // Calculate the value (balance)
-      const value = payInAmount - payOutAmount - (payInCommission + payOutCommission) - settlementAmount - lienAmount;
+      const value = payInAmount - payOutAmount - (payInCommission + payOutCommission - reversedPayOutCommission) - settlementAmount - lienAmount + reversedPayOutAmount;
 
       // Return only the calculated balance
       // Deleting specific keys
