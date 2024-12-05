@@ -158,8 +158,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _sum: { amount: true },
       _count: { id: true },
       where: {
-        status: "SUCCESS",
-        updatedAt: { gte: startDate, lte: endDate },
+        approved_at: { gte: startDate, lte: endDate },
       },
     });
 
