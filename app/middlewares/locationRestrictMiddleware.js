@@ -3,13 +3,16 @@ import config from "../../config.js";
 import { logger } from "../utils/logger.js";
 
 const locationRestrictMiddleware = async (req, res, next) => {
-    const userIp = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const userIp = req?.ip || req?.headers['x-forwarded-for'] || req?.connection.remoteAddress;
     const restrictedLocation = { latitude: config?.latitudeBlock, longitude: config?.longitudeBlock };
-    const radiusKm = 50;
+    const radiusKm = 60;
   
     try {
         console.log(userIp, "userIp", restrictedLocation.latitude, "userLat", restrictedLocation.longitude, "userLon")
       const { data } = await axios.get(`https://ipinfo.io/${userIp}?token=${config?.ipInfoApiKey}`);
+      if(!data){
+        next();
+      }
       const loc = data?.loc;
 
       if (loc) {
