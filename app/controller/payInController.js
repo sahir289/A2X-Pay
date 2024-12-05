@@ -2501,9 +2501,6 @@ class PayInController {
                     message?.message_id,
                     fromUI
                   );
-                  if (fromUI) {
-                    return res.status(200).json({ message: response });
-                  }
 
                   // Notify url--->
                   const notifyData = {
@@ -2527,7 +2524,13 @@ class PayInController {
                     console.error("Error sending notification:", error);
                   }
 
-                  return
+
+                  if (fromUI) {
+                    return res.status(200).json({ message: response });
+                  }
+                  else {
+                    return;
+                  }
                 }
               }
               const updateUtrIfNull = (getPayInData?.user_submitted_utr && getPayInData.status !== 'DUPLICATE') ? getPayInData?.user_submitted_utr : utr;
@@ -2594,9 +2597,6 @@ class PayInController {
                       existingPayinData,
                       fromUI
                     );
-                    if (fromUI) {
-                      return res.status(200).json({ message: response });
-                    }
 
                     // Notify url--->
                     const notifyData = {
@@ -2620,7 +2620,13 @@ class PayInController {
                       console.error("Error sending notification:", error);
                     }
 
-                    return
+
+                    if (fromUI) {
+                      return res.status(200).json({ message: response });
+                    }
+                    else {
+                      return
+                    }
                   } else {
 
                     const payinCommission = calculateCommission(
@@ -2661,9 +2667,6 @@ class PayInController {
                       message?.message_id,
                       fromUI
                     );
-                    if (fromUI) {
-                      return res.status(200).json({ message: response });
-                    }
 
                     // ----> Notify url
                     try {
@@ -2686,7 +2689,12 @@ class PayInController {
                     } catch (error) {
                       console.error("Error sending notification to merchant:", error);
                     }
-                    return
+                    if (fromUI) {
+                      return res.status(200).json({ message: response });
+                    }
+                    else {
+                      return
+                    }
                   }
                 }
 
@@ -2763,9 +2771,6 @@ class PayInController {
                       message?.message_id,
                       fromUI
                     );
-                    if (fromUI) {
-                      return res.status(200).json({ message: response });
-                    }
 
                     // Notify url--->
                     const notifyData = {
@@ -2789,7 +2794,12 @@ class PayInController {
                       console.error("Error sending notification:", error);
                     }
 
-                    return
+                    if (fromUI) {
+                      return res.status(200).json({ message: response });
+                    }
+                    else {
+                      return;
+                    }
                   }
                 }
 
@@ -3009,9 +3019,6 @@ class PayInController {
                     message?.message_id,
                     fromUI
                   );
-                  if (fromUI) {
-                    return res.status(200).json({ message: response });
-                  }
 
                   // ----> Notify url
                   try {
@@ -3034,7 +3041,12 @@ class PayInController {
                   } catch (error) {
                     console.error("Error sending notification to merchant:", error);
                   }
-                  return
+                  if (fromUI) {
+                    return res.status(200).json({ message: response });
+                  }
+                  else {
+                    return;
+                  }
                 }
               }
 
@@ -3111,9 +3123,6 @@ class PayInController {
                     message?.message_id,
                     fromUI
                   );
-                  if (fromUI) {
-                    return res.status(200).json({ message: response });
-                  }
 
                   // Notify url--->
                   const notifyData = {
@@ -3137,7 +3146,12 @@ class PayInController {
                     console.error("Error sending notification:", error);
                   }
 
-                  return
+                  if (fromUI) {
+                    return res.status(200).json({ message: response });
+                  }
+                  else {
+                    return;
+                  }
                 }
               }
             }
