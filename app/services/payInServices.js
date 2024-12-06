@@ -589,8 +589,8 @@ class PayInService {
           vendor_code: Array.isArray(vendorCode)
             ? { in: vendorCode }
             : vendorCode,
-          ...dateFilter,
-        },
+          },
+        ...dateFilter,
       },
     });
 
