@@ -460,13 +460,16 @@ class WithdrawController {
         merchantCode,
         merchantOrderId
       );
-      logger.info('Payout Status', {
-        status: data.status,
-        data: data.data,
-      })
-
+      
       if (!data) {
+        logger.info('Payout not found');
         return DefaultResponse(res, 404, "Payout not found");
+      }
+      else {
+        logger.info('Payout Status', {
+          status: data.status,
+          data: data.data,
+        })
       }
 
       const response = {
