@@ -697,8 +697,7 @@ class WithdrawController {
         vendorCodeValue
       );
       logger.info('Vendor Code Updated', {
-        status: payOutDataRes.status,
-        data: payOutDataRes.data,
+        data: result,
       })
 
       return DefaultResponse(
