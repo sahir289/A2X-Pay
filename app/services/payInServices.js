@@ -456,26 +456,26 @@ class PayInService {
 
     payInData?.forEach((data) => {
       payInAmount += Number(data.amount);
-      payInCommission += Number(data.payin_commission);
+      payInCommission += Number(0);
       payInCount += 1;
     });
 
     payOutData?.forEach((data) => {
       payOutAmount += Number(data.amount);
-      payOutCommission += Number(data.payout_commision); // name changed to handle the spelling err.
+      payOutCommission += Number(0); // name changed to handle the spelling err.
       payOutCount += 1;
     });
 
     reversedPayOutData?.forEach((data) => {
       reversedPayOutAmount += Number(data.amount);
-      reversedPayOutCommission += Number(data.payout_commision); // name changed to handle the spelling err.
+      reversedPayOutCommission += Number(0); // name changed to handle the spelling err.
     });
 
     settlementData?.forEach((data) => {
       settlementAmount += Number(data.amount);
     });
 
-    const netBalance = payInAmount - payOutAmount - settlementAmount + reversedPayOutAmount;
+    const netBalance = payInAmount - payOutAmount - (payInCommission + payOutCommission - reversedPayOutCommission ) + settlementAmount + reversedPayOutAmount;
 
     return netBalance;
   }
@@ -589,8 +589,8 @@ class PayInService {
           vendor_code: Array.isArray(vendorCode)
             ? { in: vendorCode }
             : vendorCode,
-          ...dateFilter,
-        },
+          },
+        ...dateFilter,
       },
     });
 

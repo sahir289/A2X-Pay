@@ -9,6 +9,7 @@ import { CustomError, customError } from "../middlewares/errorHandler.js";
 import { logger } from "../utils/logger.js";
 import crypto from 'crypto';
 import config from "../../config.js";
+import bankAccountRepo from "../repository/bankAccountRepo.js";
 import generatePrefix from "../utils/generateFormattedStrinf.js";
 // import apis from '@api/apis';
 
@@ -476,13 +477,16 @@ class WithdrawController {
         merchantCode,
         merchantOrderId
       );
-      logger.info('Payout Status', {
-        status: data.status,
-        data: data.data,
-      })
-
+      
       if (!data) {
+        logger.info('Payout not found');
         return DefaultResponse(res, 404, "Payout not found");
+      }
+      else {
+        logger.info('Payout Status', {
+          status: data.status,
+          data: data.data,
+        })
       }
 
       const response = {
@@ -609,6 +613,16 @@ class WithdrawController {
         data: data.data,
       })
 
+      if (payload.from_bank) {
+        const bankAccountRes = await bankAccountRepo.getBankNickName(data.from_bank);
+  
+        await bankAccountRepo.updatePayoutBankAccountBalance(
+          bankAccountRes.id,
+          parseFloat(data.amount),
+          payload.status
+        );
+      }
+
       const merchantPayoutUrl = merchant.payout_notify_url;
       if (merchantPayoutUrl !== null) {
         let merchantPayoutData = {
@@ -710,8 +724,7 @@ class WithdrawController {
         vendorCodeValue
       );
       logger.info('Vendor Code Updated', {
-        status: payOutDataRes.status,
-        data: payOutDataRes.data,
+        data: result,
       })
 
       return DefaultResponse(

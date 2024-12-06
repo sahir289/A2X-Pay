@@ -94,6 +94,48 @@ class BankAccountRepo {
     return updateBankAccRes;
   }
 
+  async updatePayoutBankAccountBalance(bankAccId, amount, status) {
+    const bankAccRes = await prisma.bankAccount.findUnique({
+      where: {
+        id: bankAccId,
+      },
+      select: {
+        balance: true,
+      },
+    });
+
+    if (!bankAccRes) {
+      throw new Error("Bank not found");
+    }
+
+    // Ensure the balance is a number, even if it's 0
+    const currentBalance = parseFloat(bankAccRes.balance) || 0;
+
+    // Calculate the new balance
+    let newBalance = 0
+    if (status === "SUCCESS") {
+      newBalance = currentBalance - parseFloat(amount);
+    }
+    else if (status === "REJECTED") {
+      newBalance = currentBalance + parseFloat(amount);
+    }
+    else {
+      newBalance = currentBalance;
+    }
+
+    // Update the balance with the new total
+    const updateBankAccRes = await prisma.bankAccount.update({
+      where: {
+        id: bankAccId,
+      },
+      data: {
+        balance: newBalance,
+      },
+    });
+
+    return updateBankAccRes;
+  }
+
   async getAllBankAccounts(query) {
     const ac_no = query.ac_no;
     const ac_name = query.ac_name;
@@ -163,20 +205,35 @@ class BankAccountRepo {
     // const endOfToday = new Date(today.setHours(23, 59, 59, 999)); // end of the day
     let bankAccResponse = [];
 
-    for (let bank of transformedBankAccRes) {
-      bank.payInData = await prisma.payin.findMany({
-        where: {
-          status: "SUCCESS",
-          bank_acc_id: bank?.id,
-          approved_at: dateFilter,
-          
-        },
-        orderBy: {
-          approved_at: 'desc',  // Ordering bank accounts by createdAt in descending order
-        },
-
-      })
-      bankAccResponse.push(bank);
+    try {
+      for (let bank of transformedBankAccRes) {
+        if (bank.bank_used_for === "payIn") {
+          bank.payInData = await prisma.payin.findMany({
+            where: {
+              status: "SUCCESS",
+              bank_acc_id: bank?.id,
+              approved_at: dateFilter, // Ensure dateFilter is valid
+            },
+            orderBy: {
+              approved_at: 'desc',
+            },
+          });
+        } else {
+          bank.payOutData = await prisma.payout.findMany({
+            where: {
+              status: "SUCCESS",
+              from_bank: bank?.ac_name,
+              approved_at: dateFilter,
+            },
+            orderBy: {
+              approved_at: 'desc',
+            },
+          });
+        }
+        bankAccResponse.push(bank);
+      }
+    } catch (error) {
+      console.error("Error processing bank accounts:", error);
     }
 
     const totalRecords = await prisma.bankAccount.count({
