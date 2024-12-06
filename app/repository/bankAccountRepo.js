@@ -133,8 +133,6 @@ class BankAccountRepo {
       },
     });
 
-    console.log(updateBankAccRes)
-
     return updateBankAccRes;
   }
 
