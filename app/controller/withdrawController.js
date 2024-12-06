@@ -5,13 +5,20 @@ import { DefaultResponse } from "../helper/customResponse.js";
 import { getAmountFromPerc } from "../helper/utils.js";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import { CustomError } from "../middlewares/errorHandler.js";
+import { CustomError, customError } from "../middlewares/errorHandler.js";
 import { logger } from "../utils/logger.js";
 import crypto from 'crypto';
 import config from "../../config.js";
+import generatePrefix from "../utils/generateFormattedStrinf.js";
 // import apis from '@api/apis';
 
 class WithdrawController {
+
+  constructor() {
+    this.updateWithdraw = this.updateWithdraw.bind(this);
+    this.createEkoWithdraw = this.createEkoWithdraw.bind(this);
+  }
+
   async createWithdraw(req, res, next) {
     try {
       checkValidation(req);
@@ -195,8 +202,9 @@ class WithdrawController {
     const secretKeyTimestamp = Date.now();
     const secretKey = crypto.createHmac('sha256', encodedKey).update(secretKeyTimestamp.toString()).digest('base64');
 
-    console.log('Secret Key:', secretKey);
-    console.log('Secret Timestamp:', secretKeyTimestamp);
+    // may be in future this will need
+    // console.log('Secret Key:', secretKey);
+    // console.log('Secret Timestamp:', secretKeyTimestamp);
 
     const encodedParams = new URLSearchParams();
     encodedParams.set('service_code', config?.ekoServiceCode);
@@ -239,8 +247,17 @@ class WithdrawController {
     }
   }
 
-  async createEkoWithdraw(req, res) {
-    const {amount, client_ref_id, recipient_name, ifsc, account, sender_name, } = req.body;
+  async createEkoWithdraw(payload, res) {
+    const client_ref_id = generatePrefix(payload?.user_id);
+
+    const newObj = {
+      amount: payload?.amount, 
+      client_ref_id,
+      recipient_name : payload?.acc_holder_name, 
+      ifsc: payload?.ifsc_code, 
+      account: payload?.acc_no, 
+      sender_name: "TrustPay",
+    }
 
     const key = config?.ekoAccessKey;
     const encodedKey = Buffer.from(key).toString('base64');
@@ -251,13 +268,13 @@ class WithdrawController {
     const encodedParams = new URLSearchParams();
     encodedParams.set('service_code', config?.ekoServiceCode);
     encodedParams.set('initiator_id', config?.ekoInitiatorId); 
-    encodedParams.set('amount', amount);
+    encodedParams.set('amount', newObj.amount);
     encodedParams.set('payment_mode', '5');
-    encodedParams.set('client_ref_id', client_ref_id);
-    encodedParams.set('recipient_name', recipient_name);
-    encodedParams.set('ifsc', ifsc);
-    encodedParams.set('account', account);
-    encodedParams.set('sender_name', sender_name);
+    encodedParams.set('client_ref_id', newObj.client_ref_id);
+    encodedParams.set('recipient_name', newObj.recipient_name);
+    encodedParams.set('ifsc', newObj.ifsc);
+    encodedParams.set('account', newObj.account);
+    encodedParams.set('sender_name', newObj.sender_name);
     encodedParams.set('source', 'NEWCONNECT');
     encodedParams.set('tag', 'Logistic');
     encodedParams.set('beneficiary_account_type', 1); 
@@ -286,13 +303,13 @@ class WithdrawController {
         logger.error(err);
         parsedData = responseText;
       }
-
-      return DefaultResponse(
-      res,
-      response.ok ? 200 : response.status,
-      parsedData?.message,
-      parsedData
-    );
+      return parsedData;
+    //   return DefaultResponse(
+    //   res,
+    //   response.status,
+    //   parsedData?.message,
+    //   parsedData
+    // );
     } catch (error) {
       logger.error(error);
     }
@@ -424,8 +441,7 @@ class WithdrawController {
         timestamp,
       };
 
-      const data = await updateWithdraw(req, res)
-      console.log(data, "data")
+      const data = await this.updateWithdraw(req, res)
       logger.log(`Transaction ID: ${tid}, Status: ${txstatus_desc}, Amount: ${amount}`);
       console.log(parsedData)
       return res.status(200).send('Success');
@@ -569,14 +585,23 @@ class WithdrawController {
         //     payload.status = "REVERSED";
         // })
       }
-
-      if(req?.body?.method === 'eko'){
-        const data = await createEkoWithdraw(req, res)
-        console.log(data, "data")
-      }
-
       // Created payout callback feature
       const singleWithdrawData = await withdrawService.getWithdrawById(req.params.id);
+
+      if(req?.body?.method === 'eko'){
+        delete payload.method;
+        const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, res)
+        if(ekoResponse.status === 0){
+          payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase();
+          payload.approved_at = new Date()
+          payload.utr_id = ekoResponse?.data?.tid
+        } else {
+          payload.status = 'REJECTED',
+          payload.rejected_reason = ekoResponse.message;
+          logger.error(ekoResponse?.message);
+        }
+      }
+
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
       const data = await withdrawService.updateWithdraw(req.params.id, payload);
       logger.info('Payout Updated', {

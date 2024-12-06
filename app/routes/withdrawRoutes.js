@@ -44,6 +44,7 @@ withdrawRouter.get(
   withdrawController.ekoWalletBalanceEnquiry
 );
 
+// this is the callback-api for eko, they will use this to update the transaction status
 withdrawRouter.post(
   "/transaction-status-callback-eko",
   withdrawController.ekoTransactionStatusCallback
@@ -69,7 +70,7 @@ withdrawRouter.get(
 
 withdrawRouter.put(
   "/update-payout/:id",
-  isAuthenticated,
+  // isAuthenticated,
   withdrawController.updateWithdraw
 );
 
