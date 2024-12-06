@@ -588,13 +588,15 @@ class WithdrawController {
         data: data.data,
       })
 
-      const bankAccountRes = await bankAccountRepo.getBankNickName(data.from_bank);
-
-      await bankAccountRepo.updatePayoutBankAccountBalance(
-        bankAccountRes.id,
-        parseFloat(data.amount),
-        payload.status
-      );
+      if (payload.from_bank) {
+        const bankAccountRes = await bankAccountRepo.getBankNickName(data.from_bank);
+  
+        await bankAccountRepo.updatePayoutBankAccountBalance(
+          bankAccountRes.id,
+          parseFloat(data.amount),
+          payload.status
+        );
+      }
 
       const merchantPayoutUrl = merchant.payout_notify_url;
       if (merchantPayoutUrl !== null) {
