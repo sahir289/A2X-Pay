@@ -9,6 +9,7 @@ import { CustomError } from "../middlewares/errorHandler.js";
 import { logger } from "../utils/logger.js";
 import crypto from 'crypto';
 import config from "../../config.js";
+import bankAccountRepo from "../repository/bankAccountRepo.js";
 // import apis from '@api/apis';
 
 class WithdrawController {
@@ -586,6 +587,14 @@ class WithdrawController {
         status: data.status,
         data: data.data,
       })
+
+      const bankAccountRes = await bankAccountRepo.getBankNickName(data.from_bank);
+
+      await bankAccountRepo.updatePayoutBankAccountBalance(
+        bankAccountRes.id,
+        parseFloat(data.amount),
+        payload.status
+      );
 
       const merchantPayoutUrl = merchant.payout_notify_url;
       if (merchantPayoutUrl !== null) {
