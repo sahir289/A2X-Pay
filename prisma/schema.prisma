@@ -45,7 +45,7 @@ model Merchant {
   site_url          String
   api_key           String          @unique
   secret_key        String          @unique
-  public_api_key    String          @unique 
+  public_api_key    String          @unique
   notify_url        String?
   return_url        String
   min_payin         String
@@ -70,7 +70,7 @@ model Merchant {
   Payin             Payin[]
   Payout            Payout[]
   Settlement        Settlement[]
-  Lien            Lien[]
+  Lien              Lien[]
 }
 
 model BankAccount {
@@ -141,7 +141,7 @@ model Payin {
 }
 
 model Payout {
-  id                String   @id @default(uuid())
+  id                String    @id @default(uuid())
   user_id           String
   amount            Decimal
   status            Status
@@ -158,15 +158,16 @@ model Payout {
   utr_id            String?
   notify_url        String?
   rejected_reason   String?
+  method            String?
   approved_at       DateTime?
   rejected_at       DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  sno               Int      @default(autoincrement())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  sno               Int       @default(autoincrement())
   payout_commision  Decimal
   vendor_code       String?
-  from_bank         String?  @default("")
-  Merchant          Merchant @relation(fields: [merchant_id], references: [id])
+  from_bank         String?   @default("")
+  Merchant          Merchant  @relation(fields: [merchant_id], references: [id])
 }
 
 model Settlement {
@@ -239,7 +240,7 @@ model Lien {
   merchant_order_id String
   user_id           String
   amount            Decimal
-  when              DateTime  
+  when              DateTime
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   sno               Int      @default(autoincrement())

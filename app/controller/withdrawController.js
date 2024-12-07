@@ -522,12 +522,14 @@ class WithdrawController {
         acc_no,
         merchant_order_id,
         user_id,
+        method,
         sno,
         from_bank,
         commission,
         utr_id,
         acc_holder_name,
       } = req.query;
+      console.log(method)
       const take = Number(qTake) || 20;
       const skip = take * (Number(page || 1) - 1);
       const data = await withdrawService.getWithdraw(
@@ -541,6 +543,7 @@ class WithdrawController {
         acc_no,
         merchant_order_id,
         user_id,
+        method,
         Number(sno),
         from_bank,
         commission,
@@ -577,7 +580,7 @@ class WithdrawController {
         payload.rejected_reason = "";
       }
       if (req.body.method == "accure") {
-        delete payload.method;
+        // delete payload.method;
         // const { ACCURE_SECRET  } = process.env;
         // await axios.post("http://www.example.com", {})
         // .then(res=>{
@@ -593,14 +596,14 @@ class WithdrawController {
       const singleWithdrawData = await withdrawService.getWithdrawById(req.params.id);
 
       if(req?.body?.method === 'eko'){
-        delete payload.method;
+        // delete payload.method;
         const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, res)
         if(ekoResponse.status === 0){
           payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase();
           payload.approved_at = new Date()
           payload.utr_id = ekoResponse?.data?.tid
         } else {
-          payload.status = 'REJECTED',
+          payload.status = 'REVERSED',
           payload.rejected_reason = ekoResponse.message;
           logger.error(ekoResponse?.message);
         }

@@ -38,12 +38,14 @@ class Withdraw {
     acc_no,
     merchant_order_id,
     user_id,
+    method,
     sno,
     from_bank,
     commission,
     utr_id,
     acc_holder_name
   ) {
+    console.log(method)
     const where = {};
     [
       { col: "id", value: id },
@@ -56,6 +58,7 @@ class Withdraw {
       { col: "from_bank", value: from_bank },
       { col: "payout_commision", value: commission },
       { col: "utr_id", value: utr_id },
+      { col: "method", value: method },
       { col: "acc_holder_name", value: acc_holder_name },
       { col: "vendor_code", value: vendorCode },
     ].forEach((el) => {

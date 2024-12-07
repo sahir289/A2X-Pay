@@ -534,6 +534,11 @@ export const payoutGetValidator = [
     .withMessage("amount is required!")
     .isNumeric()
     .withMessage("amount is invalid!"),
+  query("method")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("method is required!"),
   query("code").optional().trim().notEmpty().withMessage("code is required!"),
   query("page")
     .optional()

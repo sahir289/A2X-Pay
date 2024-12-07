@@ -2,10 +2,10 @@ import express from "express";
 import withdrawController from "../controller/withdrawController.js";
 import {
   payoutCreateValidator,
-  settlementsGetValidator,
   payOutInAllDataValidator,
   updateVendorCodeValidator,
   validatePayOutId,
+  payoutGetValidator,
 } from "../helper/validators.js";
 
 import isAuthenticated from "../middlewares/authMiddleware.js";
@@ -63,7 +63,7 @@ withdrawRouter.post(
 
 withdrawRouter.get(
   "/getall-payout",
-  settlementsGetValidator,
+  payoutGetValidator,
   isAuthenticated,
   withdrawController.getWithdraw
 );
