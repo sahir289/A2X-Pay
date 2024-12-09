@@ -118,172 +118,200 @@ class MerchantRepo {
   async getAllMerchantsData(query) {
     const page = parseInt(query.page) || 1;
     const pageSize = parseInt(query.pageSize) || 15;
-
+  
     const skip = (page - 1) * pageSize;
     const take = pageSize;
-    const { code } = query
-
+    const { code } = query;
+  
+    // Apply filters dynamically
     const filters = {
       ...(code && {
-        code: Array.isArray(code)
-          ? { in: code }
-          : code,
-      })
-    }
-
-    const merchants = await prisma.merchant.findMany({
-      skip: skip,
-      take: take,
-      orderBy: [
-        {is_deleted : 'asc'},
-        {createdAt: 'desc'}
-      ],
-      where: filters
-    });
-    let merchantData = [];
-
-    for (const element of merchants) {
-      element.payInData = await prisma.payin.findMany({
-        where: {
-          status: "SUCCESS",
-          Merchant: {
-            code: element?.code,
-          },
-          approved_at: {
-            not: null,
-          },
-        },
-      });
-
-      element.payOutData = await prisma.payout.findMany({
-        where: {
-          Merchant: {
-            code: element?.code,
-          },
-          approved_at: {
-            not: null,
-          },
-        },
-      });
-
-      element.reversedPayOutData = await prisma.payout.findMany({
-        where: {
-          status: "REJECTED",
-          Merchant: {
-            code: element?.code,
-          },
-          approved_at: {
-            not: null,
-          },
-          rejected_at: {
-            not: null,
-          },
-        },
-      });
-
-      element.settlementData = await prisma.settlement.findMany({
-        where: {
-          status: "SUCCESS",
-          Merchant: {
-            code: element?.code,
-          },
-        },
-      });
-
-      element.lienData = await prisma.lien.findMany({
-        where: {
-          Merchant: {
-            code: element?.code,
-          },
-        },
-      });
-
-      merchantData.push(element);
-    }
-
-    const dataRes = merchantData?.map((record) => {
-      let payInAmount = 0;
-      let payInCommission = 0;
-      let payInCount = 0;
-      let payOutAmount = 0;
-      let payOutCommission = 0;
-      let reversedPayOutAmount = 0;
-      let reversedPayOutCommission = 0;
-      let payOutCount = 0;
-      let settlementAmount = 0;
-      let lienAmount = 0;
-
-      // Calculate payInData totals
-      record.payInData?.forEach((data) => {
-        payInAmount += Number(data.amount);
-        payInCommission += Number(data.payin_commission);
-        payInCount += 1;
-      });
-
-      // Calculate payOutData totals
-      record.payOutData?.forEach((data) => {
-        payOutAmount += Number(data.amount);
-        payOutCommission += Number(data.payout_commision);
-        payOutCount += 1;
-      });
-
-      // Calculate reversedPayOutData totals
-      record.reversedPayOutData?.forEach((data) => {
-        reversedPayOutAmount += Number(data.amount);
-        reversedPayOutCommission += Number(data.payout_commision);
-      });
-
-      // Calculate settlementData total
-      record.settlementData?.forEach((data) => {
-        settlementAmount += Number(data.amount);
-      });
-      
-      record.lienData?.forEach((data) => {
-        lienAmount += Number(data.amount);
-      });
-
-      // Calculate the value (balance)
-      const value = payInAmount - payOutAmount - (payInCommission + payOutCommission - reversedPayOutCommission) - settlementAmount - lienAmount + reversedPayOutAmount;
-
-      // Return only the calculated balance
-      // Deleting specific keys
-      delete record.payInData;   // Deletes payInData key and value
-      delete record.payOutData;  // Deletes payOutData key and value
-      delete record.settlementData;
-      delete record.lienData;
-      return {
-        ...record,// Adjust this to whatever unique identifier you have
-        balance: value // Add the calculated balance
-      };
-    });
-    const transformedData = dataRes.reduce((acc, item) => {
-      // Find children based on child_code and add them to the item
-      if (item.child_code && item.child_code.length) {
-        item.childrenData = item.child_code.map(code => {
-          return dataRes.find(child => child.code === code);
-        }).filter(child => child);
-      }
-
-      // Only push the item if it's not a child of another item
-      if (!dataRes.some(parent => parent.child_code.includes(item.code))) {
-        acc.push(item);
-      }
-
-      return acc;
-    }, []);
-    const totalRecords = await prisma.merchant.count({
-      where: filters
-    });
-
-    return {
-      transformedData,
-      pagination: {
-        page,
-        pageSize,
-        total: totalRecords,
-      },
+        code: Array.isArray(code) ? { in: code } : code,
+      }),
     };
-  }
+  
+    try {
+      // Fetch merchants with pagination
+      const merchants = await prisma.merchant.findMany({
+        skip,
+        take,
+        orderBy: [
+          { is_deleted: "asc" },
+          { createdAt: "desc" },
+        ],
+        where: filters,
+      });
+  
+      // Check if merchants array is empty or contains invalid data
+      if (!merchants || merchants.length === 0) {
+        console.error('No merchants found or data is invalid');
+        return {
+          transformedData: [],
+          pagination: {
+            page,
+            pageSize,
+            total: 0,
+          },
+        };
+      }
+  
+      // Fetch related data in parallel
+      const merchantCodes = merchants.map((merchant) => merchant?.code).filter(Boolean); // Filter out undefined or null codes
+  
+      if (merchantCodes.length === 0) {
+        console.error('No valid merchant codes found');
+        return {
+          transformedData: [],
+          pagination: {
+            page,
+            pageSize,
+            total: 0,
+          },
+        };
+      }
+  
+      const [
+        payInData,
+        payOutData,
+        reversedPayOutData,
+        settlementData,
+        lienData,
+      ] = await Promise.all([
+        prisma.payin.findMany({
+          where: {
+            status: "SUCCESS",
+            Merchant: { code: { in: merchantCodes } },
+            approved_at: { not: null },
+          },
+        }),
+        prisma.payout.findMany({
+          where: {
+            Merchant: { code: { in: merchantCodes } },
+            approved_at: { not: null },
+          },
+        }),
+        prisma.payout.findMany({
+          where: {
+            status: "REJECTED",
+            Merchant: { code: { in: merchantCodes } },
+            approved_at: { not: null },
+            rejected_at: { not: null },
+          },
+        }),
+        prisma.settlement.findMany({
+          where: {
+            status: "SUCCESS",
+            Merchant: { code: { in: merchantCodes } },
+          },
+        }),
+        prisma.lien.findMany({
+          where: {
+            Merchant: { code: { in: merchantCodes } },
+          },
+        }),
+      ]);
+  
+      // Group related data by merchant code
+      const groupByMerchantCode = (data) =>
+        data.reduce((acc, item) => {
+          if (item.Merchant?.code) {
+            acc[item.Merchant.code] = acc[item.Merchant.code] || [];
+            acc[item.Merchant.code].push(item);
+          }
+          return acc;
+        }, {});
+  
+      const payInDataByMerchant = groupByMerchantCode(payInData);
+      const payOutDataByMerchant = groupByMerchantCode(payOutData);
+      const reversedPayOutDataByMerchant = groupByMerchantCode(reversedPayOutData);
+      const settlementDataByMerchant = groupByMerchantCode(settlementData);
+      const lienDataByMerchant = groupByMerchantCode(lienData);
+  
+      // Transform merchant data
+      const merchantData = merchants.map((merchant) => {
+        if (!merchant.code) {
+          console.error('Merchant code is missing:', merchant);
+          return null; // Skip invalid merchant objects
+        }
+  
+        const payIn = payInDataByMerchant[merchant.code] || [];
+        const payOut = payOutDataByMerchant[merchant.code] || [];
+        const reversedPayOut = reversedPayOutDataByMerchant[merchant.code] || [];
+        const settlement = settlementDataByMerchant[merchant.code] || [];
+        const lien = lienDataByMerchant[merchant.code] || [];
+  
+        const payInAmount = payIn.reduce((sum, data) => sum + Number(data.amount), 0);
+        const payInCommission = payIn.reduce(
+          (sum, data) => sum + Number(data.payin_commission),
+          0
+        );
+  
+        const payOutAmount = payOut.reduce((sum, data) => sum + Number(data.amount), 0);
+        const payOutCommission = payOut.reduce(
+          (sum, data) => sum + Number(data.payout_commision),
+          0
+        );
+  
+        const reversedPayOutAmount = reversedPayOut.reduce(
+          (sum, data) => sum + Number(data.amount),
+          0
+        );
+        const reversedPayOutCommission = reversedPayOut.reduce(
+          (sum, data) => sum + Number(data.payout_commision),
+          0
+        );
+  
+        const settlementAmount = settlement.reduce(
+          (sum, data) => sum + Number(data.amount),
+          0
+        );
+  
+        const lienAmount = lien.reduce((sum, data) => sum + Number(data.amount), 0);
+  
+        const balance =
+          payInAmount -
+          payOutAmount -
+          (payInCommission + payOutCommission - reversedPayOutCommission) -
+          settlementAmount -
+          lienAmount +
+          reversedPayOutAmount;
+  
+        return {
+          ...merchant,
+          balance,
+        };
+      }).filter(Boolean); // Remove any null values
+  
+      // Handle child data (if you have a hierarchical structure)
+      const transformedData = merchantData.reduce((acc, item) => {
+        if (item.child_code && item.child_code.length) {
+          item.childrenData = item.child_code.map((code) =>
+            merchantData.find((child) => child.code === code)
+          );
+        }
+  
+        if (!merchantData.some((parent) => parent.child_code?.includes(item.code))) {
+          acc.push(item);
+        }
+  
+        return acc;
+      }, []);
+  
+      const totalRecords = await prisma.merchant.count({ where: filters });
+  
+      return {
+        transformedData,
+        pagination: {
+          page,
+          pageSize,
+          total: totalRecords,
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching merchant data:", error);
+      throw new Error("Failed to fetch merchant data.");
+    }
+  }   
 
   async updateIsMerchantAdminByCode(code) {
     const res = await prisma.merchant.update({
