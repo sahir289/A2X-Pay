@@ -167,6 +167,25 @@ class BotResponseRepo {
     return res;
   }
 
+  async getBotResponseByID(id) {
+    const botRes = await prisma.telegramResponse.findFirst({
+      where: {
+        id: id,
+      },
+    });
+    return botRes;
+  }
+
+  async updateBotResponse(id,data) {
+    const updateBotRes = await prisma.telegramResponse.update({
+      where: {
+        id: id,
+      },
+      data: data,
+    });
+    return updateBotRes;
+  }
+
 }
 
 export default new BotResponseRepo();

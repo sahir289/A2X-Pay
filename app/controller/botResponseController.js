@@ -520,6 +520,54 @@ class BotResponseController {
       next(error);
     }
   }
+
+  async resetResponse(req, res, next) {
+    try {
+      checkValidation(req);
+      const { id } = req.body;
+      const botRes = await botResponseRepo.getBotResponseByID(id);
+      let getallPayinDataByUtr
+      getallPayinDataByUtr = await payInRepo.getPayinDataByUtr(botRes.utr);
+      if (getallPayinDataByUtr.length === 0) {
+        getallPayinDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(botRes.utr);
+      }
+
+      const hasSuccess = getallPayinDataByUtr?.some((item) => item.status === 'SUCCESS');
+      
+      if (!hasSuccess) {
+        const data = {
+          amount_code : null,
+          is_used : false,
+        }
+        
+        await botResponseRepo.updateBotResponse(id, data);
+        
+        const isEqualUTR = getallPayinDataByUtr?.some((item) => item.utr === botRes.utr);
+        if (isEqualUTR) {
+          const updatePayinID = getallPayinDataByUtr?.filter((item) => item.utr === botRes.utr && item.status !== 'FAILED');
+          const updatePayinData = {
+            status : "ASSIGNED",
+            utr: null,
+          }
+  
+          await payInRepo.updatePayInData(updatePayinID[0]?.id, updatePayinData)
+        }
+
+        
+        return DefaultResponse(
+          res,
+          200,
+          "Bot response Reset successful"
+        );
+      }
+      else {
+        const successPayinDataID = getallPayinDataByUtr?.filter((item) => item.status === 'SUCCESS');
+        return DefaultResponse( res, 400, `UTR of this entry is already used with ${successPayinDataID[0]?.merchant_order_id} Merchant Order ID, No Changes Applied`);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new BotResponseController();
