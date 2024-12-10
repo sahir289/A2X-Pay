@@ -35,6 +35,12 @@ merchantRouter.get(
 );
 
 merchantRouter.get(
+  "/getall-merchant-grouping",
+  isAuthenticated,
+  merchantController.getAllMerchantsGrouping
+);
+
+merchantRouter.get(
   "/getall-merchant-data",
   isAuthenticated,
   merchantController.getAllMerchantsData
