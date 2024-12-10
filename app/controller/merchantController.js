@@ -118,7 +118,7 @@ class MerchantController {
       await userRepo.validateUserId(userId);
 
       const merchants = await merchantRepo.getAllMerchants(query);
-
+ 
       const allChildCodes = new Set(
         merchants?.merchants.flatMap(merchant => merchant.child_code || [])
       );

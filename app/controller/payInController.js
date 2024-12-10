@@ -1322,19 +1322,42 @@ class PayInController {
       } else if (typeof merchantCode === "string") {
         merchantCode = [merchantCode];
       }
+      if(merchantCode.length === 1){
+        const merchantData = await merchantRepo.getMerchantByCode(merchantCode[0]);
+        let allNewMerchantCodes = [];
+        if (merchantData) {
+          allNewMerchantCodes = [
+            ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+            merchantData.code,
+          ];
+        }
 
-      const payInDataRes = await payInServices.getAllPayInDataByMerchant(
-        merchantCode,
-        startDate,
-        endDate
-      );
+        const payInDataRes = await payInServices.getAllPayInDataByMerchant(
+          allNewMerchantCodes,
+          startDate,
+          endDate
+        );
+        return DefaultResponse(
+          res,
+          200,
+          "PayIn data fetched successfully",
+          payInDataRes
+        );
+      } else {
+        const payInDataRes = await payInServices.getAllPayInDataByMerchant(
+          merchantCode,
+          startDate,
+          endDate
+        );
+  
+        return DefaultResponse(
+          res,
+          200,
+          "PayIn data fetched successfully",
+          payInDataRes
+        );
+      }
 
-      return DefaultResponse(
-        res,
-        200,
-        "PayIn data fetched successfully",
-        payInDataRes
-      );
     } catch (error) {
       next(error);
     }
