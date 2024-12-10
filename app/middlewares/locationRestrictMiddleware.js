@@ -4,7 +4,7 @@ import { logger } from "../utils/logger.js";
 
 const locationRestrictMiddleware = async (req, res, next) => {
     const API_KEY = config?.proxyCheckApiKey;
-    const userIp = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const userIp = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
     logger.info(`${req.ip}, req.ip, ${req.headers['x-forwarded-for']}, headers, ${req.connection.remoteAddress}, requested`)
     const restrictedLocation = { latitude: config?.latitudeBlock, longitude: config?.longitudeBlock };
     const radiusKm = 60;
