@@ -17,7 +17,6 @@ const locationRestrictMiddleware = async (req, res, next) => {
     try {
       const response = await axios.get(`https://proxycheck.io/v2/${userIp}?key=${API_KEY}&vpn=3&asn=1`);
       logger.info('response data here:', response.data);
-      console.log(response.data, "1223443")
       const newresp = await response.data;
       const userData = newresp[userIp];
 
