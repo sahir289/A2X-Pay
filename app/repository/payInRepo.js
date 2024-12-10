@@ -131,8 +131,6 @@ class PayInRepo {
             });
             return payInRes;
         }
-
-
     }
 
 
@@ -168,15 +166,6 @@ class PayInRepo {
             orderBy: {
                 sno: "desc",
             },
-        });
-        return payInRes;
-    }
-
-    async getPayinDataByAmountCode(amount_code) {
-        const payInRes = await prisma.payin.findFirst({
-            where: {
-                upi_short_code: amount_code,
-            }
         });
         return payInRes;
     }
