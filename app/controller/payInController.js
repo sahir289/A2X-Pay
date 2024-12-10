@@ -341,7 +341,7 @@ class PayInController {
       checkValidation(req);
       const { payinId, merchantCode, merchantOrderId } = req.body;
 
-      if (!payinId && !merchantCode && !merchantOrderId) {
+      if (!merchantCode && !merchantOrderId) {
         return DefaultResponse(res, 400, {
           status: "error",
           error: "Invalid request. Data type mismatch or incomplete request",
