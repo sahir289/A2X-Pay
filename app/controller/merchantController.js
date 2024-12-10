@@ -107,6 +107,40 @@ class MerchantController {
       next(error);
     }
   }
+
+  async getAllMerchantsGrouping(req, res, next) {
+    try {
+      checkValidation(req);
+      const { id: userId } = req.user;
+
+      const query = req.query;
+
+      await userRepo.validateUserId(userId);
+
+      const merchants = await merchantRepo.getAllMerchants(query);
+
+      const allChildCodes = new Set(
+        merchants?.merchants.flatMap(merchant => merchant.child_code || [])
+      );
+      const filteredMerchants = merchants?.merchants.filter(
+        merchant => !allChildCodes.has(merchant.code)
+      );
+    
+      const remainingMerchants ={
+        merchants: filteredMerchants
+      }
+
+      return DefaultResponse(
+        res,
+        200,
+        "Merchants fetched successfully",
+        remainingMerchants
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async deleteMerchant(req, res, next) {
     try {
       checkValidation(req);
