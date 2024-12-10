@@ -402,11 +402,11 @@ export const validatePayOutId = [
 ];
 
 export const validatePayInId = [
-  body("payinId")
-    .notEmpty()
-    .withMessage("payinId must not be empty")
-    .isString()
-    .withMessage("payinId must be a string"),
+  // body("payinId")
+  //   .notEmpty()
+  //   .withMessage("payinId must not be empty")
+  //   .isString()
+  //   .withMessage("payinId must be a string"),
   body("merchantCode")
     .notEmpty()
     .withMessage("merchantCode must not be empty")
