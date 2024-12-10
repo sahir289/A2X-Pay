@@ -6,26 +6,39 @@ const locationRestrictMiddleware = async (req, res, next) => {
     const userIp = req?.ip || req?.headers['x-forwarded-for'] || req?.connection.remoteAddress;
     const restrictedLocation = { latitude: config?.latitudeBlock, longitude: config?.longitudeBlock };
     const radiusKm = 60;
+    const restrictedStates = ['Haryana', 'Rajasthan'];
+
+    const API_KEY = config?.proxyCheckApiKey;
   
     try {
-      console.log(userIp, "userIp", restrictedLocation.latitude, "userLat", restrictedLocation.longitude, "userLon")
-      const data = await axios.get(`https://ipinfo.io/${userIp}?token=${config?.ipInfoApiKey}`);
-      const loc = data?.data?.loc;
+      const response = await axios.get(`https://proxycheck.io/v2/${userIp}?key=${API_KEY}&vpn=3&asn=1`);
+      const userData = response.data[userIp];
 
-      if (loc) {
-        const [userLat, userLon] = loc.split(',').map(Number);
-
-        if (!isNaN(userLat) && !isNaN(userLon)) {
-            if (isLocationBlocked(userLat, userLon, restrictedLocation.latitude, restrictedLocation.longitude, radiusKm)) {
-            logger.error("Access restricted in your region.");
-            return res.status(403).send('Access restricted in your region.');
-            }
-        } else {
-            logger.warn("Invalid latitude/longitude data received.");
-        }
-      } else {
-        logger.warn("Location data not available for the IP.");
+      if (!userData) {
+        logger.warn("No data found for the provided IP.");
+        return res.status(500).send('No location data available.');
       }
+      const { latitude, longitude, vpn, region } = userData;
+      if (vpn === 'yes') {
+        logger.warn("VPN detected. Access denied.");
+        return res.status(403).send('Access denied due to VPN usage.');
+      }
+
+      if (restrictedStates.includes(region)) {
+        logger.error(`Access restricted for users in ${region}.`);
+        return res.status(403).send('Access restricted in your region.');
+      }
+      if (!isNaN(latitude) && !isNaN(longitude)) {
+      // Check if the user is in the restricted region
+      if (isLocationBlocked(latitude, longitude, restrictedLocation.latitude, restrictedLocation.longitude, radiusKm)) {
+        logger.error("Access restricted in your region.");
+        return res.status(403).send('Access restricted in your region.');
+      }
+    } else {
+      logger.warn("Invalid latitude/longitude data received.");
+      return res.status(500).send('Invalid location data.');
+    }
+
       next();
     } catch (error) {
       logger.error('Error fetching location data:', error);

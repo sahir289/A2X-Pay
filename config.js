@@ -38,11 +38,14 @@ function config(Env) {
         ekoUserCode:Env?.EKO_USER_CODE,
         ekoInitiatorId:Env?.EKO_INITIATOR_ID,
         ekoDeveloperKey:Env?.EKO_DEVELOPER_KEY,
-        ipInfoApiKey:Env?.IP_INFO_API_KEY,
+        proxyCheckApiKey:Env?.PROXY_CHECK_API_KEY,
         latitudeBlock:Env?.BLOCK_LAT,
         longitudeBlock:Env?.BLOCK_LONG,
-        nodeProductionLogs:Env?.NODE_ENV
-
+        nodeProductionLogs:Env?.NODE_ENV,
+        awsLocationAccessKey:Env?.AMAZON_LOCATION_API_KEY,
+        awsRegion:Env?.AWS_REGION,
+        awsAccessKeyAdmin:Env?.AWS_ACCESS_KEY_ADMIN,
+        awsSecretKeyAdmin:Env?.AWS_SECRET_ACCESS_KEY_ADMIN
     };
 }
 
