@@ -1317,11 +1317,13 @@ class PayInController {
   async getAllPayInDataByMerchant(req, res, next) {
     try {
       let { merchantCode, startDate, endDate } = req.query;
+      
       if (merchantCode == null) {
         merchantCode = [];
       } else if (typeof merchantCode === "string") {
         merchantCode = [merchantCode];
       }
+
       if(merchantCode.length === 1){
         const merchantData = await merchantRepo.getMerchantByCode(merchantCode[0]);
         let allNewMerchantCodes = [];
@@ -1337,12 +1339,14 @@ class PayInController {
           startDate,
           endDate
         );
+
         return DefaultResponse(
           res,
           200,
           "PayIn data fetched successfully",
           payInDataRes
         );
+
       } else {
         const payInDataRes = await payInServices.getAllPayInDataByMerchant(
           merchantCode,
@@ -1369,26 +1373,42 @@ class PayInController {
 
       if (merchantCode == null) {
         merchantCode = [];
+      } else if (typeof merchantCode === "string") {
+        merchantCode = [merchantCode];
       }
 
-      const merchantCodes = Array.isArray(merchantCode)
-        ? merchantCode
-        : merchantCode.split(',');
+      if(merchantCode.length === 1){
+        const merchantData = await merchantRepo.getMerchantByCode(merchantCode[0]);
+        let allNewMerchantCodes = [];
+        if (merchantData) {
+          allNewMerchantCodes = [
+            ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+            merchantData.code,
+          ];
+        }
 
-      // if (merchantCodes.length === 0) {
-      //   return res.status(400).json({ error: 'No merchant codes provided' });
-      // }
+        const payInDataRes = await payInServices.getMerchantsNetBalance(
+          allNewMerchantCodes
+        );
 
-      const payInDataRes = await payInServices.getMerchantsNetBalance(
-        merchantCodes
-      );
-
-      return DefaultResponse(
-        res,
-        200,
-        "PayIn data fetched successfully",
-        payInDataRes
-      );
+        return DefaultResponse(
+          res,
+          200,
+          "PayIn data fetched successfully",
+          payInDataRes
+        );
+      } else {
+        const payInDataRes = await payInServices.getMerchantsNetBalance(
+          merchantCode
+        );
+  
+        return DefaultResponse(
+          res,
+          200,
+          "PayIn data fetched successfully",
+          payInDataRes
+        );
+      }
     } catch (error) {
       next(error);
     }
@@ -3414,9 +3434,9 @@ class PayInController {
 
   async resetDeposit(req, res, next) {
     try {
-      const { amount_code } = req.body;
+      const { merchant_order_id } = req.body;
 
-      const payInData = await payInRepo.getPayinDataByAmountCode(amount_code);
+      const payInData = await payInRepo.getPayInDataByMerchantOrderId(merchant_order_id);
       if (payInData?.status !== "PENDING" && payInData?.status !== "IMG_PENDING") {
         if (payInData?.status !== "SUCCESS" && payInData?.status !== "FAILED") {
           const utr = payInData?.utr ? payInData?.utr : payInData?.user_submitted_utr
@@ -3456,7 +3476,6 @@ class PayInController {
       next(error);
     }
   }
-
 }
 
 export default new PayInController();
