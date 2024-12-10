@@ -456,7 +456,7 @@ class WithdrawController {
       checkValidation(req);
       const { payoutId, merchantCode, merchantOrderId } = req.body;
 
-      if (!payoutId && !merchantCode && !merchantOrderId) {
+      if (!merchantCode && !merchantOrderId) {
         return DefaultResponse(res, 400, {
           status: "error",
           error: "Invalid request. Data type mismatch or incomplete request",
