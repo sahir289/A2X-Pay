@@ -384,11 +384,11 @@ export const settlementCreateValidator = [
 ];
 
 export const validatePayOutId = [
-  body("payoutId")
-    .notEmpty()
-    .withMessage("payOutId must not be empty")
-    .isString()
-    .withMessage("payOutId must be a string"),
+  // body("payoutId")
+  //   .notEmpty()
+  //   .withMessage("payOutId must not be empty")
+  //   .isString()
+  //   .withMessage("payOutId must be a string"),
   body("merchantCode")
     .notEmpty()
     .withMessage("merchantCode must not be empty")

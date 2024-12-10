@@ -12,6 +12,17 @@ class Withdraw {
   }
 
   async checkPayoutStatus(payoutId, merchantCode, merchantOrderId) {
+    const conditions = {
+      Merchant: {
+        code: merchantCode,
+      },
+      merchant_order_id: merchantOrderId,
+    };
+
+    if (payoutId !== null) {
+      conditions.id = payoutId;
+    }
+
     const data = await prisma.payout.findFirst({
       where: {
         id: payoutId,
