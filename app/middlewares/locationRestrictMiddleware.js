@@ -3,13 +3,12 @@ import config from "../../config.js";
 import { logger } from "../utils/logger.js";
 
 const locationRestrictMiddleware = async (req, res, next) => {
+    const API_KEY = config?.proxyCheckApiKey;
     const userIp = req?.ip || req?.headers['x-forwarded-for'] || req?.connection.remoteAddress;
     const restrictedLocation = { latitude: config?.latitudeBlock, longitude: config?.longitudeBlock };
     const radiusKm = 60;
     const restrictedStates = ['Haryana', 'Rajasthan'];
 
-    const API_KEY = config?.proxyCheckApiKey;
-  
     try {
       const response = await axios.get(`https://proxycheck.io/v2/${userIp}?key=${API_KEY}&vpn=3&asn=1`);
       const userData = response.data[userIp];
