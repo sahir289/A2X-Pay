@@ -529,7 +529,6 @@ class WithdrawController {
         utr_id,
         acc_holder_name,
       } = req.query;
-      console.log(method)
       const take = Number(qTake) || 20;
       const skip = take * (Number(page || 1) - 1);
       const data = await withdrawService.getWithdraw(

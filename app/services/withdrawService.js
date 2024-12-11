@@ -56,7 +56,6 @@ class Withdraw {
     utr_id,
     acc_holder_name
   ) {
-    console.log(method)
     const where = {};
     [
       { col: "id", value: id },
