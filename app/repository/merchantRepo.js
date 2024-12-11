@@ -183,12 +183,18 @@ class MerchantRepo {
             Merchant: { code: { in: merchantCodes } },
             approved_at: { not: null },
           },
+          include: {
+            Merchant: true
+          }
         }),
         prisma.payout.findMany({
           where: {
             Merchant: { code: { in: merchantCodes } },
             approved_at: { not: null },
           },
+          include: {
+            Merchant: true
+          }
         }),
         prisma.payout.findMany({
           where: {
@@ -197,17 +203,26 @@ class MerchantRepo {
             approved_at: { not: null },
             rejected_at: { not: null },
           },
+          include: {
+            Merchant: true
+          }
         }),
         prisma.settlement.findMany({
           where: {
             status: "SUCCESS",
             Merchant: { code: { in: merchantCodes } },
           },
+          include: {
+            Merchant: true
+          }
         }),
         prisma.lien.findMany({
           where: {
             Merchant: { code: { in: merchantCodes } },
           },
+          include: {
+            Merchant: true
+          }
         }),
       ]);
   
