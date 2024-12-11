@@ -141,9 +141,9 @@ class Withdraw {
     
     const condition = {
       Merchant: {
-        code: {
-          in: merchantCodes,
-        },
+        code: Array.isArray(merchantCodes)
+          ? { in: merchantCodes }
+          : merchantCodes,
       },
       status: status,
     };
