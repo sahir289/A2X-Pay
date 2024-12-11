@@ -1382,13 +1382,16 @@ class PayInController {
       }
 
       if(includeSubMerchant === 'false') {
-        const merchantData = await merchantRepo.getMerchantByCode(merchantCode[0]);
         let allNewMerchantCodes = [];
-        if (merchantData) {
-          allNewMerchantCodes = [
-            ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
-            merchantData.code,
-          ];
+        for (const code of merchantCode) {
+          const merchantData = await merchantRepo.getMerchantByCode(code);
+          if (merchantData) {
+            allNewMerchantCodes = [
+              ...allNewMerchantCodes,
+              ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+              merchantData.code,
+            ];
+          }
         }
 
         const payInDataRes = await payInServices.getMerchantsNetBalance(
@@ -1487,19 +1490,47 @@ class PayInController {
         merchantCode = [merchantCode];
       }
 
-      const payInDataRes = await payInServices.getAllPayInDataWithRange(
-        merchantCode,
-        status,
-        startDate,
-        endDate
-      );
+      if(includeSubMerchant === 'false') {
+        let allNewMerchantCodes = [];
+        for (const code of merchantCode) {
+          const merchantData = await merchantRepo.getMerchantByCode(code);
+          if (merchantData) {
+            allNewMerchantCodes = [
+              ...allNewMerchantCodes,
+              ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+              merchantData.code,
+            ];
+          }
+        }
 
-      return DefaultResponse(
-        res,
-        200,
-        "PayIn data fetched successfully",
-        payInDataRes
-      );
+        const payInDataRes = await payInServices.getAllPayInDataWithRange(
+          allNewMerchantCodes,
+          status,
+          startDate,
+          endDate
+        );
+  
+        return DefaultResponse(
+          res,
+          200,
+          "PayIn data fetched successfully",
+          payInDataRes
+        );
+      } else {
+        const payInDataRes = await payInServices.getAllPayInDataWithRange(
+          merchantCode,
+          status,
+          startDate,
+          endDate
+        );
+  
+        return DefaultResponse(
+          res,
+          200,
+          "PayIn data fetched successfully",
+          payInDataRes
+        );
+      }
     } catch (error) {
       next(error);
     }
