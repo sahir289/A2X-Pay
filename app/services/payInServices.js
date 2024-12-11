@@ -622,10 +622,10 @@ class PayInService {
     try {
       const condition = {
         Merchant: {
-          code: {
-            in: merchantCodes,
-          },
-        }
+          code: Array.isArray(merchantCodes)
+            ? { in: merchantCodes }
+            : merchantCodes,
+        },
       };
   
       if (status != "All") {

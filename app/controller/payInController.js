@@ -1490,7 +1490,7 @@ class PayInController {
         merchantCode = [merchantCode];
       }
 
-      if(includeSubMerchant === 'false') {
+      if(!includeSubMerchant) {
         let allNewMerchantCodes = [];
         for (const code of merchantCode) {
           const merchantData = await merchantRepo.getMerchantByCode(code);
