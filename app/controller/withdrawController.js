@@ -670,23 +670,55 @@ class WithdrawController {
         merchantCode = [merchantCode];
       }
 
-      const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
-        merchantCode,
-        status,
-        startDate,
-        endDate
-      );
-      logger.info('Get all payout with range', {
-        status: payOutDataRes.status,
-        data: payOutDataRes.data,
-      })
+      if(includeSubMerchant === 'false') {
+        let allNewMerchantCodes = [];
+        for (const code of merchantCode) {
+          const merchantData = await merchantRepo.getMerchantByCode(code);
+          if (merchantData) {
+            allNewMerchantCodes = [
+              ...allNewMerchantCodes,
+              ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+              merchantData.code,
+            ];
+          }
+        }
 
-      return DefaultResponse(
-        res,
-        200,
-        "Payout data fetched successfully",
-        payOutDataRes
-      );
+        const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
+          allNewMerchantCodes,
+          status,
+          startDate,
+          endDate
+        );
+        logger.info('Get all payout with range', {
+          status: payOutDataRes.status,
+          data: payOutDataRes.data,
+        })
+  
+        return DefaultResponse(
+          res,
+          200,
+          "Payout data fetched successfully",
+          payOutDataRes
+        );
+      } else {
+        const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
+          merchantCode,
+          status,
+          startDate,
+          endDate
+        );
+        logger.info('Get all payout with range', {
+          status: payOutDataRes.status,
+          data: payOutDataRes.data,
+        })
+  
+        return DefaultResponse(
+          res,
+          200,
+          "Payout data fetched successfully",
+          payOutDataRes
+        );
+      }
     } catch (error) {
       next(error);
     }
