@@ -662,7 +662,7 @@ class WithdrawController {
   async getAllPayOutDataWithRange(req, res, next) {
     try {
       checkValidation(req);
-      let { merchantCode, status, startDate, endDate } = req.body;
+      let { merchantCode, status, startDate, endDate, includeSubMerchant } = req.body;
 
       if (!merchantCode) {
         merchantCode = [];
