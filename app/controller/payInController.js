@@ -3240,6 +3240,7 @@ class PayInController {
         merchantOrderId: updatePayInRes?.merchant_order_id,
         payinId: updatePayInRes?.id,
         amount: updatePayInRes?.amount,
+        utr_id: updatePayInRes?.utr || ""
       };
       //Notify the merchant
       try {
@@ -3278,6 +3279,7 @@ class PayInController {
         merchantOrderId: updatePayInRes?.merchant_order_id,
         payinId: updatePayInRes?.id,
         amount: updatePayInRes?.confirmed,
+        utr_id: updatePayInRes?.utr || ""
       };
       //Notify the merchant
       try {
@@ -3373,6 +3375,7 @@ class PayInController {
         merchantOrderId: updatePayInRes?.merchant_order_id,
         payinId: updatePayInRes?.id,
         amount: updatePayInRes?.confirmed,
+        utr_id: updatePayInRes?.utr || ""
       };
 
       try {
