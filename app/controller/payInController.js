@@ -1325,13 +1325,16 @@ class PayInController {
       }
 
       if(includeSubMerchant === 'false'){
-        const merchantData = await merchantRepo.getMerchantByCode(merchantCode[0]);
         let allNewMerchantCodes = [];
-        if (merchantData) {
-          allNewMerchantCodes = [
-            ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
-            merchantData.code,
-          ];
+        for (const code of merchantCode) {
+          const merchantData = await merchantRepo.getMerchantByCode(code);
+          if (merchantData) {
+            allNewMerchantCodes = [
+              ...allNewMerchantCodes,
+              ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+              merchantData.code,
+            ];
+          }
         }
 
         const payInDataRes = await payInServices.getAllPayInDataByMerchant(
@@ -1348,6 +1351,7 @@ class PayInController {
         );
 
       } else {
+        console.log('outside')
         const payInDataRes = await payInServices.getAllPayInDataByMerchant(
           merchantCode,
           startDate,
