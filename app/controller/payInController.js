@@ -1316,7 +1316,7 @@ class PayInController {
 
   async getAllPayInDataByMerchant(req, res, next) {
     try {
-      let { merchantCode, startDate, endDate, includeSubMerchants } = req.query;
+      let { merchantCode, startDate, endDate, includeSubMerchant } = req.query;
       
       if (merchantCode == null) {
         merchantCode = [];
@@ -1324,7 +1324,7 @@ class PayInController {
         merchantCode = [merchantCode];
       }
 
-      if(!includeSubMerchants && merchantCode.length === 1){
+      if(includeSubMerchant === 'false'){
         const merchantData = await merchantRepo.getMerchantByCode(merchantCode[0]);
         let allNewMerchantCodes = [];
         if (merchantData) {
@@ -1369,7 +1369,7 @@ class PayInController {
 
   async getMerchantsNetBalance(req, res, next) {
     try {
-      let { merchantCode } = req.query;
+      let { merchantCode, includeSubMerchant } = req.query;
 
       if (merchantCode == null) {
         merchantCode = [];
@@ -1377,7 +1377,7 @@ class PayInController {
         merchantCode = [merchantCode];
       }
 
-      if(merchantCode.length === 1){
+      if(includeSubMerchant === 'false'){
         const merchantData = await merchantRepo.getMerchantByCode(merchantCode[0]);
         let allNewMerchantCodes = [];
         if (merchantData) {
