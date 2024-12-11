@@ -1316,7 +1316,7 @@ class PayInController {
 
   async getAllPayInDataByMerchant(req, res, next) {
     try {
-      let { merchantCode, startDate, endDate } = req.query;
+      let { merchantCode, startDate, endDate, includeSubMerchants } = req.query;
       
       if (merchantCode == null) {
         merchantCode = [];
@@ -1324,7 +1324,7 @@ class PayInController {
         merchantCode = [merchantCode];
       }
 
-      if(merchantCode.length === 1){
+      if(!includeSubMerchants && merchantCode.length === 1){
         const merchantData = await merchantRepo.getMerchantByCode(merchantCode[0]);
         let allNewMerchantCodes = [];
         if (merchantData) {
