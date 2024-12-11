@@ -1351,7 +1351,6 @@ class PayInController {
         );
 
       } else {
-        console.log('outside')
         const payInDataRes = await payInServices.getAllPayInDataByMerchant(
           merchantCode,
           startDate,
