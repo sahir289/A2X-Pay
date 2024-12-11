@@ -2784,72 +2784,160 @@ class PayInController {
                       return
                     }
                   } else {
-
-                    const payinCommission = calculateCommission(
-                      getBankResponseByUtr?.amount,
-                      getPayInData.Merchant?.payin_commission
-                    );
-                    const durMs = new Date() - getPayInData.createdAt;
-                    const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
-                    const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
-                    const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
-                    const duration = `${durHours}:${durMinutes}:${durSeconds}`;
-
-                    updatePayInData = {
-                      confirmed: getBankResponseByUtr?.amount,
-                      status: "SUCCESS",
-                      is_notified: true,
-                      utr: getBankResponseByUtr.utr,
-                      approved_at: new Date(),
-                      is_url_expires: true,
-                      payin_commission: payinCommission,
-                      user_submitted_image: null,
-                      duration: duration
-                    };
-                    const updatePayInDataRes = await payInRepo.updatePayInData(
-                      getPayInData?.id,
-                      updatePayInData
-                    );
-
-                    await botResponseRepo.updateBotResponseByUtr(
-                      getBankResponseByUtr?.id,
-                      getBankResponseByUtr?.utr
-                    );
-
-                    const response = await sendSuccessMessageTelegram(
-                      message?.chat?.id,
-                      merchantOrderId,
-                      TELEGRAM_BOT_TOKEN,
-                      message?.message_id,
-                      fromUI
-                    );
-
-                    // ----> Notify url
-                    try {
-
-                      const notifyData = {
-                        status: "SUCCESS",
-                        merchantOrderId: updatePayInDataRes?.merchant_order_id,
-                        payinId: updatePayInDataRes?.id,
-                        amount: updatePayInDataRes?.confirmed,
-                        req_amount: updatePayInDataRes?.amount,
-                        utr_id: updatePayInDataRes?.utr
+                    if (getPayInData?.user_submitted_utr) {
+                      if (getPayInData?.user_submitted_utr === getBankResponseByUtr.utr) {
+                        const payinCommission = calculateCommission(
+                          getBankResponseByUtr?.amount,
+                          getPayInData.Merchant?.payin_commission
+                        );
+                        const durMs = new Date() - getPayInData.createdAt;
+                        const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                        const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                        const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                        const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+      
+                        updatePayInData = {
+                          confirmed: getBankResponseByUtr?.amount,
+                          status: "SUCCESS",
+                          is_notified: true,
+                          utr: getBankResponseByUtr.utr,
+                          approved_at: new Date(),
+                          is_url_expires: true,
+                          payin_commission: payinCommission,
+                          user_submitted_image: null,
+                          duration: duration
+                        };
+                        const updatePayInDataRes = await payInRepo.updatePayInData(
+                          getPayInData?.id,
+                          updatePayInData
+                        );
+      
+                        await botResponseRepo.updateBotResponseByUtr(
+                          getBankResponseByUtr?.id,
+                          getBankResponseByUtr?.utr
+                        );
+      
+                        const response = await sendSuccessMessageTelegram(
+                          message?.chat?.id,
+                          merchantOrderId,
+                          TELEGRAM_BOT_TOKEN,
+                          message?.message_id,
+                          fromUI
+                        );
+      
+                        // ----> Notify url
+                        try {
+      
+                          const notifyData = {
+                            status: "SUCCESS",
+                            merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                            payinId: updatePayInDataRes?.id,
+                            amount: updatePayInDataRes?.confirmed,
+                            req_amount: updatePayInDataRes?.amount,
+                            utr_id: updatePayInDataRes?.utr
+                          }
+                          //When we get the notify url we will add it.
+                          logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
+                          const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
+                          logger.info('Sending notification to merchant', {
+                            status: notifyMerchant.status,
+                            data: notifyMerchant.data,
+                          })
+                        } catch (error) {
+                          console.error("Error sending notification to merchant:", error);
+                        }
+                        if (fromUI) {
+                          return res.status(200).json({ message: response });
+                        }
+                        else {
+                          return;
+                        }
                       }
-                      //When we get the notify url we will add it.
-                      logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
-                      const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
-                      logger.info('Sending notification to merchant', {
-                        status: notifyMerchant.status,
-                        data: notifyMerchant.data,
-                      })
-                    } catch (error) {
-                      console.error("Error sending notification to merchant:", error);
-                    }
-                    if (fromUI) {
-                      return res.status(200).json({ message: response });
+                      else {
+                        const response = await sendErrorMessageUtrMismatchTelegramBot(
+                          message?.chat?.id,
+                          getPayInData?.user_submitted_utr,
+                          getBankResponseByUtr?.utr,
+                          TELEGRAM_BOT_TOKEN,
+                          message?.message_id,
+                          fromUI 
+                        );
+  
+                        if (fromUI) {
+                          return res.status(200).json({ message: response });
+                        }
+                        else {
+                          return;
+                        }
+                      }
                     }
                     else {
-                      return
+                      const payinCommission = calculateCommission(
+                        getBankResponseByUtr?.amount,
+                        getPayInData.Merchant?.payin_commission
+                      );
+                      const durMs = new Date() - getPayInData.createdAt;
+                      const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
+                      const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
+                      const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
+                      const duration = `${durHours}:${durMinutes}:${durSeconds}`;
+    
+                      updatePayInData = {
+                        confirmed: getBankResponseByUtr?.amount,
+                        status: "SUCCESS",
+                        is_notified: true,
+                        utr: getBankResponseByUtr.utr,
+                        approved_at: new Date(),
+                        is_url_expires: true,
+                        payin_commission: payinCommission,
+                        user_submitted_image: null,
+                        duration: duration
+                      };
+                      const updatePayInDataRes = await payInRepo.updatePayInData(
+                        getPayInData?.id,
+                        updatePayInData
+                      );
+    
+                      await botResponseRepo.updateBotResponseByUtr(
+                        getBankResponseByUtr?.id,
+                        getBankResponseByUtr?.utr
+                      );
+    
+                      const response = await sendSuccessMessageTelegram(
+                        message?.chat?.id,
+                        merchantOrderId,
+                        TELEGRAM_BOT_TOKEN,
+                        message?.message_id,
+                        fromUI
+                      );
+    
+                      // ----> Notify url
+                      try {
+    
+                        const notifyData = {
+                          status: "SUCCESS",
+                          merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                          payinId: updatePayInDataRes?.id,
+                          amount: updatePayInDataRes?.confirmed,
+                          req_amount: updatePayInDataRes?.amount,
+                          utr_id: updatePayInDataRes?.utr
+                        }
+                        //When we get the notify url we will add it.
+                        logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
+                        const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
+                        logger.info('Sending notification to merchant', {
+                          status: notifyMerchant.status,
+                          data: notifyMerchant.data,
+                        })
+                      } catch (error) {
+                        console.error("Error sending notification to merchant:", error);
+                      }
+                      if (fromUI) {
+                        return res.status(200).json({ message: response });
+                      }
+                      else {
+                        return;
+                      }
                     }
                   }
                 }
