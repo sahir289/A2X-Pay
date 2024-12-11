@@ -137,118 +137,110 @@ class BankAccountRepo {
   }
 
   async getAllBankAccounts(query) {
-    const ac_no = query.ac_no;
-    const ac_name = query.ac_name;
-    const upi_id = query.upi_id;
-    const bank_used_for = query.bank_used_for;
-    const page = parseInt(query.page) || 1;
-    const pageSize = parseInt(query.pageSize) || 10;
-    const code = query?.code
-    const role = query?.role
+    const {
+      ac_no,
+      ac_name,
+      upi_id,
+      bank_used_for,
+      code,
+      role,
+      vendor_code,
+      startDate,
+      endDate,
+    } = query;
+  
+    const page = parseInt(query.page) || 1; // Ensure `page` is an integer
+    const pageSize = parseInt(query.pageSize) || 10; // Ensure `pageSize` is an integer
     const skip = (page - 1) * pageSize;
     const take = pageSize;
-    const vendor_code= query?.vendor_code
+  
+    // Date Filter Setup
     const dateFilter = {};
-    const startDate = query?.startDate;
-    const endDate = query?.endDate;
     if (startDate) {
-      dateFilter.gte = new Date(startDate); // Greater than or equal to startDate
+      dateFilter.gte = new Date(startDate);
     }
     if (endDate) {
-      let end = new Date(endDate);
-      
-      // end.setDate(end.getDate() + 1);
-      
-      dateFilter.lte = end; // Less than or equal to endDate
+      dateFilter.lte = new Date(endDate);
     }
+  
+    // Dynamic Filters
     const filter = {
-      ...(ac_no !== "" && { ac_no: { contains: ac_no, mode: "insensitive" } }),
-      ...(ac_name !== "" && {
-        ac_name: { contains: ac_name, mode: "insensitive" },
-      }),
-      ...(upi_id !== "" && {
-        upi_id: { contains: upi_id, mode: "insensitive" },
-      }),
-      ...(bank_used_for !== "" && {bank_used_for: bank_used_for }),
-      ...(role !== "ADMIN" && code && { code }) ,
-      ...(role !== "ADMIN" && vendor_code && { vendor_code: vendor_code }),
-      ...(vendor_code && vendor_code && { vendor_code: vendor_code }) // For enabling vendor code filter only for ADMINS
-
+      ...(ac_no && { ac_no: { contains: ac_no, mode: "insensitive" } }),
+      ...(ac_name && { ac_name: { contains: ac_name, mode: "insensitive" } }),
+      ...(upi_id && { upi_id: { contains: upi_id, mode: "insensitive" } }),
+      ...(bank_used_for && { bank_used_for }),
+      ...(role !== "ADMIN" && code && { code }),
+      ...(vendor_code && { vendor_code }),
     };
-
-    const bankAccRes = await prisma.bankAccount.findMany({
-      where: filter,
-      skip,
-      take,
-      orderBy: [
-        { is_enabled: 'desc' },  
-        { updatedAt: 'desc' }   
-      ],
-      include: {
-        Merchant_Bank: {
-          include: {
-            merchant: true,
-          },
-        },
-      },
-    });
-    const transformedBankAccRes = bankAccRes.map((bank) => {
-      bank.merchants = bank.Merchant_Bank.map(
-        (merchantBank) => merchantBank.merchant
-      );
-      delete bank.Merchant_Bank;
-      return bank;
-    });
-
-    // const today = new Date();
-    // const startOfToday = new Date(today.setHours(0, 0, 0, 0)); // start of the day (midnight)
-    // const endOfToday = new Date(today.setHours(23, 59, 59, 999)); // end of the day
-    let bankAccResponse = [];
-
+  
     try {
-      for (let bank of transformedBankAccRes) {
-        if (bank.bank_used_for === "payIn") {
-          bank.payInData = await prisma.payin.findMany({
-            where: {
-              status: "SUCCESS",
-              bank_acc_id: bank?.id,
-              approved_at: dateFilter, // Ensure dateFilter is valid
+      const [bankAccRes, totalRecords] = await Promise.all([
+        prisma.bankAccount.findMany({
+          where: filter,
+          skip,
+          take,
+          orderBy: [
+            { is_enabled: "desc" },
+            { updatedAt: "desc" },
+          ],
+          include: {
+            Merchant_Bank: {
+              include: {
+                merchant: true,
+              },
             },
-            orderBy: {
-              approved_at: 'desc',
-            },
-          });
-        } else {
-          bank.payOutData = await prisma.payout.findMany({
-            where: {
-              status: "SUCCESS",
-              from_bank: bank?.ac_name,
-              approved_at: dateFilter,
-            },
-            orderBy: {
-              approved_at: 'desc',
-            },
-          });
-        }
-        bankAccResponse.push(bank);
-      }
+          },
+        }),
+        prisma.bankAccount.count({ where: filter }),
+      ]);
+  
+      // Parallel PayIn and PayOut Data Fetch
+      const bankAccResponse = await Promise.all(
+        bankAccRes.map(async (bank) => {
+          const transformedBank = {
+            ...bank,
+            merchants: bank.Merchant_Bank.map(
+              (merchantBank) => merchantBank.merchant
+            ),
+          };
+          delete transformedBank.Merchant_Bank;
+  
+          if (bank.bank_used_for === "payIn") {
+            transformedBank.payInData = await prisma.payin.findMany({
+              where: {
+                status: "SUCCESS",
+                bank_acc_id: bank.id,
+                approved_at: dateFilter,
+              },
+              orderBy: { approved_at: "desc" },
+            });
+          } else {
+            transformedBank.payOutData = await prisma.payout.findMany({
+              where: {
+                status: "SUCCESS",
+                from_bank: bank.ac_name,
+                approved_at: dateFilter,
+              },
+              orderBy: { approved_at: "desc" },
+            });
+          }
+          return transformedBank;
+        })
+      );
+  
+      return {
+        bankAccRes: bankAccResponse,
+        pagination: {
+          page: parseInt(page),
+          pageSize: take,
+          total: totalRecords,
+        },
+      };
     } catch (error) {
       console.error("Error processing bank accounts:", error);
+      throw error; // Ensure errors propagate for visibility in calling functions
     }
-
-    const totalRecords = await prisma.bankAccount.count({
-      where: filter,
-    });
-
-    return {
-      bankAccRes: bankAccResponse,
-      pagination: {
-        page: parseInt(page),
-        pageSize: take,
-        total: totalRecords,
-      },
-    };
-  }
+  }  
 
   async deleteBankFromMerchant(body) {
     const { merchantId, bankAccountId } = body;

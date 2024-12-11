@@ -481,15 +481,22 @@ class PayInService {
   }
 
   async checkPayinStatus(payinId, merchantCode, merchantOrderId) {
-    const data = await prisma.payin.findFirst({
-      where: {
-        id: payinId,
-        // merchant_id: merchantCode,
-        Merchant: {
-          code: merchantCode,
-        },
-        merchant_order_id: merchantOrderId,
+    const conditions = {
+      Merchant: {
+        code: merchantCode,
       },
+      merchant_order_id: merchantOrderId,
+      approved_at: {
+        not: null,
+      },
+    };
+
+    if (payinId !== null) {
+      conditions.id = payinId;
+    }
+    
+    const data = await prisma.payin.findFirst({
+      where: conditions,
       include: {
         Merchant: true,
       },
@@ -615,10 +622,10 @@ class PayInService {
     try {
       const condition = {
         Merchant: {
-          code: {
-            in: merchantCodes,
-          },
-        }
+          code: Array.isArray(merchantCodes)
+            ? { in: merchantCodes }
+            : merchantCodes,
+        },
       };
   
       if (status != "All") {

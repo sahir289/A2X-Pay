@@ -12,6 +12,17 @@ class Withdraw {
   }
 
   async checkPayoutStatus(payoutId, merchantCode, merchantOrderId) {
+    const conditions = {
+      Merchant: {
+        code: merchantCode,
+      },
+      merchant_order_id: merchantOrderId,
+    };
+
+    if (payoutId !== null) {
+      conditions.id = payoutId;
+    }
+
     const data = await prisma.payout.findFirst({
       where: {
         id: payoutId,
@@ -38,6 +49,7 @@ class Withdraw {
     acc_no,
     merchant_order_id,
     user_id,
+    method,
     sno,
     from_bank,
     commission,
@@ -56,6 +68,7 @@ class Withdraw {
       { col: "from_bank", value: from_bank },
       { col: "payout_commision", value: commission },
       { col: "utr_id", value: utr_id },
+      { col: "method", value: method },
       { col: "acc_holder_name", value: acc_holder_name },
       { col: "vendor_code", value: vendorCode },
     ].forEach((el) => {
@@ -128,9 +141,9 @@ class Withdraw {
     
     const condition = {
       Merchant: {
-        code: {
-          in: merchantCodes,
-        },
+        code: Array.isArray(merchantCodes)
+          ? { in: merchantCodes }
+          : merchantCodes,
       },
       status: status,
     };

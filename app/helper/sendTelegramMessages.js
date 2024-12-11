@@ -540,3 +540,31 @@ export async function sendCheckUTRHistoryTelegramMessage(
     console.error("Error sending message to Telegram:", error);
   }
 }
+
+export async function sendErrorMessageUtrMismatchTelegramBot(
+  chatId,
+  user_submitted_utr,
+  utr,
+  TELEGRAM_BOT_TOKEN,
+  replyToMessageId,
+  fromUI
+) {
+  // Construct the error message
+  const message = `⛔ UTR: ${utr} does not match with User Submitted UTR: ${user_submitted_utr}`;
+
+  if (!fromUI) {
+    const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    try {
+      await axios.post(sendMessageUrl, {
+        chat_id: chatId,
+        text: message,
+        parse_mode: "HTML",
+        reply_to_message_id: replyToMessageId, // Add this line to reply to a specific message
+      });
+    } catch (error) {
+      console.error("Error sending message to Telegram:", error);
+    }
+  } else {
+    return message;
+  }
+}

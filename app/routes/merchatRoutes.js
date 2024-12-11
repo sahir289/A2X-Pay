@@ -35,6 +35,12 @@ merchantRouter.get(
 );
 
 merchantRouter.get(
+  "/getall-merchant-grouping",
+  isAuthenticated,
+  merchantController.getAllMerchantsGrouping
+);
+
+merchantRouter.get(
   "/getall-merchant-data",
   isAuthenticated,
   merchantController.getAllMerchantsData
@@ -53,12 +59,10 @@ merchantRouter.post('/populate-api-keys', async (req, res) => {
     });
 
     for (const merchant of merchants) {
-      console.log('first')
       const upd = await prisma.merchant.update({
         where: { id: merchant.id },
         data: { public_api_key: uuidv4() }, 
       });
-      console.log(upd, "upd")
     }
 
     res.status(200).send('Successfully updated');

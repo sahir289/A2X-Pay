@@ -384,11 +384,11 @@ export const settlementCreateValidator = [
 ];
 
 export const validatePayOutId = [
-  body("payoutId")
-    .notEmpty()
-    .withMessage("payOutId must not be empty")
-    .isString()
-    .withMessage("payOutId must be a string"),
+  // body("payoutId")
+  //   .notEmpty()
+  //   .withMessage("payOutId must not be empty")
+  //   .isString()
+  //   .withMessage("payOutId must be a string"),
   body("merchantCode")
     .notEmpty()
     .withMessage("merchantCode must not be empty")
@@ -402,11 +402,11 @@ export const validatePayOutId = [
 ];
 
 export const validatePayInId = [
-  body("payinId")
-    .notEmpty()
-    .withMessage("payinId must not be empty")
-    .isString()
-    .withMessage("payinId must be a string"),
+  // body("payinId")
+  //   .notEmpty()
+  //   .withMessage("payinId must not be empty")
+  //   .isString()
+  //   .withMessage("payinId must be a string"),
   body("merchantCode")
     .notEmpty()
     .withMessage("merchantCode must not be empty")
@@ -534,6 +534,11 @@ export const payoutGetValidator = [
     .withMessage("amount is required!")
     .isNumeric()
     .withMessage("amount is invalid!"),
+  query("method")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("method is required!"),
   query("code").optional().trim().notEmpty().withMessage("code is required!"),
   query("page")
     .optional()

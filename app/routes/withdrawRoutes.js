@@ -2,10 +2,10 @@ import express from "express";
 import withdrawController from "../controller/withdrawController.js";
 import {
   payoutCreateValidator,
-  settlementsGetValidator,
   payOutInAllDataValidator,
   updateVendorCodeValidator,
   validatePayOutId,
+  payoutGetValidator,
 } from "../helper/validators.js";
 
 import isAuthenticated from "../middlewares/authMiddleware.js";
@@ -44,6 +44,7 @@ withdrawRouter.get(
   withdrawController.ekoWalletBalanceEnquiry
 );
 
+// this is the callback-api for eko, they will use this to update the transaction status
 withdrawRouter.post(
   "/transaction-status-callback-eko",
   withdrawController.ekoTransactionStatusCallback
@@ -62,7 +63,7 @@ withdrawRouter.post(
 
 withdrawRouter.get(
   "/getall-payout",
-  settlementsGetValidator,
+  payoutGetValidator,
   isAuthenticated,
   withdrawController.getWithdraw
 );
