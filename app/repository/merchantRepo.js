@@ -189,6 +189,7 @@ class MerchantRepo {
         }),
         prisma.payout.findMany({
           where: {
+            status: { in: ["SUCCESS", "REJECTED"] },
             Merchant: { code: { in: merchantCodes } },
             approved_at: { not: null },
           },

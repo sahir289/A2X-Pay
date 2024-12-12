@@ -16,6 +16,7 @@ class ReportRepo {
                   
                         SELECT po."approved_at", po."merchant_id", po."amount" AS "amount", po."payout_commision" AS "commission", 'Payout' AS "type"
                         FROM public."Payout" po
+                        WHERE po.status = 'SUCCESS' OR po.status = 'REJECTED'
                   
                         UNION ALL
                   
@@ -143,6 +144,7 @@ class ReportRepo {
 
                         SELECT po."approved_at", po."merchant_id", po."amount" AS "amount", po."payout_commision" AS "commission", 'Payout' AS "type"
                         FROM public."Payout" po
+                        WHERE po.status = 'SUCCESS' OR po.status = 'REJECTED'
 
                         UNION ALL
 
