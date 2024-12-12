@@ -25,19 +25,20 @@ const locationRestrictMiddleware = async (req, res, next) => {
         return res.status(500).send('No location data available.');
       }
       const { latitude, longitude, vpn, region } = userData;
+      logger.info('user data here', userData);
       if (vpn === 'yes') {
-        logger.warn("VPN detected. Access denied.");
-        return res.status(403).send('Access denied due to VPN usage.');
+        logger.warn("VPN detected. Access denied.", userData);
+        return res.status(403).send('Access denied');
       }
 
       if (restrictedStates.includes(region)) {
-        logger.error(`Access restricted for users in ${region}.`);
+        logger.error(`Access restricted for users in ${region}.`, userData);
         return res.status(403).send('Access restricted in your region.');
       }
       if (!isNaN(latitude) && !isNaN(longitude)) {
       // Check if the user is in the restricted region
       if (isLocationBlocked(latitude, longitude, restrictedLocation.latitude, restrictedLocation.longitude, radiusKm)) {
-        logger.error("Access restricted in your region.");
+        logger.error("Access restricted in your region.", userData);
         return res.status(403).send('Access restricted in your region.');
       }
       } else {

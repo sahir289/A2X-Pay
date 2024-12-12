@@ -135,6 +135,7 @@ model Payin {
   confirmed            Decimal?
   sno                  Int       @default(autoincrement())
   bank_name            String?
+  user_ip              Decimal?
   one_time_used        Boolean   @default(false)
   to_bank              String?   @default("")
   Merchant             Merchant  @relation(fields: [merchant_id], references: [id])
