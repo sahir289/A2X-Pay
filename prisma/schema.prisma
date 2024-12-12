@@ -23,7 +23,7 @@ model User {
   createdBy         String?
   vendor_code       String?
   code              String[]
-  merchantAdminCode String? // when the merchant admin is created we are going to add the merchant Code here to find the parent for another merchant.
+  merchantAdminCode String?
   accessTokens      AccessToken[]
 }
 
@@ -45,7 +45,6 @@ model Merchant {
   site_url          String
   api_key           String          @unique
   secret_key        String          @unique
-  public_api_key    String          @unique
   notify_url        String?
   return_url        String
   min_payin         String
@@ -57,20 +56,21 @@ model Merchant {
   payout_notify_url String?
   is_test_mode      Boolean         @default(false)
   is_enabled        Boolean         @default(true)
-  dispute_enabled   Boolean         @default(true)
   is_demo           Boolean         @default(false)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   balance           Decimal?
   createdBy         String?
   is_deleted        Boolean         @default(false)
+  child_code        String[]
   is_merchant_Admin Boolean         @default(false)
-  child_code        String[] // we are adding the code of the merchant added by the merchant admin
+  public_api_key    String          @unique
+  dispute_enabled   Boolean         @default(true)
+  Lien              Lien[]
   Merchant_Bank     Merchant_Bank[]
   Payin             Payin[]
   Payout            Payout[]
   Settlement        Settlement[]
-  Lien              Lien[]
 }
 
 model BankAccount {
@@ -135,9 +135,9 @@ model Payin {
   confirmed            Decimal?
   sno                  Int       @default(autoincrement())
   bank_name            String?
-  user_ip              String?
   one_time_used        Boolean   @default(false)
   to_bank              String?   @default("")
+  user_ip              String?
   Merchant             Merchant  @relation(fields: [merchant_id], references: [id])
 }
 
@@ -159,15 +159,15 @@ model Payout {
   utr_id            String?
   notify_url        String?
   rejected_reason   String?
-  method            String?
-  approved_at       DateTime?
-  rejected_at       DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   sno               Int       @default(autoincrement())
   payout_commision  Decimal
   vendor_code       String?
   from_bank         String?   @default("")
+  approved_at       DateTime?
+  rejected_at       DateTime?
+  method            String?
   Merchant          Merchant  @relation(fields: [merchant_id], references: [id])
 }
 
@@ -241,10 +241,10 @@ model Lien {
   merchant_order_id String
   user_id           String
   amount            Decimal
-  when              DateTime
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   sno               Int      @default(autoincrement())
+  when              DateTime
   Merchant          Merchant @relation(fields: [merchant_id], references: [id])
 }
 
