@@ -70,7 +70,7 @@ withdrawRouter.get(
 
 withdrawRouter.put(
   "/update-payout/:id",
-  // isAuthenticated,
+  isAuthenticated,
   withdrawController.updateWithdraw
 );
 

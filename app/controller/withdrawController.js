@@ -593,23 +593,19 @@ class WithdrawController {
         //     payload.status = "REVERSED";
         // })
       }
-      // Created payout callback feature
+
       const singleWithdrawData = await withdrawService.getWithdrawById(req.params.id);
 
       if (req?.body?.method === 'eko') {
         try {
             const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, res);
-            console.log(ekoResponse, "ekoResponseekoResponse");
     
             if (ekoResponse?.status === 0) {
                 payload.status = 'SUCCESS';
                 payload.approved_at = new Date();
                 payload.utr_id = ekoResponse?.data?.tid;
             } else {
-                const getStatus = await this.ekoPayoutStatus(ekoResponse?.data?.tid);
-                console.log(getStatus, "getStatus");
-    
-                payload.method = 'eko';
+                const getStatus = await this.ekoPayoutStatus(ekoResponse?.data?.tid);    
     
                 if (getStatus?.status === 0) {
                     payload.status = getStatus?.data?.txstatus_desc?.toUpperCase();
@@ -626,9 +622,6 @@ class WithdrawController {
             }
         }
     
-    
-      console.log(req.body, "req.boddyyy")
-
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
       const data = await withdrawService.updateWithdraw(req.params.id, payload);
       logger.info('Payout Updated', {
