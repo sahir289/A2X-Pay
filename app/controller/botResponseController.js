@@ -68,98 +68,115 @@ class BotResponseController {
             }
             else {
               if (!botUtrIsUsed) {
+                
                 // We check bank exist here as we have to add the data to the res no matter what comes.
                 const isBankExist = await botResponseRepo?.getBankDataByBankName(bankName)
                 if (!isBankExist) {
-                  const payInData = {
-                    confirmed: botRes?.amount,
-                    status: "BANK_MISMATCH",
-                    is_notified: true,
-                    utr: botRes?.utr,
-                    approved_at: new Date(),
-                  };
-
-                  const updatePayInDataRes = await payInRepo.updatePayInData(
-                    checkPayInUtr[0]?.id,
-                    payInData
-                  );
-
-                  const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
-
-                  // We are adding the amount to the bank as we want to update the balance of the bank
-                  // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-                  //   isBankExist?.id,
-                  //   parseFloat(amount)
-                  // );
-
-                  const notifyData = {
-                    status: "BANK_MISMATCH",
-                    merchantOrderId: updatePayInDataRes?.merchant_order_id,
-                    payinId: updatePayInDataRes?.id,
-                    amount: updatePayInDataRes?.confirmed,
-                    req_amount: updatePayInDataRes?.amount,
-                    utr_id: updatePayInDataRes?.utr
-                  };
-
-                  try {
-                    //when we get the correct notify url;
-                    const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-                  } catch (error) {
+                  if (checkPayInUtr.at(0)?.user_submitted_utr == utr) {
+                    const payInData = {
+                      confirmed: botRes?.amount,
+                      status: "BANK_MISMATCH",
+                      is_notified: true,
+                      utr: botRes?.utr,
+                      approved_at: new Date(),
+                    };
+  
+                    const updatePayInDataRes = await payInRepo.updatePayInData(
+                      checkPayInUtr[0]?.id,
+                      payInData
+                    );
+  
+                    const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
+  
+                    // We are adding the amount to the bank as we want to update the balance of the bank
+                    // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                    //   isBankExist?.id,
+                    //   parseFloat(amount)
+                    // );
+  
+                    const notifyData = {
+                      status: "BANK_MISMATCH",
+                      merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                      payinId: updatePayInDataRes?.id,
+                      amount: updatePayInDataRes?.confirmed,
+                      req_amount: updatePayInDataRes?.amount,
+                      utr_id: updatePayInDataRes?.utr
+                    };
+  
+                    try {
+                      //when we get the correct notify url;
+                      const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                    } catch (error) {
+                    }
+  
+                    return DefaultResponse(
+                      res,
+                      200,
+                      "Bank mismatch",
+                      updatePayInDataRes
+                    );
+                  } else {
+                    return DefaultResponse(
+                      res,
+                      200,
+                      `⛔ UTR: ${utr} does not match with User Submitted UTR: ${checkPayInUtr.at(0)?.user_submitted_utr}`
+                    );
                   }
-
-                  return DefaultResponse(
-                    res,
-                    200,
-                    "Bank mismatch",
-                    updatePayInDataRes
-                  );
                 }
 
                 // if (isBankExist?.Merchant_Bank.length === 1) {
 
                 if (checkPayInUtr[0].bank_acc_id !== isBankExist?.id) {
-                  const payInData = {
-                    confirmed: botRes?.amount,
-                    status: "BANK_MISMATCH",
-                    is_notified: true,
-                    utr: botRes?.utr,
-                    approved_at: new Date(),
-                  };
-
-                  const updatePayInDataRes = await payInRepo.updatePayInData(
-                    checkPayInUtr[0]?.id,
-                    payInData
-                  );
-
-                  const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
-
-                  // We are adding the amount to the bank as we want to update the balance of the bank
-                  // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-                  //   isBankExist?.id,
-                  //   parseFloat(amount)
-                  // );
-
-                  const notifyData = {
-                    status: "BANK_MISMATCH",
-                    merchantOrderId: updatePayInDataRes?.merchant_order_id,
-                    payinId: updatePayInDataRes?.id,
-                    amount: updatePayInDataRes?.confirmed,
-                    req_amount: updatePayInDataRes?.amount,
-                    utr_id: updatePayInDataRes?.utr
-                  };
-
-                  try {
-                    //when we get the correct notify url;
-                    const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-                  } catch (error) {
+                  if (checkPayInUtr.at(0)?.user_submitted_utr == utr) {
+                    const payInData = {
+                      confirmed: botRes?.amount,
+                      status: "BANK_MISMATCH",
+                      is_notified: true,
+                      utr: botRes?.utr,
+                      approved_at: new Date(),
+                    };
+  
+                    const updatePayInDataRes = await payInRepo.updatePayInData(
+                      checkPayInUtr[0]?.id,
+                      payInData
+                    );
+  
+                    const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
+  
+                    // We are adding the amount to the bank as we want to update the balance of the bank
+                    // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                    //   isBankExist?.id,
+                    //   parseFloat(amount)
+                    // );
+  
+                    const notifyData = {
+                      status: "BANK_MISMATCH",
+                      merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                      payinId: updatePayInDataRes?.id,
+                      amount: updatePayInDataRes?.confirmed,
+                      req_amount: updatePayInDataRes?.amount,
+                      utr_id: updatePayInDataRes?.utr
+                    };
+  
+                    try {
+                      //when we get the correct notify url;
+                      const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                    } catch (error) {
+                    }
+  
+                    return DefaultResponse(
+                      res,
+                      200,
+                      "Bank mismatch",
+                      updatePayInDataRes
+                    );
+                  } else {
+                    return DefaultResponse(
+                      res,
+                      200,
+                      `⛔ UTR: ${utr} does not match with User Submitted UTR: ${checkPayInUtr.at(0)?.user_submitted_utr}`
+                    );
                   }
-
-                  return DefaultResponse(
-                    res,
-                    200,
-                    "Bank mismatch",
-                    updatePayInDataRes
-                  );
                 }
 
                 // }
@@ -233,29 +250,82 @@ class BotResponseController {
                   }
                 }
                 else {
+                  if (checkPayInUtr.at(0)?.user_submitted_utr == utr) {
+                    const payInData = {
+                      confirmed: botRes?.amount,
+                      status: "DISPUTE",
+                      is_notified: true,
+                      utr: botRes?.utr,
+                      approved_at: new Date(),
+                      duration: duration,
+                      payin_commission: payinCommission
+                    };
+                    const updatePayInDataRes = await payInRepo.updatePayInData(
+                      checkPayInUtr[0]?.id,
+                      payInData
+                    );
+  
+                    // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                    //   checkPayInUtr[0]?.bank_acc_id,
+                    //   parseFloat(amount)
+                    // );
+  
+  
+                    const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id);
+                    const notifyData = {
+                      status: "DISPUTE",
+                      merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                      payinId: updatePayInDataRes?.id,
+                      amount: updatePayInDataRes?.confirmed,
+                      req_amount: updatePayInDataRes?.amount,
+                      utr_id: updatePayInDataRes?.utr
+                    };
+  
+                    try {
+                      //when we get the correct notify url;
+                      const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                    } catch (error) {
+                    }
+                  } else {
+                    return DefaultResponse(
+                      res,
+                      200,
+                      `⛔ UTR: ${utr} does not match with User Submitted UTR: ${checkPayInUtr.at(0)?.user_submitted_utr}`
+                    );
+                  }
+                }
+              }
+            }
+          }
+          else {
+            if (!acceptedStatus.includes(checkPayInUtr[0]?.status)){
+              // We check bank exist here as we have to add the data to the res no matter what comes.
+              const isBankExist = await botResponseRepo?.getBankDataByBankName(bankName)
+              if (!isBankExist) {
+                if (checkPayInUtr.at(0)?.user_submitted_utr == utr) {
                   const payInData = {
                     confirmed: botRes?.amount,
-                    status: "DISPUTE",
+                    status: "BANK_MISMATCH",
                     is_notified: true,
                     utr: botRes?.utr,
                     approved_at: new Date(),
-                    duration: duration,
-                    payin_commission: payinCommission
                   };
+
                   const updatePayInDataRes = await payInRepo.updatePayInData(
                     checkPayInUtr[0]?.id,
                     payInData
                   );
 
+                  const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
+
+                  // We are adding the amount to the bank as we want to update the balance of the bank
                   // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-                  //   checkPayInUtr[0]?.bank_acc_id,
+                  //   isBankExist?.id,
                   //   parseFloat(amount)
                   // );
 
-
-                  const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id);
                   const notifyData = {
-                    status: "DISPUTE",
+                    status: "BANK_MISMATCH",
                     merchantOrderId: updatePayInDataRes?.merchant_order_id,
                     payinId: updatePayInDataRes?.id,
                     amount: updatePayInDataRes?.confirmed,
@@ -268,104 +338,75 @@ class BotResponseController {
                     const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
                   } catch (error) {
                   }
+
+                  return DefaultResponse(
+                    res,
+                    200,
+                    "Bank mismatch",
+                    updatePayInDataRes
+                  );
+                } else {
+                  return DefaultResponse(
+                    res,
+                    200,
+                    `⛔ UTR: ${utr} does not match with User Submitted UTR: ${checkPayInUtr.at(0)?.user_submitted_utr}`
+                  );
                 }
-              }
-            }
-          }
-          else {
-            if (!acceptedStatus.includes(checkPayInUtr[0]?.status)){
-              // We check bank exist here as we have to add the data to the res no matter what comes.
-              const isBankExist = await botResponseRepo?.getBankDataByBankName(bankName)
-              if (!isBankExist) {
-                const payInData = {
-                  confirmed: botRes?.amount,
-                  status: "BANK_MISMATCH",
-                  is_notified: true,
-                  utr: botRes?.utr,
-                  approved_at: new Date(),
-                };
-  
-                const updatePayInDataRes = await payInRepo.updatePayInData(
-                  checkPayInUtr[0]?.id,
-                  payInData
-                );
-  
-                const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
-  
-                // We are adding the amount to the bank as we want to update the balance of the bank
-                // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-                //   isBankExist?.id,
-                //   parseFloat(amount)
-                // );
-  
-                const notifyData = {
-                  status: "BANK_MISMATCH",
-                  merchantOrderId: updatePayInDataRes?.merchant_order_id,
-                  payinId: updatePayInDataRes?.id,
-                  amount: updatePayInDataRes?.confirmed,
-                  req_amount: updatePayInDataRes?.amount,
-                  utr_id: updatePayInDataRes?.utr
-                };
-  
-                try {
-                  //when we get the correct notify url;
-                  const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-                } catch (error) {
-                }
-  
-                return DefaultResponse(
-                  res,
-                  200,
-                  "Bank mismatch",
-                  updatePayInDataRes
-                );
               }
   
               // if (isBankExist?.Merchant_Bank.length === 1) {
   
               if (checkPayInUtr[0].bank_acc_id !== isBankExist?.id) {
-                const payInData = {
-                  confirmed: botRes?.amount,
-                  status: "BANK_MISMATCH",
-                  is_notified: true,
-                  utr: botRes?.utr,
-                  approved_at: new Date(),
-                };
-  
-                const updatePayInDataRes = await payInRepo.updatePayInData(
-                  checkPayInUtr[0]?.id,
-                  payInData
-                );
-  
-                const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
-  
-                // We are adding the amount to the bank as we want to update the balance of the bank
-                // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-                //   isBankExist?.id,
-                //   parseFloat(amount)
-                // );
-  
-                const notifyData = {
-                  status: "BANK_MISMATCH",
-                  merchantOrderId: updatePayInDataRes?.merchant_order_id,
-                  payinId: updatePayInDataRes?.id,
-                  amount: updatePayInDataRes?.confirmed,
-                  req_amount: updatePayInDataRes?.amount,
-                  utr_id: updatePayInDataRes?.utr
-                };
-  
-                try {
-                  //when we get the correct notify url;
-                  const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-                } catch (error) {
+                if (checkPayInUtr.at(0)?.user_submitted_utr == utr) {
+                  const payInData = {
+                    confirmed: botRes?.amount,
+                    status: "BANK_MISMATCH",
+                    is_notified: true,
+                    utr: botRes?.utr,
+                    approved_at: new Date(),
+                  };
+
+                  const updatePayInDataRes = await payInRepo.updatePayInData(
+                    checkPayInUtr[0]?.id,
+                    payInData
+                  );
+
+                  const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
+
+                  // We are adding the amount to the bank as we want to update the balance of the bank
+                  // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                  //   isBankExist?.id,
+                  //   parseFloat(amount)
+                  // );
+
+                  const notifyData = {
+                    status: "BANK_MISMATCH",
+                    merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                    payinId: updatePayInDataRes?.id,
+                    amount: updatePayInDataRes?.confirmed,
+                    req_amount: updatePayInDataRes?.amount,
+                    utr_id: updatePayInDataRes?.utr
+                  };
+
+                  try {
+                    //when we get the correct notify url;
+                    const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                  } catch (error) {
+                  }
+
+                  return DefaultResponse(
+                    res,
+                    200,
+                    "Bank mismatch",
+                    updatePayInDataRes
+                  );
+                } else {
+                  return DefaultResponse(
+                    res,
+                    200,
+                    `⛔ UTR: ${utr} does not match with User Submitted UTR: ${checkPayInUtr.at(0)?.user_submitted_utr}`
+                  );
                 }
-  
-                return DefaultResponse(
-                  res,
-                  200,
-                  "Bank mismatch",
-                  updatePayInDataRes
-                );
               }
   
               // }
@@ -439,40 +480,48 @@ class BotResponseController {
                 }
               }
               else {
-                const payInData = {
-                  confirmed: botRes?.amount,
-                  status: "DISPUTE",
-                  is_notified: true,
-                  utr: botRes?.utr,
-                  approved_at: new Date(),
-                  duration: duration,
-                  payin_commission: payinCommission
-                };
-                const updatePayInDataRes = await payInRepo.updatePayInData(
-                  checkPayInUtr[0]?.id,
-                  payInData
-                );
-  
-                // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-                //   checkPayInUtr[0]?.bank_acc_id,
-                //   parseFloat(amount)
-                // );
-  
-  
-                const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id);
-                const notifyData = {
-                  status: "DISPUTE",
-                  merchantOrderId: updatePayInDataRes?.merchant_order_id,
-                  payinId: updatePayInDataRes?.id,
-                  amount: updatePayInDataRes?.confirmed,
-                  req_amount: updatePayInDataRes?.amount,
-                  utr_id: updatePayInDataRes?.utr
-                };
-  
-                try {
-                  //when we get the correct notify url;
-                  const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-                } catch (error) {
+                if (checkPayInUtr.at(0)?.user_submitted_utr == utr) {
+                  const payInData = {
+                    confirmed: botRes?.amount,
+                    status: "DISPUTE",
+                    is_notified: true,
+                    utr: botRes?.utr,
+                    approved_at: new Date(),
+                    duration: duration,
+                    payin_commission: payinCommission
+                  };
+                  const updatePayInDataRes = await payInRepo.updatePayInData(
+                    checkPayInUtr[0]?.id,
+                    payInData
+                  );
+
+                  // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                  //   checkPayInUtr[0]?.bank_acc_id,
+                  //   parseFloat(amount)
+                  // );
+
+
+                  const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id);
+                  const notifyData = {
+                    status: "DISPUTE",
+                    merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                    payinId: updatePayInDataRes?.id,
+                    amount: updatePayInDataRes?.confirmed,
+                    req_amount: updatePayInDataRes?.amount,
+                    utr_id: updatePayInDataRes?.utr
+                  };
+
+                  try {
+                    //when we get the correct notify url;
+                    const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                  } catch (error) {
+                  }
+                } else {
+                  return DefaultResponse(
+                    res,
+                    200,
+                    `⛔ UTR: ${utr} does not match with User Submitted UTR: ${checkPayInUtr.at(0)?.user_submitted_utr}`
+                  );
                 }
               }
             }
