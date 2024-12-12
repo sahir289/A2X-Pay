@@ -215,6 +215,7 @@ class PayInService {
 
     const payOutData = await prisma.payout.findMany({
       where: {
+        status: { in: ["SUCCESS", "REJECTED"] },
         Merchant: {
           code: Array.isArray(merchantCode)
             ? { in: merchantCode }
@@ -291,6 +292,7 @@ class PayInService {
 
     const payOutData = await prisma.payout.aggregate({
       where: {
+        status: { in: ["SUCCESS", "REJECTED"] },
         Merchant: {
           code: { in: codesArray },
         },
@@ -409,6 +411,7 @@ class PayInService {
     
     const payOutData = await prisma.payout.findMany({
       where: {
+        status: { in: ["SUCCESS", "REJECTED"] },
         vendor_code: Array.isArray(vendorCode)
           ? { in: vendorCode }
           : vendorCode,
@@ -563,6 +566,7 @@ class PayInService {
     
     const payOutData = await prisma.payout.findMany({
       where: {
+        status: { in: ["SUCCESS", "REJECTED"] },
         vendor_code: Array.isArray(vendorCode)
           ? { in: vendorCode }
           : vendorCode,

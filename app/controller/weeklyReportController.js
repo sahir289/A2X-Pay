@@ -1,6 +1,5 @@
 import { DefaultResponse } from "../helper/customResponse.js";
 import reportRepo from "../repository/reportRepo.js";
-import merchantRepo from "../repository/merchantRepo.js";
 
 class weeklyReportController {
     async getWeeklyReport(req, res, next) {
