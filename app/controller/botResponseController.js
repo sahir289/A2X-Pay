@@ -185,44 +185,51 @@ class BotResponseController {
                 const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
                 if (checkPayInUtr.at(0)?.amount == amount
-                  // && checkPayInUtr.at(0)?.user_submitted_utr == utr
-                ) {
-                  const payInData = {
-                    confirmed: botRes?.amount,
-                    status: "SUCCESS",
-                    is_notified: true,
-                    utr: botRes?.utr,
-                    user_submitted_utr: checkPayInUtr.at(0)?.user_submitted_utr,
-                    approved_at: new Date(),
-                    duration: duration,
-                    payin_commission: payinCommission
-                  };
-
-                  const updatePayInDataRes = await payInRepo.updatePayInData(
-                    checkPayInUtr[0]?.id,
-                    payInData
-                  );
-
-                  if (checkPayInUtr[0]?.bank_acc_id) {
-                    const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-                      checkPayInUtr[0]?.bank_acc_id,
-                      parseFloat(amount)
+              ) {
+                  if (checkPayInUtr.at(0)?.user_submitted_utr == utr) {
+                    const payInData = {
+                      confirmed: botRes?.amount,
+                      status: "SUCCESS",
+                      is_notified: true,
+                      utr: botRes?.utr,
+                      user_submitted_utr: checkPayInUtr.at(0)?.user_submitted_utr,
+                      approved_at: new Date(),
+                      duration: duration,
+                      payin_commission: payinCommission
+                    };
+  
+                    const updatePayInDataRes = await payInRepo.updatePayInData(
+                      checkPayInUtr[0]?.id,
+                      payInData
                     );
-                  }
-                  const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
-
-                  const updateMerchantData = await merchantRepo?.updateMerchant(checkPayInUtr[0]?.merchant_id, amount)
-                  const notifyData = {
-                    status: "SUCCESS",
-                    merchantOrderId: updatePayInDataRes?.merchant_order_id,
-                    payinId: updatePayInDataRes?.id,
-                    amount: updatePayInDataRes?.confirmed,
-                    utr_id: updatePayInDataRes?.utr
-                  };
-                  try {
-                    //when we get the correct notify url;
-                    const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-                  } catch (error) {
+  
+                    if (checkPayInUtr[0]?.bank_acc_id) {
+                      const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                        checkPayInUtr[0]?.bank_acc_id,
+                        parseFloat(amount)
+                      );
+                    }
+                    const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
+  
+                    const updateMerchantData = await merchantRepo?.updateMerchant(checkPayInUtr[0]?.merchant_id, amount)
+                    const notifyData = {
+                      status: "SUCCESS",
+                      merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                      payinId: updatePayInDataRes?.id,
+                      amount: updatePayInDataRes?.confirmed,
+                      utr_id: updatePayInDataRes?.utr
+                    };
+                    try {
+                      //when we get the correct notify url;
+                      const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                    } catch (error) {
+                    }
+                  } else {
+                    return DefaultResponse(
+                      res,
+                      200,
+                      `⛔ UTR: ${utr} does not match with User Submitted UTR: ${checkPayInUtr.at(0)?.user_submitted_utr}`
+                    );
                   }
                 }
                 else {
@@ -384,44 +391,51 @@ class BotResponseController {
               const duration = `${durHours}:${durMinutes}:${durSeconds}`;
   
               if (checkPayInUtr.at(0)?.amount == amount
-                // && checkPayInUtr.at(0)?.user_submitted_utr == utr
               ) {
-                const payInData = {
-                  confirmed: botRes?.amount,
-                  status: "SUCCESS",
-                  is_notified: true,
-                  utr: botRes?.utr,
-                  user_submitted_utr: checkPayInUtr.at(0)?.user_submitted_utr,
-                  approved_at: new Date(),
-                  duration: duration,
-                  payin_commission: payinCommission
-                };
-  
-                const updatePayInDataRes = await payInRepo.updatePayInData(
-                  checkPayInUtr[0]?.id,
-                  payInData
-                );
-  
-                if (checkPayInUtr[0]?.bank_acc_id) {
-                  const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-                    checkPayInUtr[0]?.bank_acc_id,
-                    parseFloat(amount)
+                if (checkPayInUtr.at(0)?.user_submitted_utr == utr) {
+                  const payInData = {
+                    confirmed: botRes?.amount,
+                    status: "SUCCESS",
+                    is_notified: true,
+                    utr: botRes?.utr,
+                    user_submitted_utr: checkPayInUtr.at(0)?.user_submitted_utr,
+                    approved_at: new Date(),
+                    duration: duration,
+                    payin_commission: payinCommission
+                  };
+
+                  const updatePayInDataRes = await payInRepo.updatePayInData(
+                    checkPayInUtr[0]?.id,
+                    payInData
                   );
-                }
-                const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
-  
-                const updateMerchantData = await merchantRepo?.updateMerchant(checkPayInUtr[0]?.merchant_id, amount)
-                const notifyData = {
-                  status: "SUCCESS",
-                  merchantOrderId: updatePayInDataRes?.merchant_order_id,
-                  payinId: updatePayInDataRes?.id,
-                  amount: updatePayInDataRes?.confirmed,
-                  utr_id: updatePayInDataRes?.utr
-                };
-                try {
-                  //when we get the correct notify url;
-                  const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
-                } catch (error) {
+
+                  if (checkPayInUtr[0]?.bank_acc_id) {
+                    const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+                      checkPayInUtr[0]?.bank_acc_id,
+                      parseFloat(amount)
+                    );
+                  }
+                  const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
+
+                  const updateMerchantData = await merchantRepo?.updateMerchant(checkPayInUtr[0]?.merchant_id, amount)
+                  const notifyData = {
+                    status: "SUCCESS",
+                    merchantOrderId: updatePayInDataRes?.merchant_order_id,
+                    payinId: updatePayInDataRes?.id,
+                    amount: updatePayInDataRes?.confirmed,
+                    utr_id: updatePayInDataRes?.utr
+                  };
+                  try {
+                    //when we get the correct notify url;
+                    const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                  } catch (error) {
+                  }
+                } else {
+                  return DefaultResponse(
+                    res,
+                    200,
+                    `⛔ UTR: ${utr} does not match with User Submitted UTR: ${checkPayInUtr.at(0)?.user_submitted_utr}`
+                  );
                 }
               }
               else {
