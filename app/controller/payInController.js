@@ -625,7 +625,6 @@ class PayInController {
       }
 
       const isBankExist = await bankAccountRepo?.getBankDataByBankId(getPayInData?.bank_acc_id)
-
       if (!isBankExist) {
         throw new CustomError(404, "Bank account does not exist");
       }
@@ -785,6 +784,7 @@ class PayInController {
             user_ip: userIp
 
           };
+
           responseMessage = "Duplicate Payment Found";
         } else {
           if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
@@ -887,19 +887,19 @@ class PayInController {
             responseMessage = "Dispute in Payment";
           }
         }
-
+        
         const updatePayinRes = await payInRepo.updatePayInData(
           payInId,
           payInData
         );
 
         const notifyData = {
-          status: updatePayinRes.status,
+          status: updatePayinRes?.status,
           merchantOrderId: updatePayinRes?.merchant_order_id,
           payinId: payInId,
           amount: updatePayinRes?.confirmed,
           req_amount: amount,
-          utr_id: (updatePayinRes.status === "SUCCESS" || updatePayinRes.status === "DISPUTE") ? updatePayinRes?.utr : ""
+          utr_id: (updatePayinRes?.status === "SUCCESS" || updatePayinRes?.status === "DISPUTE") ? updatePayinRes?.utr : ""
         };
 
         try {
@@ -917,7 +917,7 @@ class PayInController {
 
 
         const response = {
-          status: updatePayinRes.status,
+          status: updatePayinRes?.status,
           amount,
           merchant_order_id: updatePayinRes?.merchant_order_id,
           return_url: updatePayinRes?.return_url,

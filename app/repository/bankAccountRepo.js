@@ -1,5 +1,6 @@
 import { prisma } from "../client/prisma.js";
 import { CustomError } from "../middlewares/errorHandler.js";
+import { logger } from "../utils/logger.js";
 
 class BankAccountRepo {
   async createBankAccount(data) {
@@ -314,15 +315,20 @@ class BankAccountRepo {
   }
 
   async getBankDataByBankId(bankId) {
-    const res = await prisma.bankAccount.findUnique({
-      where: {
-        id: bankId
-      },
-      include: {
-        Merchant_Bank: true
-      }
-    })
-    return res;
+    try {
+      const res = await prisma.bankAccount.findUnique({
+        where: {
+          id: bankId
+        },
+        include: {
+          Merchant_Bank: true
+        }
+      })
+      return res;
+      
+    } catch (error) {
+      logger.info("not getting bank details by id")
+    }
   }
 
   async updateBankDataDetails(data){

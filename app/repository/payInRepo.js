@@ -1,4 +1,5 @@
 import { prisma } from '../client/prisma.js';
+import { logger } from '../utils/logger.js';
 
 class PayInRepo {
 
@@ -55,13 +56,17 @@ class PayInRepo {
     }
 
     async updatePayInData(payInId, data) {
-        const payInUrlRes = await prisma.payin.update({
-            where: {
-                id: payInId
-            },
-            data: data
-        })
-        return payInUrlRes
+        try {
+            const payInUrlRes = await prisma.payin.update({
+                where: {
+                    id: payInId
+                },
+                data: data
+            })
+            return payInUrlRes  
+        } catch (error) {
+            logger.info('Payin data did not updated', error);
+        }
     }
 
 
