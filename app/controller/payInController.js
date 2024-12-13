@@ -694,7 +694,7 @@ class PayInController {
             is_url_expires: true,
             user_submitted_image: null,
             duration: duration,
-            user_ip: userIp
+            // user_ip: userIp
           };
           responseMessage = "Duplicate Payment Found";
           const updatePayinRes = await payInRepo.updatePayInData(
@@ -771,7 +771,7 @@ class PayInController {
               user_submitted_utr: usrSubmittedUtr,
               approved_at: new Date(),
               duration: duration,
-              user_ip: userIp
+              // user_ip: userIp
             };
 
             const updatePayInDataRes = await payInRepo.updatePayInData(
@@ -836,7 +836,7 @@ class PayInController {
             user_submitted_utr: usrSubmittedUtr,
             is_url_expires: true,
             user_submitted_image: null,
-            user_ip: userIp
+            // user_ip: userIp
           };
           responseMessage = "Payment Not Found";
         } else if (matchDataFromBotRes.is_used === true) {
@@ -848,7 +848,7 @@ class PayInController {
             is_url_expires: true,
             user_submitted_image: null,
             duration: duration,
-            user_ip: userIp
+            // user_ip: userIp
 
           };
 
@@ -867,7 +867,7 @@ class PayInController {
               user_submitted_utr: usrSubmittedUtr,
               approved_at: new Date(),
               duration: duration,
-              user_ip: userIp
+              // user_ip: userIp
             };
 
             const updatePayInDataRes = await payInRepo.updatePayInData(
@@ -957,7 +957,7 @@ class PayInController {
               payin_commission: payinCommission,
               user_submitted_image: null,
               duration: duration,
-              user_ip: userIp
+              // user_ip: userIp
             };
             responseMessage = "Payment Done successfully";
           } else {
@@ -970,7 +970,7 @@ class PayInController {
               is_url_expires: true,
               user_submitted_image: null,
               duration: duration,
-              user_ip: userIp
+              // user_ip: userIp
 
             };
             responseMessage = "Dispute in Payment";

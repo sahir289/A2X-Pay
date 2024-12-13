@@ -112,7 +112,7 @@ model Payin {
   id                   String    @id @default(uuid())
   upi_short_code       String
   qr_params            String?
-  amount               Decimal
+  amount               Decimal   @db.Decimal
   status               Status
   is_notified          Boolean   @default(false)
   user_submitted_utr   String?
