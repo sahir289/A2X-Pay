@@ -4350,7 +4350,7 @@ class PayInController {
     try {
       checkValidation(req)
       const { id } = req.params;
-      const expirePayInUrlRes = await payInServices.oneTimeExpire(id)
+      const expirePayInUrlRes = await payInServices.oneTimeExpire(id);
       return DefaultResponse(res, 200, "URL is expired!");
     } catch (error) {
       next(error);
