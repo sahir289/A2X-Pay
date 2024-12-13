@@ -508,17 +508,21 @@ class PayInService {
   }
 
   async payinAssignment(payinId, merchantCode, merchantOrderId) {
-    const data = await prisma.payin.findFirst({
-      where: {
-        id: payinId,
-        merchant_id: merchantCode,
-        merchant_order_id: merchantOrderId,
-      },
-      include: {
-        Merchant: true,
-      },
-    });
-    return data;
+    try {
+      const data = await prisma.payin.findFirst({
+        where: {
+          id: payinId,
+          merchant_id: merchantCode,
+          merchant_order_id: merchantOrderId,
+        },
+        include: {
+          Merchant: true,
+        },
+      });
+      return data;
+    } catch (error) {
+      logger.info("getting issue while fetching", error);
+    }
   }
 
   async getAllPayInDataByVendor(vendorCode, startDate, endDate) {
@@ -667,15 +671,19 @@ class PayInService {
   }
   
   async oneTimeExpire(payInId) {
-    const expirePayInUrlRes = await prisma.payin.update({
-      where: {
-        id: payInId,
-      },
-      data: {
-        one_time_used: true,
-      },
-    });
-    return expirePayInUrlRes;
+    try {
+      const expirePayInUrlRes = await prisma.payin.update({
+        where: {
+          id: payInId,
+        },
+        data: {
+          one_time_used: true,
+        },
+      });
+      return expirePayInUrlRes;
+    } catch (error) {
+      logger.log('getting issue in db while updating', error);
+    }
   }
 
   async getPayInDetails(payInId) {
