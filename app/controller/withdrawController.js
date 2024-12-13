@@ -557,7 +557,7 @@ class WithdrawController {
       })
       return DefaultResponse(res, 200, "Payout fetched successfully!", data);
     } catch (err) {
-      next(err);
+      logger.info(err);
     }
   }
 
@@ -668,7 +668,7 @@ class WithdrawController {
       }
       return DefaultResponse(res, 200, "Payout Updated!", data);
     } catch (err) {
-      console.log(err)
+      logger.info(err)
     }
   }
 
