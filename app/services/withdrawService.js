@@ -56,83 +56,95 @@ class Withdraw {
     utr_id,
     acc_holder_name
   ) {
-    const where = {};
-    [
-      { col: "id", value: id },
-      { col: "status", value: status },
-      { col: "amount", value: amount },
-      { col: "acc_no", value: acc_no },
-      { col: "merchant_order_id", value: merchant_order_id },
-      { col: "user_id", value: user_id },
-      { col: "sno", value: sno },
-      { col: "from_bank", value: from_bank },
-      { col: "payout_commision", value: commission },
-      { col: "utr_id", value: utr_id },
-      { col: "method", value: method },
-      { col: "acc_holder_name", value: acc_holder_name },
-      { col: "vendor_code", value: vendorCode },
-    ].forEach((el) => {
-      if (el.value) {
-        where[el.col] = el.value;
+    try {
+      const where = {};
+      [
+        { col: "id", value: id },
+        { col: "status", value: status },
+        { col: "amount", value: amount },
+        { col: "acc_no", value: acc_no },
+        { col: "merchant_order_id", value: merchant_order_id },
+        { col: "user_id", value: user_id },
+        { col: "sno", value: sno },
+        { col: "from_bank", value: from_bank },
+        { col: "payout_commision", value: commission },
+        { col: "utr_id", value: utr_id },
+        { col: "method", value: method },
+        { col: "acc_holder_name", value: acc_holder_name },
+        { col: "vendor_code", value: vendorCode },
+      ].forEach((el) => {
+        if (el.value) {
+          where[el.col] = el.value;
+        }
+      });
+
+      if (code) {
+        where.Merchant = { code: { in: code.split(',') } };
       }
-    });
 
-    if (code) {
-      where.Merchant = { code: { in: code.split(',') } };
-    }
-
-    const data = await prisma.payout.findMany({
-      where,
-      skip,
-      take,
-      orderBy: {
-        sno: "desc",
-      },
-      include: {
-        Merchant: {
-          select: {
-            id: true,
-            code: true,
+      const data = await prisma.payout.findMany({
+        where,
+        skip,
+        take,
+        orderBy: {
+          sno: "desc",
+        },
+        include: {
+          Merchant: {
+            select: {
+              id: true,
+              code: true,
+            },
           },
         },
-      },
-    });
-    const totalRecords = await prisma.payout.count({
-      where
-    });
+      });
+      const totalRecords = await prisma.payout.count({
+        where
+      });
 
-    return {
-      data,
-      totalRecords,
-    };
+      return {
+        data,
+        totalRecords,
+      };
+    } catch (error) {
+      logger.info('Payout data did not fetch Successful', error);
+    }
   }
 
   async updateWithdraw(id, body) {
-    return await prisma.payout.update({
-      where: {
-        id,
-      },
-      data: body,
-    });
+    try {
+      return await prisma.payout.update({
+        where: {
+          id,
+        },
+        data: body,
+      });
+    } catch (error) {
+      logger.info('Payin data did not updated', error);
+    }
   }
 
   // Service created to get single withdraw data by id
   async getWithdrawById(id) {
-    const data = await prisma.payout.findFirst({
-      where: {
-        id,
-      },
-      include: {
-        Merchant: {
-          select: {
-            id: true,
-            code: true,
+    try {
+      const data = await prisma.payout.findFirst({
+        where: {
+          id,
+        },
+        include: {
+          Merchant: {
+            select: {
+              id: true,
+              code: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    return data;
+      return data;
+    } catch (error) {
+      logger.info('PayOut data fetch Failed', error);
+    }
   }
 
   async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate) {
