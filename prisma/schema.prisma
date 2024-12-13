@@ -137,7 +137,7 @@ model Payin {
   bank_name            String?
   one_time_used        Boolean   @default(false)
   to_bank              String?   @default("")
-  user_ip              String?
+  user_ip              Decimal?
   Merchant             Merchant  @relation(fields: [merchant_id], references: [id])
 }
 
