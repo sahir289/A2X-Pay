@@ -614,7 +614,7 @@ class PayInController {
     try {
       checkValidation(req);
       const { payInId } = req.params;
-      const userIp = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
+      // const userIp = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
       const { usrSubmittedUtr, code, amount, isFront, filePath } = req.body;
       let payInData;
       let responseMessage;
@@ -647,7 +647,7 @@ class PayInController {
 
       if (payinStatus.includes(getPayInData?.status)) {
         let response = {
-          status: getPayInData.status,
+          status: getPayInData?.status,
           amount,
           merchant_order_id: getPayInData?.merchant_order_id,
           return_url: getPayInData?.return_url,
@@ -660,27 +660,27 @@ class PayInController {
 
         const message = getPayInData?.status === "BANK_MISMATCH" ? "Bank mismatch" : responseMessage;
 
-        const notifyData = {
-          status: getPayInData.status,
-          merchantOrderId: getPayInData?.merchant_order_id,
-          payinId: getPayInData?.payInId,
-          amount: getPayInData?.confirmed,
-          req_amount: getPayInData?.amount,
-          utr_id: getPayInData?.utr,
-        };
+        // const notifyData = {
+        //   status: getPayInData?.status,
+        //   merchantOrderId: getPayInData?.merchant_order_id,
+        //   payinId: getPayInData?.payInId,
+        //   amount: getPayInData?.confirmed,
+        //   req_amount: getPayInData?.amount,
+        //   utr_id: getPayInData?.utr,
+        // };
 
-        try {
-          logger.info('Sending notification to merchant', { notify_url: getPayInData?.notify_url, notify_data: notifyData });
-          //When we get the notify url we will add it.
-          const notifyMerchant = await axios.post(getPayInData?.notify_url, notifyData);
-          logger.info('Sending notification to merchant', {
-            status: notifyMerchant.status,
-            data: notifyMerchant.data,
-          })
+        // try {
+        //   logger.info('Sending notification to merchant', { notify_url: getPayInData?.notify_url, notify_data: notifyData });
+        //   //When we get the notify url we will add it.
+        //   const notifyMerchant = await axios.post(getPayInData?.notify_url, notifyData);
+        //   logger.info('Sending notification to merchant', {
+        //     status: notifyMerchant.status,
+        //     data: notifyMerchant.data,
+        //   })
 
-        } catch (error) {
-          logger.error("Error sending notification:", error);
-        }
+        // } catch (error) {
+        //   logger.error("Error sending notification:", error);
+        // }
 
         return DefaultResponse(res, 200, message, response);
       }
@@ -702,27 +702,27 @@ class PayInController {
             payInData
           );
 
-          const notifyData = {
-            status: updatePayinRes.status,
-            merchantOrderId: updatePayinRes?.merchant_order_id,
-            payinId: payInId,
-            amount: updatePayinRes?.confirmed,
-            req_amount: amount,
-            utr_id: updatePayinRes?.utr,
-          };
+          // const notifyData = {
+          //   status: updatePayinRes?.status,
+          //   merchantOrderId: updatePayinRes?.merchant_order_id,
+          //   payinId: payInId,
+          //   amount: updatePayinRes?.confirmed,
+          //   req_amount: amount,
+          //   utr_id: updatePayinRes?.utr,
+          // };
   
-          try {
-            logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-            //When we get the notify url we will add it.
-            const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-            logger.info('Sending notification to merchant', {
-              status: notifyMerchant.status,
-              data: notifyMerchant.data,
-            })
+          // try {
+          //   logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+          //   //When we get the notify url we will add it.
+          //   const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+          //   logger.info('Sending notification to merchant', {
+          //     status: notifyMerchant.status,
+          //     data: notifyMerchant.data,
+          //   })
   
-          } catch (error) {
-            logger.error("Error sending notification:", error);
-          }
+          // } catch (error) {
+          //   logger.error("Error sending notification:", error);
+          // }
 
           const response = {
             status: payInData.status,
@@ -790,27 +790,27 @@ class PayInController {
             //   parseFloat(amount)
             // );
 
-            const notifyData = {
-              status: updatePayinRes.status,
-              merchantOrderId: updatePayinRes?.merchant_order_id,
-              payinId: payInId,
-              amount: updatePayinRes?.confirmed,
-              req_amount: amount,
-              utr_id: updatePayinRes?.utr,
-            };
+            // const notifyData = {
+            //   status: updatePayinRes?.status,
+            //   merchantOrderId: updatePayinRes?.merchant_order_id,
+            //   payinId: payInId,
+            //   amount: updatePayinRes?.confirmed,
+            //   req_amount: amount,
+            //   utr_id: updatePayinRes?.utr,
+            // };
     
-            try {
-              logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-              //When we get the notify url we will add it.
-              const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-              logger.info('Sending notification to merchant', {
-                status: notifyMerchant.status,
-                data: notifyMerchant.data,
-              })
+            // try {
+            //   logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+            //   //When we get the notify url we will add it.
+            //   const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+            //   logger.info('Sending notification to merchant', {
+            //     status: notifyMerchant.status,
+            //     data: notifyMerchant.data,
+            //   })
     
-            } catch (error) {
-              logger.error("Error sending notification:", error);
-            }
+            // } catch (error) {
+            //   logger.error("Error sending notification:", error);
+            // }
 
             const response = {
               status: updatePayInDataRes.status,
@@ -886,27 +886,27 @@ class PayInController {
             //   parseFloat(amount)
             // );
 
-            const notifyData = {
-              status: updatePayinRes.status,
-              merchantOrderId: updatePayinRes?.merchant_order_id,
-              payinId: payInId,
-              amount: updatePayinRes?.confirmed,
-              req_amount: amount,
-              utr_id: updatePayinRes?.utr,
-            };
+            // const notifyData = {
+            //   status: updatePayInDataRes?.status,
+            //   merchantOrderId: updatePayInDataRes?.merchant_order_id,
+            //   payinId: payInId,
+            //   amount: updatePayInDataRes?.confirmed,
+            //   req_amount: amount,
+            //   utr_id: updatePayInDataRes?.utr,
+            // };
     
-            try {
-              logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-              //When we get the notify url we will add it.
-              const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-              logger.info('Sending notification to merchant', {
-                status: notifyMerchant.status,
-                data: notifyMerchant.data,
-              })
+            // try {
+            //   logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
+            //   //When we get the notify url we will add it.
+            //   const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+            //   logger.info('Sending notification to merchant', {
+            //     status: notifyMerchant.status,
+            //     data: notifyMerchant.data,
+            //   })
     
-            } catch (error) {
-              logger.error("Error sending notification:", error);
-            }
+            // } catch (error) {
+            //   logger.error("Error sending notification:", error);
+            // }
 
             const response = {
               status: updatePayInDataRes.status,
@@ -940,7 +940,7 @@ class PayInController {
             getPayInData?.bank_acc_id,
             parseFloat(matchDataFromBotRes?.amount)
           );
-          const payinCommission = await calculateCommission(
+          const payinCommission =  calculateCommission(
             matchDataFromBotRes?.amount,
             updateMerchantRes?.payin_commission
           );
