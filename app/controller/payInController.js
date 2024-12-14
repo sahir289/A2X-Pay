@@ -64,13 +64,13 @@ class PayInController {
           throw new CustomError(404, "Enter valid Api key");
         }
       }
-      if (returnUrl) {
-        const data = {
-          id: getMerchantApiKeyByCode.id,
-          return_url: returnUrl
-        }
-        await merchantRepo.updateMerchantData(data);
-      }
+      // if (returnUrl) {
+      //   const data = {
+      //     id: getMerchantApiKeyByCode.id,
+      //     return_url: returnUrl
+      //   }
+      //   await merchantRepo.updateMerchantData(data);
+      // }
       const bankAccountLinkRes = await bankAccountRepo.getMerchantBankById(getMerchantApiKeyByCode?.id);
       const payInBankAccountLinkRes = bankAccountLinkRes?.filter(payInBank => payInBank?.bankAccount?.bank_used_for === "payIn");
       const availableBankAccounts = payInBankAccountLinkRes?.filter(bank => (bank?.bankAccount?.is_bank === true || bank?.bankAccount?.is_qr === true) && bank?.bankAccount?.is_enabled === true);
@@ -91,6 +91,7 @@ class PayInController {
           api_key: getMerchantApiKeyByCode?.api_key,
           merchant_order_id: uuidv4(),
           user_id: user_id,
+          return_url: returnUrl ? returnUrl : getMerchantApiKeyByCode?.return_url,
           // isTest:isTest
         };
         // Uncomment and use your service to generate PayIn URL
