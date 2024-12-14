@@ -21,7 +21,7 @@ class PayInService {
       user_id: payInData?.user_id,
       // isTest:payInData?.isTest,
       // bank_acc_id: bankAccountLinkRes?.bankAccountId,   this is done bcs bank will be assigned after the submission of amount in frontend.
-      return_url: getMerchantRes?.return_url,
+      return_url: payInData?.return_url,
       notify_url: getMerchantRes?.notify_url,
       merchant_id: getMerchantRes?.id,
       expirationDate,
