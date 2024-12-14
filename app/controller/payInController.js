@@ -134,6 +134,7 @@ class PayInController {
           merchant_order_id,
           user_id,
           amount,
+          return_url: returnUrl ? returnUrl : getMerchantApiKeyByCode?.return_url,
         };
 
         const generatePayInUrlRes = await payInServices.generatePayInUrl(
