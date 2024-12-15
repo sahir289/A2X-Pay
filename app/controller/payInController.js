@@ -1173,30 +1173,30 @@ class PayInController {
           throw new CustomError(404, "Payment does not exist");
         }
 
-        if (parseFloat(usrSubmittedUtr.amount) !== parseFloat(getPayInData?.amount)) {
-          const updatePayInData = {
-            confirmed: usrSubmittedUtr.amount,
-            amount: getPayInData?.amount,
-            status: "DISPUTE",
-            is_notified: true,
-            is_url_expires: true,
-            user_submitted_utr: usrSubmittedUtrData,
-            approved_at: new Date(),
-            duration: duration,
-          };
-          const updatePayinRes = await payInRepo.updatePayInData(
-            payInId,
-            updatePayInData
-          );
-          const response = {
-            status: updatePayinRes.status,
-            amount,
-            merchant_order_id: updatePayinRes?.merchant_order_id,
-            return_url: updatePayinRes?.return_url,
-            utr_id: updatePayinRes?.user_submitted_utr,
-          };
-          return DefaultResponse(res, 200, "Payment Disputed", response);
-        }
+        // if (parseFloat(usrSubmittedUtr.amount) !== parseFloat(getPayInData?.amount)) {
+        //   const updatePayInData = {
+        //     confirmed: usrSubmittedUtr.amount,
+        //     amount: getPayInData?.amount,
+        //     status: "DISPUTE",
+        //     is_notified: true,
+        //     is_url_expires: true,
+        //     user_submitted_utr: usrSubmittedUtrData,
+        //     approved_at: new Date(),
+        //     duration: duration,
+        //   };
+        //   const updatePayinRes = await payInRepo.updatePayInData(
+        //     payInId,
+        //     updatePayInData
+        //   );
+        //   const response = {
+        //     status: updatePayinRes.status,
+        //     amount,
+        //     merchant_order_id: updatePayinRes?.merchant_order_id,
+        //     return_url: updatePayinRes?.return_url,
+        //     utr_id: updatePayinRes?.user_submitted_utr,
+        //   };
+        //   return DefaultResponse(res, 200, "Payment Disputed", response);
+        // }
 
         //
         const isBankExist = await bankAccountRepo?.getBankDataByBankId(getPayInData?.bank_acc_id)
@@ -1264,7 +1264,7 @@ class PayInController {
           }
         }
 
-        if (parseFloat(usrSubmittedUtr.amount) === parseFloat(getPayInData?.amount)) {
+        // if (parseFloat(usrSubmittedUtr.amount) === parseFloat(getPayInData?.amount)) {
           if (!matchDataFromBotRes) {
             payInData = {
               status: "PENDING",
@@ -1372,45 +1372,45 @@ class PayInController {
               responseMessage = "Dispute in Payment";
             }
           }
-        }
-        else {
-          const payInData = {
-          confirmed: usrSubmittedUtr.amount,
-          amount: getPayInData?.amount,
-          status: "DISPUTE",
-          is_notified: true,
-          is_url_expires: true,
-          user_submitted_utr: usrSubmittedUtrData,
-          approved_at: new Date(),
-          duration: duration,
-        };
+        // }
+        // else {
+        //   const payInData = {
+        //     confirmed: usrSubmittedUtr.amount,
+        //     amount: getPayInData?.amount,
+        //     status: "DISPUTE",
+        //     is_notified: true,
+        //     is_url_expires: true,
+        //     user_submitted_utr: usrSubmittedUtrData,
+        //     approved_at: new Date(),
+        //     duration: duration,
+        //   };
 
-        const updatePayInDataRes = await payInRepo.updatePayInData(
-          getPayInData.id,
-          payInData
-        );
+        //   const updatePayInDataRes = await payInRepo.updatePayInData(
+        //     getPayInData.id,
+        //     payInData
+        //   );
 
-        // We are adding the amount to the bank as we want to update the balance of the bank
-        // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-        //   getBankDataByBotRes?.id,
-        //   parseFloat(amount)
-        // );
+        //   // We are adding the amount to the bank as we want to update the balance of the bank
+        //   // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+        //   //   getBankDataByBotRes?.id,
+        //   //   parseFloat(amount)
+        //   // );
 
-        const response = {
-          status: updatePayInDataRes.status,
-          amount,
-          merchant_order_id: updatePayInDataRes?.merchant_order_id,
-          return_url: updatePayInDataRes?.return_url,
-          utr_id: updatePayInDataRes?.user_submitted_utr
-        };
+        //   const response = {
+        //     status: updatePayInDataRes.status,
+        //     amount,
+        //     merchant_order_id: updatePayInDataRes?.merchant_order_id,
+        //     return_url: updatePayInDataRes?.return_url,
+        //     utr_id: updatePayInDataRes?.user_submitted_utr
+        //   };
 
-        return DefaultResponse(
-          res,
-          200,
-          "Dispute",
-          response
-        );
-        }
+        //   return DefaultResponse(
+        //     res,
+        //     200,
+        //     "Dispute",
+        //     response
+        //   );
+        // }
         const updatePayinRes = await payInRepo.updatePayInData(
           payInId,
           payInData
