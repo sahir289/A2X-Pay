@@ -645,28 +645,30 @@ class PayInService {
           gte: start,
           lte: end,
         };
-      }
-      else {
+      } else {
         condition.updatedAt = {
           gte: start,
           lte: end,
         };
       }
-  
-      // Example of dynamic conditional ordering
-      const payInData = await prisma.payin.findMany({
-        where: condition,
-        include: {
-          Merchant: true,
-        },
-        orderBy: status === "SUCCESS"
-          ? { approved_at: "asc" }
-          : { updatedAt: "asc" },
-      });
-  
-      return payInData;
+      try {
+        // Example of dynamic conditional ordering
+        const payInData = await prisma.payin.findMany({
+          where: condition,
+          include: {
+            Merchant: true,
+          },
+          orderBy: status === "SUCCESS"
+            ? { approved_at: "asc" }
+            : { updatedAt: "asc" },
+        });
+
+        return payInData;
+      } catch (error) {
+        logger.error('getting error while fetching pay in data', error);
+      }
     } catch (error) {
-      logger.error(error);
+      logger.error('getting error while downloading payin reports', error);
     }
   }
   
