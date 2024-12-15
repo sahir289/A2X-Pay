@@ -1151,7 +1151,7 @@ class PayInController {
             amount,
             status: "DUPLICATE",
             is_notified: true,
-            user_submitted_utr: usrSubmittedUtr,
+            user_submitted_utr: usrSubmittedUtrData,
             is_url_expires: true,
             duration: duration
           };
@@ -1206,7 +1206,7 @@ class PayInController {
               is_notified: true,
               is_url_expires: true,
               utr: matchDataFromBotRes?.utr,
-              user_submitted_utr: usrSubmittedUtr,
+              user_submitted_utr: usrSubmittedUtrData,
               approved_at: new Date(),
               duration: duration,
             };
@@ -1252,7 +1252,7 @@ class PayInController {
             amount,
             status: "DUPLICATE",
             is_notified: true,
-            user_submitted_utr: usrSubmittedUtr,
+            user_submitted_utr: usrSubmittedUtrData,
             is_url_expires: true,
             duration: duration
           };
@@ -1269,7 +1269,7 @@ class PayInController {
                   is_notified: true,
                   is_url_expires: true,
                   utr: matchDataFromBotRes?.utr,
-                  user_submitted_utr: usrSubmittedUtr,
+                  user_submitted_utr: usrSubmittedUtrData,
                   approved_at: new Date(),
                   duration: duration,
                 };
