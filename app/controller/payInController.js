@@ -1175,7 +1175,7 @@ class PayInController {
 
         if (parseFloat(usrSubmittedUtr.amount) !== parseFloat(getPayInData?.amount)) {
           const updatePayInData = {
-            confirmed: amount,
+            confirmed: usrSubmittedUtr.amount,
             amount: getPayInData?.amount,
             status: "DISPUTE",
             is_notified: true,
@@ -1375,7 +1375,7 @@ class PayInController {
         }
         else {
           const payInData = {
-          confirmed: amount,
+          confirmed: usrSubmittedUtr.amount,
           amount: getPayInData?.amount,
           status: "DISPUTE",
           is_notified: true,
