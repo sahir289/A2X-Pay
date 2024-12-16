@@ -22,34 +22,34 @@ const locationRestrictMiddleware = async (req, res, next) => {
 
       if (!userData) {
         logger.warn("No data found for the provided IP.");
-        return res.status(500).send('No location data available.');
+        return res.status(500).send('500: Access denied');
       }
       const { latitude, longitude, vpn, region } = userData;
       logger.info('user data here', userData);
       if (vpn === 'yes') {
         logger.warn("VPN detected. Access denied.", userData);
-        return res.status(403).send('Access denied');
+        return res.status(403).send('403: Access denied');
       }
 
       if (restrictedStates.includes(region)) {
         logger.error(`Access restricted for users in ${region}.`, userData);
-        return res.status(403).send('Access restricted in your region.');
+        return res.status(403).send('403: Access denied');
       }
       if (!isNaN(latitude) && !isNaN(longitude)) {
       // Check if the user is in the restricted region
       if (isLocationBlocked(latitude, longitude, restrictedLocation.latitude, restrictedLocation.longitude, radiusKm)) {
         logger.error("Access restricted in your region.", userData);
-        return res.status(403).send('Access restricted in your region.');
+        return res.status(403).send('403: Access denied');
       }
       } else {
         logger.warn("Invalid latitude/longitude data received.");
-        return res.status(500).send('Invalid location data.');
+        return res.status(500).send('500: Access denied');
       }
 
       next();
     } catch (error) {
       logger.error('Error fetching location data:', error);
-      res.status(500).send('Internal server error.');
+      res.status(500).send('500: Access denied');
     }
   };
 
