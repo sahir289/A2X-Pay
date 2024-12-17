@@ -470,16 +470,16 @@ export const payoutCreateValidator = [
     .trim()
     .notEmpty()
     .withMessage("Account Holder Name is required!"),
-  body("ifsc_code")
-    .trim()
-    .notEmpty()
-    .withMessage("ifsc_code is required!")
-    .custom((input, meta) => {
-      if (ifsc.validate(input)) {
-        return Promise.resolve();
-      }
-      return Promise.reject("IFSC is invalid!");
-    }),
+  // body("ifsc_code")
+  //   .trim()
+  //   .notEmpty()
+  //   .withMessage("ifsc_code is required!")
+  //   .custom((input, meta) => {
+  //     if (ifsc.validate(input)) {
+  //       return Promise.resolve();
+  //     }
+  //     return Promise.reject("IFSC is invalid!");
+  //   }),
   body("amount")
     .trim()
     .notEmpty()
