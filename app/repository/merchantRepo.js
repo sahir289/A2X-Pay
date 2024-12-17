@@ -35,6 +35,18 @@ class MerchantRepo {
     return merchant;
   }
 
+  async getMerchantsByIds(ids) {
+    const merchants = await prisma.merchant.findMany({
+      where: {
+        id: {
+          in: ids, // Use the `in` filter for multiple IDs
+        },
+        is_deleted: false, // Get merchants that are not deleted
+      },
+    });
+    return merchants;
+  }  
+
   async getAllMerchants(query) {
     const page = parseInt(query.page) || 1;
     const pageSize = parseInt(query.pageSize) || 15;
