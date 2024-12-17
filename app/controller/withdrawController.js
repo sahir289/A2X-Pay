@@ -66,40 +66,6 @@ class WithdrawController {
     const headers = req.headers;
     const body = req.body;
 
-    if (!headers.merchant_code || !headers.merchant_secret) {
-        return res.status(400).json({
-            success: false,
-            message: 'Missing required headers: merchant_code or merchant_secret',
-        });
-    }
-
-    if (headers.merchant_secret !== process.env.MERCHANT_SECRET) {
-        return res.status(401).json({
-            success: false,
-            message: 'Invalid merchant secret',
-        });
-    }
-
-    const requiredFields = [
-        'name',
-        'phone',
-        'bankAccount',
-        'ifsc',
-        'mode',
-        'amount',
-        'notifyUrl',
-        'merchantRefId',
-    ];
-
-    for (const field of requiredFields) {
-        if (!body[field]) {
-            return res.status(400).json({
-                success: false,
-                message: `Missing required field: ${field}`,
-            });
-        }
-    }
-
     try {
         const thirdPartyResponse = await axios.post('https://blazepe-api-url.com/api/m/payout', body, {
             headers: {
