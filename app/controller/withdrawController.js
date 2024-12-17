@@ -485,9 +485,9 @@ class WithdrawController {
         return DefaultResponse(res, 404, "Payout not found");
       }
       else {
-        logger.info('Payout Status', {
+        logger.info('Checking Payout Status', {
           status: data.status,
-          data: data.data,
+          // data: data.data,
         })
       }
 
@@ -553,7 +553,7 @@ class WithdrawController {
       );
       logger.info('Get All Payout', {
         status: data.status,
-        data: data.data,
+        // data: data.data,
       })
       return DefaultResponse(res, 200, "Payout fetched successfully!", data);
     } catch (err) {
@@ -626,7 +626,7 @@ class WithdrawController {
       const data = await withdrawService.updateWithdraw(req.params.id, payload);
       logger.info('Payout Updated', {
         status: data.status,
-        data: data.data,
+        // data: data.data,
       })
 
       if (payload.from_bank) {
@@ -705,7 +705,7 @@ class WithdrawController {
         );
         logger.info('Get all payout with range', {
           status: payOutDataRes.status,
-          data: payOutDataRes.data,
+          // data: payOutDataRes.data,
         })
   
         return DefaultResponse(
@@ -723,7 +723,7 @@ class WithdrawController {
         );
         logger.info('Get all payout with range', {
           status: payOutDataRes.status,
-          data: payOutDataRes.data,
+          // data: payOutDataRes.data,
         })
   
         return DefaultResponse(
