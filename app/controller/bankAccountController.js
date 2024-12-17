@@ -2,6 +2,7 @@ import { DefaultResponse } from "../helper/customResponse.js";
 import { checkValidation } from "../helper/validationHelper.js";
 import bankAccountRepo from "../repository/bankAccountRepo.js";
 import merchantRepo from "../repository/merchantRepo.js";
+import { logger } from "../utils/logger.js";
 
 class BankAccountController {
   async createBankAccount(req, res, next) {
@@ -201,45 +202,69 @@ class BankAccountController {
 
       if (!includeSubMerchant) {
         let allNewMerchantIds = [];
-        const merchantData = await merchantRepo.getMerchantById(merchantId);
+        const merchantData = await merchantRepo.getMerchantsByIds(merchantId);
 
-        if (merchantData) {
-          // Start with the current merchant's ID
-          allNewMerchantIds = [merchantData.id];
+        if (Array.isArray(merchantData)) {
 
-          if (Array.isArray(merchantData.child_code)) {
-            // Fetch all merchants for the child codes
-            const childMerchants = await Promise.all(
-              merchantData.child_code.map((code) => merchantRepo.getMerchantByCode(code))
-            );
+          // Filter out merchants with missing or non-array `child_code`
+          const validMerchants = merchantData.filter((data) => {
+            const hasChildCode = Array.isArray(data.child_code);
+            return hasChildCode; // Only keep merchants with a valid `child_code` array
+          });
 
-            // Collect the IDs from the child merchants
-            const childMerchantIds = childMerchants
-              .filter((data) => data) // Filter out null or undefined responses
-              .map((data) => data.id);
+          const validMerchantIds = validMerchants.filter((data) => data).map((data) => data.id);
 
-            // Combine the IDs
-            allNewMerchantIds = [...allNewMerchantIds, ...childMerchantIds];
-          }
+          const childMerchants = await Promise.all(
+            validMerchants.flatMap((data) =>
+              data.child_code.map((code) =>
+                merchantRepo.getMerchantByCode(code).catch((err) => {
+                  logger.info(`Error fetching merchant for code ${code}:`, err);
+                  return null; // Handle individual failures gracefully
+                })
+              )
+            )
+          );
+
+          // Collect the IDs from the child merchants
+          const childMerchantIds = childMerchants
+            .filter((data) => data) // Filter out null or undefined responses
+            .map((data) => data.id);
+
+          // Combine the IDs
+          allNewMerchantIds = [...validMerchantIds, ...childMerchantIds];
         }
 
         const data = { bankAccountId };
 
-        const bankAccountResponses = await Promise.all(
-          allNewMerchantIds.map((id) =>
-            bankAccountRepo.deleteBankFromMerchant({
-              ...data,
-              merchantId: id,
+        if (!Array.isArray(allNewMerchantIds) || allNewMerchantIds.length === 0) {
+          logger.info("No merchant IDs to process.");
+          return;
+        }
+
+        try {
+          const bankAccountResponses = await Promise.all(
+            allNewMerchantIds.map(async (id) => {
+              try {
+                return await bankAccountRepo.deleteBankFromMerchant({
+                  ...data,
+                  merchantId: id,
+                });
+              } catch (error) {
+                logger.info(`Failed to delete bank for merchant ID ${id}:`, error);
+                return null; // Handle individual failure gracefully
+              }
             })
-          )
-        );
-  
-        return DefaultResponse(
-          res,
-          200,
-          "Bank is deleted from merchant successfully",
-          bankAccountResponses
-        );
+          );
+
+          return DefaultResponse(
+            res,
+            200,
+            "Bank is deleted from merchant successfully",
+            bankAccountResponses
+          );
+        } catch (error) {
+          logger.info("Error during bank account deletions:", error);
+        }
       } else {
         const data = {
           bankAccountId,
@@ -247,7 +272,7 @@ class BankAccountController {
         }
 
         const bankAccountRes = await bankAccountRepo.deleteBankFromMerchant(data);
-  
+
         return DefaultResponse(
           res,
           200,
@@ -256,7 +281,7 @@ class BankAccountController {
         );
       }
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
