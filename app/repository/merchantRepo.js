@@ -1,5 +1,6 @@
 import { prisma } from "../client/prisma.js";
 import { CustomError } from "../middlewares/errorHandler.js";
+import { logger } from "../utils/logger.js";
 
 class MerchantRepo {
   async createMerchant(data) {
@@ -10,14 +11,18 @@ class MerchantRepo {
   }
 
   async getMerchantByCode(code) {
-    const merchantRes = await prisma.merchant.findFirst({
-      where: {
-        code: code,
-        is_deleted: false, //get merchant records which is not deleted
-      },
-    });
-
-    return merchantRes;
+    try {
+      const merchantRes = await prisma.merchant.findFirst({
+        where: {
+          code: code,
+          is_deleted: false, //get merchant records which is not deleted
+        },
+      });
+  
+      return merchantRes;
+    } catch (error) {
+      logger.error("Failed to get merchants by code", error);
+    }
   }
 
   async getMerchantById(id) {

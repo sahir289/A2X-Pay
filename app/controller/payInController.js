@@ -1585,11 +1585,79 @@ class PayInController {
       checkValidation(req);
       let { merchantCode, status, startDate, endDate, includeSubMerchant } = req.body;
 
+      // const start = new Date(startDate);
+      // const end = new Date(endDate);
+
       if (!merchantCode) {
         merchantCode = [];
       } else if (typeof merchantCode === "string") {
         merchantCode = [merchantCode];
       }
+
+      // let allNewMerchantCodes = merchantCode;
+      // if (!includeSubMerchant) {
+      //   allNewMerchantCodes = [];
+      //   for (const code of merchantCode) {
+      //     const merchantData = await merchantRepo.getMerchantByCode(code);
+      //     if (merchantData) {
+      //       allNewMerchantCodes = [
+      //         ...allNewMerchantCodes,
+      //         ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+      //         merchantData.code,
+      //       ];
+      //     }
+      //   }
+      // }
+
+      // console.log(allNewMerchantCodes, "allNewMerchantCodes")
+
+      // const chunkSize = 7;
+      // let currentDate = new Date(start);
+      // let allPayInData = [];
+      // let iterationCount = 0;
+      // console.log(allPayInData, "allPayInData")
+  
+      // while (currentDate < end) {
+        // iterationCount++;
+
+        // if (iterationCount > 100) {
+        //   console.error("Too many iterations, possible infinite loop. Exiting.");
+        //   break;
+        // }
+        // const chunkEndDate = new Date(currentDate);
+        // chunkEndDate.setDate(chunkEndDate.getDate() + chunkSize);
+        // if (chunkEndDate > end) {
+        //   chunkEndDate = new Date(end);
+        // }
+
+        // try {
+        //   const payInDataRes = await payInServices.getAllPayInDataWithRange(
+        //     allNewMerchantCodes,
+        //     status,
+        //     startDate,
+        //     endDate
+        //   );
+        //   console.log("Data fetched for range:", currentDate, chunkEndDate);
+        //   allPayInData = [...allPayInData, ...payInDataRes];
+        //   console.log("allPayInData length:", allPayInData.length);
+
+        // } catch (error) {
+        //   console.error("Error fetching payIn data for range:", currentDate, chunkEndDate, error);
+        //   // break;
+        // }
+
+        // currentDate = new Date(chunkEndDate);
+        // currentDate.setDate(currentDate.getDate() + 1);
+      // }
+      // console.log("Exited the loop, allPayInData:", allPayInData.length);
+  
+      // // Send the response once all data is fetched
+      // return DefaultResponse(
+      //   res,
+      //   200,
+      //   "PayIn data fetched successfully",
+      //   allPayInData
+      // );
 
       if(!includeSubMerchant) {
         let allNewMerchantCodes = [];
@@ -1603,7 +1671,6 @@ class PayInController {
             ];
           }
         }
-
         const payInDataRes = await payInServices.getAllPayInDataWithRange(
           allNewMerchantCodes,
           status,

@@ -178,19 +178,36 @@ class Withdraw {
         lte: end,
       };
     }
-  
-    const payOutData = await prisma.payout.findMany({
-      where: condition,
-      include: {
-        Merchant: true,
-      },
-      orderBy: status === "SUCCESS"
+
+    try {
+      const pageSize = 1000;
+      let page = 0;
+      let allPayOutData = [];
+
+      while (true) {
+        const payOutData = await prisma.payout.findMany({
+          where: condition,
+          skip: page * pageSize,
+          take: pageSize,
+          include: {
+            Merchant: true,
+          },
+          orderBy: status === "SUCCESS"
           ? { approved_at: "asc" }
           : status === "REJECTED"
           ? { rejected_at: "asc" }
           : { updatedAt: "asc" },
-    });
-    return payOutData;
+        });
+        if (payOutData.length === 0) {
+          break;
+        }
+        allPayOutData = [...allPayOutData, ...payOutData];
+        page++;
+      }
+      return allPayOutData;
+    } catch (error) {
+      logger.error('getting error while fetching pay in data', error);
+    }
   }
 
   async updateVendorCodes(withdrawIds, vendorCode) {

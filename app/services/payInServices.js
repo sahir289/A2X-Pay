@@ -626,7 +626,6 @@ class PayInService {
   async getAllPayInDataWithRange(merchantCodes, status, startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-
     try {
       const condition = {
         Merchant: {
@@ -652,18 +651,31 @@ class PayInService {
         };
       }
       try {
-        // Example of dynamic conditional ordering
-        const payInData = await prisma.payin.findMany({
-          where: condition,
-          include: {
-            Merchant: true,
-          },
-          orderBy: status === "SUCCESS"
-            ? { approved_at: "asc" }
-            : { updatedAt: "asc" },
-        });
+        const pageSize = 1000;
+        let page = 0;
+        let allPayInData = [];
 
-        return payInData;
+        while (true) {
+          const payInData = await prisma.payin.findMany({
+            where: condition,
+            skip: page * pageSize,
+            take: pageSize,
+            include: {
+              Merchant: true,
+            },
+            orderBy: status === "SUCCESS"
+              ? { approved_at: "asc" }
+              : { updatedAt: "asc" },
+          });
+
+          if (payInData.length === 0) {
+            break;
+          }
+
+          allPayInData = [...allPayInData, ...payInData];
+          page++;
+        }
+        return allPayInData;
       } catch (error) {
         logger.error('getting error while fetching pay in data', error);
       }
