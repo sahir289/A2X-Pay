@@ -375,9 +375,9 @@ export const settlementCreateValidator = [
         if (!value || (typeof value === "string" && !value.trim())) {
           return Promise.reject(`${field} is required!`);
         }
-        if (field == "ifsc" && !ifsc.validate(value)) {
-          return Promise.reject(`ifsc is invalid!`);
-        }
+        // if (field == "ifsc" && !ifsc.validate(value)) {
+        //   return Promise.reject(`ifsc is invalid!`);
+        // }
       }
       return Promise.resolve();
     }),
