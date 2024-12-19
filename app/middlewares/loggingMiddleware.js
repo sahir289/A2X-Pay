@@ -38,7 +38,7 @@ const loggingMiddleware = (req, res, next) => {
       status: statusCode,
       duration: `${duration}ms`,
       requestId: req.id,
-      responseBody: res.locals.body,
+      // responseBody: res.locals.body,
       timestamp: new Date().toISOString(),
     };
 
