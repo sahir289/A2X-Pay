@@ -30,45 +30,69 @@ class BankAccountController {
 
       if (!includeSubMerchant) {
         let allNewMerchantIds = [];
-        const merchantData = await merchantRepo.getMerchantById(merchantId);
+        const merchantData = await merchantRepo.getMerchantsByIds(merchantId);
 
-        if (merchantData) {
-          // Start with the current merchant's ID
-          allNewMerchantIds = [merchantData.id];
+        if (Array.isArray(merchantData)) {
 
-          if (Array.isArray(merchantData.child_code)) {
-            // Fetch all merchants for the child codes
-            const childMerchants = await Promise.all(
-              merchantData.child_code.map((code) => merchantRepo.getMerchantByCode(code))
-            );
+          // Filter out merchants with missing or non-array `child_code`
+          const validMerchants = merchantData.filter((data) => {
+            const hasChildCode = Array.isArray(data.child_code);
+            return hasChildCode; // Only keep merchants with a valid `child_code` array
+          });
 
-            // Collect the IDs from the child merchants
-            const childMerchantIds = childMerchants
-              .filter((data) => data) // Filter out null or undefined responses
-              .map((data) => data.id);
+          const validMerchantIds = validMerchants.filter((data) => data).map((data) => data.id);
 
-            // Combine the IDs
-            allNewMerchantIds = [...allNewMerchantIds, ...childMerchantIds];
-          }
+          const childMerchants = await Promise.all(
+            validMerchants.flatMap((data) =>
+              data.child_code.map((code) =>
+                merchantRepo.getMerchantByCode(code).catch((err) => {
+                  logger.info(`Error fetching merchant for code ${code}:`, err);
+                  return null; // Handle individual failures gracefully
+                })
+              )
+            )
+          );
+
+          // Collect the IDs from the child merchants
+          const childMerchantIds = childMerchants
+            .filter((data) => data) // Filter out null or undefined responses
+            .map((data) => data.id);
+
+          // Combine the IDs
+          allNewMerchantIds = [...validMerchantIds, ...childMerchantIds];
         }
 
         const data = { bankAccountId };
 
-        const bankAccountResponses = await Promise.all(
-          allNewMerchantIds.map((id) =>
-            bankAccountRepo.addBankToMerchant({
-              ...data,
-              merchantId: id,
-            })
-          )
-        );
+        if (!Array.isArray(allNewMerchantIds) || allNewMerchantIds.length === 0) {
+          logger.info("No merchant IDs to process.");
+          return;
+        }
 
-        return DefaultResponse(
-          res,
-          201,
-          "Bank is added to merchant successfully",
-          bankAccountResponses
-        );
+        try {
+          const bankAccountResponses = await Promise.all(
+            allNewMerchantIds.map(async (id) => {
+              try {
+                return await bankAccountRepo.addBankToMerchant({
+                  ...data,
+                  merchantId: id,
+                });
+              } catch (error) {
+                logger.info(`Failed to add bank for merchant ID ${id}:`, error);
+                return null; // Handle individual failure gracefully
+              }
+            })
+          );
+
+          return DefaultResponse(
+            res,
+            200,
+            "Bank is deleted from merchant successfully",
+            bankAccountResponses
+          );
+        } catch (error) {
+          logger.info("Error during merchant adding in bank account:", error);
+        }
       } else {
         const data = {
           bankAccountId,
