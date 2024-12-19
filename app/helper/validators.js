@@ -243,9 +243,7 @@ export const bankAccountCreateValidator = [
 export const merchantBankValidator = [
   body("merchantId")
     .notEmpty()
-    .withMessage("Merchant ID is required")
-    .isString()
-    .withMessage("Merchant ID must be a string"),
+    .withMessage("Merchant ID is required"),
   body("bankAccountId")
     .notEmpty()
     .withMessage("Bank Account ID is required")
