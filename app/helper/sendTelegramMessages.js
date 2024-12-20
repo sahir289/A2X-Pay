@@ -527,9 +527,9 @@ export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
   // Construct the error message
   let message;
   if (payinData?.status === "SUCCESS") {
-    message = `✅ UTR ${payinData?.user_submitted_utr} is already confirmed with this orderId ${payinData?.merchant_order_id}`;
+    message = `✅ UTR ${payinData?.utr} is already confirmed with this orderId ${payinData?.merchant_order_id}`;
   } else {
-    message = `🚨 UTR ${payinData?.user_submitted_utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
+    message = `🚨 UTR ${payinData?.utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
   }
 
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
