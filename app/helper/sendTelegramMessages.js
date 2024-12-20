@@ -520,7 +520,7 @@ export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
   const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
   let payinData
   if (hasSuccess) {
-    payinData = getallPayinDataByUtr.filter((item) => item.status === 'SUCCESS');
+    payinData = getallPayinDataByUtr.filter((item) => item.status === 'SUCCESS')[0];
   } else {
     payinData = getallPayinDataByUtr[getallPayinDataByUtr.length - 1];
   }
