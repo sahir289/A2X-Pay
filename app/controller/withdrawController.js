@@ -62,138 +62,64 @@ class WithdrawController {
     }
   }
 
-  async createBlazepeWithdraw(req, res) {
-    const headers = req.headers;
-    const body = req.body;
-
-    if (!headers.merchant_code || !headers.merchant_secret) {
-        return res.status(400).json({
-            success: false,
-            message: 'Missing required headers: merchant_code or merchant_secret',
-        });
+  async createBlazepeWithdraw(payload, merchantRefId) {
+    const newObj = {
+      amount: payload?.amount, 
+      name : payload?.acc_holder_name, 
+      mode: "imps", 
+      ifsc: payload?.ifsc_code, 
+      bankAccount: payload?.acc_no,
+      notifyUrl: `${config.ourUrlForGettingCallbackFromBlazePe}${payload.id}`,
+      merchantRefId,
     }
+    const merchant_code = config?.merchantCodeBlazePay;
+    const merchant_secret = config?.merchantSecretBlazePay;
 
-    if (headers.merchant_secret !== process.env.MERCHANT_SECRET) {
-        return res.status(401).json({
-            success: false,
-            message: 'Invalid merchant secret',
-        });
-    }
-
-    const requiredFields = [
-        'name',
-        'phone',
-        'bankAccount',
-        'ifsc',
-        'mode',
-        'amount',
-        'notifyUrl',
-        'merchantRefId',
-    ];
-
-    for (const field of requiredFields) {
-        if (!body[field]) {
-            return res.status(400).json({
-                success: false,
-                message: `Missing required field: ${field}`,
-            });
-        }
-    }
+    const url = `${config?.blazePePaymentsInitiateUrl}`;
+    let newConfig = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: url,
+      headers: { 
+        'merchant_code': merchant_code, 
+        'merchant_secret':  merchant_secret, 
+        'Content-Type': 'application/json'
+      },
+      data : JSON.stringify(newObj)
+    };
 
     try {
-        const thirdPartyResponse = await axios.post('https://blazepe-api-url.com/api/m/payout', body, {
-            headers: {
-                merchant_code: headers.merchant_code,
-                merchant_secret: headers.merchant_secret,
-                'Content-Type': 'application/json',
-            },
-        });
-
-        const data = thirdPartyResponse.data;
-
-        // Check Response and Update Database
-        if (data.success) {
-            const {
-                amount,
-                payoutId,
-                transferId,
-                status,
-                message,
-                merchantRefId,
-            } = data.data;
-
-            //  will Update DB below
-
-            // const response = await withdrawService.updateWithdraw()
-            
-            return DefaultResponse(
-              res,
-              200,
-              "Payout status fetched successfully",
-              data
-            );
-        } else {
-            return res.status(400).json({
-                success: false,
-                message: 'Third-party API returned an error',
-                error: data.message,
-            });
-        }
+      const response = await axios.request(newConfig);
+      const data = response?.data;
+      return data;
     } catch (error) {
-        console.error('Error processing payout:', error.message);
-        throw new CustomError(404, "Error processing payout");
+        logger.error('Error processing BlazePe payout:', error.message);
+        throw new CustomError(401, "Error processing BlazePe payout");
     }
   };
 
-  async checkBlazepePayoutStatus(req, res, next) {
+  async checkBlazepePayoutStatus(merchantRefId) {
+    const merchant_code = config?.merchantCodeBlazePay;
+    const merchant_secret = config?.merchantSecretBlazePay;
+
+    const url = `${config?.blazePeGetPayoutStatusUrl}${merchantRefId}`;
+    let newConfig = {
+      method: 'get',
+      url: url,
+      headers: { 
+        'merchant_code': merchant_code, 
+        'merchant_secret':  merchant_secret, 
+        'Content-Type': 'application/json'
+      },
+    };
+
     try {
-      checkValidation(req);
-      const headers = req.headers;
-
-      if (!payoutId && !headers.merchantCode && !headers.merchantOrderId) {
-        return DefaultResponse(res, 400, {
-          status: "error",
-          error: "Invalid request. Data type mismatch or incomplete request",
-        });
-      }
-      const merchant = await merchantRepo.getMerchantByCode(headers.merchantCode);
-      if (!merchant) {
-        throw new CustomError(404, "Merchant does not exist");
-      }
-      if (req.headers["x-api-key"] !== merchant.api_key) {
-        throw new CustomError(404, "Enter valid Api key");
-      }
-
-      const data = await withdrawService.checkPayoutStatus(
-        payoutId,
-        headers.merchantCode,
-        merchantOrderId
-      );
-      logger.info('Payout Status', {
-        status: data.status,
-        data: data.data,
-      })
-
-      if (!data) {
-        return DefaultResponse(res, 404, "Payout not found");
-      }
-
-      const response = {
-        status: data.status,
-        merchantOrderId: data.merchant_order_id,
-        amount: data.amount,
-        payoutId: data.id,
-        utr_id: data?.status === "SUCCESS" ? data?.utr_id : ""
-      };
-
-      return DefaultResponse(
-        res,
-        200,
-        "Payout status fetched successfully",
-        response
-      );
-    } catch (err) {
-      next(err);
+      const response = await axios.request(newConfig)
+      const data = await response?.data;
+      return data;  
+    } catch (error) {
+        logger.error('Error getting BlazePe payout status:', error.message);
+        throw new CustomError(401, "Error getting BlazePe payout status");
     }
   }
 
@@ -250,8 +176,8 @@ class WithdrawController {
     }
   }
 
-  async createEkoWithdraw(payload, res) {
-    const client_ref_id = generatePrefix(payload?.user_id);
+  async createEkoWithdraw(payload, method) {
+    const client_ref_id = generatePrefix(payload?.user_id, method);
 
     const newObj = {
       amount: payload?.amount, 
@@ -259,7 +185,6 @@ class WithdrawController {
       recipient_name : payload?.acc_holder_name, 
       ifsc: payload?.ifsc_code, 
       account: payload?.acc_no, 
-      sender_name: "TrustPay",
     }
 
     const key = config?.ekoAccessKey;
@@ -568,13 +493,13 @@ class WithdrawController {
       };
       if (req.body.utr_id) {
         payload.status = "SUCCESS";
-        payload.approved_at = new Date()
+        payload.approved_at = new Date().toISOString()
       }
       if (req.body.rejected_reason) {
         // TODO: confirm the status
         payload.status = "REJECTED";
         payload.rejected_reason = req.body.rejected_reason;
-        payload.rejected_at = new Date()
+        payload.rejected_at = new Date().toISOString()
       }
       if ([req.body.status].includes("INITIATED")) {
         payload.utr_id = "";
@@ -598,18 +523,18 @@ class WithdrawController {
 
       if (req?.body?.method === 'eko') {
         try {
-            const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, res);
+            const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, req?.body?.method);
     
             if (ekoResponse?.status === 0) {
                 payload.status = 'SUCCESS';
-                payload.approved_at = new Date();
+                payload.approved_at = new Date().toISOString();
                 payload.utr_id = ekoResponse?.data?.tid;
             } else {
                 const getStatus = await this.ekoPayoutStatus(ekoResponse?.data?.tid);    
     
                 if (getStatus?.status === 0) {
                     payload.status = getStatus?.data?.txstatus_desc?.toUpperCase();
-                    payload.approved_at = new Date();
+                    payload.approved_at = new Date().toISOString();
                     payload.utr_id = getStatus?.data?.tid;
                 } else {
                     payload.status = 'REVERSED';
@@ -621,6 +546,38 @@ class WithdrawController {
                 logger.error('Error processing Eko method:', error);
             }
         }
+
+      if(req.body?.method === 'blazepe'){
+        payload.method = req.body?.method;
+        try {
+          const merchantRefId = generatePrefix(singleWithdrawData?.user_id, req.body?.method);
+          const blazePeResponse = await this.createBlazepeWithdraw(singleWithdrawData, merchantRefId);
+          if (blazePeResponse?.success === true) {
+              payload.status = 'PENDING';
+          } else if(blazePeResponse?.success === false){
+            logger.error(`New payout with merchantRefId: ${merchantRefId} has been failed to initiate`,blazePeResponse?.message);
+
+            const getStatus = await this.checkBlazepePayoutStatus(merchantRefId); 
+    
+                if (getStatus?.status === 'REFUNDED' || getStatus?.status === 'REVERSED') {
+                    payload.status = 'REVERSED';
+                    payload.utr_id = getStatus?.utr;
+                    logger.error(`Status is ${payload.status}`, getStatus?.message);
+                } else if(getStatus?.status === 'SUCCESS'){
+                  payload.status = getStatus?.status.toUpperCase();;
+                  payload.approved_at = new Date().toISOString();
+                  payload.utr_id = getStatus?.utr;
+                  logger.info(`Status is ${payload.status}`, getStatus?.message);
+                } else {
+                    payload.status = getStatus?.status? getStatus?.status.toUpperCase() : 'REJECTED';
+                    payload.rejected_reason = getStatus?.message;
+                    logger.error(`Status is ${payload.status}`, getStatus?.message);
+                }
+          }
+          } catch (error) {
+              logger.error('Error processing BlazePe method:', error);
+          }
+      }
     
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
       const data = await withdrawService.updateWithdraw(req.params.id, payload);
@@ -661,12 +618,72 @@ class WithdrawController {
         } catch (error) {
           // Handle error for invalid/unreachable merchant URL
           console.error("Error notifying merchant at payout URL:", error.message);
+          logger.error("Error notifying merchant at payout URL:", error.message)
 
           // Call your custom error function if necessary
           new CustomError(400, "Failed to notify merchant about payout"); // Or handle in a different way
         }
       }
       return DefaultResponse(res, 200, "Payout Updated!", data);
+    } catch (err) {
+      logger.info(err)
+    }
+  }
+
+  async updateBlazePePayoutStatus(req, res) {
+    try {
+      const payload = req.body;
+      const { id } = req.params;
+      const singleWithdrawData = await withdrawService.getWithdrawById(id);
+      if(!singleWithdrawData){
+        return DefaultResponse(res, 404, "withdrawal not found");
+      }
+      const updatedData = {
+        status: payload.status,
+        amount: Number(payload.amount),
+        utr_id: payload.utr ? payload.utr: "",
+        approved_at: payload.status === 'SUCCESS'? new Date().toISOString() : null,
+      }
+
+      const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
+      const data = await withdrawService.updateWithdraw(id, updatedData);
+      logger.info('Payout Updated by blazePe notify callback', {
+        status: data.status,
+      })
+
+      if (payload.from_bank) {
+        const bankAccountRes = await bankAccountRepo.getBankNickName(data.from_bank);
+  
+        await bankAccountRepo.updatePayoutBankAccountBalance(
+          bankAccountRes.id,
+          parseFloat(data.amount),
+          payload.status
+        );
+      }
+
+      const merchantPayoutUrl = merchant.payout_notify_url;
+      if (merchantPayoutUrl !== null) {
+        let merchantPayoutData = {
+          code:merchant.code,
+          merchantOrderId: singleWithdrawData.merchant_order_id,
+          payoutId: id,
+          amount: singleWithdrawData.amount,
+          status: payload.status,
+          utr_id: payload.utr ? payload.utr : "",
+        }
+        try {
+          logger.info('Sending notification to merchant', { notify_url: merchantPayoutUrl, notify_data: merchantPayoutData });
+          const response = await axios.post(merchantPayoutUrl, merchantPayoutData);
+          logger.info('Notification to merchant sent Successfully', {
+            status: response.status,
+            data: response.data,
+          })
+        } catch (error) {
+          logger.error("Error notifying merchant at payout URL:", error.message)
+          new CustomError(400, "Failed to notify merchant about payout"); // Or handle in a different way
+        }
+      }
+      return DefaultResponse(res, 200, "Payout Updated by BlazePe Notify Callback", data);
     } catch (err) {
       logger.info(err)
     }
