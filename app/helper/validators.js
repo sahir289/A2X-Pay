@@ -1,6 +1,6 @@
 import { param } from "express-validator";
 import validator from "express-validator";
-import ifsc from "ifsc";
+import ifsc from 'ifsc';
 const { body, query } = validator;
 
 const methodEnums = ["BANK", "CASH", "CRYPTO", "AED"];

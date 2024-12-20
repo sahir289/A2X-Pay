@@ -113,12 +113,13 @@ class Withdraw {
 
   async updateWithdraw(id, body) {
     try {
-      return await prisma.payout.update({
+      const data = await prisma.payout.update({
         where: {
           id,
         },
         data: body,
       });
+      return data;
     } catch (error) {
       logger.info('Payin data did not updated', error);
     }
