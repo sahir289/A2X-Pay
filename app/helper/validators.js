@@ -373,9 +373,9 @@ export const settlementCreateValidator = [
         if (!value || (typeof value === "string" && !value.trim())) {
           return Promise.reject(`${field} is required!`);
         }
-        if (field == "ifsc" && !ifsc.validate(value)) {
-          return Promise.reject(`ifsc is invalid!`);
-        }
+        // if (field == "ifsc" && !ifsc.validate(value)) {
+        //   return Promise.reject(`ifsc is invalid!`);
+        // }
       }
       return Promise.resolve();
     }),
@@ -468,16 +468,16 @@ export const payoutCreateValidator = [
     .trim()
     .notEmpty()
     .withMessage("Account Holder Name is required!"),
-  body("ifsc_code")
-    .trim()
-    .notEmpty()
-    .withMessage("ifsc_code is required!")
-    .custom((input, meta) => {
-      if (ifsc.validate(input)) {
-        return Promise.resolve();
-      }
-      return Promise.reject("IFSC is invalid!");
-    }),
+  // body("ifsc_code")
+  //   .trim()
+  //   .notEmpty()
+  //   .withMessage("ifsc_code is required!")
+  //   .custom((input, meta) => {
+  //     if (ifsc.validate(input)) {
+  //       return Promise.resolve();
+  //     }
+  //     return Promise.reject("IFSC is invalid!");
+  //   }),
   body("amount")
     .trim()
     .notEmpty()
