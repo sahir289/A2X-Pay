@@ -554,6 +554,7 @@ class WithdrawController {
           const blazePeResponse = await this.createBlazepeWithdraw(singleWithdrawData, merchantRefId);
           if (blazePeResponse?.success === true) {
               payload.status = 'PENDING';
+              logger.info(`New payout with merchantRefId: ${merchantRefId} has been created`, blazePeResponse?.message);
           } else if(blazePeResponse?.success === false){
             logger.error(`New payout with merchantRefId: ${merchantRefId} has been failed to initiate`,blazePeResponse?.message);
 
