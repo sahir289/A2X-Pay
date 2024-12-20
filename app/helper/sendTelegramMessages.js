@@ -1,4 +1,5 @@
 import axios from "axios";
+import payInRepo from "../repository/payInRepo.js";
 export async function sendTelegramMessage(
   chatId,
   data,
@@ -519,16 +520,16 @@ export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
   const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
   let payinData
   if (hasSuccess) {
-    payinData = existingPayinData.filter((item) => item.status === 'SUCCESS')[0];
+    payinData = getallPayinDataByUtr.filter((item) => item.status === 'SUCCESS');
   } else {
-    payinData = existingPayinData.filter((item) => item.status === 'FAILED') ? existingPayinData[existingPayinData.length - 2] : existingPayinData[existingPayinData.length - 1];
+    payinData = getallPayinDataByUtr[getallPayinDataByUtr.length - 1];
   }
   // Construct the error message
   let message;
   if (payinData?.status === "SUCCESS") {
-    message = `✅ UTR ${utr} is already confirmed with this orderId ${payinData?.merchant_order_id}`;
+    message = `✅ UTR ${payinData?.user_submitted_utr} is already confirmed with this orderId ${payinData?.merchant_order_id}`;
   } else {
-    message = `🚨 UTR ${utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
+    message = `🚨 UTR ${payinData?.user_submitted_utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
   }
 
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
