@@ -517,6 +517,7 @@ export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
     getallPayinDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(getPayInData.user_submitted_utr);
   }
   const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
+  let payinData
   if (hasSuccess) {
     payinData = existingPayinData.filter((item) => item.status === 'SUCCESS')[0];
   } else {
