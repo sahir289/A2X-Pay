@@ -45,7 +45,12 @@ function config(Env) {
         awsLocationAccessKey:Env?.AMAZON_LOCATION_API_KEY,
         awsRegion:Env?.AWS_REGION,
         awsAccessKeyAdmin:Env?.AWS_ACCESS_KEY_ADMIN,
-        awsSecretKeyAdmin:Env?.AWS_SECRET_ACCESS_KEY_ADMIN
+        awsSecretKeyAdmin:Env?.AWS_SECRET_ACCESS_KEY_ADMIN,
+        blazePePaymentsInitiateUrl:Env?.BLAZEPE_CREATE_PAYOUT_URL,
+        blazePeGetPayoutStatusUrl:Env?.BLAZEPE_GET_PAYOUT_STATUS_URL,
+        merchantCodeBlazePay:Env?.MERCHANT_CODE_BLAZEPE,
+        merchantSecretBlazePay:Env?.MERCHANT_SECRET_BLAZEPE,
+        ourUrlForGettingCallbackFromBlazePe:Env?.OUR_NOTIFY_URL_FOR_GETTING_CALLBACK_FROM_BLAZEPE
     };
 }
 

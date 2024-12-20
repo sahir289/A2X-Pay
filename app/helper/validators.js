@@ -243,9 +243,7 @@ export const bankAccountCreateValidator = [
 export const merchantBankValidator = [
   body("merchantId")
     .notEmpty()
-    .withMessage("Merchant ID is required")
-    .isString()
-    .withMessage("Merchant ID must be a string"),
+    .withMessage("Merchant ID is required"),
   body("bankAccountId")
     .notEmpty()
     .withMessage("Bank Account ID is required")
@@ -470,16 +468,16 @@ export const payoutCreateValidator = [
     .trim()
     .notEmpty()
     .withMessage("Account Holder Name is required!"),
-  body("ifsc_code")
-    .trim()
-    .notEmpty()
-    .withMessage("ifsc_code is required!")
-    .custom((input, meta) => {
-      if (ifsc.validate(input)) {
-        return Promise.resolve();
-      }
-      return Promise.reject("IFSC is invalid!");
-    }),
+  // body("ifsc_code")
+  //   .trim()
+  //   .notEmpty()
+  //   .withMessage("ifsc_code is required!")
+  //   .custom((input, meta) => {
+  //     if (ifsc.validate(input)) {
+  //       return Promise.resolve();
+  //     }
+  //     return Promise.reject("IFSC is invalid!");
+  //   }),
   body("amount")
     .trim()
     .notEmpty()

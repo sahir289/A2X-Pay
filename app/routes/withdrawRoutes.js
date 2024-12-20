@@ -20,7 +20,7 @@ withdrawRouter.post(
 );
 
 withdrawRouter.post(
-  "/check-blazePe-status",
+  "/create-blazePe-payout",
   withdrawController.createBlazepeWithdraw
 );
 
@@ -51,8 +51,14 @@ withdrawRouter.post(
 );
 
 withdrawRouter.post(
-  "/create-blazePe-payout",
+  "/check-blazePe-status",
   withdrawController.checkBlazepePayoutStatus
+);
+
+// this is the callback-api for blazePe, they will use this to update the transaction status
+withdrawRouter.put(
+  "/update-blazepe-payout-status/:id",
+  withdrawController.updateBlazePePayoutStatus
 );
 
 withdrawRouter.post(
