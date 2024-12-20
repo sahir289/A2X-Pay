@@ -10,7 +10,7 @@ import { logger } from "../utils/logger.js";
 import crypto from 'crypto';
 import config from "../../config.js";
 import bankAccountRepo from "../repository/bankAccountRepo.js";
-import generatePrefix from "../utils/generateFormattedStrinf.js";
+import generatePrefix from "../utils/generateFormattedString.js";
 import { response } from "express";
 // import apis from '@api/apis';
 
