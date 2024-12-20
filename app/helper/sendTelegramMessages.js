@@ -572,3 +572,29 @@ export async function sendErrorMessageUtrMismatchTelegramBot(
     return message;
   }
 }
+
+export async function sendResetEntryTelegramMessage(
+  chatId,
+  data,
+  TELEGRAM_BOT_TOKEN
+) {
+  const message = `
+      <b><u>🔔 Entry Reset Alert 🔔</u></b> 
+          <b>Merchant Order ID:</b> ${data.merchant_order_id}
+          <b>Old Status:</b> ${data.status}
+          <b>Old User Submitted UTR:</b> ${data?.user_submitted_utr ? data.user_submitted_utr : '--'}
+          <b>Old UTR:</b> ${data?.utr ? data.utr : '--'}
+          <b>Old Amount:</b> ${data?.amount}
+          <b>Old Confirmed Amount:</b> ${data?.confirmed ? data.confirmed : '--'}
+  `;
+  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  try {
+    await axios.post(sendMessageUrl, {
+      chat_id: chatId,
+      text: message,
+      parse_mode: "HTML",
+    });
+  } catch (error) {
+    console.error("Error sending message to Telegram:", error);
+  }
+}
