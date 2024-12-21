@@ -1,4 +1,5 @@
 import axios from "axios";
+import payInRepo from "../repository/payInRepo.js";
 export async function sendTelegramMessage(
   chatId,
   data,
@@ -511,9 +512,25 @@ export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
   TELEGRAM_BOT_TOKEN,
   replyToMessageId
 ) {
+  let getallPayinDataByUtr
+  getallPayinDataByUtr = await payInRepo.getPayinDataByUtr(getPayInData.user_submitted_utr);
+  if (getallPayinDataByUtr.length === 0) {
+    getallPayinDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(getPayInData.user_submitted_utr);
+  }
+  const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
+  let payinData
+  if (hasSuccess) {
+    payinData = getallPayinDataByUtr.filter((item) => item.status === 'SUCCESS')[0];
+  } else {
+    payinData = getallPayinDataByUtr[getallPayinDataByUtr.length - 1];
+  }
   // Construct the error message
-  const message = `⛔ Merchant Order ID: ${getPayInData.merchant_order_id}
-  is Already Marked ${getPayInData.status} with UTR: ${getPayInData.user_submitted_utr}`;
+  let message;
+  if (payinData?.status === "SUCCESS") {
+    message = `✅ UTR ${payinData?.utr} is already confirmed with this orderId ${payinData?.merchant_order_id}`;
+  } else {
+    message = `🚨 UTR ${payinData?.utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
+  }
 
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
   try {
@@ -570,5 +587,31 @@ export async function sendErrorMessageUtrMismatchTelegramBot(
     }
   } else {
     return message;
+  }
+}
+
+export async function sendResetEntryTelegramMessage(
+  chatId,
+  data,
+  TELEGRAM_BOT_TOKEN
+) {
+  const message = `
+      <b><u>🔔 Entry Reset Alert 🔔</u></b> 
+          <b>Merchant Order ID:</b> ${data.merchant_order_id}
+          <b>Old Status:</b> ${data.status}
+          <b>Old User Submitted UTR:</b> ${data?.user_submitted_utr ? data.user_submitted_utr : '--'}
+          <b>Old UTR:</b> ${data?.utr ? data.utr : '--'}
+          <b>Old Amount:</b> ${data?.amount}
+          <b>Old Confirmed Amount:</b> ${data?.confirmed ? data.confirmed : '--'}
+  `;
+  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  try {
+    await axios.post(sendMessageUrl, {
+      chat_id: chatId,
+      text: message,
+      parse_mode: "HTML",
+    });
+  } catch (error) {
+    console.error("Error sending message to Telegram:", error);
   }
 }

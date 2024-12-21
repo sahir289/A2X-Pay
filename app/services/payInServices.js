@@ -488,10 +488,7 @@ class PayInService {
       Merchant: {
         code: merchantCode,
       },
-      merchant_order_id: merchantOrderId,
-      approved_at: {
-        not: null,
-      },
+      merchant_order_id: merchantOrderId
     };
 
     if (payinId !== null) {

@@ -21,6 +21,7 @@ import {
   sendErrorMessageUtrNotFoundTelegramBot,
   sendErrorMessageUtrOrAmountNotFoundImgTelegramBot,
   sendMerchantOrderIDStatusDuplicateTelegramMessage,
+  sendResetEntryTelegramMessage,
   sendSuccessMessageTelegram,
   sendTelegramMessage,
 } from "../helper/sendTelegramMessages.js";
@@ -4709,6 +4710,11 @@ class PayInController {
       const { merchant_order_id } = req.body;
 
       const payInData = await payInRepo.getPayInDataByMerchantOrderId(merchant_order_id);
+      await sendResetEntryTelegramMessage(
+        config?.telegramEntryResetChatId,
+        payInData,
+        config?.telegramBotToken,
+      );
       if (payInData?.status !== "SUCCESS" && payInData?.status !== "FAILED") {
         const utr = payInData?.utr ? payInData?.utr : payInData?.user_submitted_utr
         const botRes = await botResponseRepo.getBotResByUtr(utr);
