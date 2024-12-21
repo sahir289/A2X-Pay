@@ -163,7 +163,7 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
   if (hasSuccess) {
     payinData = existingPayinData.filter((item) => item.status === 'SUCCESS')[0];
   } else {
-    payinData = existingPayinData.filter((item) => item.status === 'FAILED') ? existingPayinData[existingPayinData.length - 2] : existingPayinData[existingPayinData.length - 1];
+    payinData = existingPayinData[existingPayinData.length - 1];
   }
   // Construct the error message
   let message;
