@@ -554,6 +554,7 @@ class WithdrawController {
           const blazePeResponse = await this.createBlazepeWithdraw(singleWithdrawData, merchantRefId);
           if (blazePeResponse?.success === true) {
               payload.status = 'PENDING';
+              payload.utr_id = merchantRefId;
               logger.info(`New payout with merchantRefId: ${merchantRefId} has been created`, blazePeResponse?.message);
           } else if(blazePeResponse?.success === false){
             logger.error(`New payout with merchantRefId: ${merchantRefId} has been failed to initiate`,blazePeResponse?.message);
@@ -562,12 +563,12 @@ class WithdrawController {
     
                 if (getStatus?.status === 'REFUNDED' || getStatus?.status === 'REVERSED') {
                     payload.status = 'REVERSED';
-                    payload.utr_id = getStatus?.utr;
+                    // payload.utr_id = getStatus?.utr;
                     logger.error(`Status is ${payload.status}`, getStatus?.message);
                 } else if(getStatus?.status === 'SUCCESS'){
                   payload.status = getStatus?.status.toUpperCase();;
                   payload.approved_at = new Date().toISOString();
-                  payload.utr_id = getStatus?.utr;
+                  // payload.utr_id = getStatus?.utr;
                   logger.info(`Status is ${payload.status}`, getStatus?.message);
                 } else {
                     payload.status = getStatus?.status? getStatus?.status.toUpperCase() : 'REJECTED';
