@@ -70,7 +70,7 @@ class PayInService {
     merchantCode,
     vendorCode,
     userId,
-    userSubmittedUtr,
+    // userSubmittedUtr,
     utr,
     payInId,
     dur,
@@ -119,10 +119,12 @@ class PayInService {
       ...(merchantOrderId && {
         merchant_order_id: { contains: merchantOrderId, mode: "insensitive" },
       }),
-      ...(userSubmittedUtr && {
-        user_submitted_utr: { contains: userSubmittedUtr, mode: "insensitive" },
+      ...(utr && {
+        OR: [
+          { user_submitted_utr: { contains: utr, mode: "insensitive" } },
+          { utr: { contains: utr, mode: "insensitive" } },
+        ],
       }),
-      ...(utr && { utr: { contains: utr, mode: "insensitive" } }),
       ...(userId && { user_id: { equals: userId } }),
       ...(payInId && { id: { equals: payInId } }),
       ...(upiShortCode && {

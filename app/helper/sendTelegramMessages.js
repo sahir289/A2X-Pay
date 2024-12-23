@@ -163,7 +163,7 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
   if (hasSuccess) {
     payinData = existingPayinData.filter((item) => item.status === 'SUCCESS')[0];
   } else {
-    payinData = existingPayinData.filter((item) => item.status === 'FAILED') ? existingPayinData[existingPayinData.length - 2] : existingPayinData[existingPayinData.length - 1];
+    payinData = existingPayinData[existingPayinData.length - 1];
   }
   // Construct the error message
   let message;
@@ -512,25 +512,9 @@ export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
   TELEGRAM_BOT_TOKEN,
   replyToMessageId
 ) {
-  let getallPayinDataByUtr
-  getallPayinDataByUtr = await payInRepo.getPayinDataByUtr(getPayInData.user_submitted_utr);
-  if (getallPayinDataByUtr.length === 0) {
-    getallPayinDataByUtr = await payInRepo.getPayinDataByUsrSubmittedUtr(getPayInData.user_submitted_utr);
-  }
-  const hasSuccess = getallPayinDataByUtr.some((item) => item.status === 'SUCCESS');
-  let payinData
-  if (hasSuccess) {
-    payinData = getallPayinDataByUtr.filter((item) => item.status === 'SUCCESS')[0];
-  } else {
-    payinData = getallPayinDataByUtr[getallPayinDataByUtr.length - 1];
-  }
   // Construct the error message
-  let message;
-  if (payinData?.status === "SUCCESS") {
-    message = `✅ UTR ${payinData?.utr} is already confirmed with this orderId ${payinData?.merchant_order_id}`;
-  } else {
-    message = `🚨 UTR ${payinData?.utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
-  }
+  const message = `⛔ Merchant Order ID: ${getPayInData.merchant_order_id}
+  is Already Marked ${getPayInData.status} with UTR: ${getPayInData.user_submitted_utr}`;
 
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
   try {

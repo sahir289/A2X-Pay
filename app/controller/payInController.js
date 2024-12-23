@@ -1039,7 +1039,7 @@ class PayInController {
         merchantCode,
         vendorCode,
         userId,
-        userSubmittedUtr,
+        // userSubmittedUtr,
         utr,
         payInId,
         dur,
@@ -1065,7 +1065,7 @@ class PayInController {
         merchantCode,
         vendorCode,
         userId,
-        userSubmittedUtr,
+        // userSubmittedUtr,
         utr,
         payInId,
         dur,
@@ -1104,7 +1104,7 @@ class PayInController {
         image: base64Image,
       };
       const resFromOcrPy = await axios.post(
-        "http://54.172.72.118:8000/ocr",
+        "http://54.81.39.27:8000/ocr",
         imgData
       );
 
@@ -1839,7 +1839,7 @@ class PayInController {
             image: base64Image,
           };
           const resFromOcrPy = await axios.post(
-            "http://54.172.72.118:8000/ocr",
+            "http://54.81.39.27:8000/ocr",
             imgData
           );
 
