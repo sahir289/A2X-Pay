@@ -27,13 +27,13 @@ class LienController {
                     "Merchant order id does not exist",
                 );
             }
-            else if (getPayInData.merchant_id !== merchant.id) {
-                return DefaultResponse(
-                    res,
-                    404,
-                    "Please enter valid merchant order id",
-                );
-            }
+            // else if (getPayInData.merchant_id !== merchant.id) {
+            //     return DefaultResponse(
+            //         res,
+            //         404,
+            //         "Please enter valid merchant order id",
+            //     );
+            // }
             else if (getPayInData.user_id !== req.body.user_id) {
                 return DefaultResponse(
                     res,
