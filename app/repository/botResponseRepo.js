@@ -17,15 +17,11 @@ class BotResponseRepo {
     try {
       const botRes = await prisma.telegramResponse.findFirst({
         where: {
-          amount_code: code,  // Search for the bot data by amount_code
+          amount_code: code,
         },
       });
 
-      if (!botRes) {
-        throw new Error("Bot data not found");  // Handle case when no record is found
-      }
-
-      return botRes;  // Return the fetched bot data
+      return botRes;
     } catch (error) {
       logger.info(`Error fetching bot data for amount_code: ${code}`, error);
     }
@@ -164,9 +160,6 @@ class BotResponseRepo {
 
   async getBankDataByBankName(bankName) {
     try {
-      if (!bankName) {
-        throw new Error('Bank name is required');
-      }
 
       const res = await prisma.bankAccount.findFirst({
         where: {
@@ -176,11 +169,6 @@ class BotResponseRepo {
           Merchant_Bank: true, // Includes related Merchant_Bank data
         },
       });
-
-      // If no bank data is found, you might want to handle it explicitly
-      if (!res) {
-        throw new Error(`No bank found with the name ${bankName}`);
-      }
 
       return res;
     } catch (error) {

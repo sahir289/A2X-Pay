@@ -69,6 +69,7 @@ class LienController {
             );
         } catch (error) {
             logger.info(error);
+            next(error);
         }
     }
 
@@ -104,6 +105,7 @@ class LienController {
             );
         } catch (error) {
             logger.info(error);
+            next(error);
         }
     }
 }

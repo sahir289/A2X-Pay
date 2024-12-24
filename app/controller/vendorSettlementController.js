@@ -25,6 +25,7 @@ class SettlementController {
             return DefaultResponse(res, 201, "Settlement created successfully");
         } catch (err) {
             logger.info(err);
+            next(err);
         }
     }
 
@@ -61,6 +62,7 @@ class SettlementController {
             return DefaultResponse(res, 201, "Settlement fetched successfully!", data);
         } catch (err) {
             logger.info(err);
+            next(err);
         }
     }
 
@@ -83,6 +85,7 @@ class SettlementController {
             return DefaultResponse(res, 200, "Settlement Updated!", data);
         } catch (err) {
             logger.info(err);
+            next(err);
         }
     }
 }
