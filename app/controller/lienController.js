@@ -4,6 +4,7 @@ import { checkValidation } from "../helper/validationHelper.js";
 import lienRepo from "../repository/lienRepo.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import payInRepo from "../repository/payInRepo.js";
+import { logger } from "../utils/logger.js";
 
 class LienController {
     async createLien(req, res, next) {
@@ -67,7 +68,7 @@ class LienController {
                 lien
             );
         } catch (error) {
-            next(error);
+            logger.info(error);
         }
     }
 
@@ -102,7 +103,7 @@ class LienController {
                 lien
             );
         } catch (error) {
-            next(error);
+            logger.info(error);
         }
     }
 }
