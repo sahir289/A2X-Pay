@@ -19,7 +19,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -109,7 +109,7 @@ class BankAccountController {
         );
       }
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -127,7 +127,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -144,7 +144,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -165,7 +165,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -183,7 +183,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -325,7 +325,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -343,7 +343,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
   async updateBankAccountDetails(req, res, next) {
@@ -361,7 +361,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 }

@@ -4,6 +4,7 @@ import { CustomError } from "../middlewares/errorHandler.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import userRepo from "../repository/userRepo.js";
 import { v4 as uuidv4 } from "uuid";
+import { logger } from "../utils/logger.js";
 
 class MerchantController {
   async createMerchant(req, res, next) {
@@ -65,7 +66,7 @@ class MerchantController {
       }
       return DefaultResponse(res, 201, "Merchant is created successfully", merchantRes);
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -83,7 +84,7 @@ class MerchantController {
         merchant
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -104,7 +105,7 @@ class MerchantController {
         merchants
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -137,7 +138,7 @@ class MerchantController {
         remainingMerchants
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -155,7 +156,7 @@ class MerchantController {
         merchantRes
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -175,7 +176,7 @@ class MerchantController {
         merchantRes
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 
@@ -196,7 +197,7 @@ class MerchantController {
         merchants
       );
     } catch (error) {
-      next(error);
+      logger.info(error);
     }
   }
 }
