@@ -5,6 +5,7 @@ import merchantRepo from "../repository/merchantRepo.js";
 import userRepo from "../repository/userRepo.js";
 import vendorRepo from "../repository/vendorRepo.js";
 import vendorSettlementService from "../services/vendorSettlementService.js";
+import { logger } from "../utils/logger.js";
 
 class SettlementController {
 
@@ -23,7 +24,7 @@ class SettlementController {
             });
             return DefaultResponse(res, 201, "Settlement created successfully");
         } catch (err) {
-            next(err);
+            logger.info(err);
         }
     }
 
@@ -59,7 +60,7 @@ class SettlementController {
             const data = await vendorSettlementService.getSettlement(skip, take, parseInt(id), Codes, status, amount, acc_no, method, refrence_id);
             return DefaultResponse(res, 201, "Settlement fetched successfully!", data);
         } catch (err) {
-            next(err);
+            logger.info(err);
         }
     }
 
@@ -81,7 +82,7 @@ class SettlementController {
             const data = await vendorSettlementService.updateSettlement(req.params.id, payload);
             return DefaultResponse(res, 200, "Settlement Updated!", data);
         } catch (err) {
-            next(err);
+            logger.info(err);
         }
     }
 }
