@@ -41,11 +41,6 @@ class BankAccountRepo {
         },
       });
 
-      // Check if no records were found
-      if (!bankRes || bankRes.length === 0) {
-        throw new Error('No bank accounts found for the specified merchant');
-      }
-
       return bankRes;
     } catch (error) {
       logger.info('Failed to get merchant bank details by ID:', error.message);
@@ -61,11 +56,6 @@ class BankAccountRepo {
           bank_used_for: "payIn",
         },
       });
-
-      // Check if no records were found
-      if (!bankRes || bankRes.length === 0) {
-        throw new Error('No bank accounts found for payIn');
-      }
 
       return bankRes;
     } catch (error) {
@@ -87,11 +77,6 @@ class BankAccountRepo {
         where: filters,
       });
 
-      // Check if no records were found
-      if (!bankRes || bankRes.length === 0) {
-        throw new Error('No bank accounts found for payOut');
-      }
-
       return bankRes;
     } catch (error) {
       logger.info('Failed to get payOut bank accounts:', error.message);
@@ -106,11 +91,6 @@ class BankAccountRepo {
           code: code,
         },
       });
-
-      // Check if no bank account was found
-      if (!bankAccRes) {
-        throw new Error('Bank account not found');
-      }
 
       return bankAccRes;
     } catch (error) {
@@ -138,14 +118,8 @@ class BankAccountRepo {
       // Ensure the balance is a number, even if it's 0
       const currentBalance = parseFloat(bankAccRes.balance) || 0;
 
-      // Ensure the amount is a valid number
-      const amountFloat = parseFloat(amount);
-      if (isNaN(amountFloat)) {
-        throw new Error("Invalid amount provided");
-      }
-
       // Calculate the new balance
-      const newBalance = currentBalance + amountFloat;
+      const newBalance = currentBalance + parseFloat(amount);
 
       // Update the bank account with the new balance
       const updateBankAccRes = await prisma.bankAccount.update({
@@ -183,23 +157,12 @@ class BankAccountRepo {
       // Ensure the balance is a number, even if it's 0
       const currentBalance = parseFloat(bankAccRes.balance) || 0;
 
-      // Ensure the amount is a valid number
-      const amountFloat = parseFloat(amount);
-      if (isNaN(amountFloat)) {
-        throw new Error("Invalid amount provided");
-      }
-
       // Calculate the new balance based on the status
-      let newBalance = currentBalance;
+      let newBalance = 0;
       if (status === "SUCCESS") {
-        newBalance = currentBalance - amountFloat;
+        newBalance = currentBalance - parseFloat(amount);
       } else if (status === "REJECTED") {
-        newBalance = currentBalance + amountFloat;
-      }
-
-      // Ensure that the balance does not become negative (if necessary)
-      if (newBalance < 0) {
-        throw new Error("Insufficient balance for payout");
+        newBalance = currentBalance + parseFloat(amount);
       }
 
       // Update the bank account with the new balance
@@ -398,10 +361,6 @@ class BankAccountRepo {
         },
       });
 
-      if (!bankRes) {
-        throw new Error("Bank account not found");
-      }
-
       return bankRes;
     } catch (error) {
       logger.info("Failed to retrieve bank account by ID", error);
@@ -410,11 +369,6 @@ class BankAccountRepo {
 
   async updateBankAccountStates(data) {
     try {
-      // Ensure the required parameters are provided
-      if (!data.id || !data.fieldName || !data.value) {
-        throw new Error("Missing required parameters: id, fieldName, or value");
-      }
-
       // Update the bank account state dynamically
       const bankAccRes = await prisma.bankAccount.update({
         where: {
@@ -433,19 +387,12 @@ class BankAccountRepo {
 
   async getBankNickName(nick_name) {
     try {
-      if (!nick_name) {
-        throw new Error("Nickname is required to fetch the bank account.");
-      }
 
       const bankRes = await prisma.bankAccount.findFirst({
         where: {
           ac_name: nick_name,
         },
       });
-
-      if (!bankRes) {
-        throw new Error("Bank account with the specified nickname not found.");
-      }
 
       return bankRes;
     } catch (error) {
@@ -463,11 +410,6 @@ class BankAccountRepo {
           Merchant_Bank: true, // Include related merchant-bank data
         }
       });
-
-      if (!res) {
-        logger.info(`No bank account found for id: ${bankId}`);
-        return null;  // Return null if no data is found
-      }
 
       return res;  // Return the found bank account details
     } catch (error) {
