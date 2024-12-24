@@ -884,6 +884,7 @@ class BotResponseController {
       }
     } catch (err) {
       logger.info(err);
+      next(err);
     }
   }
 
@@ -902,6 +903,7 @@ class BotResponseController {
       );
     } catch (error) {
       logger.info(error);
+      next(error);
     }
   }
 
@@ -920,6 +922,7 @@ class BotResponseController {
       );
     } catch (error) {
       logger.info(error);
+      next(error);
     }
   }
 
@@ -968,6 +971,7 @@ class BotResponseController {
       }
     } catch (error) {
       logger.info(error);
+      next(error);
     }
   }
 }

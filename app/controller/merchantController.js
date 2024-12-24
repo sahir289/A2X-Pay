@@ -67,6 +67,7 @@ class MerchantController {
       return DefaultResponse(res, 201, "Merchant is created successfully", merchantRes);
     } catch (error) {
       logger.info(error);
+      next(error);
     }
   }
 
@@ -85,6 +86,7 @@ class MerchantController {
       );
     } catch (error) {
       logger.info(error);
+      next(error);
     }
   }
 
@@ -106,6 +108,7 @@ class MerchantController {
       );
     } catch (error) {
       logger.info(error);
+      next(error);
     }
   }
 
@@ -139,6 +142,7 @@ class MerchantController {
       );
     } catch (error) {
       logger.info(error);
+      next(error);
     }
   }
 
@@ -157,6 +161,7 @@ class MerchantController {
       );
     } catch (error) {
       logger.info(error);
+      next(error);
     }
   }
 
@@ -177,6 +182,7 @@ class MerchantController {
       );
     } catch (error) {
       logger.info(error);
+      next(error);
     }
   }
 
@@ -198,6 +204,7 @@ class MerchantController {
       );
     } catch (error) {
       logger.info(error);
+      next(error);
     }
   }
 }
