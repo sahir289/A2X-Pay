@@ -99,7 +99,6 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       };
       return acc;
     }, {});
-    
 
     const totalPayinTransactions = await prisma.payin.groupBy({
       by: ["merchant_id"],
@@ -143,8 +142,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _sum: { amount: true },
       _count: { id: true },
       where: {
-        status: "SUCCESS",
-        approved_at: { gte: startDate, lte: endDate },
+        status: { in: ["SUCCESS", "REJECTED"] },
+        updatedAt: { gte: startDate, lte: endDate },
       },
     });
 
@@ -190,8 +189,6 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       0
     );
 
-    const formattedPayIns = [];
-
     const filteredPayinMerchants = merchants.filter(merchant => {
       if (!payInMap[merchant.id]) {
         return false; // exclude merchants without transactions
@@ -207,7 +204,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
     });
 
     const filteredPayoutMerchants = merchants.filter(merchant => {
-      if (!payInMap[merchant.id]) {
+      if (!payOutMap[merchant.id]) {
         return false; // exclude merchants without transactions
       }
     
@@ -217,21 +214,10 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
           return false; // exclude the merchant if it's a child of another
         }
       }
-      return true; // include the merchant if it’s a parent and has transactions
+      return true;
     });
-    // const formattedPayIns = payIns
-    //   .map((payIn) => {
-    //     const { merchant_id, _sum, _count } = payIn;
-    //     const merchantCode = merchantCodeMap[merchant_id];
 
-    //     return merchantCode && _sum.amount > 0
-    //       ? `${merchantCode}: ${formatePrice(_sum.amount)} (${_count.id})`
-    //       : null;
-    //   })
-    //   .filter(Boolean);
-
-    // const formattedPayIns 
-
+    const formattedPayIns = [];
     for (let merchant of filteredPayinMerchants) {
       const { id, code, child_code } = merchant;
 
@@ -421,8 +407,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       }
 
       // mark this parent and its children as processed
-      processedPayinMerchants.add(code);
-      child_code.forEach((childCode) => processedPayinMerchants.add(childCode));
+      processedPayOutMerchants.add(code);
+      child_code.forEach((childCode) => processedPayOutMerchants.add(childCode));
 
       let totalAmount = 0;
       let totalCount = 0;
