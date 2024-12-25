@@ -1,41 +1,49 @@
 import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../client/prisma.js";
+import { logger } from "../utils/logger.js";
 class Withdraw {
   async createWithdraw(body) {
-
-    return await prisma.payout.create({
-      data: {
-        ...body,
-        merchant_order_id: body?.merchant_order_id || uuidv4(),
-      },
-    });
+    try {
+      return await prisma.payout.create({
+        data: {
+          ...body,
+          merchant_order_id: body?.merchant_order_id || uuidv4(),
+        },
+      });
+    } catch (err) {
+      logger.info("Error creating Withdraw", err);
+    }
   }
 
   async checkPayoutStatus(payoutId, merchantCode, merchantOrderId) {
-    const conditions = {
-      Merchant: {
-        code: merchantCode,
-      },
-      merchant_order_id: merchantOrderId,
-    };
-
-    if (payoutId !== null) {
-      conditions.id = payoutId;
-    }
-
-    const data = await prisma.payout.findFirst({
-      where: {
-        id: payoutId,
+    try {
+      const conditions = {
         Merchant: {
-          code: merchantCode
+          code: merchantCode,
         },
         merchant_order_id: merchantOrderId,
-      },
-      include: {
-        Merchant: true,
-      },
-    });
-    return data;
+      };
+
+      if (payoutId !== null) {
+        conditions.id = payoutId;
+      }
+
+      const data = await prisma.payout.findFirst({
+        where: {
+          id: payoutId,
+          Merchant: {
+            code: merchantCode
+          },
+          merchant_order_id: merchantOrderId,
+        },
+        include: {
+          Merchant: true,
+        },
+      });
+      return data;
+    } catch (err) {
+      logger.info("Error checking Payout Status", err);
+    }
   }
 
   async getWithdraw(
@@ -151,7 +159,7 @@ class Withdraw {
   async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
+
     const condition = {
       Merchant: {
         code: Array.isArray(merchantCodes)
@@ -194,10 +202,10 @@ class Withdraw {
             Merchant: true,
           },
           orderBy: status === "SUCCESS"
-          ? { approved_at: "asc" }
-          : status === "REJECTED"
-          ? { rejected_at: "asc" }
-          : { updatedAt: "asc" },
+            ? { approved_at: "asc" }
+            : status === "REJECTED"
+              ? { rejected_at: "asc" }
+              : { updatedAt: "asc" },
         });
         if (payOutData.length === 0) {
           break;
@@ -212,20 +220,23 @@ class Withdraw {
   }
 
   async updateVendorCodes(withdrawIds, vendorCode) {
-    await prisma.payout.updateMany({
-      where: {
-        id: {
-          in: withdrawIds,
+    try {
+      await prisma.payout.updateMany({
+        where: {
+          id: {
+            in: withdrawIds,
+          },
         },
-      },
-      data: { vendor_code: vendorCode },
-    });
+        data: { vendor_code: vendorCode },
+      });
 
-    return {
-      message:
-        "Vendor code updated successfully for all specified withdrawal IDs",
-    };
+      return {
+        message:
+          "Vendor code updated successfully for all specified withdrawal IDs",
+      };
+    } catch (error) {
+      logger.error('Error updating Vendor Codes', error);
+    }
   }
 }
-
 export default new Withdraw();

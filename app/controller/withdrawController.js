@@ -58,6 +58,7 @@ class WithdrawController {
       })
       return DefaultResponse(res, 201, "Payout created successfully", { merchantOrderId: data?.merchant_order_id, payoutId: data?.id, amount: data?.amount });
     } catch (err) {
+      logger.info(err);
       next(err);
     }
   }
@@ -431,6 +432,7 @@ class WithdrawController {
         response
       );
     } catch (err) {
+      logger.info('Payout not found', err);
       next(err);
     }
   }
@@ -483,6 +485,7 @@ class WithdrawController {
       return DefaultResponse(res, 200, "Payout fetched successfully!", data);
     } catch (err) {
       logger.info(err);
+      next(err);
     }
   }
 
@@ -628,7 +631,8 @@ class WithdrawController {
       }
       return DefaultResponse(res, 200, "Payout Updated!", data);
     } catch (err) {
-      logger.info(err)
+      logger.info(err);
+      next(err);
     }
   }
 
@@ -753,6 +757,7 @@ class WithdrawController {
         );
       }
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
@@ -800,6 +805,7 @@ class WithdrawController {
         result.message || "Vendor code updated successfully"
       );
     } catch (err) {
+      logger.info(err);
       next(err);
     }
   }
