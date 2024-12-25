@@ -5,10 +5,8 @@ class LogInController {
     // Login User
     async login(req, res, next) {
         try {
-
             const { userName, password,confirmOverRide=false } = req.body;
  
-
             const newAccessToken = await loginServices.login(userName,password,confirmOverRide)
             return DefaultResponse(
                 res,
