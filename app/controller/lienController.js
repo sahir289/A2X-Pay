@@ -81,6 +81,7 @@ class LienController {
                 merchant_order_id,
                 merchantCode,
                 user_id,
+                includeSubMerchant
             } = req.query;
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 20;
@@ -94,7 +95,8 @@ class LienController {
                 amount,
                 merchant_order_id,
                 merchantCode,
-                user_id
+                user_id,
+                includeSubMerchant
             );
 
             return DefaultResponse(

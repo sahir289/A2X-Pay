@@ -40,13 +40,13 @@ class SettlementController {
                 amount,
                 acc_no,
                 method,
-                refrence_id
+                refrence_id,
+                includeSubMerchant
             } = req.query;
 
             const user = await userRepo.getUserByUsernameRepo(req.user.userName)
 
             let Codes;
-
 
             if ((user?.role !== "ADMIN" || !user?.code) && !code) {
                 Codes = user?.code.join(",")
@@ -57,7 +57,7 @@ class SettlementController {
 
             const take = Number(qTake) || 20;
             const skip = take * (Number(page || 1) - 1);
-            const data = await settlementService.getSettlement(skip, take, parseInt(id), Codes, status, amount, acc_no, method, refrence_id);
+            const data = await settlementService.getSettlement(skip, take, parseInt(id), Codes, status, amount, acc_no, method, refrence_id, includeSubMerchant);
             return DefaultResponse(res, 201, "Settlement fetched successfully!", data);
         } catch (err) {
             logger.info(err);
