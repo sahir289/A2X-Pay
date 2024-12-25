@@ -111,14 +111,8 @@ class MerchantRepo {
       // Ensure the balance is a number, even if it's 0
       const currentBalance = parseFloat(currentMerchant.balance) || 0;
 
-      // Ensure the amount is a number
-      const parsedAmount = parseFloat(amount);
-      if (isNaN(parsedAmount)) {
-        throw new Error("Invalid amount");
-      }
-
       // Calculate the new balance
-      const newBalance = currentBalance + parsedAmount;
+      const newBalance = currentBalance + parseFloat(amount);
 
       // Update the balance with the new total
       const updateMerchantRes = await prisma.merchant.update({
@@ -145,10 +139,6 @@ class MerchantRepo {
         where: { id: merchantId },
       });
 
-      if (!existingMerchant) {
-        throw new Error("Merchant not found");
-      }
-
       // Update the merchant's status to 'deleted'
       const merchantRes = await prisma.merchant.update({
         where: {
@@ -171,10 +161,6 @@ class MerchantRepo {
       const existingMerchant = await prisma.merchant.findUnique({
         where: { id: data.id },
       });
-
-      if (!existingMerchant) {
-        throw new Error("Merchant not found");
-      }
 
       // Update the merchant data
       const merchantRes = await prisma.merchant.update({
@@ -410,10 +396,6 @@ class MerchantRepo {
         where: { code: code },
       });
 
-      if (!existingMerchant) {
-        throw new Error("Merchant not found");
-      }
-
       // Update the merchant's is_merchant_Admin field to true
       const res = await prisma.merchant.update({
         where: {
@@ -436,10 +418,6 @@ class MerchantRepo {
       const existingMerchant = await prisma.merchant.findUnique({
         where: { id: id },
       });
-
-      if (!existingMerchant) {
-        throw new Error("Merchant not found");
-      }
 
       // Update the merchant's child_code field with the new value
       const res = await prisma.merchant.update({
