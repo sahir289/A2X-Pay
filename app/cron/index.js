@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { prisma } from "../client/prisma.js";
-import { sendTelegramDashboardReportMessage, sendTelegramDashboardSuccessRatioMessage } from "../helper/sendTelegramMessages.js";
+import { sendTelegramDashboardMerchantGroupingReportMessage, sendTelegramDashboardReportMessage, sendTelegramDashboardSuccessRatioMessage } from "../helper/sendTelegramMessages.js";
 import config from "../../config.js";
 import moment from "moment-timezone";
 
@@ -56,18 +56,12 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       select: { id: true, code: true, child_code: true },
     });
 
-    const processedPayinMerchants = new Set();
-    const processedPayOutMerchants = new Set();
-
     const banks = await prisma.bankAccount.findMany({
       select: { id: true, ac_name: true },
     });
 
     const merchantCodeMap = merchants.reduce((acc, merchant) => {
-      acc[merchant.code] = {
-        id: merchant.id,
-        childCodes: merchant.child_code, // Map child codes directly
-      };
+      acc[merchant.id] = merchant.code;    
       return acc;
     }, {});
 
@@ -87,18 +81,11 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       },
     });
 
+
     totalDepositAmount = payIns.reduce(
       (sum, payIn) => sum + parseFloat(payIn._sum.amount || 0),
       0
     );
-  
-    const payInMap = payIns.reduce((acc, payIn) => {
-      acc[payIn.merchant_id] = {
-        amount: parseFloat(payIn._sum.amount || 0),
-        count: payIn._count.id,
-      };
-      return acc;
-    }, {});
 
     const totalPayinTransactions = await prisma.payin.groupBy({
       by: ["merchant_id"],
@@ -142,18 +129,10 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       _sum: { amount: true },
       _count: { id: true },
       where: {
-        status: { in: ["SUCCESS", "REJECTED"] },
+        status: "SUCCESS",
         updatedAt: { gte: startDate, lte: endDate },
       },
     });
-
-    const payOutMap = payOuts.reduce((acc, payOut) => {
-      acc[payOut.merchant_id] = {
-        amount: parseFloat(payOut._sum.amount || 0),
-        count: payOut._count.id,
-      };
-      return acc;
-    }, {});
 
     totalWithdrawAmount = payOuts.reduce(
       (sum, payOut) => sum + parseFloat(payOut._sum.amount || 0),
@@ -189,74 +168,60 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       0
     );
 
-    const filteredPayinMerchants = merchants.filter(merchant => {
-      if (!payInMap[merchant.id]) {
-        return false; // exclude merchants without transactions
-      }
-    
-      // check if the merchant's code is in the child_code array of any other merchant
-      for (const m of merchants) {
-        if (m.child_code.includes(merchant.code)) {
-          return false; // exclude the merchant if it's a child of another
+    // format payins of merchants independently
+    const formattedPayIns = payIns
+      .map((payIn) => {
+        const { merchant_id, _sum, _count } = payIn;
+        const merchantCode = merchantCodeMap[merchant_id];
+        return merchantCode && _sum.amount > 0
+          ? `${merchantCode}: ${formatePrice(_sum.amount)} (${_count.id})`
+          : null;
+      })
+      .filter(Boolean);
+
+      // here we are grouping merchants with their child
+      const childToParentPayinMap = {};
+      const parentToChildrenPayinMap = {};
+      
+      merchants.forEach((merchant) => {
+        const { code, child_code } = merchant;
+        if (child_code) {
+          child_code.forEach((child) => {
+            childToParentPayinMap[child] = code;
+          });
         }
-      }
-      return true; // include the merchant if it’s a parent and has transactions
-    });
+        parentToChildrenPayinMap[code] = child_code || [];
+      });
 
-    const filteredPayoutMerchants = merchants.filter(merchant => {
-      if (!payOutMap[merchant.id]) {
-        return false; // exclude merchants without transactions
-      }
-    
-      // check if the merchant's code is in the child_code array of any other merchant
-      for (const m of merchants) {
-        if (m.child_code.includes(merchant.code)) {
-          return false; // exclude the merchant if it's a child of another
-        }
-      }
-      return true;
-    });
+      const merchantPayinAggregates = {};
 
-    const formattedPayIns = [];
-    for (let merchant of filteredPayinMerchants) {
-      const { id, code, child_code } = merchant;
-
-      // if this merchant (or its child) has already been processed then it will skip
-      if (processedPayinMerchants.has(code)) {
-        continue;
-      }
-
-      // mark this parent and its children as processed
-      processedPayinMerchants.add(code);
-      child_code.forEach((childCode) => processedPayinMerchants.add(childCode));
-
-      // Get all merchant codes for this parent (parent + children)
-      // const allMerchantCodes = [code, ...child_code];
-
-      let totalAmount = 0;
-      let totalCount = 0;
-
-      const parentPayInData = payInMap[id];
-      if (parentPayInData) {
-        totalAmount += parentPayInData.amount;
-        totalCount += parentPayInData.count;
-      }
-
-      child_code.forEach((childCode) => {
-        const childMerchant = merchants.find((m) => m.code === childCode);
-        if (childMerchant) {
-          const childPayInData = payInMap[childMerchant.id];
-          if (childPayInData) {
-            totalAmount += childPayInData.amount;
-            totalCount += childPayInData.count;
+      payIns.forEach(({ merchant_id, _sum, _count }) => {
+        const merchant = merchants.find((m) => m.id === merchant_id);
+        if (merchant) {
+          const code = merchant.code;
+          const parentCode = childToParentPayinMap[code] || code;
+      
+          // initialize aggregation for the parent merchant if it is not done already
+          if (!merchantPayinAggregates[parentCode]) {
+            merchantPayinAggregates[parentCode] = { amount: 0, count: 0 };
           }
+
+          // add amount to the parent merchant aggregation
+          merchantPayinAggregates[parentCode].amount += Number(_sum.amount) || 0;
+          merchantPayinAggregates[parentCode].count += Number(_count.id) || 0;
         }
       });
 
-      if (totalAmount > 0) {
-        formattedPayIns.push(`${code}: ${formatePrice(totalAmount)} (${totalCount})`);
-      }
-    }
+      // format payins with merchants grouping
+      const formattedMerchantGroupingPayIns = [];
+      Object.keys(parentToChildrenPayinMap).forEach((parentCode) => {
+        if (merchantPayinAggregates[parentCode]) {
+          const { amount, count } = merchantPayinAggregates[parentCode];
+          if (amount > 0) {
+            formattedMerchantGroupingPayIns.push(`${parentCode}: ${formatePrice(amount)} (${count})`);
+          }
+        }
+      });
 
     const formattedRatios = payIns
       .map((payIn) => {
@@ -388,52 +353,60 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       
       formattedSuccessRatiosByMerchant();
 
-    // const formattedPayOuts = payOuts
-    //   .map((payOut) => {
-    //     const { merchant_id, _sum, _count } = payOut;
-    //     const merchantCode = merchantCodeMap[merchant_id];
-    //     return merchantCode
-    //       ? `${merchantCode}: ${formatePrice(_sum.amount)} (${_count.id})`
-    //       : null;
-    //   })
-    //   .filter(Boolean);
-    const formattedPayOuts = [];
-    for (let merchant of filteredPayoutMerchants) {
-      const { id, code, child_code } = merchant;
+  // format payins of merchants independently
+    const formattedPayOuts = payOuts
+      .map((payOut) => {
+        const { merchant_id, _sum, _count } = payOut;
+        const merchantCode = merchantCodeMap[merchant_id];
+        return merchantCode
+          ? `${merchantCode}: ${formatePrice(_sum.amount)} (${_count.id})`
+          : null;
+      })
+      .filter(Boolean);
 
-      // if this merchant (or its child) has already been processed then it will skip
-      if (processedPayOutMerchants.has(code)) {
-        continue;
-      }
+    // here we are grouping merchants with their child
+      const childToParentPayoutMap = {};
+      const parentToChildrenPayoutMap = {};
+      
+      merchants.forEach((merchant) => {
+        const { code, child_code } = merchant;
+        if (child_code) {
+          child_code.forEach((child) => {
+            childToParentPayoutMap[child] = code;
+          });
+        }
+        parentToChildrenPayoutMap[code] = child_code || [];
+      });
 
-      // mark this parent and its children as processed
-      processedPayOutMerchants.add(code);
-      child_code.forEach((childCode) => processedPayOutMerchants.add(childCode));
+      const merchantPayoutAggregates = {};
 
-      let totalAmount = 0;
-      let totalCount = 0;
-
-      const parentPayOutData = payOutMap[id];
-      if (parentPayOutData) {
-        totalAmount += parentPayOutData.amount;
-        totalCount += parentPayOutData.count;
-      }
-
-      child_code.forEach((childCode) => {
-        const childMerchant = merchants.find((m) => m.code === childCode);
-        if (childMerchant) {
-          const childPayOutData = payOutMap[childMerchant.id];
-          if (childPayOutData) {
-            totalAmount += childPayOutData.amount;
-            totalCount += childPayOutData.count;
+      payOuts.forEach(({ merchant_id, _sum, _count }) => {
+        const merchant = merchants.find((m) => m.id === merchant_id);
+        if (merchant) {
+          const code = merchant.code;
+          const parentCode = childToParentPayoutMap[code] || code;
+      
+          // initialize aggregation for the parent merchant if it is not already done
+          if (!merchantPayoutAggregates[parentCode]) {
+            merchantPayoutAggregates[parentCode] = { amount: 0, count: 0 };
           }
+
+          // add amount to the parent merchant aggregation
+          merchantPayoutAggregates[parentCode].amount += Number(_sum.amount) || 0;
+          merchantPayoutAggregates[parentCode].count += Number(_count.id) || 0;
         }
       });
 
-      if (totalAmount > 0) {
-        formattedPayOuts.push(`${code}: ${formatePrice(totalAmount)} (${totalCount})`);
-      }
-    }
+      // format payOuts with merchants grouping
+      const formattedMerchantGroupingPayOuts = [];
+      Object.keys(parentToChildrenPayoutMap).forEach((parentCode) => {
+        if (merchantPayoutAggregates[parentCode]) {
+          const { amount, count } = merchantPayoutAggregates[parentCode];
+          if (amount > 0) {
+            formattedMerchantGroupingPayOuts.push(`${parentCode}: ${formatePrice(amount)} (${count})`);
+          }
+        }
+      });
 
     const formattedBankPayIns = bankPayIns
       .map((payIn) => {
@@ -458,6 +431,21 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       config?.telegramDashboardChatId,
       formattedPayIns,
       formattedPayOuts,
+      formattedBankPayIns,
+      formattedBankPayOuts,
+      type === "H" ? "Hourly Report" : "Daily Report",
+      config?.telegramBotToken,
+      formatePrice(totalDepositAmount),
+      formatePrice(totalWithdrawAmount),
+      formatePrice(totalBankDepositAmount),
+      formatePrice(totalBankWithdrawAmount),
+      // formattedRatios
+    );
+
+    await sendTelegramDashboardMerchantGroupingReportMessage(
+      config?.telegramDashboardChatId,
+      formattedMerchantGroupingPayIns,
+      formattedMerchantGroupingPayOuts,
       formattedBankPayIns,
       formattedBankPayOuts,
       type === "H" ? "Hourly Report" : "Daily Report",

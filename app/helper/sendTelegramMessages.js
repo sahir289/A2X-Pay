@@ -428,6 +428,95 @@ ${
   }
 }
 
+export async function sendTelegramDashboardMerchantGroupingReportMessage(
+  chatId,
+  formattedPayIns,
+  formattedPayOuts,
+  formattedBankPayIns,
+  formattedBankPayOuts,
+  type,
+  TELEGRAM_BOT_TOKEN,
+  totalDepositAmount,
+  totalWithdrawAmount,
+  totalBankDepositAmount,
+  totalBankWithdrawAmount,
+  // formattedRatios
+) {
+  const currentDate = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const istTime = new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
+
+  let startHour = istTime.getHours() - 1;
+  let endHour = (startHour + 1) % 24; // Wrap around if it's 23 (to handle midnight)
+
+  const startAmpm = startHour >= 12 ? "PM" : "AM";
+  const endAmpm = endHour >= 12 ? "PM" : "AM";
+
+  // Convert hours to 12-hour format
+  startHour = startHour % 12 || 12;
+  endHour = endHour % 12 || 12;
+
+  const formattedTime = `${startHour}${startAmpm}-${endHour}${endAmpm}`;
+  const timeStamp = type === "Hourly Report" ? formattedTime : currentDate;
+  const message = `
+<b>${type} (${timeStamp}) IST</b>
+
+<b>💰 Deposits</b>
+${
+  formattedPayIns.length > 0
+    ? formattedPayIns.join("\n")
+    : "No deposits available."
+}
+
+<b>Total Deposits:</b> ${totalDepositAmount}
+
+<b>🏦 Withdrawals</b>
+${
+  formattedPayOuts.length > 0
+    ? formattedPayOuts.join("\n")
+    : "No withdrawals available."
+}
+
+<b>Total Withdrawals:</b> ${totalWithdrawAmount}
+
+<b>✅ Bank Account Deposits</b>
+${
+  formattedBankPayIns.length > 0
+    ? formattedBankPayIns.join("\n")
+    : "No bank account deposits available."
+}
+
+<b>Total Bank Account Deposits:</b> ${totalBankDepositAmount}
+
+<b>✅ Bank Account Withdrawals</b>
+${
+  formattedBankPayOuts.length > 0
+    ? formattedBankPayOuts.join("\n")
+    : "No bank account withdrawals available."
+}
+
+<b>Total Bank Account Withdrawals:</b> ${totalBankWithdrawAmount}
+    `;
+
+  // Send the message to Telegram
+  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+  try {
+    const response = await axios.post(sendMessageUrl, {
+      chat_id: chatId,
+      text: message,
+      parse_mode: "HTML",
+    });
+  } catch (error) {
+    console.error(
+      "Error sending Telegram message:",
+      error.response?.data || error.message
+    );
+  }
+}
+
 export async function sendTelegramDashboardSuccessRatioMessage(
   chatId,
   // merchantCode,
