@@ -1,4 +1,5 @@
 import { prisma } from "../client/prisma.js";
+import merchantRepo from "../repository/merchantRepo.js";
 import { logger } from "../utils/logger.js";
 class Settlement {
 
@@ -13,7 +14,7 @@ class Settlement {
         }
     }
 
-    async getSettlement(skip, take, id, code, status, amount, acc_no, method, refrence_id) {
+    async getSettlement(skip, take, id, code, status, amount, acc_no, method, refrence_id, includeSubMerchant) {
         try {
             const where = {};
             [
@@ -31,8 +32,25 @@ class Settlement {
                 });
     
             if (code) {
-                const SplitedCode = code?.split(",");
-                where.Merchant = { code: Array.isArray(SplitedCode) ? { in: SplitedCode } : code };
+                const result = code.split(",").map(item => item.trim());
+                let allNewMerchantCodes = [];
+                if (includeSubMerchant === 'false') {
+                    for (const code of result) {
+                        const merchantData = await merchantRepo.getMerchantByCode(code);
+                        if (merchantData) {
+                            allNewMerchantCodes = [
+                                ...allNewMerchantCodes,
+                                ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+                                merchantData.code,
+                            ];
+                        }
+                    }
+                    where.Merchant = { code: Array.isArray(allNewMerchantCodes) ? { in: allNewMerchantCodes } : code };
+                }
+                else {
+                    const SplitedCode = code?.split(",");
+                    where.Merchant = { code: Array.isArray(SplitedCode) ? { in: SplitedCode } : code };
+                }
             }
     
             const data = await prisma.settlement.findMany({

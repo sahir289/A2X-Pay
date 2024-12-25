@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../client/prisma.js";
 import { logger } from "../utils/logger.js";
+import merchantRepo from "../repository/merchantRepo.js";
 class Withdraw {
   async createWithdraw(body) {
     try {
@@ -62,7 +63,8 @@ class Withdraw {
     from_bank,
     commission,
     utr_id,
-    acc_holder_name
+    acc_holder_name,
+    includeSubMerchant
   ) {
     try {
       const where = {};
@@ -86,8 +88,26 @@ class Withdraw {
         }
       });
 
+      let merchantCodes = code?.split(',')
+      
       if (code) {
-        where.Merchant = { code: { in: code.split(',') } };
+        let allNewMerchantCodes = [];
+        if (includeSubMerchant  === 'false') {
+          for (const code of merchantCodes) {
+            const merchantData = await merchantRepo.getMerchantByCode(code);
+            if (merchantData) {
+              allNewMerchantCodes = [
+                ...allNewMerchantCodes,
+                ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+                merchantData.code,
+              ];
+            }
+          }
+          where.Merchant = { code: { in: allNewMerchantCodes } };
+        }
+        else {
+          where.Merchant = { code: { in: merchantCodes } };
+        }
       }
 
       const data = await prisma.payout.findMany({

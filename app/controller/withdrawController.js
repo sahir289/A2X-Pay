@@ -457,6 +457,7 @@ class WithdrawController {
         commission,
         utr_id,
         acc_holder_name,
+        includeSubMerchant,
       } = req.query;
       const take = Number(qTake) || 20;
       const skip = take * (Number(page || 1) - 1);
@@ -476,7 +477,8 @@ class WithdrawController {
         from_bank,
         commission,
         utr_id,
-        acc_holder_name
+        acc_holder_name,
+        includeSubMerchant
       );
       logger.info('Get All Payout', {
         status: data.status,
