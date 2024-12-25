@@ -41,10 +41,6 @@ class VendorRepo {
         }
       });
 
-      if (!vendor) {
-        throw new Error('Vendor not found');
-      }
-
       return vendor;
     } catch (error) {
       logger.info('Error fetching vendor by code:', error.message);
