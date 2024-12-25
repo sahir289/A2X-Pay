@@ -443,7 +443,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
     );
 
     await sendTelegramDashboardMerchantGroupingReportMessage(
-      config?.telegramDashboardChatId,
+      config?.telegramDashboardMerchantGroupingChatId,
       formattedMerchantGroupingPayIns,
       formattedMerchantGroupingPayOuts,
       formattedBankPayIns,
