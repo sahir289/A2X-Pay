@@ -1,5 +1,6 @@
 import loginServices from "../services/loginServices.js";
 import { DefaultResponse } from "../helper/customResponse.js"
+import { logger } from "../utils/logger.js";
 class LogInController {
     // Login User
     async login(req, res, next) {
@@ -17,6 +18,7 @@ class LogInController {
             );
         } catch (err) {
             // Handle errors and pass them to the next middleware
+            logger.info(err);
             next(err);
         }
     }
@@ -41,6 +43,7 @@ class LogInController {
             }
         } catch (err) {
             // Handle errors and pass them to the next middleware
+            logger.info(err);
             next(err);
         }
     }
