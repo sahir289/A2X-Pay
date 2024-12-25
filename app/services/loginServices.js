@@ -3,6 +3,7 @@ import tokenRepo from "../repository/tokenRepo.js";
 import userRepo from "../repository/userRepo.js";
 import { generateAccessToken } from "../helper/utils.js";
 import { comparePassword } from "../helper/passwordHelper.js";
+import { logger } from "../utils/logger.js";
 
 class LogInService {
 
@@ -39,9 +40,13 @@ class LogInService {
 
   // Verify Password while edit and delete functionality
   async comparePassword(userName, password) {
-    const user = await userRepo.getUserByUsernameRepo(userName);
-    const isPasswordValid = await comparePassword(password, user?.password);
-    return isPasswordValid
+    try {
+      const user = await userRepo.getUserByUsernameRepo(userName);
+      const isPasswordValid = await comparePassword(password, user?.password);
+      return isPasswordValid
+    } catch (err) {
+      logger.info(err);
+    }
   }
 }
 

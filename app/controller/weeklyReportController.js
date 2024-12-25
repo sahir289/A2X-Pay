@@ -1,5 +1,6 @@
 import { DefaultResponse } from "../helper/customResponse.js";
 import reportRepo from "../repository/reportRepo.js";
+import { logger } from "../utils/logger.js";
 
 class weeklyReportController {
     async getWeeklyReport(req, res, next) {
@@ -52,7 +53,8 @@ class weeklyReportController {
             }
 
         } catch (err) {
-            console.log(err);
+            logger.log(err);
+            next(err);
         }
     }
 }

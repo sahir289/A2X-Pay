@@ -19,6 +19,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
@@ -109,6 +110,7 @@ class BankAccountController {
         );
       }
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
@@ -127,6 +129,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
@@ -144,6 +147,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
@@ -165,6 +169,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
@@ -183,6 +188,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
@@ -306,6 +312,7 @@ class BankAccountController {
       }
     } catch (error) {
       logger.info(error);
+      next(error);
     }
   }
 
@@ -325,6 +332,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
@@ -343,6 +351,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
@@ -361,6 +370,7 @@ class BankAccountController {
         bankAccountRes
       );
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }

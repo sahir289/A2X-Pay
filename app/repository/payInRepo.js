@@ -4,55 +4,74 @@ import { logger } from '../utils/logger.js';
 class PayInRepo {
 
     async generatePayInUrl(data) {
-        const payInUrlRes = await prisma.payin.create({
-            data: data
-        })
-        return payInUrlRes
+        try {
+            const payInUrlRes = await prisma.payin.create({
+                data: data
+            })
+            return payInUrlRes
+        } catch (err) {
+            logger.info('Error generating PayIn URL:', err.message);
+        }
     }
 
     async validatePayInUrl(payInId) {
-        const validateUrlRes = await prisma.payin.findFirst({
-            where: {
-                id: payInId
-            }
-        })
-        return validateUrlRes
+        try {
+            const validateUrlRes = await prisma.payin.findFirst({
+                where: {
+                    id: payInId
+                }
+            })
+            return validateUrlRes
+        } catch (err) {
+            logger.info('Error validating PayIn URL:', err.message);
+        }
     }
 
     async expirePayInUrl(payInId) {
-        const expirePayInUrlRes = await prisma.payin.update({
-            where: {
-                id: payInId
-            }, data: {
-                is_url_expires: true,
-                status: "DROPPED"
-            }
-        })
-        return expirePayInUrlRes
+        try {
+            const expirePayInUrlRes = await prisma.payin.update({
+                where: {
+                    id: payInId
+                }, data: {
+                    is_url_expires: true,
+                    status: "DROPPED"
+                }
+            })
+            return expirePayInUrlRes
+        } catch (err) {
+            logger.info('Error in expiring PayIn URL:', err.message);
+        }
     }
 
     async getMerchantByCodeAndApiKey(code, api_key) {
+        try {
+            const merchantRes = await prisma.merchant.findFirst({
+                where: {
+                    code: code,
+                    api_key: api_key
+                }
+            })
 
-        const merchantRes = await prisma.merchant.findFirst({
-            where: {
-                code: code,
-                api_key: api_key
-            }
-        })
-
-        return merchantRes;
+            return merchantRes;
+        } catch (err) {
+            logger.info('Error fetching merchant data by code and api key:', err.message);
+        }
     }
 
     async getPayInData(payInId) {
-        const paymentRes = await prisma.payin.findFirst({
-            where: {
-                id: payInId
-            },
-            include:{
-                Merchant:true
-            }
-        })
-        return paymentRes
+        try {
+            const paymentRes = await prisma.payin.findFirst({
+                where: {
+                    id: payInId
+                },
+                include: {
+                    Merchant: true
+                }
+            })
+            return paymentRes
+        } catch (err) {
+            logger.info('Error fetching PayIn data by id:', err.message);
+        }
     }
 
     async updatePayInData(payInId, data) {
@@ -63,7 +82,7 @@ class PayInRepo {
                 },
                 data: data
             })
-            return payInUrlRes  
+            return payInUrlRes
         } catch (error) {
             logger.info('Payin data did not updated', error);
         }
@@ -71,108 +90,124 @@ class PayInRepo {
 
 
     async getPayInDataByUtrOrUpi(utr, upi_short_code) {
-        // Construct the conditions
-        let conditions = [];
+        try {
+            // Construct the conditions
+            let conditions = [];
 
-        // if (utr) {
-        //     conditions.push({ user_submitted_utr: utr , });
-        // }
-        if (utr) {
-            conditions.push({
-                user_submitted_utr: utr,
-                status: { not: 'DUPLICATE' }
-            });
-        }
-        if (upi_short_code !== "nil") {
-            conditions.push({ upi_short_code: upi_short_code });
-        }
+            // if (utr) {
+            //     conditions.push({ user_submitted_utr: utr , });
+            // }
+            if (utr) {
+                conditions.push({
+                    user_submitted_utr: utr,
+                    status: { not: 'DUPLICATE' }
+                });
+            }
+            if (upi_short_code !== "nil") {
+                conditions.push({ upi_short_code: upi_short_code });
+            }
 
-        // If no conditions are provided, return an empty array
-        if (conditions.length === 0) {
-            return [];
-        }
+            // If no conditions are provided, return an empty array
+            if (conditions.length === 0) {
+                return [];
+            }
 
-        // If both conditions are present, use AND condition
-        if (conditions[0]?.user_submitted_utr && conditions[1]?.upi_short_code) {
+            // If both conditions are present, use AND condition
+            if (conditions[0]?.user_submitted_utr && conditions[1]?.upi_short_code) {
 
-            // const payInRes = await prisma.payin.findMany({
-            //     where: {
-            //         AND: [
-            //             { user_submitted_utr: utr },
-            //             { upi_short_code: upi_short_code }
-            //         ],
-            //         OR: {
-            //             upi_short_code: upi_short_code
-            //         }
-            //     }
-            // });
-            // return payInRes;
-            const payInRes = await prisma.payin.findMany({
-                where: {
-                    AND: [
-                        { user_submitted_utr: utr },
-                        { upi_short_code: upi_short_code }
-                    ]
-                }
-            });
-
-            if (!payInRes.length) {
-                // If no result is found, try searching only by upi_short_code
-                const fallbackRes = await prisma.payin.findMany({
+                // const payInRes = await prisma.payin.findMany({
+                //     where: {
+                //         AND: [
+                //             { user_submitted_utr: utr },
+                //             { upi_short_code: upi_short_code }
+                //         ],
+                //         OR: {
+                //             upi_short_code: upi_short_code
+                //         }
+                //     }
+                // });
+                // return payInRes;
+                const payInRes = await prisma.payin.findMany({
                     where: {
-                        upi_short_code: upi_short_code,
-                       
+                        AND: [
+                            { user_submitted_utr: utr },
+                            { upi_short_code: upi_short_code }
+                        ]
                     }
                 });
-                return fallbackRes;
+
+                if (!payInRes.length) {
+                    // If no result is found, try searching only by upi_short_code
+                    const fallbackRes = await prisma.payin.findMany({
+                        where: {
+                            upi_short_code: upi_short_code,
+
+                        }
+                    });
+                    return fallbackRes;
+                }
+                return payInRes;
+            } else {
+                // If only one condition is present, use OR condition
+                const payInRes = await prisma.payin.findMany({
+                    where: {
+                        OR: conditions
+                    },
+                });
+                return payInRes;
             }
-            return payInRes;
-        } else {
-            // If only one condition is present, use OR condition
-            const payInRes = await prisma.payin.findMany({
-                where: {
-                    OR: conditions
-                },
-            });
-            return payInRes;
+        } catch (err) {
+            logger.info('Error fetching PayIn data by UTR or UPI:', err.message);
         }
     }
 
 
     async getPayInDataByMerchantOrderId(merchantOrderId) {
-        const payInDataRes = await prisma.payin.findFirst({
-            where: {
-                merchant_order_id: merchantOrderId,
-            },
-            include: {
-                Merchant: true
-            }
-        })
-        return payInDataRes;
+        try {
+            const payInDataRes = await prisma.payin.findFirst({
+                where: {
+                    merchant_order_id: merchantOrderId,
+                },
+                include: {
+                    Merchant: true
+                }
+            })
+            return payInDataRes;
+        } catch (err) {
+            logger.info('Error fetching PayIn data by merchant order id:', err.message);
+        }
     }
 
     async getPayinDataByUsrSubmittedUtr(usrSubmittedUtr) {
-        const payInRes = await prisma.payin.findMany({
-            where: {
-                user_submitted_utr: usrSubmittedUtr,
-            },
-            orderBy: {
-                sno: "desc",
-            },
-        });
-        return payInRes;
+        try {
+            const payInRes = await prisma.payin.findMany({
+                where: {
+                    user_submitted_utr: usrSubmittedUtr,
+                },
+                orderBy: {
+                    sno: "desc",
+                },
+            });
+            return payInRes;
+        } catch (err) {
+            logger.info('Error fetching PayIn data by user submitted UTR:', err.message);
+        }
     }
 
     async getPayinDataByUtr(utr) {
-        const payInRes = await prisma.payin.findMany({
-            where: {
-                utr: utr,
-            },
-            orderBy: {
-                sno: "desc",
-            },
-        });
-        return payInRes;
+        try {
+            const payInRes = await prisma.payin.findMany({
+                where: {
+                    utr: utr,
+                },
+                orderBy: {
+                    sno: "desc",
+                },
+            });
+            return payInRes;
+        } catch (err) {
+            logger.info('Error fetching PayIn data by UTR:', err.message);
+        }
     }
 }
 

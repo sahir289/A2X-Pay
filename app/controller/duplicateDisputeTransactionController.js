@@ -43,15 +43,78 @@ class DuplicateDisputeTransactionController {
             else {
                 if (merchant_order_id){
                     const newPayInData = await payInRepo.getPayInDataByMerchantOrderId(merchant_order_id);
-                    if (newPayInData.status === "SUCCESS") {
-                        return DefaultResponse(res, 400, `${merchant_order_id} is already in confirmed`);
-                    } else if (newPayInData.status === "BANK_MISMATCH") {
-                        return DefaultResponse(res, 400, `${merchant_order_id} is in bank mismatched`);
-                    } else if (newPayInData.status === "FAILED") {
-                        return DefaultResponse(res, 400, `${merchant_order_id} is in failed`);
-                    }
-                    if (newPayInData.user_submitted_utr) {
-                        if (newPayInData.user_submitted_utr === oldPayInData.utr) {
+                    if (newPayInData?.merchant_id === oldPayInData?.merchant_id){
+                        if (newPayInData.status === "SUCCESS") {
+                            return DefaultResponse(res, 400, `${merchant_order_id} is already in confirmed`);
+                        } else if (newPayInData.status === "BANK_MISMATCH") {
+                            return DefaultResponse(res, 400, `${merchant_order_id} is in bank mismatched`);
+                        } else if (newPayInData.status === "FAILED") {
+                            return DefaultResponse(res, 400, `${merchant_order_id} is in failed`);
+                        }
+                        if (newPayInData.user_submitted_utr) {
+                            if (newPayInData.user_submitted_utr === oldPayInData.utr) {
+                                const payInData = {
+                                    confirmed: req?.body?.amount,
+                                    is_notified: true,
+                                    // user_submitted_utr: oldPayInData.user_submitted_utr,
+                                    utr: oldPayInData.utr,
+                                    approved_at: new Date(),
+                                    is_url_expires: true,
+                                    user_submitted_image: null,
+                                    duration: duration,
+                                    status: newPayInData?.bank_name != oldPayInData?.bank_name ? "BANK_MISMATCH" : parseFloat(newPayInData?.amount) != parseFloat(req?.body?.amount) ? "DISPUTE" : "SUCCESS",
+                                };
+                                
+                                if (payInData.status === "SUCCESS") {
+                                    payInData.payin_commission = payinCommission;
+                                }
+                                
+                                const updatedPayInData = await payInRepo.updatePayInData(newPayInData?.id, payInData)
+                                const notifyData = {
+                                    status: updatedPayInData?.status,
+                                    merchantOrderId: updatedPayInData?.merchant_order_id,
+                                    payinId: updatedPayInData?.id,
+                                    amount: updatedPayInData?.confirmed,
+                                    req_amount: updatedPayInData?.amount,
+                                    utr_id: updatedPayInData?.utr
+                                };
+                            
+                                try {
+                                    logger.info('Sending notification to merchant', { notify_url: updatedPayInData?.notify_url, notify_data: notifyData });
+                                    //When we get the notify url we will add it.
+                                    const notifyMerchant = await axios.post(updatedPayInData?.notify_url, notifyData);
+                                    logger.info('Sending notification to merchant', {
+                                        status: notifyMerchant.status,
+                                        data: notifyMerchant.data,
+                                    })
+            
+                                } catch (error) {
+                                    logger.error("Error sending notification:", error);
+                                }
+            
+                                delete req?.body?.merchant_order_id // deleted to avoid updating merchant_order_id in existing payin data
+                                if(newPayInData?.merchant_order_id === oldPayInData?.merchant_order_id){
+                                    apiData = {
+                                        ...req.body,
+                                        status: "SUCCESS",
+                                        payin_commission: payinCommission,
+                                        approved_at: new Date(),
+                                        duration: duration,
+                                    }
+                                } else {
+                                    delete req?.body?.amount
+                                    apiData = {
+                                        ...req.body,
+                                        status: "FAILED",
+                                        duration: duration,
+                                    }
+                                }
+                            }
+                            else {
+                                return DefaultResponse(res, 400, `UTR ${newPayInData.user_submitted_utr} MisMatches with ${oldPayInData.utr} User Submitted UTR `);
+                            }
+                        }
+                        else {
                             const payInData = {
                                 confirmed: req?.body?.amount,
                                 is_notified: true,
@@ -109,67 +172,9 @@ class DuplicateDisputeTransactionController {
                                 }
                             }
                         }
-                        else {
-                            return DefaultResponse(res, 400, `UTR ${newPayInData.user_submitted_utr} MisMatches with ${oldPayInData.utr} User Submitted UTR `);
-                        }
                     }
                     else {
-                        const payInData = {
-                            confirmed: req?.body?.amount,
-                            is_notified: true,
-                            // user_submitted_utr: oldPayInData.user_submitted_utr,
-                            utr: oldPayInData.utr,
-                            approved_at: new Date(),
-                            is_url_expires: true,
-                            user_submitted_image: null,
-                            duration: duration,
-                            status: parseFloat(newPayInData?.amount) != parseFloat(req?.body?.amount) ? "DISPUTE" : newPayInData?.bank_name != oldPayInData?.bank_name ? "BANK_MISMATCH" : "SUCCESS",
-                        };
-                        
-                        if (payInData.status === "SUCCESS") {
-                            payInData.payin_commission = payinCommission;
-                        }
-                        
-                        const updatedPayInData = await payInRepo.updatePayInData(newPayInData?.id, payInData)
-                        const notifyData = {
-                            status: updatedPayInData?.status,
-                            merchantOrderId: updatedPayInData?.merchant_order_id,
-                            payinId: updatedPayInData?.id,
-                            amount: updatedPayInData?.confirmed,
-                            req_amount: updatedPayInData?.amount,
-                            utr_id: updatedPayInData?.utr
-                        };
-                    
-                        try {
-                            logger.info('Sending notification to merchant', { notify_url: updatedPayInData?.notify_url, notify_data: notifyData });
-                            //When we get the notify url we will add it.
-                            const notifyMerchant = await axios.post(updatedPayInData?.notify_url, notifyData);
-                            logger.info('Sending notification to merchant', {
-                                status: notifyMerchant.status,
-                                data: notifyMerchant.data,
-                            })
-    
-                        } catch (error) {
-                            logger.error("Error sending notification:", error);
-                        }
-    
-                        delete req?.body?.merchant_order_id // deleted to avoid updating merchant_order_id in existing payin data
-                        if(newPayInData?.merchant_order_id === oldPayInData?.merchant_order_id){
-                            apiData = {
-                                ...req.body,
-                                status: "SUCCESS",
-                                payin_commission: payinCommission,
-                                approved_at: new Date(),
-                                duration: duration,
-                            }
-                        } else {
-                            delete req?.body?.amount
-                            apiData = {
-                                ...req.body,
-                                status: "FAILED",
-                                duration: duration,
-                            }
-                        }
+                        return DefaultResponse(res, 400, `Merchant name must be same `);
                     }
                 }
                 else {
@@ -193,6 +198,7 @@ class DuplicateDisputeTransactionController {
               );
             return DefaultResponse(res, 200, "Transaction updated successfully", duplicateDisputeTransactionRes);
         } catch (error) {
+            logger.info(error);
             next(error);
         }
     }

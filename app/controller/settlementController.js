@@ -4,6 +4,7 @@ import { CustomError } from "../models/customError.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import userRepo from "../repository/userRepo.js";
 import settlementService from "../services/settlementService.js";
+import { logger } from "../utils/logger.js";
 
 class SettlementController {
 
@@ -22,6 +23,7 @@ class SettlementController {
             });
             return DefaultResponse(res, 201, "Settlement created successfully");
         } catch (err) {
+            logger.info(err);
             next(err);
         }
     }
@@ -58,6 +60,7 @@ class SettlementController {
             const data = await settlementService.getSettlement(skip, take, parseInt(id), Codes, status, amount, acc_no, method, refrence_id);
             return DefaultResponse(res, 201, "Settlement fetched successfully!", data);
         } catch (err) {
+            logger.info(err);
             next(err);
         }
     }
@@ -80,6 +83,7 @@ class SettlementController {
             const data = await settlementService.updateSettlement(req.params.id, payload);
             return DefaultResponse(res, 200, "Settlement Updated!", data);
         } catch (err) {
+            logger.info(err);
             next(err);
         }
     }

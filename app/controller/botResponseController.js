@@ -9,6 +9,7 @@ import { calculateCommission } from "../helper/utils.js";
 import bankAccountRepo from "../repository/bankAccountRepo.js";
 import { prisma } from "../client/prisma.js";
 import { CustomError } from "../middlewares/errorHandler.js";
+import { logger } from "../utils/logger.js";
 
 class BotResponseController {
   async botResponse(req, res, next) {
@@ -882,6 +883,7 @@ class BotResponseController {
         });
       }
     } catch (err) {
+      logger.info(err);
       next(err);
     }
   }
@@ -900,6 +902,7 @@ class BotResponseController {
         botRes
       );
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
@@ -918,6 +921,7 @@ class BotResponseController {
         botRes
       );
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
@@ -966,6 +970,7 @@ class BotResponseController {
         return DefaultResponse(res, 400, `UTR of this entry is already used with ${successPayinDataID[0]?.merchant_order_id} Merchant Order ID, No Changes Applied`);
       }
     } catch (error) {
+      logger.info(error);
       next(error);
     }
   }
