@@ -193,6 +193,7 @@ class DuplicateDisputeTransactionController {
               );
             return DefaultResponse(res, 200, "Transaction updated successfully", duplicateDisputeTransactionRes);
         } catch (error) {
+            logger.info(error);
             next(error);
         }
     }
