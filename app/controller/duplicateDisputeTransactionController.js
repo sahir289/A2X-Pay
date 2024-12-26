@@ -47,9 +47,11 @@ class DuplicateDisputeTransactionController {
                         if (newPayInData.status === "SUCCESS") {
                             return DefaultResponse(res, 400, `${merchant_order_id} is already in confirmed`);
                         } else if (newPayInData.status === "BANK_MISMATCH") {
-                            return DefaultResponse(res, 400, `${merchant_order_id} is in bank mismatched`);
+                            return DefaultResponse(res, 400, `${merchant_order_id} is in bank mismatched status`);
+                        } else if (newPayInData.status === "DISPUTE") {
+                            return DefaultResponse(res, 400, `${merchant_order_id} is in dispute status`);
                         } else if (newPayInData.status === "FAILED") {
-                            return DefaultResponse(res, 400, `${merchant_order_id} is in failed`);
+                            return DefaultResponse(res, 400, `${merchant_order_id} is in failed status`);
                         }
                         if (newPayInData.user_submitted_utr) {
                             if (newPayInData.user_submitted_utr === oldPayInData.utr) {
@@ -124,7 +126,7 @@ class DuplicateDisputeTransactionController {
                                 is_url_expires: true,
                                 user_submitted_image: null,
                                 duration: duration,
-                                status: parseFloat(newPayInData?.amount) != parseFloat(req?.body?.amount) ? "DISPUTE" : newPayInData?.bank_name != oldPayInData?.bank_name ? "BANK_MISMATCH" : "SUCCESS",
+                                status: newPayInData?.bank_name != oldPayInData?.bank_name ? "BANK_MISMATCH" : parseFloat(newPayInData?.amount) != parseFloat(req?.body?.amount) ? "DISPUTE" : "SUCCESS",
                             };
                             
                             if (payInData.status === "SUCCESS") {
