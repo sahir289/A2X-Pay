@@ -1246,30 +1246,30 @@ class PayInController {
           }
         }
 
-        if (parseFloat(usrSubmittedUtr.amount) !== parseFloat(getPayInData?.amount)) {
-          const updatePayInData = {
-            confirmed: usrSubmittedUtr.amount,
-            amount: getPayInData?.amount,
-            status: "DISPUTE",
-            is_notified: true,
-            is_url_expires: true,
-            user_submitted_utr: usrSubmittedUtrData,
-            approved_at: new Date(),
-            duration: duration,
-          };
-          const updatePayinRes = await payInRepo.updatePayInData(
-            payInId,
-            updatePayInData
-          );
-          const response = {
-            status: updatePayinRes.status,
-            amount,
-            merchant_order_id: updatePayinRes?.merchant_order_id,
-            return_url: updatePayinRes?.return_url,
-            utr_id: updatePayinRes?.user_submitted_utr,
-          };
-          return DefaultResponse(res, 200, "Payment Disputed", response);
-        }
+        // if (parseFloat(usrSubmittedUtr.amount) !== parseFloat(getPayInData?.amount)) {
+        //   const updatePayInData = {
+        //     confirmed: usrSubmittedUtr.amount,
+        //     amount: getPayInData?.amount,
+        //     status: "DISPUTE",
+        //     is_notified: true,
+        //     is_url_expires: true,
+        //     user_submitted_utr: usrSubmittedUtrData,
+        //     approved_at: new Date(),
+        //     duration: duration,
+        //   };
+        //   const updatePayinRes = await payInRepo.updatePayInData(
+        //     payInId,
+        //     updatePayInData
+        //   );
+        //   const response = {
+        //     status: updatePayinRes.status,
+        //     amount,
+        //     merchant_order_id: updatePayinRes?.merchant_order_id,
+        //     return_url: updatePayinRes?.return_url,
+        //     utr_id: updatePayinRes?.user_submitted_utr,
+        //   };
+        //   return DefaultResponse(res, 200, "Payment Disputed", response);
+        // }
 
         // if (parseFloat(usrSubmittedUtr.amount) === parseFloat(getPayInData?.amount)) {
         if (!matchDataFromBotRes) {
