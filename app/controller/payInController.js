@@ -1246,7 +1246,7 @@ class PayInController {
           }
         }
 
-        if (parseFloat(usrSubmittedUtr.amount) !== parseFloat(getPayInData?.amount) && matchDataFromBotRes.utr !==usrSubmittedUtr.utr) {
+        if (parseFloat(usrSubmittedUtr.amount) !== parseFloat(getPayInData?.amount)) {
           const updatePayInData = {
             confirmed: usrSubmittedUtr.amount,
             amount: getPayInData?.amount,
