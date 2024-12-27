@@ -1246,6 +1246,8 @@ class PayInController {
           }
         }
 
+        // COMMENTED THIS DUE TO GETTING DISPUTED WITHOUT VERIFYING FROM BANK RESPONSE
+        
         // if (parseFloat(usrSubmittedUtr.amount) !== parseFloat(getPayInData?.amount)) {
         //   const updatePayInData = {
         //     confirmed: usrSubmittedUtr.amount,
@@ -1293,7 +1295,10 @@ class PayInController {
         } else {
 
           if (matchDataFromBotRes?.bankName) {
-            if (isBankExist?.Merchant_Bank?.length === 1) {
+            // if (isBankExist?.Merchant_Bank?.length === 1) {      // before
+
+            if (isBankExist) {                                      // after
+
               if (getBankDataByBotRes?.id !== isBankExist?.id) {
                 const payInData = {
                   confirmed: parseFloat(matchDataFromBotRes?.amount),
