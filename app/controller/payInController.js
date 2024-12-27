@@ -1200,12 +1200,13 @@ class PayInController {
 
         //
         let getBankDataByBotRes;
-        // we are making sure that we get bank name then only we move forward
-        if (matchDataFromBotRes?.bankName) {
-          // We check bank exist here as we have to add the data to the res no matter what comes.
-          getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
+        getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
 
-          if (!getBankDataByBotRes) {
+        // we are making sure that we get bank name then only we move forward
+        if (matchDataFromBotRes?.bankName !== isBankExist.ac_name) {
+          // We check bank exist here as we have to add the data to the res no matter what comes.
+
+          // if (!getBankDataByBotRes) {
             const payInData = {
               confirmed: parseFloat(matchDataFromBotRes?.amount),
               amount: amount,
@@ -1243,7 +1244,7 @@ class PayInController {
               "Bank mismatch",
               response
             );
-          }
+          // }
         }
 
         // COMMENTED THIS DUE TO GETTING DISPUTED WITHOUT VERIFYING FROM BANK RESPONSE
