@@ -1223,6 +1223,10 @@ class PayInController {
               getPayInData.id,
               payInData
             );
+            await botResponseRepo.updateBotResponseByUtr(
+              matchDataFromBotRes?.id,
+              usrSubmittedUtrData
+            );
 
             // We are adding the amount to the bank as we want to update the balance of the bank
             // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
