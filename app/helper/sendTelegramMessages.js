@@ -156,6 +156,7 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
   TELEGRAM_BOT_TOKEN,
   replyToMessageId,
   existingPayinData,
+  getPayInData,
   fromUI
 ) {
   let payinData
@@ -167,11 +168,23 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
   }
   // Construct the error message
   let message;
-  if (payinData?.status === "SUCCESS") {
-    message = `✅ UTR ${utr} is already confirmed with this orderId ${payinData?.merchant_order_id}`;
-  } else {
-    message = `🚨 UTR ${utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
+  if (payinData) {
+    if (payinData?.status === "SUCCESS") {
+      message = `✅ UTR ${utr} is already confirmed with this orderId ${payinData?.merchant_order_id}`;
+    } else {
+      message = `🚨 UTR ${utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
+    }
   }
+  else {
+    if (getPayInData?.status === "SUCCESS") {
+      message = `🚨 Merchant Order ID: ${getPayInData.merchant_order_id}
+                is Already Confirmed with UTR: ${getPayInData.user_submitted_utr}`;
+    } else {
+      message = `🚨 Merchant Order ID: ${getPayInData.merchant_order_id}
+                is Already Marked ${getPayInData.status} with UTR: ${getPayInData.user_submitted_utr}`;
+    }
+  }
+
 
   if (!fromUI) {
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -598,12 +611,40 @@ export async function sendErrorMessageNoImageFoundTelegramBot(
 export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
   chatId,
   getPayInData,
+  utr,
   TELEGRAM_BOT_TOKEN,
   replyToMessageId
 ) {
+  let existingPayinData
+  existingPayinData = await payInRepo.getPayinDataByUtr(utr);
+  if (existingPayinData.length == 0) {
+    existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
+  }
+  let payinData
+  const hasSuccess = existingPayinData.some((item) => item.status === 'SUCCESS');
+  if (hasSuccess) {
+    payinData = existingPayinData.filter((item) => item.status === 'SUCCESS')[0];
+  } else {
+    payinData = existingPayinData[existingPayinData.length - 1];
+  }
   // Construct the error message
-  const message = `⛔ Merchant Order ID: ${getPayInData.merchant_order_id}
-  is Already Marked ${getPayInData.status} with UTR: ${getPayInData.user_submitted_utr}`;
+  let message;
+  if (payinData) {
+    if (payinData?.status === "SUCCESS") {
+      message = `✅ UTR ${utr} is already confirmed with this orderId ${payinData?.merchant_order_id}`;
+    } else {
+      message = `🚨 UTR ${utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
+    }
+  }
+  else {
+    if (getPayInData?.status === "SUCCESS") {
+      message = `✅ Merchant Order ID: ${getPayInData.merchant_order_id}
+                is Already Confirmed with UTR: ${getPayInData.user_submitted_utr}`;
+    } else {
+      message = `🚨 Merchant Order ID: ${getPayInData.merchant_order_id}
+                is Already Marked ${getPayInData.status} with UTR: ${getPayInData.user_submitted_utr}`;
+    }
+  }
 
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
   try {

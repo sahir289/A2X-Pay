@@ -41,7 +41,7 @@ class BankAccountController {
             return hasChildCode; // Only keep merchants with a valid `child_code` array
           });
 
-          const validMerchantIds = validMerchants.filter((data) => data).map((data) => data.id);
+          const validMerchantIds = validMerchants.filter((data) => data.is_enabled).map((data) => data.id);
 
           const childMerchants = await Promise.all(
             validMerchants.flatMap((data) =>
@@ -56,7 +56,7 @@ class BankAccountController {
 
           // Collect the IDs from the child merchants
           const childMerchantIds = childMerchants
-            .filter((data) => data) // Filter out null or undefined responses
+            .filter((data) => data.is_enabled) // Filter out null or undefined responses
             .map((data) => data.id);
 
           // Combine the IDs
