@@ -177,10 +177,10 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
   }
   else {
     if (getPayInData?.status === "SUCCESS") {
-      message = `✅ Merchant Order ID: ${getPayInData.merchant_order_id}
+      message = `🚨 Merchant Order ID: ${getPayInData.merchant_order_id}
                 is Already Confirmed with UTR: ${getPayInData.user_submitted_utr}`;
     } else {
-      message = `⛔ Merchant Order ID: ${getPayInData.merchant_order_id}
+      message = `🚨 Merchant Order ID: ${getPayInData.merchant_order_id}
                 is Already Marked ${getPayInData.status} with UTR: ${getPayInData.user_submitted_utr}`;
     }
   }
@@ -641,7 +641,7 @@ export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
       message = `✅ Merchant Order ID: ${getPayInData.merchant_order_id}
                 is Already Confirmed with UTR: ${getPayInData.user_submitted_utr}`;
     } else {
-      message = `⛔ Merchant Order ID: ${getPayInData.merchant_order_id}
+      message = `🚨 Merchant Order ID: ${getPayInData.merchant_order_id}
                 is Already Marked ${getPayInData.status} with UTR: ${getPayInData.user_submitted_utr}`;
     }
   }
