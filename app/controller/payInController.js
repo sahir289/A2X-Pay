@@ -1936,6 +1936,40 @@ class PayInController {
                   logger.error("Utr is already used");
                   return
                 }
+                else if (getPayInData?.is_notified === true && getPayInData?.status === 'BANK_MISMATCH') {
+                  let existingPayinData
+                  existingPayinData = await payInRepo.getPayinDataByUtr(dataRes?.utr);
+                  if (existingPayinData.length == 0) {
+                    existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                  }
+                  await sendAlreadyConfirmedMessageTelegramBot(
+                    message.chat.id,
+                    dataRes?.utr,
+                    TELEGRAM_BOT_TOKEN,
+                    message?.message_id,
+                    existingPayinData,
+                    getPayInData
+                  );
+                  logger.error("Utr is already used");
+                  return
+                }
+                else if (getPayInData?.is_notified === true && getPayInData?.status === 'DISPUTE') {
+                  let existingPayinData
+                  existingPayinData = await payInRepo.getPayinDataByUtr(dataRes?.utr);
+                  if (existingPayinData.length == 0) {
+                    existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(dataRes?.utr);
+                  }
+                  await sendAlreadyConfirmedMessageTelegramBot(
+                    message.chat.id,
+                    dataRes?.utr,
+                    TELEGRAM_BOT_TOKEN,
+                    message?.message_id,
+                    existingPayinData,
+                    getPayInData
+                  );
+                  logger.error("Utr is already used");
+                  return
+                }
                 else {
                   if (getPayInData?.status === 'DUPLICATE') {
                     await sendMerchantOrderIDStatusDuplicateTelegramMessage(
