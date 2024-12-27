@@ -1295,10 +1295,7 @@ class PayInController {
         } else {
 
           if (matchDataFromBotRes?.bankName) {
-            // if (isBankExist?.Merchant_Bank?.length === 1) {      // before
-
-            if (isBankExist) {                                      // after
-
+            if (isBankExist?.Merchant_Bank?.length === 1) { 
               if (getBankDataByBotRes?.id !== isBankExist?.id) {
                 const payInData = {
                   confirmed: parseFloat(matchDataFromBotRes?.amount),
