@@ -192,7 +192,7 @@ class MerchantRepo {
 
     try {
         // Fetch merchants with pagination
-        const merchants = await prisma.merchant.findMany({
+        const allMerchants = await prisma.merchant.findMany({
             skip,
             take,
             orderBy: [
@@ -202,7 +202,7 @@ class MerchantRepo {
             where: filters,
         });
 
-        if (!merchants.length) {
+        if (!allMerchants.length) {
             return {
                 transformedData: [],
                 pagination: {
@@ -213,7 +213,7 @@ class MerchantRepo {
             };
         }
 
-        const merchantCodes = merchants.map((merchant) => merchant.code).filter(Boolean);
+        const merchantCodes = allMerchants.map((merchant) => merchant.code).filter(Boolean);
 
         const aggregatedData = await prisma.$transaction([
             prisma.payin.groupBy({
@@ -278,12 +278,19 @@ class MerchantRepo {
         const settlementAmountByCode = groupByCode(settlementData, 'amount');
         const lienAmountByCode = groupByCode(lienData, 'amount');
 
-        const merchantMap = merchants.reduce((acc, merchant) => {
+        // Create a map of merchants by their codes for easy lookup
+        const merchantMap = allMerchants.reduce((acc, merchant) => {
             acc[merchant.code] = merchant;
             return acc;
         }, {});
 
-        const merchantData = merchants.map((merchant) => {
+        // Filter out merchants that are children (those that are in any parent's child_code array)
+        const merchantsWithoutChildren = allMerchants.filter((merchant) => {
+            return !allMerchants.some((parent) => parent.child_code?.includes(merchant.code));
+        });
+
+        // Now, map the filtered merchants to include their balance and children if applicable
+        const merchantData = merchantsWithoutChildren.map((merchant) => {
             const code = merchant.code;
             const payInAmount = Number(payInAmountByCode[merchant.id]) || 0;
             const payInCommission = Number(payInCommissionByCode[merchant.id]) || 0;
@@ -305,12 +312,15 @@ class MerchantRepo {
                 lienAmount +
                 reversedPayOutAmount;
 
-            const childrenData = merchant.child_code ? merchant.child_code.map((childCode) => merchantMap[childCode]) : [];
+            // Find the children merchants for this parent
+            const childrenData = merchant.child_code
+                ? merchant.child_code.map((childCode) => merchantMap[childCode]).filter(Boolean)
+                : [];
 
             return {
                 ...merchant,
                 balance,
-                childrenData,
+                childrenData, // Add the child merchants to the merchant data
             };
         });
 
@@ -328,6 +338,8 @@ class MerchantRepo {
         logger.info("Error fetching merchant data:", error);
     }
 }
+
+
 
 
   
