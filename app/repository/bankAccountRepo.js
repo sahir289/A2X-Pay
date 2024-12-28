@@ -287,66 +287,42 @@ class BankAccountRepo {
   }
 
   async deleteBankFromMerchant(body) {
-    const { merchantId, bankAccountId } = body;
-
     try {
-      // If multiple merchantIds are provided
+      const { merchantId, bankAccountId } = body;
+
       if (Array.isArray(merchantId)) {
-        // First, delete the associations of the bank account from the merchants
-        const deleteMerchantBank = await prisma.merchant_Bank.deleteMany({
+        const merchantBank = await prisma.merchant_Bank.deleteMany({
           where: {
             merchantId: {
-              in: merchantId, // Deletes associations for all provided merchantIds
+              in: merchantId,
             },
-            bankAccountId: bankAccountId, // Specifies which bank account to remove
+            bankAccountId: bankAccountId,
           },
         });
 
-        // Check if the bank account is associated with any other merchants
-        const remainingAssociations = await prisma.merchant_Bank.count({
-          where: {
-            bankAccountId: bankAccountId, // Count remaining associations
-          },
-        });
-
-        // If there are no remaining associations, delete the bank account
-        if (remainingAssociations === 0) {
-          const deleteBankAccount = await prisma.bankAccount.delete({
+        const bankRes = await prisma.bankAccount.delete(
+          {
             where: {
               id: bankAccountId,
             },
-          });
-          return deleteBankAccount;
-        } else {
-          return deleteMerchantBank; // Return the result of deleting the merchant-bank association
-        }
+          },
+          {
+            include: {
+              merchant: true,
+            },
+          }
+        );
+
+        return bankRes;
       } else {
-        // If only a single merchantId is provided
-        const deleteMerchantBank = await prisma.merchant_Bank.deleteMany({
+        const bankRes = await prisma.merchant_Bank.deleteMany({
           where: {
             merchantId: merchantId,
             bankAccountId: bankAccountId,
           },
         });
 
-        // Check if the bank account is still associated with any merchants
-        const remainingAssociations = await prisma.merchant_Bank.count({
-          where: {
-            bankAccountId: bankAccountId,
-          },
-        });
-
-        // If there are no remaining associations, delete the bank account
-        if (remainingAssociations === 0) {
-          const deleteBankAccount = await prisma.bankAccount.delete({
-            where: {
-              id: bankAccountId,
-            },
-          });
-          return deleteBankAccount;
-        } else {
-          return deleteMerchantBank; // Return the result of deleting the merchant-bank association
-        }
+        return bankRes;
       }
     } catch (error) {
       logger.info("Error deleting bank from merchant", error);
