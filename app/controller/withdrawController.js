@@ -186,6 +186,7 @@ class WithdrawController {
       recipient_name : payload?.acc_holder_name, 
       ifsc: payload?.ifsc_code, 
       account: payload?.acc_no, 
+      sender_name: "TrustPay"
     }
 
     const key = config?.ekoAccessKey;
