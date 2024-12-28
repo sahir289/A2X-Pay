@@ -1206,7 +1206,7 @@ class PayInController {
         if (matchDataFromBotRes?.bankName !== isBankExist.ac_name) {
           // We check bank exist here as we have to add the data to the res no matter what comes.
 
-          // if (!getBankDataByBotRes) {
+          if (!getBankDataByBotRes) {
             const payInData = {
               confirmed: parseFloat(matchDataFromBotRes?.amount),
               amount: amount,
@@ -1248,7 +1248,7 @@ class PayInController {
               "Bank mismatch",
               response
             );
-          // }
+          }
         }
 
         // COMMENTED THIS DUE TO GETTING DISPUTED WITHOUT VERIFYING FROM BANK RESPONSE
