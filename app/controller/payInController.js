@@ -1206,7 +1206,7 @@ class PayInController {
           // We check bank exist here as we have to add the data to the res no matter what comes.
           getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
 
-          if (!getBankDataByBotRes) {
+          if (getBankDataByBotRes) {
             const payInData = {
               confirmed: parseFloat(matchDataFromBotRes?.amount),
               amount: amount,
