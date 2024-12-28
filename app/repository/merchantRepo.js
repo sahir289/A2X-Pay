@@ -217,7 +217,7 @@ class MerchantRepo {
 
         const aggregatedData = await prisma.$transaction([
             prisma.payin.groupBy({
-                by: ['merchant_id'], 
+                by: ['merchant_id'],
                 where: {
                     status: "SUCCESS",
                     Merchant: { code: { in: merchantCodes } },
@@ -226,7 +226,7 @@ class MerchantRepo {
                 _sum: { amount: true, payin_commission: true },
             }),
             prisma.payout.groupBy({
-                by: ['merchant_id'], 
+                by: ['merchant_id'],
                 where: {
                     status: { in: ["SUCCESS", "REJECTED"] },
                     Merchant: { code: { in: merchantCodes } },
@@ -235,7 +235,7 @@ class MerchantRepo {
                 _sum: { amount: true, payout_commision: true },
             }),
             prisma.payout.groupBy({
-                by: ['merchant_id'], 
+                by: ['merchant_id'],
                 where: {
                     status: "REJECTED",
                     Merchant: { code: { in: merchantCodes } },
@@ -258,19 +258,15 @@ class MerchantRepo {
             }),
         ]);
 
-
         const [payInData, payOutData, reversedPayOutData, settlementData, lienData] = aggregatedData;
-
-        console.log(payInData, "payInData")
 
         const groupByCode = (data, field) =>
             data.reduce((acc, item) => {
-              acc[item.merchant_id] = item._sum?.[field] || 0;
+                acc[item.merchant_id] = item._sum?.[field] || 0;
                 return acc;
             }, {});
 
         const payInAmountByCode = groupByCode(payInData, 'amount');
-        console.log(payInAmountByCode, "payInAmountByCode")
         const payInCommissionByCode = groupByCode(payInData, 'payin_commission');
 
         const payOutAmountByCode = groupByCode(payOutData, 'amount');
@@ -281,6 +277,11 @@ class MerchantRepo {
 
         const settlementAmountByCode = groupByCode(settlementData, 'amount');
         const lienAmountByCode = groupByCode(lienData, 'amount');
+
+        const merchantMap = merchants.reduce((acc, merchant) => {
+            acc[merchant.code] = merchant;
+            return acc;
+        }, {});
 
         const merchantData = merchants.map((merchant) => {
             const code = merchant.code;
@@ -304,9 +305,12 @@ class MerchantRepo {
                 lienAmount +
                 reversedPayOutAmount;
 
+            const childrenData = merchant.child_code ? merchant.child_code.map((childCode) => merchantMap[childCode]) : [];
+
             return {
                 ...merchant,
                 balance,
+                childrenData,
             };
         });
 
@@ -324,6 +328,7 @@ class MerchantRepo {
         logger.info("Error fetching merchant data:", error);
     }
 }
+
 
   
   
