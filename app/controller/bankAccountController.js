@@ -267,8 +267,17 @@ class BankAccountController {
         const data = { bankAccountId };
 
         if (!Array.isArray(allNewMerchantIds) || allNewMerchantIds.length === 0) {
-          logger.info("No merchant IDs to process.");
-          return;
+          const bankAccountRes = await bankAccountRepo.deleteBankFromMerchant({
+            ...data,
+            merchantId: [],
+          });
+
+          return DefaultResponse(
+            res,
+            200,
+            "Bank is deleted from merchant successfully",
+            bankAccountRes
+          );
         }
 
         try {
