@@ -48,14 +48,16 @@ class BankAccountController {
               data.child_code.map((code) =>
                 merchantRepo.getMerchantByCode(code).catch((err) => {
                   logger.info(`Error fetching merchant for code ${code}:`, err);
-                  return null; // Handle individual failures gracefully
+                  next(err); // Handle individual failures gracefully
                 })
               )
             )
           );
 
+          const filteredChildMerchants = childMerchants.filter(item => item !== null);
+
           // Collect the IDs from the child merchants
-          const childMerchantIds = childMerchants
+          const childMerchantIds = filteredChildMerchants
             .filter((data) => data.is_enabled) // Filter out null or undefined responses
             .map((data) => data.id);
 
@@ -66,8 +68,17 @@ class BankAccountController {
         const data = { bankAccountId };
 
         if (!Array.isArray(allNewMerchantIds) || allNewMerchantIds.length === 0) {
-          logger.info("No merchant IDs to process.");
-          return;
+          const bankAccountRes = await bankAccountRepo.addBankToMerchant({
+            ...data,
+            merchantId: [],
+          });
+  
+          return DefaultResponse(
+            res,
+            201,
+            "Bank is added to merchant successfully",
+            bankAccountRes
+          );
         }
 
         try {
@@ -80,7 +91,7 @@ class BankAccountController {
                 });
               } catch (error) {
                 logger.info(`Failed to add bank for merchant ID ${id}:`, error);
-                return null; // Handle individual failure gracefully
+                next(error); // Handle individual failure gracefully
               }
             })
           );
@@ -249,7 +260,7 @@ class BankAccountController {
               data.child_code.map((code) =>
                 merchantRepo.getMerchantByCode(code).catch((err) => {
                   logger.info(`Error fetching merchant for code ${code}:`, err);
-                  return null; // Handle individual failures gracefully
+                  next(err); // Handle individual failures gracefully
                 })
               )
             )
@@ -290,7 +301,7 @@ class BankAccountController {
                 });
               } catch (error) {
                 logger.info(`Failed to delete bank for merchant ID ${id}:`, error);
-                return null; // Handle individual failure gracefully
+                next(error); // Handle individual failure gracefully
               }
             })
           );
