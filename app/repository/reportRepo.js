@@ -368,9 +368,9 @@ class ReportRepo {
                                 SUM(CASE WHEN data."type" = 'Payin' THEN data."amount" ELSE 0 END) -
                                 SUM(CASE WHEN data."type" = 'Payout' THEN data."amount" ELSE 0 END) - 
                                 (
-                                    SUM(CASE WHEN data."type" = 'Payin' THEN data."commission" ELSE 0 END) + 
-                                    SUM(CASE WHEN data."type" = 'Payout' THEN data."commission" ELSE 0 END) -
-                                    SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."commission" ELSE 0 END)
+                                    SUM(0) + 
+                                    SUM(0) -
+                                    SUM(0)
                                 ) - 
                                 SUM(CASE WHEN data."type" = 'Settlement' THEN data."amount" ELSE 0 END) + 
                                 SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."amount" ELSE 0 END)
@@ -412,9 +412,9 @@ class ReportRepo {
                                     SUM(CASE WHEN data."type" = 'Payin' THEN data."amount" ELSE 0 END) -
                                     SUM(CASE WHEN data."type" = 'Payout' THEN data."amount" ELSE 0 END) - 
                                     (
-                                        SUM(CASE WHEN data."type" = 'Payin' THEN data."commission" ELSE 0 END) + 
-                                        SUM(CASE WHEN data."type" = 'Payout' THEN data."commission" ELSE 0 END) -
-                                        SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."commission" ELSE 0 END)
+                                        SUM(0) + 
+                                        SUM(0) -
+                                        SUM(0)
                                     ) - 
                                     SUM(CASE WHEN data."type" = 'Settlement' THEN data."amount" ELSE 0 END) + 
                                     SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."amount" ELSE 0 END)
