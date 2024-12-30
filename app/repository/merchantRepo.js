@@ -184,14 +184,35 @@ class MerchantRepo {
     const take = pageSize;
     const { code } = query;
 
-    const filters = {
-        ...(code && {
-            code: Array.isArray(code) ? { in: code } : code,
+    let merchantCodes = [];
+
+    try {
+
+        if (code) {
+          const merchant = await prisma.merchant.findUnique({
+              where: { code },
+          });
+
+          if (!merchant) {
+              return {
+                  transformedData: [],
+                  pagination: {
+                      page: 1,
+                      pageSize: 1,
+                      total: 0,
+                  },
+              };
+          }
+
+          merchantCodes = [code, ...(merchant.child_code || [])];
+      }
+
+      const filters = {
+        ...(merchantCodes.length > 0 && {
+            code: { in: merchantCodes },
         }),
     };
 
-    try {
-        // Fetch merchants with pagination
         const allMerchants = await prisma.merchant.findMany({
             skip,
             take,
@@ -213,7 +234,7 @@ class MerchantRepo {
             };
         }
 
-        const merchantCodes = allMerchants.map((merchant) => merchant.code).filter(Boolean);
+        merchantCodes = allMerchants.map((merchant) => merchant.code).filter(Boolean);
 
         const aggregatedData = await prisma.$transaction([
             prisma.payin.groupBy({
@@ -336,13 +357,6 @@ class MerchantRepo {
         logger.info("Error fetching merchant data:", error);
     }
 }
-
-
-
-
-  
-  
-  
 
   async updateIsMerchantAdminByCode(code) {
     try {
