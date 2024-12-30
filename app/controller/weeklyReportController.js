@@ -85,7 +85,6 @@ class weeklyReportController {
 
         } catch (err) {
             logger.error(err);
-            console.log(err);
             next(err);
         }
     }
