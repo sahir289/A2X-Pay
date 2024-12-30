@@ -244,7 +244,7 @@ class MerchantRepo {
                     Merchant: { code: { in: merchantCodes } },
                     approved_at: { not: null },
                 },
-                _sum: { amount: true, payin_commission: true },
+                _sum: { confirmed: true, payin_commission: true },
             }),
             prisma.payout.groupBy({
                 by: ['merchant_id'],
@@ -260,6 +260,7 @@ class MerchantRepo {
                 where: {
                     status: "REJECTED",
                     Merchant: { code: { in: merchantCodes } },
+                    approved_at: { not: null },
                     rejected_at: { not: null },
                 },
                 _sum: { amount: true, payout_commision: true },
@@ -287,7 +288,7 @@ class MerchantRepo {
                 return acc;
             }, {});
 
-        const payInAmountByCode = groupByCode(payInData, 'amount');
+        const payInAmountByCode = groupByCode(payInData, 'confirmed');
         const payInCommissionByCode = groupByCode(payInData, 'payin_commission');
 
         const payOutAmountByCode = groupByCode(payOutData, 'amount');
@@ -331,7 +332,6 @@ class MerchantRepo {
                 lienAmount +
                 reversedPayOutAmount;
 
-  
             const childrenData = merchant.child_code
                 ? merchant.child_code.map((childCode) => merchantMap[childCode]).filter(Boolean)
                 : [];
