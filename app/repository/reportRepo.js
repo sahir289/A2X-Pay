@@ -320,7 +320,7 @@ class ReportRepo {
     SELECT p."approved_at", b."vendor_code", p."confirmed" AS "amount", p."payin_commission" AS "commission", 'Payin' AS "type"
     FROM public."Payin" p
     JOIN "BankAccount" b ON p.bank_acc_id = b.id
-    WHERE p.status = 'SUCCESS' AND b."vendor_code" IN ('Parker')
+    WHERE p.status = 'SUCCESS' AND b."vendor_code" IN (${vendorCodesList})
 
     UNION ALL
 
@@ -346,7 +346,7 @@ filtered_vendors AS (
     SELECT DISTINCT 
         v."vendor_code"
     FROM public."Vendor" v
-    WHERE v."vendor_code" IN ('Parker')
+    WHERE v."vendor_code" IN (${vendorCodesList})
 ),
 data_with_vendor AS (
     -- Assign merchant to each record
