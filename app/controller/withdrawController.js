@@ -272,6 +272,7 @@ class WithdrawController {
       let parsedData;
       try {
         parsedData = JSON.parse(responseText);
+
       } catch (err) {
         logger.error(err);
         parsedData = responseText;
@@ -330,53 +331,63 @@ class WithdrawController {
     }
   }
 
-  async ekoTransactionStatusCallback(req, res, next) {
+  async ekoTransactionStatusCallback(req, res) {
     const payload = req.body;
-    const {
-      tx_status,
-      amount,
-      payment_mode,
-      txstatus_desc,
-      fee,
-      gst,
-      sender_name,
-      tid,
-      beneficiary_account_type,
-      client_ref_id,
-      old_tx_status,
-      old_tx_status_desc,
-      bank_ref_num,
-      ifsc,
-      recipient_name,
-      account,
-      timestamp,
-    } = payload;
-    try {
-      const parsedData = {
-        tx_status,
-        amount,
-        payment_mode,
-        txstatus_desc,
-        fee,
-        gst,
-        sender_name,
-        tid,
-        client_ref_id,
-        old_tx_status,
-        old_tx_status_desc,
-        bank_ref_num,
-        ifsc,
-        recipient_name,
-        account,
-        timestamp,
-      };
+    const tid = payload.tid;
 
-      const data = await this.updateWithdraw(req, res)
-      logger.log(`Transaction ID: ${tid}, Status: ${txstatus_desc}, Amount: ${amount}`);
-      console.log(parsedData)
-      return res.status(200).send('Success');
+    try {
+      const singleWithdrawData = await withdrawService.getWithdrawByTid(tid);
+      if(!singleWithdrawData){
+        return DefaultResponse(res, 404, "Payment not found");
+      }
+      const updatedData = {
+        status: payload.txstatus_desc.toUpperCase(),
+        amount: Number(payload.amount),
+        utr_id: payload.tid ? String(payload.tid): "",
+        approved_at: payload.status == 'SUCCESS'? new Date().toISOString() : null,
+      }
+
+      const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
+      const data = await withdrawService.updateWithdraw(singleWithdrawData.id, updatedData);
+      logger.info('Payout Updated by Eko callback', {
+        status: data.status,
+      })
+
+      if (payload.from_bank) {
+        const bankAccountRes = await bankAccountRepo.getBankNickName(data.from_bank);
+  
+        await bankAccountRepo.updatePayoutBankAccountBalance(
+          bankAccountRes.id,
+          parseFloat(data.amount),
+          payload.status
+        );
+      }
+
+      const merchantPayoutUrl = merchant.payout_notify_url;
+      if (merchantPayoutUrl !== null) {
+        let merchantPayoutData = {
+          code:merchant.code,
+          merchantOrderId: singleWithdrawData.merchant_order_id,
+          payoutId: singleWithdrawData.id,
+          amount: singleWithdrawData.amount,
+          status: payload.status,
+          utr_id: payload.utr ? payload.utr : "",
+        }
+        try {
+          logger.info('Sending notification to merchant', { notify_url: merchantPayoutUrl, notify_data: merchantPayoutData });
+          const response = await axios.post(merchantPayoutUrl, merchantPayoutData);
+          logger.info('Notification to merchant sent Successfully', {
+            status: response.status,
+            data: response.data,
+          })
+        } catch (error) {
+          logger.error("Error notifying merchant at payout URL:", error.message)
+          new CustomError(400, "Failed to notify merchant about payout"); // Or handle in a different way
+        }
+      }
+      return DefaultResponse(res, 200, "Callback Received Successfully");
     } catch (err) {
-      next(err);
+      logger.error("getting error while updating payout", err);
     }
   }
 
@@ -529,25 +540,19 @@ class WithdrawController {
 
       if (req?.body?.method === 'eko') {
         try {
-            const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, req?.body?.method);
-    
-            if (ekoResponse?.status === 0) {
-                payload.status = 'SUCCESS';
-                payload.approved_at = new Date().toISOString();
-                payload.utr_id = ekoResponse?.data?.tid;
-            } else {
-                const getStatus = await this.ekoPayoutStatus(ekoResponse?.data?.tid);    
-    
-                if (getStatus?.status === 0) {
-                    payload.status = getStatus?.data?.txstatus_desc?.toUpperCase();
-                    payload.approved_at = new Date().toISOString();
-                    payload.utr_id = getStatus?.data?.tid;
-                } else {
-                    payload.status = 'REVERSED';
-                    payload.rejected_reason = getStatus?.message;
-                    logger.error(getStatus?.message);
-                }
-            }
+              const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, req?.body?.method);
+              if (ekoResponse?.status === 0) {
+                  // added == instead of ===, due the type of txstatus_desc is not string
+                  payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS'? ekoResponse?.data?.txstatus_desc?.toUpperCase(): 'PENDING';
+                  payload.approved_at = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS'? new Date().toISOString() : null;
+                  payload.utr_id = ekoResponse?.data?.tid;
+
+                  logger.info(`Payment initiated: ${ekoResponse?.message}`, ekoResponse?.message);
+              } else {
+                  payload.status = 'REJECTED';
+                  payload.rejected_reason = ekoResponse?.message;
+                  logger.error(`Payment rejected by eko due to ${ekoResponse?.message}`, ekoResponse?.message);
+              }
             } catch (error) {
                 logger.error('Error processing Eko method:', error);
             }

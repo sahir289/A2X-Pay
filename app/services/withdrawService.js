@@ -176,6 +176,29 @@ class Withdraw {
     }
   }
 
+  //created to get eko tid 
+  async getWithdrawByTid(tid) {
+    try {
+      const data = await prisma.payout.findFirst({
+        where: {
+          utr_id: String(tid),
+        },
+        include: {
+          Merchant: {
+            select: {
+              id: true,
+              code: true,
+            },
+          },
+        },
+      });
+
+      return data;
+    } catch (error) {
+      logger.info('PayOut data fetch Failed', error);
+    }
+  }
+
   async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
