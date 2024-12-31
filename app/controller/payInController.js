@@ -1300,8 +1300,8 @@ class PayInController {
         } else {
 
           if (matchDataFromBotRes?.bankName) {
-            if (isBankExist?.Merchant_Bank?.length === 1) { 
-              if (getBankDataByBotRes?.id !== isBankExist?.id) {
+            if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {  
+              // if (getBankDataByBotRes?.id !== isBankExist?.id) {
                 const payInData = {
                   confirmed: parseFloat(matchDataFromBotRes?.amount),
                   amount: amount,
@@ -1339,7 +1339,7 @@ class PayInController {
                   "Bank mismatch",
                   response
                 );
-              }
+              // }
             }
           }
           await botResponseRepo.updateBotResponseByUtr(

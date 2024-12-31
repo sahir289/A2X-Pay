@@ -53,7 +53,38 @@ class weeklyReportController {
             }
 
         } catch (err) {
-            logger.log(err);
+            logger.error(err);
+            next(err);
+        }
+    }
+
+    async getWeeklyVendorReport(req, res, next) {
+        try {
+            let { vendorCode, startDate, endDate, includeSubMerchant } = req.query;
+            if (vendorCode == null) {
+                vendorCode = [];
+            } else if (typeof vendorCode === "string") {
+                vendorCode = [vendorCode];
+            }
+
+            const weeklyReport = await reportRepo.getVendorReport(
+                vendorCode,
+                startDate,
+                endDate,
+            );
+
+            function convertBigIntToString(obj) {
+                return JSON.parse(
+                    JSON.stringify(obj, (key, value) =>
+                        typeof value === "bigint" ? value.toString() : value
+                    )
+                );
+            }
+
+            DefaultResponse(res, 201, "Weekly Report fetched successfully!", convertBigIntToString(weeklyReport));
+
+        } catch (err) {
+            logger.error(err);
             next(err);
         }
     }
