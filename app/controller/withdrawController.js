@@ -34,13 +34,14 @@ class WithdrawController {
         throw new CustomError(404, "Enter valid Api key");
       }
       delete req.body.code;
+      const ifsc = ifsc_code.toUpperCase();
 
       const data = await withdrawService.createWithdraw({
         user_id,
         bank_name,
         acc_no,
         acc_holder_name,
-        ifsc_code,
+        ifsc,
         amount,
         vendor_code,
         status: "INITIATED",
