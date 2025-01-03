@@ -28,19 +28,29 @@ class LienController {
                     "Merchant order id does not exist",
                 );
             }
-            // else if (getPayInData.merchant_id !== merchant.id) {
-            //     return DefaultResponse(
-            //         res,
-            //         404,
-            //         "Please enter valid merchant order id",
-            //     );
-            // }
+            else if (getPayInData.merchant_id !== merchant.id) {
+                return DefaultResponse(
+                    res,
+                    404,
+                    "Please enter valid merchant order id",
+                );
+            }
             else if (getPayInData.user_id !== req.body.user_id) {
                 return DefaultResponse(
                     res,
                     404,
                     "Please enter valid user id",
                 );
+            }
+            else if (req.body.merchant_order_id) {
+                const lienExists = await lienRepo.getLienByMerchantOrderID(req.body.merchant_order_id);
+                if (lienExists) {
+                    return DefaultResponse(
+                        res,
+                        404,
+                        "Lien already exists for this merchant order id",
+                    );
+                }
             }
             // else if (parseFloat(getPayInData.amount) !== parseFloat(req.body.amount)) {
             //     return DefaultResponse(
