@@ -15,6 +15,19 @@ class LienRepo {
         }
     }
 
+    async getLienByMerchantOrderID(merchant_order_id) {
+        try {
+            const lien = await prisma.lien.findFirst({
+                where: {
+                    merchant_order_id: merchant_order_id,
+                },
+            });
+            return lien;
+        } catch (error) {
+            logger.info('Error creating lien:', error.message);
+        }
+    }
+
     async getLien(
         skip,
         take,
