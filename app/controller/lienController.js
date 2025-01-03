@@ -48,7 +48,7 @@ class LienController {
                     return DefaultResponse(
                         res,
                         404,
-                        "Lien already exists for this merchant order id",
+                        "ChargeBack already exists for this merchant order id",
                     );
                 }
             }
