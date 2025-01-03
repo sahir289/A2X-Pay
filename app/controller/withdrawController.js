@@ -246,8 +246,8 @@ class WithdrawController {
     }
   }
 
-  async ekoPayoutStatus(id, res) {
-    // const {id} = req.params; // here id wil be client_ref_id (unique)
+  async ekoPayoutStatus(req, res) {
+    const {id} = req.params; // here id wil be client_ref_id (unique)
     const key = config?.ekoAccessKey;
     const encodedKey = Buffer.from(key).toString('base64');
 
@@ -278,13 +278,13 @@ class WithdrawController {
         logger.error(err);
         parsedData = responseText;
       }
-      return parsedData;
-    //   return DefaultResponse(
-    //   res,
-    //   response.ok ? 200 : response.status,
-    //   parsedData?.message,
-    //   parsedData
-    // );
+      // return parsedData;
+      return DefaultResponse(
+      res,
+      response.ok ? 200 : response.status,
+      parsedData?.message,
+      parsedData
+    );
     } catch (error) {
       logger.error(error);
     }
@@ -342,7 +342,7 @@ class WithdrawController {
         return DefaultResponse(res, 404, "Payment not found");
       }
       const updatedData = {
-        status: payload.txstatus_desc.toUpperCase(),
+        status: payload.txstatus_desc.toUpperCase() == 'SUCCESS' ? payload.txstatus_desc.toUpperCase() : 'REVERSED',
         amount: Number(payload.amount),
         utr_id: payload.tid ? String(payload.tid): "",
         approved_at: payload.status == 'SUCCESS'? new Date().toISOString() : null,
