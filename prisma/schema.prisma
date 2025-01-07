@@ -66,6 +66,7 @@ model Merchant {
   is_merchant_Admin Boolean         @default(false)
   public_api_key    String          @unique
   dispute_enabled   Boolean         @default(true)
+  allow_intent  Boolean?         @default(false)
   Lien              Lien[]
   Merchant_Bank     Merchant_Bank[]
   Payin             Payin[]
@@ -95,6 +96,7 @@ model BankAccount {
   code          String?
   vendor_code   String?
   bank_used_for String?         @default("")
+  allow_intent  Boolean?         @default(false)
   Merchant_Bank Merchant_Bank[]
 }
 
@@ -138,6 +140,7 @@ model Payin {
   one_time_used        Boolean   @default(false)
   to_bank              String?   @default("")
   user_ip              Decimal?
+  method               String?
   Merchant             Merchant  @relation(fields: [merchant_id], references: [id])
 }
 
