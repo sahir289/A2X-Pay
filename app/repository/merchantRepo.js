@@ -292,6 +292,7 @@ class MerchantRepo {
         const payInCommissionByCode = groupByCode(payInData, 'payin_commission');
 
         const payOutAmountByCode = groupByCode(payOutData, 'amount');
+
         const payOutCommissionByCode = groupByCode(payOutData, 'payout_commision');
 
         const reversedPayOutAmountByCode = groupByCode(reversedPayOutData, 'amount');
@@ -330,10 +331,38 @@ class MerchantRepo {
                 (payInCommission + payOutCommission - reversedPayOutCommission) -
                 settlementAmount -
                 lienAmount +
-                reversedPayOutAmount;
+                reversedPayOutAmount;            
 
             const childrenData = merchant.child_code
-                ? merchant.child_code.map((childCode) => merchantMap[childCode]).filter(Boolean)
+                ? merchant.child_code.map((childCode) => {
+                      const child = merchantMap[childCode];
+                      if (!child) return null;
+        
+                      const childPayInAmount = Number(payInAmountByCode[child.id]) || 0;
+                      const childPayInCommission = Number(payInCommissionByCode[child.id]) || 0;
+        
+                      const childPayOutAmount = Number(payOutAmountByCode[child.id]) || 0;
+                      const childPayOutCommission = Number(payOutCommissionByCode[child.id]) || 0;
+        
+                      const childReversedPayOutAmount = Number(reversedPayOutAmountByCode[child.id]) || 0;
+                      const childReversedPayOutCommission = Number(reversedPayOutCommissionByCode[child.id]) || 0;
+        
+                      const childSettlementAmount = Number(settlementAmountByCode[child.id]) || 0;
+                      const childLienAmount = Number(lienAmountByCode[child.id]) || 0;
+        
+                      const childBalance =
+                          childPayInAmount -
+                          childPayOutAmount -
+                          (childPayInCommission + childPayOutCommission - childReversedPayOutCommission) -
+                          childSettlementAmount -
+                          childLienAmount +
+                          childReversedPayOutAmount;
+        
+                      return {
+                          ...child,
+                          balance: childBalance,
+                      };
+                  }).filter(Boolean)
                 : [];
 
             return {
