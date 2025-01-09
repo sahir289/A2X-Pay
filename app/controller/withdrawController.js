@@ -11,6 +11,7 @@ import crypto from 'crypto';
 import config from "../../config.js";
 import bankAccountRepo from "../repository/bankAccountRepo.js";
 import generatePrefix from "../utils/generateFormattedString.js";
+import payInServices from "../services/payInServices.js";
 import { response } from "express";
 // import apis from '@api/apis';
 
@@ -20,16 +21,31 @@ class WithdrawController {
     this.updateWithdraw = this.updateWithdraw.bind(this);
     this.createEkoWithdraw = this.createEkoWithdraw.bind(this);
     this.ekoPayoutStatus = this.ekoPayoutStatus.bind(this);
+    this.ekoWalletBalanceEnquiryInternally = this.ekoWalletBalanceEnquiryInternally.bind(this);
+    this.createWithdraw = this.createWithdraw.bind(this);
   }
 
   async createWithdraw(req, res, next) {
+    const restrictedMerchants = ['DHM','APPLE','CB','RK','MafiaMundeer','BERU','luna','Bita','treX'];
     try {
       checkValidation(req);
-      const { user_id, bank_name, acc_no, acc_holder_name, ifsc_code, amount, vendor_code, merchant_order_id } = req.body;
-      const merchant = await merchantRepo.getMerchantByCode(req.body.code);
+      const { user_id, bank_name, acc_no, acc_holder_name, ifsc_code, amount, vendor_code, merchant_order_id, code } = req.body;
+
+      if (restrictedMerchants.includes(code)) {
+        const getMerchantNetBalance = await payInServices.getMerchantsNetBalance([code]);
+        if (getMerchantNetBalance.totalNetBalance < amount) {
+          return DefaultResponse(res, 401, `${code} have Insufficient Balance to create Payout`);
+        }
+        const ekoBalanceEnquiry = await this.ekoWalletBalanceEnquiryInternally();
+        if (ekoBalanceEnquiry.data.balance < amount) {
+          return DefaultResponse(res, 501, "Insufficient Balance in Wallet");
+        }
+      }
+      const merchant = await merchantRepo.getMerchantByCode(code);
       if (!merchant) {
         throw new CustomError(404, "Merchant does not exist");
       }
+      
       if (req.headers["x-api-key"] !== merchant.api_key) {
         throw new CustomError(404, "Enter valid Api key");
       }
@@ -327,6 +343,49 @@ class WithdrawController {
       parsedData?.message,
       parsedData
     );
+    } catch (error) {
+      logger.error(error);
+    }
+  }
+
+  async ekoWalletBalanceEnquiryInternally() {
+    const key = config?.ekoAccessKey;
+    const encodedKey = Buffer.from(key).toString('base64');
+
+    const secretKeyTimestamp = Date.now();
+    const secretKey = crypto.createHmac('sha256', encodedKey).update(secretKeyTimestamp.toString()).digest('base64');
+
+    const url = `${config?.ekoWalletBalanceEnquiryUrl}:${config?.ekoRegisteredMobileNo}/balance?initiator_id=${config?.ekoInitiatorId}&user_code=${config?.ekoUserCode}`;
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        developer_key: config?.ekoDeveloperKey,
+        'secret-key': secretKey,
+        'secret-key-timestamp': secretKeyTimestamp,
+        'content-type': 'application/x-www-form-urlencoded'
+      },
+  };
+
+    try{
+      const response = await fetch(url, options);
+      const responseText = await response.text();
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (err) {
+        logger.error(err);
+        parsedData = responseText;
+      }
+      return parsedData;
+
+    //   return DefaultResponse(
+    //   res,
+    //   response.ok ? 200 : response.status,
+    //   parsedData?.message,
+    //   parsedData
+    // );
     } catch (error) {
       logger.error(error);
     }
