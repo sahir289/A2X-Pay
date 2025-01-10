@@ -30,14 +30,15 @@ class WithdrawController {
     try {
       checkValidation(req);
       const { user_id, bank_name, acc_no, acc_holder_name, ifsc_code, amount, vendor_code, merchant_order_id, code } = req.body;
-
+      const num = Number(amount);
+      
       if (restrictedMerchants.includes(code)) {
         const getMerchantNetBalance = await payInServices.getMerchantsNetBalance([code]);
-        if (getMerchantNetBalance.totalNetBalance < amount) {
+        if (getMerchantNetBalance.totalNetBalance < num) {
           return DefaultResponse(res, 401, `${code} have Insufficient Balance to create Payout`);
         }
         const ekoBalanceEnquiry = await this.ekoWalletBalanceEnquiryInternally();
-        if (ekoBalanceEnquiry.data.balance < amount) {
+        if (Number(ekoBalanceEnquiry.data.balance) < num) {
           return DefaultResponse(res, 501, "Insufficient Balance in Wallet");
         }
       }
