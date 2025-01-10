@@ -172,7 +172,7 @@ class MerchantRepo {
 
       return merchantRes;
     } catch (error) {
-      logger.info('Failed to update merchant data:', error.message);
+      logger.info('Failed to update merchant data:', error);
     }
   }
 
@@ -333,7 +333,7 @@ class MerchantRepo {
                 lienAmount +
                 reversedPayOutAmount;            
 
-            const childrenData = merchant.child_code
+                const childrenData = merchant.child_code
                 ? merchant.child_code.map((childCode) => {
                       const child = merchantMap[childCode];
                       if (!child) return null;

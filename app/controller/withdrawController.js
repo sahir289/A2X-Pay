@@ -11,6 +11,7 @@ import crypto from 'crypto';
 import config from "../../config.js";
 import bankAccountRepo from "../repository/bankAccountRepo.js";
 import generatePrefix from "../utils/generateFormattedString.js";
+import payInServices from "../services/payInServices.js";
 import { response } from "express";
 // import apis from '@api/apis';
 
@@ -20,16 +21,32 @@ class WithdrawController {
     this.updateWithdraw = this.updateWithdraw.bind(this);
     this.createEkoWithdraw = this.createEkoWithdraw.bind(this);
     this.ekoPayoutStatus = this.ekoPayoutStatus.bind(this);
+    this.ekoWalletBalanceEnquiryInternally = this.ekoWalletBalanceEnquiryInternally.bind(this);
+    this.createWithdraw = this.createWithdraw.bind(this);
   }
 
   async createWithdraw(req, res, next) {
+    const restrictedMerchants = ['DHM','APPLE','CB','RK','MafiaMundeer','BERU','luna','Bita','treX'];
     try {
       checkValidation(req);
-      const { user_id, bank_name, acc_no, acc_holder_name, ifsc_code, amount, vendor_code, merchant_order_id } = req.body;
-      const merchant = await merchantRepo.getMerchantByCode(req.body.code);
+      const { user_id, bank_name, acc_no, acc_holder_name, ifsc_code, amount, vendor_code, merchant_order_id, code } = req.body;
+      const num = Number(amount);
+      
+      if (restrictedMerchants.includes(code)) {
+        const getMerchantNetBalance = await payInServices.getMerchantsNetBalance([code]);
+        if (getMerchantNetBalance.totalNetBalance < num) {
+          return DefaultResponse(res, 401, `${code} have Insufficient Balance to create Payout`);
+        }
+        const ekoBalanceEnquiry = await this.ekoWalletBalanceEnquiryInternally();
+        if (Number(ekoBalanceEnquiry.data.balance) < num) {
+          return DefaultResponse(res, 501, "Insufficient Balance in Wallet");
+        }
+      }
+      const merchant = await merchantRepo.getMerchantByCode(code);
       if (!merchant) {
         throw new CustomError(404, "Merchant does not exist");
       }
+      
       if (req.headers["x-api-key"] !== merchant.api_key) {
         throw new CustomError(404, "Enter valid Api key");
       }
@@ -178,8 +195,7 @@ class WithdrawController {
     }
   }
 
-  async createEkoWithdraw(payload, method) {
-    const client_ref_id = generatePrefix(payload?.user_id, method);
+  async createEkoWithdraw(payload, client_ref_id) {
 
     const newObj = {
       amount: payload?.amount, 
@@ -246,15 +262,15 @@ class WithdrawController {
     }
   }
 
-  async ekoPayoutStatus(req, res) {
-    const {id} = req.params; // here id wil be client_ref_id (unique)
+  async ekoPayoutStatus(id, res) {
+    // const {id} = req.params; // here id wil be client_ref_id (unique)
     const key = config?.ekoAccessKey;
     const encodedKey = Buffer.from(key).toString('base64');
 
     const secretKeyTimestamp = Date.now();
     const secretKey = crypto.createHmac('sha256', encodedKey).update(secretKeyTimestamp.toString()).digest('base64');
 
-    const url = `${config?.ekoPaymentsStatusUrl}${id}?initiator_id=${config?.ekoInitiatorId}`;
+    const url = `${config?.ekoPaymentsStatusUrlByClientRefId}${id}?initiator_id=${config?.ekoInitiatorId}`;
     const options = {
       method: 'GET',
       headers: {
@@ -278,13 +294,13 @@ class WithdrawController {
         logger.error(err);
         parsedData = responseText;
       }
-      // return parsedData;
-      return DefaultResponse(
-      res,
-      response.ok ? 200 : response.status,
-      parsedData?.message,
-      parsedData
-    );
+      return parsedData;
+    //   return DefaultResponse(
+    //   res,
+    //   response.ok ? 200 : response.status,
+    //   parsedData?.message,
+    //   parsedData
+    // );
     } catch (error) {
       logger.error(error);
     }
@@ -332,6 +348,49 @@ class WithdrawController {
     }
   }
 
+  async ekoWalletBalanceEnquiryInternally() {
+    const key = config?.ekoAccessKey;
+    const encodedKey = Buffer.from(key).toString('base64');
+
+    const secretKeyTimestamp = Date.now();
+    const secretKey = crypto.createHmac('sha256', encodedKey).update(secretKeyTimestamp.toString()).digest('base64');
+
+    const url = `${config?.ekoWalletBalanceEnquiryUrl}:${config?.ekoRegisteredMobileNo}/balance?initiator_id=${config?.ekoInitiatorId}&user_code=${config?.ekoUserCode}`;
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        developer_key: config?.ekoDeveloperKey,
+        'secret-key': secretKey,
+        'secret-key-timestamp': secretKeyTimestamp,
+        'content-type': 'application/x-www-form-urlencoded'
+      },
+  };
+
+    try{
+      const response = await fetch(url, options);
+      const responseText = await response.text();
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (err) {
+        logger.error(err);
+        parsedData = responseText;
+      }
+      return parsedData;
+
+    //   return DefaultResponse(
+    //   res,
+    //   response.ok ? 200 : response.status,
+    //   parsedData?.message,
+    //   parsedData
+    // );
+    } catch (error) {
+      logger.error(error);
+    }
+  }
+
   async ekoTransactionStatusCallback(req, res) {
     const payload = req.body;
     const tid = payload.tid;
@@ -345,7 +404,7 @@ class WithdrawController {
         status: payload.txstatus_desc.toUpperCase() == 'SUCCESS' ? payload.txstatus_desc.toUpperCase() : 'REVERSED',
         amount: Number(payload.amount),
         utr_id: payload.tid ? String(payload.tid): "",
-        approved_at: payload.status == 'SUCCESS'? new Date().toISOString() : null,
+        approved_at: payload.status == 'SUCCESS'? new Date() : null,
       }
 
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
@@ -511,13 +570,13 @@ class WithdrawController {
       };
       if (req.body.utr_id) {
         payload.status = "SUCCESS";
-        payload.approved_at = new Date().toISOString()
+        payload.approved_at = new Date()
       }
       if (req.body.rejected_reason) {
         // TODO: confirm the status
         payload.status = "REJECTED";
         payload.rejected_reason = req.body.rejected_reason;
-        payload.rejected_at = new Date().toISOString()
+        payload.rejected_at = new Date()
       }
       if ([req.body.status].includes("INITIATED")) {
         payload.utr_id = "";
@@ -541,17 +600,24 @@ class WithdrawController {
 
       if (req?.body?.method === 'eko') {
         try {
-              const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, req?.body?.method);
+              const client_ref_id = Math.floor(Date.now() / 1000);
+              const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, client_ref_id);
               if (ekoResponse?.status === 0) {
                   // added == instead of ===, due the type of txstatus_desc is not string
                   payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS'? ekoResponse?.data?.txstatus_desc?.toUpperCase(): 'PENDING';
-                  payload.approved_at = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS'? new Date().toISOString() : null;
+                  payload.approved_at = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS'? new Date() : null;
                   payload.utr_id = ekoResponse?.data?.tid;
 
                   logger.info(`Payment initiated: ${ekoResponse?.message}`, ekoResponse?.message);
               } else {
+                let getEkoPayoutStatus;
+                if(ekoResponse.status === 1328){
+                  getEkoPayoutStatus = await this.ekoPayoutStatus(client_ref_id);
+                }
                   payload.status = 'REJECTED';
                   payload.rejected_reason = ekoResponse?.message;
+                  payload.rejected_at = new Date();
+                  payload.utr_id = getEkoPayoutStatus ? getEkoPayoutStatus?.data.tid : null;
                   logger.error(`Payment rejected by eko due to ${ekoResponse?.message}`, ekoResponse?.message);
               }
             } catch (error) {
@@ -562,7 +628,7 @@ class WithdrawController {
       if(req.body?.method === 'blazepe'){
         payload.method = req.body?.method;
         try {
-          const merchantRefId = generatePrefix(singleWithdrawData?.user_id, req.body?.method);
+          const merchantRefId = generatePrefix(req.body?.method);
           const blazePeResponse = await this.createBlazepeWithdraw(singleWithdrawData, merchantRefId);
           if (blazePeResponse?.success === true) {
               payload.status = 'PENDING';
@@ -578,13 +644,14 @@ class WithdrawController {
                     // payload.utr_id = getStatus?.utr;
                     logger.error(`Status is ${payload.status}`, getStatus?.message);
                 } else if(getStatus?.status === 'SUCCESS'){
-                  payload.status = getStatus?.status.toUpperCase();;
-                  payload.approved_at = new Date().toISOString();
+                  payload.status = getStatus?.status.toUpperCase();
+                  payload.approved_at = new Date();
                   // payload.utr_id = getStatus?.utr;
                   logger.info(`Status is ${payload.status}`, getStatus?.message);
                 } else {
                     payload.status = getStatus?.status? getStatus?.status.toUpperCase() : 'REJECTED';
                     payload.rejected_reason = getStatus?.message;
+                    payload.rejected_at = new Date();
                     logger.error(`Status is ${payload.status}`, getStatus?.message);
                 }
           }
@@ -640,6 +707,7 @@ class WithdrawController {
       }
       return DefaultResponse(res, 200, "Payout Updated!", data);
     } catch (err) {
+      console.log(err);
       logger.info(err);
       next(err);
     }
@@ -657,7 +725,7 @@ class WithdrawController {
         status: payload.status,
         amount: Number(payload.amount),
         utr_id: payload.utr ? payload.utr: "",
-        approved_at: payload.status === 'SUCCESS'? new Date().toISOString() : null,
+        approved_at: payload.status === 'SUCCESS'? new Date() : null,
       }
 
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);

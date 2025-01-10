@@ -1,16 +1,16 @@
-function generatePrefix(user_id, prefix) {
+function generatePrefix(prefix) {
   let combinedString;
+  const timestamp = Math.floor(Date.now() / 1000);
 
   if (prefix !== 'eko') {
-    const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '');
     combinedString = prefix + timestamp;
     if (combinedString.length > 21) {
       combinedString = combinedString.substring(0, 21);
     }
   } else {
-    combinedString = prefix + user_id;
+    combinedString = prefix + timestamp;
     if (combinedString.length > 16) {
-      combinedString = prefix + user_id.substring(0, 16 - prefix.length);
+      combinedString = prefix + timestamp.substring(0, 16 - prefix.length);
     }
   }
   return combinedString;
