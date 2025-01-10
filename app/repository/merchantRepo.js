@@ -172,7 +172,7 @@ class MerchantRepo {
 
       return merchantRes;
     } catch (error) {
-      logger.info('Failed to update merchant data:', error.message);
+      logger.info('Failed to update merchant data:', error);
     }
   }
 
