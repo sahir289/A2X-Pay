@@ -405,7 +405,7 @@ class WithdrawController {
         status: payload.txstatus_desc.toUpperCase() == 'SUCCESS' ? payload.txstatus_desc.toUpperCase() : 'REVERSED',
         amount: Number(payload.amount),
         utr_id: payload.tid ? String(payload.tid): "",
-        approved_at: payload.status == 'SUCCESS'? new Date().toISOString() : null,
+        approved_at: payload.status == 'SUCCESS'? new Date() : null,
       }
 
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
@@ -571,13 +571,13 @@ class WithdrawController {
       };
       if (req.body.utr_id) {
         payload.status = "SUCCESS";
-        payload.approved_at = new Date().toISOString()
+        payload.approved_at = new Date()
       }
       if (req.body.rejected_reason) {
         // TODO: confirm the status
         payload.status = "REJECTED";
         payload.rejected_reason = req.body.rejected_reason;
-        payload.rejected_at = new Date().toISOString()
+        payload.rejected_at = new Date()
       }
       if ([req.body.status].includes("INITIATED")) {
         payload.utr_id = "";
@@ -605,13 +605,14 @@ class WithdrawController {
               if (ekoResponse?.status === 0) {
                   // added == instead of ===, due the type of txstatus_desc is not string
                   payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS'? ekoResponse?.data?.txstatus_desc?.toUpperCase(): 'PENDING';
-                  payload.approved_at = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS'? new Date().toISOString() : null;
+                  payload.approved_at = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS'? new Date() : null;
                   payload.utr_id = ekoResponse?.data?.tid;
 
                   logger.info(`Payment initiated: ${ekoResponse?.message}`, ekoResponse?.message);
               } else {
                   payload.status = 'REJECTED';
                   payload.rejected_reason = ekoResponse?.message;
+                  payload.rejected_at = new Date();
                   logger.error(`Payment rejected by eko due to ${ekoResponse?.message}`, ekoResponse?.message);
               }
             } catch (error) {
@@ -638,13 +639,14 @@ class WithdrawController {
                     // payload.utr_id = getStatus?.utr;
                     logger.error(`Status is ${payload.status}`, getStatus?.message);
                 } else if(getStatus?.status === 'SUCCESS'){
-                  payload.status = getStatus?.status.toUpperCase();;
-                  payload.approved_at = new Date().toISOString();
+                  payload.status = getStatus?.status.toUpperCase();
+                  payload.approved_at = new Date();
                   // payload.utr_id = getStatus?.utr;
                   logger.info(`Status is ${payload.status}`, getStatus?.message);
                 } else {
                     payload.status = getStatus?.status? getStatus?.status.toUpperCase() : 'REJECTED';
                     payload.rejected_reason = getStatus?.message;
+                    payload.rejected_at = new Date();
                     logger.error(`Status is ${payload.status}`, getStatus?.message);
                 }
           }
@@ -654,6 +656,7 @@ class WithdrawController {
       }
     
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
+      console.log(payload)
       const data = await withdrawService.updateWithdraw(req.params.id, payload);
       logger.info('Payout Updated', {
         status: data.status,
@@ -700,6 +703,7 @@ class WithdrawController {
       }
       return DefaultResponse(res, 200, "Payout Updated!", data);
     } catch (err) {
+      console.log(err);
       logger.info(err);
       next(err);
     }
@@ -717,7 +721,7 @@ class WithdrawController {
         status: payload.status,
         amount: Number(payload.amount),
         utr_id: payload.utr ? payload.utr: "",
-        approved_at: payload.status === 'SUCCESS'? new Date().toISOString() : null,
+        approved_at: payload.status === 'SUCCESS'? new Date() : null,
       }
 
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);

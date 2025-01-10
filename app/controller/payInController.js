@@ -299,6 +299,8 @@ class PayInController {
       const payinDataResult = await payInRepo.getPayInData(payInId);
       assignedBankToPayInUrlRes.merchant_min_payin = payinDataResult?.Merchant?.min_payin;
       assignedBankToPayInUrlRes.merchant_max_payin = payinDataResult?.Merchant?.max_payin;
+      assignedBankToPayInUrlRes.merchant_code = payinDataResult?.Merchant?.code;
+      assignedBankToPayInUrlRes.allow_merchant_intent = payinDataResult?.Merchant?.allow_intent;
 
       return DefaultResponse(
         res,
