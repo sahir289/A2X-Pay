@@ -195,8 +195,7 @@ class WithdrawController {
     }
   }
 
-  async createEkoWithdraw(payload, method) {
-    const client_ref_id = generatePrefix(payload?.user_id, method);
+  async createEkoWithdraw(payload, client_ref_id) {
 
     const newObj = {
       amount: payload?.amount, 
@@ -263,15 +262,15 @@ class WithdrawController {
     }
   }
 
-  async ekoPayoutStatus(req, res) {
-    const {id} = req.params; // here id wil be client_ref_id (unique)
+  async ekoPayoutStatus(id, res) {
+    // const {id} = req.params; // here id wil be client_ref_id (unique)
     const key = config?.ekoAccessKey;
     const encodedKey = Buffer.from(key).toString('base64');
 
     const secretKeyTimestamp = Date.now();
     const secretKey = crypto.createHmac('sha256', encodedKey).update(secretKeyTimestamp.toString()).digest('base64');
 
-    const url = `${config?.ekoPaymentsStatusUrl}${id}?initiator_id=${config?.ekoInitiatorId}`;
+    const url = `${config?.ekoPaymentsStatusUrlByClientRefId}${id}?initiator_id=${config?.ekoInitiatorId}`;
     const options = {
       method: 'GET',
       headers: {
@@ -295,13 +294,13 @@ class WithdrawController {
         logger.error(err);
         parsedData = responseText;
       }
-      // return parsedData;
-      return DefaultResponse(
-      res,
-      response.ok ? 200 : response.status,
-      parsedData?.message,
-      parsedData
-    );
+      return parsedData;
+    //   return DefaultResponse(
+    //   res,
+    //   response.ok ? 200 : response.status,
+    //   parsedData?.message,
+    //   parsedData
+    // );
     } catch (error) {
       logger.error(error);
     }
@@ -601,7 +600,8 @@ class WithdrawController {
 
       if (req?.body?.method === 'eko') {
         try {
-              const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, req?.body?.method);
+              const client_ref_id = Math.floor(Date.now() / 1000);
+              const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, client_ref_id);
               if (ekoResponse?.status === 0) {
                   // added == instead of ===, due the type of txstatus_desc is not string
                   payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS'? ekoResponse?.data?.txstatus_desc?.toUpperCase(): 'PENDING';
@@ -610,9 +610,14 @@ class WithdrawController {
 
                   logger.info(`Payment initiated: ${ekoResponse?.message}`, ekoResponse?.message);
               } else {
+                let getEkoPayoutStatus;
+                if(ekoResponse.status === 1328){
+                  getEkoPayoutStatus = await this.ekoPayoutStatus(client_ref_id);
+                }
                   payload.status = 'REJECTED';
                   payload.rejected_reason = ekoResponse?.message;
                   payload.rejected_at = new Date();
+                  payload.utr_id = getEkoPayoutStatus ? getEkoPayoutStatus?.data.tid : null;
                   logger.error(`Payment rejected by eko due to ${ekoResponse?.message}`, ekoResponse?.message);
               }
             } catch (error) {
@@ -623,7 +628,7 @@ class WithdrawController {
       if(req.body?.method === 'blazepe'){
         payload.method = req.body?.method;
         try {
-          const merchantRefId = generatePrefix(singleWithdrawData?.user_id, req.body?.method);
+          const merchantRefId = generatePrefix(req.body?.method);
           const blazePeResponse = await this.createBlazepeWithdraw(singleWithdrawData, merchantRefId);
           if (blazePeResponse?.success === true) {
               payload.status = 'PENDING';
@@ -656,7 +661,6 @@ class WithdrawController {
       }
     
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
-      console.log(payload)
       const data = await withdrawService.updateWithdraw(req.params.id, payload);
       logger.info('Payout Updated', {
         status: data.status,
