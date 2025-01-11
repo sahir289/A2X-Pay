@@ -98,6 +98,12 @@ payInRouter.post(
   payInController.payInProcess
 );
 
+payInRouter.post(
+  "/generate-intent-order/:payInId",
+  // validatePayInProcess,
+  payInController.payInIntentGenerateOrder
+);
+
 payInRouter.get("/get-payInData", payInController.getAllPayInData);
 
 payInRouter.get(
