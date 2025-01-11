@@ -1040,7 +1040,7 @@ class PayInController {
       checkValidation(req);
       const { payInId } = req.params;
       // const userIp = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
-      const { amount, user_id, merchantOrderId } = req.body;
+      const { amount, user_id } = req.body;
 
       const getPayInData = await payInRepo.getPayInData(payInId);
       if (!getPayInData) {
@@ -1063,7 +1063,7 @@ class PayInController {
         body: JSON.stringify({
         order_amount: amount,
         order_currency: "INR",
-        order_id: merchantOrderId,
+        order_id: getPayInData.merchant_order_id,
         order_meta: { notify_url: "https://hello.com" },
         customer_details: {
           customer_id: user_id,
