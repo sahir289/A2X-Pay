@@ -1035,6 +1035,114 @@ class PayInController {
     }
   }
 
+  async payInIntentGenerateOrder(req, res, next) {
+    try {
+      checkValidation(req);
+      const { payInId } = req.params;
+      // const userIp = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
+      const { amount, user_id } = req.body;
+
+      const getPayInData = await payInRepo.getPayInData(payInId);
+      if (!getPayInData) {
+        throw new CustomError(404, "Payment does not exist");
+      }
+
+      const _10_MINUTES = 1000 * 60 * 10;
+      const expirationTimestamp = new Date(new Date().getTime() + _10_MINUTES);
+
+      const expirationTimeFormatted = expirationTimestamp.toISOString().replace('T', ' ').split('.')[0];
+
+      const optionsToCreateOrder = {
+        method: 'POST',
+        headers: {
+          'x-client-id': config.cashfreeClientId,
+          'x-client-secret': config.cashfreeClientSecret,
+          'x-api-version': '2025-01-01',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+        order_amount: amount,
+        order_currency: "INR",
+        order_id: getPayInData.merchant_order_id,
+        order_meta: { notify_url: "https://hello.com" },
+        customer_details: {
+          customer_id: user_id,
+          customer_phone: "9898900909",
+          },
+        }),
+      };
+      let cashfreeResponse;
+      try {
+        const response = await fetch('https://sandbox.cashfree.com/pg/orders', optionsToCreateOrder);
+        cashfreeResponse = await response.json();
+      } catch (err) {
+        console.error('Error:', err);
+        logger.error('getting error while creating order', err);
+      }
+      const now = new Date(); 
+      now.setUTCMinutes(now.getUTCMinutes() + 5);
+      const istOffset = 5.5 * 60;
+      const startTime = new Date(now.getTime() + istOffset * 60000);
+      const endTime = new Date(startTime.getTime() + 5 * 60000); 
+
+      const optionsToOrderPay = {
+        method: 'POST',
+        headers: {
+          'x-api-version': '2025-01-01', 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          payment_method: {
+            upi: {
+              channel: "link",
+              authorization: {
+                start_time: startTime,
+                end_time: endTime,
+                approve_by: "2025-01-11T20:05:00.000Z"
+              },
+              authorize_only: false,
+              upi_expiry_minutes: 5,
+              upi_id: "testsuccess@gocash",
+              upi_redirect_url: true
+            }
+          },
+          payment_session_id: cashfreeResponse.payment_session_id,
+        })
+      };
+      
+      const orderPay = await fetch('https://sandbox.cashfree.com/pg/orders/sessions', optionsToOrderPay);
+      const payOrderResponse = await orderPay.json();
+
+      // const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
+
+      const payInData = {
+        status: payOrderResponse.cf_payment_id ? "PENDING" : 'FAILED',
+      };
+
+        const updatePayinRes = await payInRepo.updatePayInData(
+          payInId,
+          payInData
+        );
+
+        const response = {
+          status: updatePayinRes?.status,
+          payment_amount: amount,
+          payment_session_id: cashfreeResponse.payment_session_id,
+          merchant_order_id: updatePayinRes?.merchant_order_id,
+          payin_id: payInId,
+          cf_payment_id: payOrderResponse.cf_payment_id,
+          payment_method : payOrderResponse.payment_method,
+          data: payOrderResponse.data,
+        };
+
+        return DefaultResponse(res, 200, 'Payment initiated successfully', response);
+    
+    } catch (error) {
+      logger.error("Error in creating cashfree order:", error);
+      next(error);
+    }
+  }
+
   // To Get pay-in data.
   async getAllPayInData(req, res, next) {
     try {
