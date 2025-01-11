@@ -33,6 +33,7 @@ function config(Env) {
         ekoPaymentsActivateUrl:Env?.EKO_PAYMENTS_ACTIVATE_URL,
         ekoPaymentsInitiateUrl:Env?.EKO_PAYMENTS_INITIATE_URL,
         ekoPaymentsStatusUrl:Env?.EKO_PAYMENTS_STATUS_URL,
+        ekoPaymentsStatusUrlByClientRefId:Env?.EKO_PAYMENTS_STATUS_URL_BY_CLIENT_REF_ID,
         ekoWalletBalanceEnquiryUrl:Env?.EKO_WALLET_BALANCE_INQUIRY_URL,
         ekoRegisteredMobileNo:Env?.EKO_REGISTERED_MOBILE_NO,
         ekoAccessKey:Env?.EKO_ACCESS_AUTHENTICATOR_KEY,

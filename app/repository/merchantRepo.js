@@ -292,6 +292,7 @@ class MerchantRepo {
         const payInCommissionByCode = groupByCode(payInData, 'payin_commission');
 
         const payOutAmountByCode = groupByCode(payOutData, 'amount');
+
         const payOutCommissionByCode = groupByCode(payOutData, 'payout_commision');
 
         const reversedPayOutAmountByCode = groupByCode(reversedPayOutData, 'amount');
@@ -330,7 +331,7 @@ class MerchantRepo {
                 (payInCommission + payOutCommission - reversedPayOutCommission) -
                 settlementAmount -
                 lienAmount +
-                reversedPayOutAmount;
+                reversedPayOutAmount;            
 
                 const childrenData = merchant.child_code
                 ? merchant.child_code.map((childCode) => {
