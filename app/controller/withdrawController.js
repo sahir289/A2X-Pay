@@ -401,10 +401,11 @@ class WithdrawController {
         return DefaultResponse(res, 404, "Payment not found");
       }
       const updatedData = {
-        status: payload.txstatus_desc.toUpperCase() == 'SUCCESS' ? payload.txstatus_desc.toUpperCase() : 'REVERSED',
+        status: payload.txstatus_desc.toUpperCase() == 'SUCCESS' ? payload.txstatus_desc.toUpperCase() : 'REJECTED',
         amount: Number(payload.amount),
         utr_id: payload.tid ? String(payload.tid): "",
         approved_at: payload.status == 'SUCCESS'? new Date() : null,
+        rejected_at: payload.status != 'SUCCESS'? new Date() : null,
       }
 
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
@@ -640,7 +641,9 @@ class WithdrawController {
             const getStatus = await this.checkBlazepePayoutStatus(merchantRefId); 
     
                 if (getStatus?.status === 'REFUNDED' || getStatus?.status === 'REVERSED') {
-                    payload.status = 'REVERSED';
+                    payload.status = 'REJECTED';
+                    payload.rejected_reason = getStatus?.message;
+                    payload.rejected_at = new Date();
                     // payload.utr_id = getStatus?.utr;
                     logger.error(`Status is ${payload.status}`, getStatus?.message);
                 } else if(getStatus?.status === 'SUCCESS'){
