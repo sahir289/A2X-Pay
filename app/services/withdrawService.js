@@ -199,7 +199,7 @@ class Withdraw {
     }
   }
 
-  async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate) {
+  async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate, method) {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
@@ -209,7 +209,7 @@ class Withdraw {
           ? { in: merchantCodes }
           : merchantCodes,
       },
-      status: status,
+      status: status === "REVERSED" ? "REJECTED" : status,
     };
 
     if (status === "SUCCESS") {
@@ -218,8 +218,24 @@ class Withdraw {
         lte: end,
       };
     }
-    if (status === "REJECTED") {
+    else if (status === "REJECTED") {
       condition.rejected_at = {
+        gte: start,
+        lte: end,
+      };
+    }
+    else if (status === "REVERSED") {
+      condition.approved_at = {
+        not: null,
+      };
+      condition.rejected_at = {
+        gte: start,
+        lte: end,
+      };
+    }
+    else if (status === "All") {
+      delete condition.status;
+      condition.updatedAt = {
         gte: start,
         lte: end,
       };
@@ -229,6 +245,9 @@ class Withdraw {
         gte: start,
         lte: end,
       };
+    }
+    if (method) {
+      condition.method = method;
     }
 
     try {
