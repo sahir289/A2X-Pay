@@ -1040,7 +1040,7 @@ class PayInController {
       checkValidation(req);
       const { payInId } = req.params;
       // const userIp = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
-      const { amount, user_id } = req.body;
+      const { amount } = req.body;
 
       const getPayInData = await payInRepo.getPayInData(payInId);
       if (!getPayInData) {
@@ -1066,7 +1066,7 @@ class PayInController {
         order_id: getPayInData.merchant_order_id,
         order_meta: { notify_url: "https://hello.com" },
         customer_details: {
-          customer_id: user_id,
+          customer_id: getPayInData.user_id,
           customer_phone: "9898900909",
           },
         }),
