@@ -779,7 +779,7 @@ class WithdrawController {
   async getAllPayOutDataWithRange(req, res, next) {
     try {
       checkValidation(req);
-      let { merchantCode, status, startDate, endDate, includeSubMerchant } = req.body;
+      let { merchantCode, status, startDate, endDate, method, includeSubMerchant } = req.body;
 
       if (!merchantCode) {
         merchantCode = [];
@@ -804,7 +804,8 @@ class WithdrawController {
           allNewMerchantCodes,
           status,
           startDate,
-          endDate
+          endDate,
+          method
         );
         logger.info('Get all payout with range', {
           status: payOutDataRes.status,
@@ -822,7 +823,8 @@ class WithdrawController {
           merchantCode,
           status,
           startDate,
-          endDate
+          endDate,
+          method
         );
         logger.info('Get all payout with range', {
           status: payOutDataRes.status,
