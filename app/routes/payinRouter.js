@@ -104,6 +104,11 @@ payInRouter.post(
   payInController.payInIntentGenerateOrder
 );
 
+payInRouter.post(
+  "/update-payment-cashfree-webhook",
+  payInController.payInUpdateCashfreeWebhook
+);
+
 payInRouter.get("/get-payInData", payInController.getAllPayInData);
 
 payInRouter.get(

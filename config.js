@@ -56,6 +56,9 @@ function config(Env) {
         ourUrlForGettingCallbackFromBlazePe:Env?.OUR_NOTIFY_URL_FOR_GETTING_CALLBACK_FROM_BLAZEPE,
         cashfreeClientId:Env?.CLIENT_ID,
         cashfreeClientSecret:Env?.CLIENT_SECRET,
+        cashfreeCreateOrderUrl:Env?.CREATE_ORDER_URL,
+        cashfreePayOrderUrl:Env?.PAY_ORDER_URL
+
     };
 }
 
