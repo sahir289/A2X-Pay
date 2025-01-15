@@ -6,10 +6,10 @@ import router from "./app/routes/index.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import config from "./config.js";
-import "./app/cron/index.js";
 import loggingMiddleware from "./app/middlewares/loggingMiddleware.js";
 import { logger } from "./app/utils/logger.js";
-import "./app/webhooks/index.js";
+import { razorHook } from "./app/webhooks/razorpay.js";
+import "./app/cron/index.js";
 const app = express();
 app.use(cookieParser())
 app.use(cors({
@@ -23,6 +23,7 @@ app.use(loggingMiddleware);
 
 // Use routes
 app.use("/", router);
+app.use("/", razorHook);
 app.get('/test', (req, res) => {
     res.send('This is a test endpoint.');
 });
