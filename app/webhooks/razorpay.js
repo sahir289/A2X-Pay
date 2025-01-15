@@ -1,30 +1,34 @@
-import crypto from "crypto";
 import payInRepo from '../repository/payInRepo.js';
 import { calculateCommission } from '../helper/utils.js';
 import merchantRepo from '../repository/merchantRepo.js';
 import axios from 'axios';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
+import Razorpay from 'razorpay';
+import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
+
+const razorpay = new Razorpay({
+    key_id: process.env.RAZOR_PAY_ID,
+    key_secret: process.env.RAZOR_PAY_SECRET
+})
 
 const RazorHook = async (req, res) => {
     try {
         const webhookSecret = 'trust-pay-stg#001188';
         const receivedSignature = req.headers['X-Razorpay-Signature'];
         const data = req.body?.payload?.payment?.entity || {};
-        const expectedSignature = crypto.createHmac('sha256', webhookSecret).update(JSON.stringify(data)).digest('base64');
-        if (receivedSignature != expectedSignature || !data.event) {
-            logger.error("Invalid Webhook Signature or Event!");
-            res.status(400).json({ message: "Invalid Webhook Signature or Event!" })
-            return;
-        }
-
+        validateWebhookSignature(JSON.stringify(req.body), receivedSignature, webhookSecret);
         // transaction id will be passed from our payment-site as email
-        const { email, amount } = data;
+        const { email, razorAmount, id } = data;
+        const amount = razorAmount / 100;
         const sno = (email || "").replace(".trustpay@gmail.com", "");
         let status = null;
         logger.info({ status, sno });
 
         switch (data.event) {
+            case "payment.authorized":
+                await razorpay.payments.capture(id, razorAmount, data.currency || "INR");
+                status = "SUCCESS";
             case "payment.captured":
                 status = "SUCCESS";
                 break;
