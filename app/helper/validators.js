@@ -341,6 +341,20 @@ export const validatePayInProcess = [
     .withMessage("amount must be a valid number between 0 and 100000"),
 ];
 
+export const validateIntentPayInProcess = [
+  param("payInId")
+    .notEmpty()
+    .withMessage("payInId must not be empty")
+    .isUUID()
+    .withMessage("payInId must be a valid UUID"),
+
+  body("amount")
+    .notEmpty()
+    .withMessage("amount must not be empty")
+    .isFloat({ min: 0 })
+    .withMessage("amount must be a valid number between 0 and 100000"),
+];
+
 export const settlementCreateValidator = [
   body("amount")
     .trim()

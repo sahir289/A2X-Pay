@@ -8,6 +8,7 @@ import {
   payInAssignValidator,
   payInExpireURLValidator,
   payOutInAllDataValidator,
+  validateIntentPayInProcess,
   validatePayInId,
   validatePayInIdAndAmountAssigned,
   validatePayInIdAndMerchant,
@@ -57,7 +58,7 @@ payInRouter.post(
 
 payInRouter.get(
   "/validate-payIn-url/:payInId",
-  locationRestrictMiddleware,
+  // locationRestrictMiddleware,
   validatePayInIdUrl,
   payInController.validatePayInUrl
 );
@@ -100,7 +101,7 @@ payInRouter.post(
 
 payInRouter.post(
   "/generate-intent-order/:payInId",
-  // validatePayInProcess,
+  validateIntentPayInProcess,
   payInController.payInIntentGenerateOrder
 );
 
