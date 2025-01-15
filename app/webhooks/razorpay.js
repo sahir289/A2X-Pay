@@ -1,4 +1,3 @@
-import express from 'express';
 import crypto from "crypto";
 import payInRepo from '../repository/payInRepo.js';
 import { calculateCommission } from '../helper/utils.js';
@@ -6,8 +5,8 @@ import merchantRepo from '../repository/merchantRepo.js';
 import axios from 'axios';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
-const razorHook = express();
-razorHook.use('/webhook/razor-pay', async (req, res) => {
+
+const RazorHook = async (req, res) => {
     try {
         const webhookSecret = 'trust-pay-stg#001188';
         const receivedSignature = req.headers['X-Razorpay-Signature'];
@@ -84,6 +83,6 @@ razorHook.use('/webhook/razor-pay', async (req, res) => {
     } catch (err) {
         logger.error("Razorpay webhook error", err);
     }
-});
+};
 
-export { razorHook };
+export default RazorHook;

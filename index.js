@@ -8,7 +8,6 @@ import { Server } from "socket.io";
 import config from "./config.js";
 import loggingMiddleware from "./app/middlewares/loggingMiddleware.js";
 import { logger } from "./app/utils/logger.js";
-import { razorHook } from "./app/webhooks/razorpay.js";
 import "./app/cron/index.js";
 const app = express();
 app.use(cookieParser())
@@ -23,7 +22,6 @@ app.use(loggingMiddleware);
 
 // Use routes
 app.use("/", router);
-app.use("/", razorHook);
 app.get('/test', (req, res) => {
     res.send('This is a test endpoint.');
 });
