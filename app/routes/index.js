@@ -33,7 +33,7 @@ router.use("/v1", vendorSettlementRouter);
 router.use("/v1", duplicateDisputeTransactionRouter); // add router to handle duplicate and disputed transaction
 router.use("/v1", lienRouter);
 router.use("/v1", weeklyReportRouter);
-router.use("/webhook/razor-pay", RazorHook);
+router.all("/v1/webhook/razor-pay", RazorHook);
 
 
 // Middleware for handling 404 errors

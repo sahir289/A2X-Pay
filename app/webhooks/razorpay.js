@@ -10,10 +10,11 @@ const RazorHook = async (req, res) => {
     try {
         const webhookSecret = 'trust-pay-stg#001188';
         const receivedSignature = req.headers['X-Razorpay-Signature'];
-        const data = data?.payload?.payment?.entity || {};
+        const data = req.body?.payload?.payment?.entity || {};
         const expectedSignature = crypto.createHmac('sha256', webhookSecret).update(JSON.stringify(data)).digest('base64');
         if (receivedSignature != expectedSignature || !data.event) {
             logger.error("Invalid Webhook Signature or Event!");
+            res.status(400).json({ message: "Invalid Webhook Signature or Event!" })
             return;
         }
 
@@ -33,6 +34,7 @@ const RazorHook = async (req, res) => {
         // if webhook is called with none of handled events or transaction id not received
         if (!status || !id) {
             logger.error("Status or Id not found!", {status, id});
+            res.status(400).json({ message: "Status or Id not found!" })
             return;
         }
 
@@ -44,6 +46,7 @@ const RazorHook = async (req, res) => {
         const merchantData = await merchantRepo.getMerchantById(payInData.merchant_id)
         if (!merchantData) {
             logger.error("Merchant not found!");
+            res.status(400).json({ message: "Merchant not found!" })
             return;
         }
 
@@ -82,6 +85,7 @@ const RazorHook = async (req, res) => {
         await axios.post(payInData.notify_url, notifyData)
     } catch (err) {
         logger.error("Razorpay webhook error", err);
+        res.status(500).json({ message: "Razorpay webhook error", error: err })
     }
 };
 
