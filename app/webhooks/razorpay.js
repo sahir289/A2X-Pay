@@ -32,6 +32,7 @@ razorHook.use('/webhook/razor-pay', async (req, res) => {
 
         // if webhook is called with none of handled events or transaction id not received
         if (!status || !id) {
+            console.error("Status or Id not found!", {status, id});
             return;
         }
 
