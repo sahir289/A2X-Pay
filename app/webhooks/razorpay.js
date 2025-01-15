@@ -8,7 +8,7 @@ import bankAccountRepo from '../repository/bankAccountRepo.js';
 const razorHook = express();
 razorHook.use('/webhook/razor-pay', async (req, res) => {
     try {
-        const webhookSecret = '';
+        const webhookSecret = 'trust-pay-stg#001188';
         const receivedSignature = req.headers['X-Razorpay-Signature'];
         const data = data?.payload?.payment?.entity || {};
         const expectedSignature = crypto.createHmac('sha256', webhookSecret).update(JSON.stringify(data)).digest('base64');
@@ -18,7 +18,7 @@ razorHook.use('/webhook/razor-pay', async (req, res) => {
         }
 
         // transaction id will be passed from our payment-site as email
-        const { email: id, amount } = data;
+        const { contact: id, amount } = data;
         let status = null;
 
         switch (data.event) {
