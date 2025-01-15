@@ -5,6 +5,7 @@ import { calculateCommission } from '../helper/utils.js';
 import merchantRepo from '../repository/merchantRepo.js';
 import axios from 'axios';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
+import { logger } from '../utils/logger.js';
 const razorHook = express();
 razorHook.use('/webhook/razor-pay', async (req, res) => {
     try {
@@ -13,7 +14,7 @@ razorHook.use('/webhook/razor-pay', async (req, res) => {
         const data = data?.payload?.payment?.entity || {};
         const expectedSignature = crypto.createHmac('sha256', webhookSecret).update(JSON.stringify(data)).digest('base64');
         if (receivedSignature != expectedSignature || !data.event) {
-            console.error("Invalid Webhook Signature or Event!");
+            logger.error("Invalid Webhook Signature or Event!");
             return;
         }
 
@@ -32,7 +33,7 @@ razorHook.use('/webhook/razor-pay', async (req, res) => {
 
         // if webhook is called with none of handled events or transaction id not received
         if (!status || !id) {
-            console.error("Status or Id not found!", {status, id});
+            logger.error("Status or Id not found!", {status, id});
             return;
         }
 
@@ -43,7 +44,7 @@ razorHook.use('/webhook/razor-pay', async (req, res) => {
 
         const merchantData = await merchantRepo.getMerchantById(payInData.merchant_id)
         if (!merchantData) {
-            console.error("Merchant not found!");
+            logger.error("Merchant not found!");
             return;
         }
 
@@ -81,7 +82,7 @@ razorHook.use('/webhook/razor-pay', async (req, res) => {
         };
         await axios.post(payInData.notify_url, notifyData)
     } catch (err) {
-        console.error("Razorpay webhook error", err);
+        logger.error("Razorpay webhook error", err);
     }
 });
 
