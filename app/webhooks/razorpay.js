@@ -19,8 +19,10 @@ const RazorHook = async (req, res) => {
         }
 
         // transaction id will be passed from our payment-site as email
-        const { contact: id, amount } = data;
+        const { email, amount } = data;
+        const sno = (email || "").replace(".trustpay@gmail.com", "");
         let status = null;
+        logger.info({ status, sno });
 
         switch (data.event) {
             case "payment.captured":
@@ -32,13 +34,12 @@ const RazorHook = async (req, res) => {
         }
 
         // if webhook is called with none of handled events or transaction id not received
-        if (!status || !id) {
-            logger.error("Status or Id not found!", {status, id});
-            res.status(400).json({ message: "Status or Id not found!" })
+        if (!status || !sno) {
+            res.status(400).json({ message: "Status or sno not found!" })
             return;
         }
 
-        const payInData = await payInRepo.getPayInData(id);
+        const payInData = await payInRepo.getPayInData(sno, true);
         if (!payInData) {
             throw Error("Payment does not exist");
         }

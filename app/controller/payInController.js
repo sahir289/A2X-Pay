@@ -301,6 +301,7 @@ class PayInController {
       assignedBankToPayInUrlRes.merchant_max_payin = payinDataResult?.Merchant?.max_payin;
       assignedBankToPayInUrlRes.merchant_code = payinDataResult?.Merchant?.code;
       assignedBankToPayInUrlRes.allow_merchant_intent = payinDataResult?.Merchant?.allow_intent;
+      assignedBankToPayInUrlRes.sno = payinDataResult?.sno;
 
       return DefaultResponse(
         res,
