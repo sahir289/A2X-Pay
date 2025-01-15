@@ -9,7 +9,7 @@ import config from "./config.js";
 import "./app/cron/index.js";
 import loggingMiddleware from "./app/middlewares/loggingMiddleware.js";
 import { logger } from "./app/utils/logger.js";
-
+import "./app/webhooks/index.js";
 const app = express();
 app.use(cookieParser())
 app.use(cors({
