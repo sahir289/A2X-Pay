@@ -1,4 +1,3 @@
-import express from 'express';
 import crypto from "crypto";
 import payInRepo from '../repository/payInRepo.js';
 import { calculateCommission } from '../helper/utils.js';
@@ -6,21 +5,24 @@ import merchantRepo from '../repository/merchantRepo.js';
 import axios from 'axios';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
-const razorHook = express();
-razorHook.use('/webhook/razor-pay', async (req, res) => {
+
+const RazorHook = async (req, res) => {
     try {
         const webhookSecret = 'trust-pay-stg#001188';
         const receivedSignature = req.headers['X-Razorpay-Signature'];
-        const data = data?.payload?.payment?.entity || {};
+        const data = req.body?.payload?.payment?.entity || {};
         const expectedSignature = crypto.createHmac('sha256', webhookSecret).update(JSON.stringify(data)).digest('base64');
         if (receivedSignature != expectedSignature || !data.event) {
             logger.error("Invalid Webhook Signature or Event!");
+            res.status(400).json({ message: "Invalid Webhook Signature or Event!" })
             return;
         }
 
         // transaction id will be passed from our payment-site as email
-        const { contact: id, amount } = data;
+        const { email, amount } = data;
+        const sno = (email || "").replace(".trustpay@gmail.com", "");
         let status = null;
+        logger.info({ status, sno });
 
         switch (data.event) {
             case "payment.captured":
@@ -32,12 +34,12 @@ razorHook.use('/webhook/razor-pay', async (req, res) => {
         }
 
         // if webhook is called with none of handled events or transaction id not received
-        if (!status || !id) {
-            logger.error("Status or Id not found!", {status, id});
+        if (!status || !sno) {
+            res.status(400).json({ message: "Status or sno not found!" })
             return;
         }
 
-        const payInData = await payInRepo.getPayInData(id);
+        const payInData = await payInRepo.getPayInData(sno, true);
         if (!payInData) {
             throw Error("Payment does not exist");
         }
@@ -45,6 +47,7 @@ razorHook.use('/webhook/razor-pay', async (req, res) => {
         const merchantData = await merchantRepo.getMerchantById(payInData.merchant_id)
         if (!merchantData) {
             logger.error("Merchant not found!");
+            res.status(400).json({ message: "Merchant not found!" })
             return;
         }
 
@@ -83,7 +86,8 @@ razorHook.use('/webhook/razor-pay', async (req, res) => {
         await axios.post(payInData.notify_url, notifyData)
     } catch (err) {
         logger.error("Razorpay webhook error", err);
+        res.status(500).json({ message: "Razorpay webhook error", error: err })
     }
-});
+};
 
-export { razorHook };
+export default RazorHook;

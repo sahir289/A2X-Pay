@@ -58,12 +58,16 @@ class PayInRepo {
         }
     }
 
-    async getPayInData(payInId) {
+    async getPayInData(payInId, isSno = false) {
         try {
+            let condition = {
+                id: payInId
+            };
+            if(isSno){
+                condition = { sno: payInId };
+            }
             const paymentRes = await prisma.payin.findFirst({
-                where: {
-                    id: payInId
-                },
+                where: condition,
                 include: {
                     Merchant: true
                 }
