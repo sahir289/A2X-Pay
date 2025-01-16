@@ -5,7 +5,7 @@ import axios from 'axios';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
 import Razorpay from 'razorpay';
-// import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
+import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils.js';
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZOR_PAY_ID,
@@ -17,7 +17,7 @@ const RazorHook = async (req, res) => {
         const webhookSecret = 'trust-pay-stg#001188';
         const receivedSignature = req.headers['X-Razorpay-Signature'];
         const data = req.body?.payload?.payment?.entity || {};
-        // validateWebhookSignature(JSON.stringify(req.body), receivedSignature, webhookSecret);
+        validateWebhookSignature(JSON.stringify(req.body), receivedSignature, webhookSecret);
         // transaction id will be passed from our payment-site as email
         const { email, razorAmount, id } = data;
         const amount = razorAmount / 100;
