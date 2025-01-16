@@ -16,7 +16,7 @@ const RazorHook = async (req, res) => {
     try {
         const webhookSecret = 'trust-pay-stg#001188';
         console.log(req.headers, "req.headers")
-        const receivedSignature = req.headers['X-Razorpay-Signature'];
+        const receivedSignature = req.headers['x-razorpay-signature'];
         const data = req.body?.payload?.payment?.entity || {};
         validateWebhookSignature(JSON.stringify(req.body), receivedSignature, webhookSecret);
         // transaction id will be passed from our payment-site as email
