@@ -64,7 +64,7 @@ class PayInRepo {
                 id: payInId
             };
             if(isSno){
-                condition = { sno: payInId };
+                condition = { sno: Number(payInId) };
             }
             const paymentRes = await prisma.payin.findFirst({
                 where: condition,

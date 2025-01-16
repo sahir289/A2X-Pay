@@ -15,18 +15,17 @@ const razorpay = new Razorpay({
 const RazorHook = async (req, res) => {
     try {
         const webhookSecret = 'trust-pay-stg#001188';
-        console.log(req.headers, "req.headers")
         const receivedSignature = req.headers['x-razorpay-signature'];
         const data = req.body?.payload?.payment?.entity || {};
         validateWebhookSignature(JSON.stringify(req.body), receivedSignature, webhookSecret);
         // transaction id will be passed from our payment-site as email
-        const { email, razorAmount, id } = data;
+        const { email, amount: razorAmount, id } = data;
         const amount = razorAmount / 100;
         const sno = (email || "").replace(".trustpay@gmail.com", "");
         let status = null;
         logger.info({ status, sno });
 
-        switch (data.event) {
+        switch (req.body.event) {
             case "payment.authorized":
                 await razorpay.payments.capture(id, razorAmount, data.currency || "INR");
                 status = "SUCCESS";
@@ -74,13 +73,14 @@ const RazorHook = async (req, res) => {
             payload.payin_commission = payinCommission;
         }
 
+        const updatePayInDataRes = await payInRepo.updatePayInData(payInData.id, payload);
 
-        const updatePayInDataRes = await payInRepo.updatePayInData(id, payload);
         if (payInData.bank_acc_id) {
             await bankAccountRepo.updateBankAccountBalance(payInData.bank_acc_id, parseFloat(amount));
         }
 
         await merchantRepo.updateMerchant(payInData.merchant_id, amount)
+
         const notifyData = {
             status,
             merchantOrderId: updatePayInDataRes?.merchant_order_id,
