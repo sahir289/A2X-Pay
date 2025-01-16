@@ -88,7 +88,8 @@ const RazorHook = async (req, res) => {
             amount: updatePayInDataRes?.confirmed,
             utr_id: updatePayInDataRes?.utr
         };
-        await axios.post(payInData.notify_url, notifyData)
+        
+        await axios.post(payInData.notify_url, notifyData).catch((err)=>{logger.error(err)})
         res.status(200).json({ message: "Transaction status updated" });
     } catch (err) {
         logger.error("Razorpay webhook error", err);
