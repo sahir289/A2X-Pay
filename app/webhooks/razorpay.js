@@ -22,8 +22,8 @@ const RazorHook = async (req, res) => {
         
         // transaction id will be passed from our payment-site as email
         const { email, amount: razorAmount, id } = data;
-        console.log(email, amount, id, "rddeee");
         const amount = razorAmount / 100;
+        console.log(email, amount, id, "rddeee");
         const sno = (email || "").replace(".trustpay@gmail.com", "");
         let status = 'PENDING';
         logger.info({ status, sno });
