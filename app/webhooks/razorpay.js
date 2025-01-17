@@ -21,9 +21,8 @@ const RazorHook = async (req, res) => {
         validateWebhookSignature(JSON.stringify(req.body), receivedSignature, webhookSecret);
         
         // transaction id will be passed from our payment-site as email
-        const { email, amount: razorAmount, id } = data;
+        const { email, amount: razorAmount, id, acquirer_data } = data;
         const amount = razorAmount / 100;
-        console.log(email, amount, id, "rddeee");
         const sno = (email || "").replace(".trustpay@gmail.com", "");
         let status = 'PENDING';
         logger.info({ status, sno });
@@ -74,8 +73,8 @@ const RazorHook = async (req, res) => {
             is_notified: true,
             approved_at: new Date(),
             duration,
-            utr: id,
-            user_submitted_utr: id
+            utr: acquirer_data?.rrn,
+            user_submitted_utr: acquirer_data?.rrn
         };
 
         if (status === "SUCCESS") {
