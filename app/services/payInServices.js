@@ -108,6 +108,27 @@ class PayInService {
           status: "DROPPED",
         },
       });
+      const notifyData = {
+        status: "DROPPED",
+        merchantOrderId: Data?.merchant_order_id,
+        payinId: Data?.id,
+        amount: null,
+        req_amount: Data?.amount,
+        utr_id: ""
+      };
+
+      try {
+        logger.info('Sending notification to merchant', { notify_url: Data.notify_url, notify_data: notifyData });
+        //When we get the notify url we will add it.
+        const notifyMerchant = await axios.post(Data.notify_url, notifyData);
+        logger.info('Sending notification to merchant', {
+          status: notifyMerchant.status,
+          data: notifyMerchant.data,
+        })
+
+      } catch (error) {
+        logger.error("Error sending notification:", error);
+      }
       const now = new Date();
       const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString(); // Start of today
       const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString(); // End of today
