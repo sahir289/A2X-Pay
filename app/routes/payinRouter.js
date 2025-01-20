@@ -58,7 +58,7 @@ payInRouter.post(
 
 payInRouter.get(
   "/validate-payIn-url/:payInId",
-  // locationRestrictMiddleware,
+  locationRestrictMiddleware,
   validatePayInIdUrl,
   payInController.validatePayInUrl
 );
