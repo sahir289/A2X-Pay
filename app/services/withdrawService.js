@@ -213,6 +213,7 @@ class Withdraw {
     };
 
     if (status === "SUCCESS") {
+      delete condition.status;
       condition.approved_at = {
         gte: start,
         lte: end,
