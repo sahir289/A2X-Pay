@@ -333,7 +333,7 @@ class PayInController {
         };
         logger.info('Sending notification to merchant', { notify_url: payinDataRes?.notify_url, notify_data: notifyData });
         const notifyMerchant = await axios.post(payinDataRes?.notify_url, notifyData);
-        logger.info('Merchant notification response', {
+        logger.info('Notification sent successfully', {
           status: notifyMerchant.status,
           data: notifyMerchant.data,
         });
@@ -684,7 +684,7 @@ class PayInController {
           logger.info('Sending notification to merchant', { notify_url: getPayInData?.notify_url, notify_data: notifyData });
           //When we get the notify url we will add it.
           const notifyMerchant = await axios.post(getPayInData?.notify_url, notifyData);
-          logger.info('Sending notification to merchant', {
+          logger.info('Notification sent successfully', {
             status: notifyMerchant.status,
             data: notifyMerchant.data,
           })
@@ -726,7 +726,7 @@ class PayInController {
             logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
             //When we get the notify url we will add it.
             const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-            logger.info('Sending notification to merchant', {
+            logger.info('Notification sent successfully', {
               status: notifyMerchant.status,
               data: notifyMerchant.data,
             })
@@ -814,7 +814,7 @@ class PayInController {
               logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
               //When we get the notify url we will add it.
               const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-              logger.info('Sending notification to merchant', {
+              logger.info('Notification sent successfully', {
                 status: notifyMerchant.status,
                 data: notifyMerchant.data,
               })
@@ -910,7 +910,7 @@ class PayInController {
               logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
               //When we get the notify url we will add it.
               const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-              logger.info('Sending notification to merchant', {
+              logger.info('Notification sent successfully', {
                 status: notifyMerchant.status,
                 data: notifyMerchant.data,
               })
@@ -1006,7 +1006,7 @@ class PayInController {
           logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
           //When we get the notify url we will add it.
           const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-          logger.info('Sending notification to merchant', {
+          logger.info('Notification sent successfully', {
             status: notifyMerchant.status,
             data: notifyMerchant.data,
           })
@@ -1206,7 +1206,7 @@ class PayInController {
         logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
         //When we get the notify url we will add it.
         const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-        logger.info('Sending notification to merchant', {
+        logger.info('Notification sent successfully', {
           status: notifyMerchant.status,
           data: notifyMerchant.data,
         })
@@ -1632,7 +1632,7 @@ class PayInController {
           logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
 
           const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-          logger.info('Sending notification to merchant', {
+          logger.info('Notification sent successfully', {
             status: notifyMerchant.status,
             data: notifyMerchant.data,
           })
@@ -2271,7 +2271,7 @@ class PayInController {
                         logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
 
                         const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                        logger.info('Sending notification to merchant', {
+                        logger.info('Notification sent successfully', {
                           status: notifyMerchant.status,
                           data: notifyMerchant.data,
                         })
@@ -2377,7 +2377,7 @@ class PayInController {
                       logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
 
                       const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                      logger.info('Sending notification to merchant', {
+                      logger.info('Notification sent successfully', {
                         status: notifyMerchant.status,
                         data: notifyMerchant.data,
                       })
@@ -2472,7 +2472,7 @@ class PayInController {
                             //When we get the notify url we will add it.
                             logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
                             const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                            logger.info('Sending notification to merchant', {
+                            logger.info('Notification sent successfully', {
                               status: notifyMerchant.status,
                               data: notifyMerchant.data,
                             })
@@ -2547,7 +2547,7 @@ class PayInController {
                           //When we get the notify url we will add it.
                           logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
                           const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                          logger.info('Sending notification to merchant', {
+                          logger.info('Notification sent successfully', {
                             status: notifyMerchant.status,
                             data: notifyMerchant.data,
                           })
@@ -2610,7 +2610,7 @@ class PayInController {
                             logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
 
                             const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                            logger.info('Sending notification to merchant', {
+                            logger.info('Notification sent successfully', {
                               status: notifyMerchant.status,
                               data: notifyMerchant.data,
                             })
@@ -2683,7 +2683,7 @@ class PayInController {
                           logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
 
                           const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                          logger.info('Sending notification to merchant', {
+                          logger.info('Notification sent successfully', {
                             status: notifyMerchant.status,
                             data: notifyMerchant.data,
                           })
@@ -2860,7 +2860,7 @@ class PayInController {
                             logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
 
                             const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                            logger.info('Sending notification to merchant', {
+                            logger.info('Notification sent successfully', {
                               status: notifyMerchant.status,
                               data: notifyMerchant.data,
                             })
@@ -2958,7 +2958,7 @@ class PayInController {
                                   logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
 
                                   const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                                  logger.info('Sending notification to merchant', {
+                                  logger.info('Notification sent successfully', {
                                     status: notifyMerchant.status,
                                     data: notifyMerchant.data,
                                   })
@@ -3064,7 +3064,7 @@ class PayInController {
                                 logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
 
                                 const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                                logger.info('Sending notification to merchant', {
+                                logger.info('Notification sent successfully', {
                                   status: notifyMerchant.status,
                                   data: notifyMerchant.data,
                                 })
@@ -3131,7 +3131,7 @@ class PayInController {
                                   //When we get the notify url we will add it.
                                   logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
                                   const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                                  logger.info('Sending notification to merchant', {
+                                  logger.info('Notification sent successfully', {
                                     status: notifyMerchant.status,
                                     data: notifyMerchant.data,
                                   })
@@ -3206,7 +3206,7 @@ class PayInController {
                                 //When we get the notify url we will add it.
                                 logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
                                 const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                                logger.info('Sending notification to merchant', {
+                                logger.info('Notification sent successfully', {
                                   status: notifyMerchant.status,
                                   data: notifyMerchant.data,
                                 })
@@ -3273,7 +3273,7 @@ class PayInController {
                               logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
 
                               const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                              logger.info('Sending notification to merchant', {
+                              logger.info('Notification sent successfully', {
                                 status: notifyMerchant.status,
                                 data: notifyMerchant.data,
                               })
@@ -3346,7 +3346,7 @@ class PayInController {
                             logger.info('Sending notification to merchant', { notify_url: updatedPayInData.notify_url, notify_data: notifyData });
 
                             const notifyMerchant = await axios.post(updatedPayInData.notify_url, notifyData);
-                            logger.info('Sending notification to merchant', {
+                            logger.info('Notification sent successfully', {
                               status: notifyMerchant.status,
                               data: notifyMerchant.data,
                             })
@@ -3635,7 +3635,7 @@ class PayInController {
                         logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
 
                         const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
-                        logger.info('Sending notification to merchant', {
+                        logger.info('Notification sent successfully', {
                           status: notifyMerchant.status,
                           data: notifyMerchant.data,
                         })
@@ -3725,7 +3725,7 @@ class PayInController {
                       logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
 
                       const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
-                      logger.info('Sending notification to merchant', {
+                      logger.info('Notification sent successfully', {
                         status: notifyMerchant.status,
                         data: notifyMerchant.data,
                       })
@@ -3823,7 +3823,7 @@ class PayInController {
                       logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
 
                       const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-                      logger.info('Sending notification to merchant', {
+                      logger.info('Notification sent successfully', {
                         status: notifyMerchant.status,
                         data: notifyMerchant.data,
                       })
@@ -3894,7 +3894,7 @@ class PayInController {
                           //When we get the notify url we will add it.
                           logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
                           const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
-                          logger.info('Sending notification to merchant', {
+                          logger.info('Notification sent successfully', {
                             status: notifyMerchant.status,
                             data: notifyMerchant.data,
                           })
@@ -3980,7 +3980,7 @@ class PayInController {
                         //When we get the notify url we will add it.
                         logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
                         const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
-                        logger.info('Sending notification to merchant', {
+                        logger.info('Notification sent successfully', {
                           status: notifyMerchant.status,
                           data: notifyMerchant.data,
                         })
@@ -4088,7 +4088,7 @@ class PayInController {
                           logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
 
                           const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
-                          logger.info('Sending notification to merchant', {
+                          logger.info('Notification sent successfully', {
                             status: notifyMerchant.status,
                             data: notifyMerchant.data,
                           })
@@ -4176,7 +4176,7 @@ class PayInController {
                         logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
 
                         const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
-                        logger.info('Sending notification to merchant', {
+                        logger.info('Notification sent successfully', {
                           status: notifyMerchant.status,
                           data: notifyMerchant.data,
                         })
@@ -4364,7 +4364,7 @@ class PayInController {
                     logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
 
                     const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-                    logger.info('Sending notification to merchant', {
+                    logger.info('Notification sent successfully', {
                       status: notifyMerchant.status,
                       data: notifyMerchant.data,
                     })
@@ -4429,7 +4429,7 @@ class PayInController {
                         //When we get the notify url we will add it.
                         logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
                         const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
-                        logger.info('Sending notification to merchant', {
+                        logger.info('Notification sent successfully', {
                           status: notifyMerchant.status,
                           data: notifyMerchant.data,
                         })
@@ -4515,7 +4515,7 @@ class PayInController {
                       //When we get the notify url we will add it.
                       logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
                       const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
-                      logger.info('Sending notification to merchant', {
+                      logger.info('Notification sent successfully', {
                         status: notifyMerchant.status,
                         data: notifyMerchant.data,
                       })
@@ -4623,7 +4623,7 @@ class PayInController {
                         logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
 
                         const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
-                        logger.info('Sending notification to merchant', {
+                        logger.info('Notification sent successfully', {
                           status: notifyMerchant.status,
                           data: notifyMerchant.data,
                         })
@@ -4711,7 +4711,7 @@ class PayInController {
                       logger.info('Sending notification to merchant', { notify_url: updatePayInDataRes.notify_url, notify_data: notifyData });
 
                       const notifyMerchant = await axios.post(updatePayInDataRes.notify_url, notifyData);
-                      logger.info('Sending notification to merchant', {
+                      logger.info('Notification sent successfully', {
                         status: notifyMerchant.status,
                         data: notifyMerchant.data,
                       })
@@ -4779,7 +4779,7 @@ class PayInController {
       try {
         logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
         const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
-        logger.info('Sending notification to merchant', {
+        logger.info('Notification sent successfully', {
           status: notifyMerchant.status,
           data: notifyMerchant.data,
         })
@@ -4819,7 +4819,7 @@ class PayInController {
       try {
         logger.info('Sending notification to merchant', { notify_url: updatePayInRes.notify_url, notify_data: notifyData });
         const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
-        logger.info('Sending notification to merchant', {
+        logger.info('Notification sent successfully', {
           status: notifyMerchant.status,
           data: notifyMerchant.data,
         })
@@ -4916,7 +4916,7 @@ class PayInController {
       try {
         logger.info('Sending notification to merchant', { notify_url: updatePayInRes.notify_url, notify_data: notifyData });
         const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
-        logger.info('Sending notification to merchant', {
+        logger.info('Notification sent successfully', {
           status: notifyMerchant.status,
           data: notifyMerchant.data,
         })

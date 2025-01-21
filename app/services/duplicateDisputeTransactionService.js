@@ -28,7 +28,7 @@ class DuplicateDisputeTransactionService {
                 logger.info('Sending notification to merchant', { notify_url: duplicateDisputeTransactionData?.notify_url, notify_data: notifyData });
                 //When we get the notify url we will add it.
                 const notifyMerchant = await axios.post(duplicateDisputeTransactionData?.notify_url, notifyData);
-                logger.info('Sending notification to merchant', {
+                logger.info('Notification sent successfully', {
                     status: notifyMerchant.status,
                     data: notifyMerchant.data,
                 })

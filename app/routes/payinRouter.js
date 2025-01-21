@@ -17,6 +17,7 @@ import {
 } from "../helper/validators.js";
 import gatherAllData from "../cron/index.js";
 import locationRestrictMiddleware from "../middlewares/locationRestrictMiddleware.js";
+import gatherPayinData from "../cron/notifyCron.js";
 
 const payInRouter = express();
 
@@ -172,5 +173,11 @@ payInRouter.post(
   "/reset-payment/",
   payInController.resetDeposit
 );
+
+payInRouter.get("/initialize-notify-cronjob", (req, res) => {
+  console.log("Calling gatherPayinData CRONJOB with timezone: Asia/Kolkata");
+  gatherPayinData("Asia/Kolkata");
+  res.send("Cron job initialized");
+});
 
 export default payInRouter;

@@ -85,7 +85,7 @@ class DuplicateDisputeTransactionController {
                                     logger.info('Sending notification to merchant', { notify_url: updatedPayInData?.notify_url, notify_data: notifyData });
                                     //When we get the notify url we will add it.
                                     const notifyMerchant = await axios.post(updatedPayInData?.notify_url, notifyData);
-                                    logger.info('Sending notification to merchant', {
+                                    logger.info('Notification sent successfully', {
                                         status: notifyMerchant.status,
                                         data: notifyMerchant.data,
                                     })
@@ -147,7 +147,7 @@ class DuplicateDisputeTransactionController {
                                 logger.info('Sending notification to merchant', { notify_url: updatedPayInData?.notify_url, notify_data: notifyData });
                                 //When we get the notify url we will add it.
                                 const notifyMerchant = await axios.post(updatedPayInData?.notify_url, notifyData);
-                                logger.info('Sending notification to merchant', {
+                                logger.info('Notification sent successfully', {
                                     status: notifyMerchant.status,
                                     data: notifyMerchant.data,
                                 })

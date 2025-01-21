@@ -437,7 +437,7 @@ class WithdrawController {
         try {
           logger.info('Sending notification to merchant', { notify_url: merchantPayoutUrl, notify_data: merchantPayoutData });
           const response = await axios.post(merchantPayoutUrl, merchantPayoutData);
-          logger.info('Notification to merchant sent Successfully', {
+          logger.info('Notification sent successfully', {
             status: response.status,
             data: response.data,
           })
@@ -694,7 +694,7 @@ class WithdrawController {
           // Payout notify
           logger.info('Sending notification to merchant', { notify_url: merchantPayoutUrl, notify_data: merchantPayoutData });
           const response = await axios.post(merchantPayoutUrl, merchantPayoutData);
-          logger.info('Notification to merchant sent Successfully', {
+          logger.info('Notification sent successfully', {
             status: response.status,
             data: response.data,
           })
@@ -760,7 +760,7 @@ class WithdrawController {
         try {
           logger.info('Sending notification to merchant', { notify_url: merchantPayoutUrl, notify_data: merchantPayoutData });
           const response = await axios.post(merchantPayoutUrl, merchantPayoutData);
-          logger.info('Notification to merchant sent Successfully', {
+          logger.info('Notification sent successfully', {
             status: response.status,
             data: response.data,
           })
