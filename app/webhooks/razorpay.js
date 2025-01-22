@@ -7,7 +7,7 @@ import { logger } from '../utils/logger.js';
 import Razorpay from 'razorpay';
 import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils.js';
 
-const razorpay = new Razorpay({
+export const razorpay = new Razorpay({
     key_id: process.env.RAZOR_PAY_ID,
     key_secret: process.env.RAZOR_PAY_SECRET
 })
