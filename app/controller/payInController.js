@@ -35,6 +35,7 @@ import payInRepo from "../repository/payInRepo.js";
 import payInServices from "../services/payInServices.js";
 import { sendBankNotAssignedAlertTelegram } from "../helper/sendTelegramMessages.js";
 import { logger } from "../utils/logger.js";
+import { razorpay } from "../webhooks/razorpay.js";
 
 // Construct __dirname manually
 const __filename = fileURLToPath(import.meta.url);
@@ -1041,7 +1042,7 @@ class PayInController {
       checkValidation(req);
       const { payInId } = req.params;
       // const userIp = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
-      const { amount } = req.body;
+      const { amount, isRazorpay } = req.body;
 
       const getPayInData = await payInRepo.getPayInData(payInId);
       if (!getPayInData) {
@@ -1051,6 +1052,16 @@ class PayInController {
       // const _10_MINUTES = 1000 * 60 * 10;
       // const expirationTimestamp = new Date(new Date().getTime() + _10_MINUTES);
       // const expirationTimeFormatted = expirationTimestamp.toISOString().replace('T', ' ').split('.')[0];
+
+      if (isRazorpay) {
+        const orderRes = await razorpay.orders.create({
+          amount: amount * 100,
+          currency: "INR",
+          receipt: payInId,
+        })
+
+        return DefaultResponse(res, 200, 'Payment initiated successfully', orderRes);
+      }
 
       const createOrderUrl = config.cashfreeCreateOrderUrl;
       const optionsToCreateOrder = {
@@ -1062,13 +1073,13 @@ class PayInController {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-        order_amount: amount,
-        order_currency: "INR",
-        order_id: getPayInData.merchant_order_id,
-        order_meta: { notify_url: "https://hello.com" },
-        customer_details: {
-          customer_id: getPayInData.user_id,
-          customer_phone: "9898900909",
+          order_amount: amount,
+          order_currency: "INR",
+          order_id: getPayInData.merchant_order_id,
+          order_meta: { notify_url: "https://hello.com" },
+          customer_details: {
+            customer_id: getPayInData.user_id,
+            customer_phone: "9898900909",
           },
         }),
       };
@@ -1082,18 +1093,18 @@ class PayInController {
         console.error('Error:', err);
         logger.error('getting error while creating order', err);
       }
-      const now = new Date(); 
+      const now = new Date();
       now.setUTCMinutes(now.getUTCMinutes() + 5);
       const istOffset = 5.5 * 60;
       const startTime = new Date(now.getTime() + istOffset * 60000);
-      const endTime = new Date(startTime.getTime() + 5 * 60000); 
-      const approveTime = new Date(startTime.getTime() + 1 * 60000); 
+      const endTime = new Date(startTime.getTime() + 5 * 60000);
+      const approveTime = new Date(startTime.getTime() + 1 * 60000);
 
       const payOrderUrl = config.cashfreePayOrderUrl;
       const optionsToOrderPay = {
         method: 'POST',
         headers: {
-          'x-api-version': '2025-01-01', 
+          'x-api-version': '2025-01-01',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -1114,8 +1125,8 @@ class PayInController {
           payment_session_id: cashfreeResponse.payment_session_id,
         })
       };
-      
-     
+
+
       let payOrderResponse;
       try {
         const orderPay = await fetch(payOrderUrl, optionsToOrderPay);
@@ -1131,24 +1142,24 @@ class PayInController {
         status: payOrderResponse.cf_payment_id ? "PENDING" : 'FAILED',
       };
 
-        const updatePayinRes = await payInRepo.updatePayInData(
-          payInId,
-          payInData
-        );
+      const updatePayinRes = await payInRepo.updatePayInData(
+        payInId,
+        payInData
+      );
 
-        const response = {
-          status: updatePayinRes?.status,
-          payment_amount: amount,
-          payment_session_id: cashfreeResponse.payment_session_id,
-          merchant_order_id: updatePayinRes?.merchant_order_id,
-          payin_id: payInId,
-          cf_payment_id: payOrderResponse.cf_payment_id,
-          payment_method : payOrderResponse.payment_method,
-          data: payOrderResponse.data,
-        };
+      const response = {
+        status: updatePayinRes?.status,
+        payment_amount: amount,
+        payment_session_id: cashfreeResponse.payment_session_id,
+        merchant_order_id: updatePayinRes?.merchant_order_id,
+        payin_id: payInId,
+        cf_payment_id: payOrderResponse.cf_payment_id,
+        payment_method: payOrderResponse.payment_method,
+        data: payOrderResponse.data,
+      };
 
-        return DefaultResponse(res, 200, 'Payment initiated successfully', response);
-    
+      return DefaultResponse(res, 200, 'Payment initiated successfully', response);
+
     } catch (error) {
       logger.error("Error in creating cashfree order:", error);
       next(error);
@@ -1160,9 +1171,9 @@ class PayInController {
     res.sendStatus(200);
     try {
       console.log(payload, "payloadpayload");
-      
+
       const payInDataByMerchantOrderId = await payInRepo.getPayInDataByMerchantOrderId(payload.data.order_id);
-      if(!payInDataByMerchantOrderId){
+      if (!payInDataByMerchantOrderId) {
         logger.error('Payment not found');
       }
 
@@ -1172,11 +1183,11 @@ class PayInController {
       const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
       const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
-      if(payload.data.payment_status === 'FAILED' || payload.data.payment_status === 'USER_DROPPED'){
+      if (payload.data.payment_status === 'FAILED' || payload.data.payment_status === 'USER_DROPPED') {
         logger.info('Payment Failed due to:', data.payment.payment_message);
       }
 
-      const payInData= {
+      const payInData = {
         confirmed: payload.data.order_amount,
         amount: payload.data.order_amount,
         status: payload.data.payment_status === 'USER_DROPPED' ? 'DROPPED' : payload.data.payment_status,
@@ -1187,7 +1198,7 @@ class PayInController {
         user_submitted_image: null,
         duration: duration,
       }
-      
+
       const updatePayinRes = await payInRepo.updatePayInData(
         payInId,
         payInData
@@ -1220,7 +1231,7 @@ class PayInController {
       next(error);
     }
   }
-  
+
 
   // To Get pay-in data.
   async getAllPayInData(req, res, next) {
@@ -1389,7 +1400,7 @@ class PayInController {
 
         //
         let getBankDataByBotRes;
-        
+
         // we are making sure that we get bank name then only we move forward
         if (matchDataFromBotRes?.bankName && matchDataFromBotRes?.bankName !== isBankExist.ac_name) {
           // We check bank exist here as we have to add the data to the res no matter what comes.
@@ -1441,7 +1452,7 @@ class PayInController {
         }
 
         // COMMENTED THIS DUE TO GETTING DISPUTED WITHOUT VERIFYING FROM BANK RESPONSE
-        
+
         // if (parseFloat(usrSubmittedUtr.amount) !== parseFloat(getPayInData?.amount)) {
         //   const updatePayInData = {
         //     confirmed: usrSubmittedUtr.amount,
@@ -1489,45 +1500,45 @@ class PayInController {
         } else {
 
           if (matchDataFromBotRes?.bankName) {
-            if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {  
+            if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
               // if (getBankDataByBotRes?.id !== isBankExist?.id) {
-                const payInData = {
-                  confirmed: parseFloat(matchDataFromBotRes?.amount),
-                  amount: amount,
-                  status: "BANK_MISMATCH",
-                  is_notified: true,
-                  is_url_expires: true,
-                  utr: matchDataFromBotRes?.utr,
-                  user_submitted_utr: usrSubmittedUtrData,
-                  approved_at: new Date(),
-                  duration: duration,
-                };
+              const payInData = {
+                confirmed: parseFloat(matchDataFromBotRes?.amount),
+                amount: amount,
+                status: "BANK_MISMATCH",
+                is_notified: true,
+                is_url_expires: true,
+                utr: matchDataFromBotRes?.utr,
+                user_submitted_utr: usrSubmittedUtrData,
+                approved_at: new Date(),
+                duration: duration,
+              };
 
-                const updatePayInDataRes = await payInRepo.updatePayInData(
-                  getPayInData.id,
-                  payInData
-                );
+              const updatePayInDataRes = await payInRepo.updatePayInData(
+                getPayInData.id,
+                payInData
+              );
 
-                // We are adding the amount to the bank as we want to update the balance of the bank
-                // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
-                //   getBankDataByBotRes?.id,
-                //   parseFloat(amount)
-                // );
+              // We are adding the amount to the bank as we want to update the balance of the bank
+              // const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
+              //   getBankDataByBotRes?.id,
+              //   parseFloat(amount)
+              // );
 
-                const response = {
-                  status: updatePayInDataRes.status,
-                  amount,
-                  merchant_order_id: updatePayInDataRes?.merchant_order_id,
-                  return_url: updatePayInDataRes?.return_url,
-                  utr_id: updatePayInDataRes?.user_submitted_utr
-                };
+              const response = {
+                status: updatePayInDataRes.status,
+                amount,
+                merchant_order_id: updatePayInDataRes?.merchant_order_id,
+                return_url: updatePayInDataRes?.return_url,
+                utr_id: updatePayInDataRes?.user_submitted_utr
+              };
 
-                return DefaultResponse(
-                  res,
-                  200,
-                  "Bank mismatch",
-                  response
-                );
+              return DefaultResponse(
+                res,
+                200,
+                "Bank mismatch",
+                response
+              );
               // }
             }
           }
