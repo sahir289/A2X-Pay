@@ -1311,7 +1311,7 @@ class PayInController {
         image: base64Image,
       };
       const resFromOcrPy = await axios.post(
-        "http://54.81.39.27:8000/ocr",
+        "http://34.228.18.32:8000/ocr",
         imgData
       );
 
@@ -2058,7 +2058,7 @@ class PayInController {
             image: base64Image,
           };
           const resFromOcrPy = await axios.post(
-            "http://54.81.39.27:8000/ocr",
+            "http://34.228.18.32:8000/ocr",
             imgData
           );
 

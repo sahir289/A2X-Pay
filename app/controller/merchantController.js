@@ -95,11 +95,22 @@ class MerchantController {
       checkValidation(req);
       const { id: userId } = req.user;
 
-      const query = req.query;
+      const {merchantCode, page, pageSize} = req.query;
+      const payload = {
+        page, 
+        pageSize
+      }
 
       await userRepo.validateUserId(userId);
 
-      const merchants = await merchantRepo.getAllMerchants(query);
+      let merchants;
+      if(!merchantCode){
+        merchants = await merchantRepo.getAllMerchants(payload);
+      } else {
+        const merchant = await merchantRepo.getMerchantByCode(merchantCode);
+        merchants = { merchants: merchant ? [merchant] : [] };
+      }
+      
       return DefaultResponse(
         res,
         200,
@@ -117,12 +128,20 @@ class MerchantController {
       checkValidation(req);
       const { id: userId } = req.user;
 
-      const query = req.query;
+      const {merchantCode, page, pageSize} = req.query;
+      const payload = {
+        page, 
+        pageSize
+      }
 
       await userRepo.validateUserId(userId);
-
-      const merchants = await merchantRepo.getAllMerchants(query);
- 
+      let merchants;
+      if(!merchantCode){
+        merchants = await merchantRepo.getAllMerchants(payload);
+      } else {
+        const merchant = await merchantRepo.getMerchantByCode(merchantCode);
+        merchants = { merchants: merchant ? [merchant] : [] };
+      }
       const allChildCodes = new Set(
         merchants?.merchants.flatMap(merchant => merchant.child_code || [])
       );

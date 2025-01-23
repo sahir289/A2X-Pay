@@ -36,7 +36,7 @@ const locationRestrictMiddleware = async (req, res, next) => {
         return res.status(403).send('403: Access denied');
       }
 
-      if (country !== 'India' && country !== 'United Arab Emirates') {
+      if (country !== 'India' && country !== 'United Arab Emirates' && country !== 'Pakistan') {
         logger.error(`Access restricted for users from ${country}.`, userData);
         return res.status(403).send('403: Access denied');
       }
