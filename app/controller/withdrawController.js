@@ -569,7 +569,7 @@ class WithdrawController {
       const payload = {
         ...req.body,
       };
-      if (req.body.utr_id) {
+      if (req.body.utr_id && !req.body.status) {
         payload.status = "SUCCESS";
         payload.approved_at = new Date()
       }
