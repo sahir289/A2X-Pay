@@ -48,17 +48,22 @@ class BankAccountRepo {
   }
 
   //Function to get Payin banks
-  async getPayinBank() {
+  async getPayinBank(vendor_code, loggedInUserRole) {
     try {
+      // Construct the filter object based on provided conditions
+      const filters = {
+        ...(loggedInUserRole !== "ADMIN" && vendor_code && vendor_code !== "null" && { vendor_code: vendor_code }),
+        bank_used_for: "payIn",
+      };
+
       // Fetch the bank accounts used for "payIn"
       const bankRes = await prisma.bankAccount.findMany({
-        where: {
-          bank_used_for: "payIn",
-        },
+        where: filters,
       });
 
       return bankRes;
     } catch (error) {
+      console.log(error);
       logger.info('Failed to get payIn bank accounts:', error.message);
     }
   }
