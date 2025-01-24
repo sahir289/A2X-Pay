@@ -262,7 +262,12 @@ class Withdraw {
           skip: page * pageSize,
           take: pageSize,
           include: {
-            Merchant: true,
+            Merchant: {
+              select: {
+                id: true,
+                code: true,
+              },
+            },
           },
           orderBy: status === "SUCCESS"
             ? { approved_at: "asc" }
