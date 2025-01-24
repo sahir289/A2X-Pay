@@ -9,19 +9,25 @@ cron.schedule("*/10 * * * *", () => {
 });
 
 const gatherPayinData = async (timezone = "Asia/Kolkata") => {
-    // Fetch payins from the last 10 minutes
-    const startDate = moment().tz(timezone).subtract(10, "minutes").toDate();
-    const payins = await prisma.payin.findMany({
-        where: {
-            createdAt: { gte: startDate },
-        },
-        include: {
-            Merchant: true,
-        },
-    });
+    try {
+        // Fetch payins from the last 10 minutes
+        const startDate = moment().tz(timezone).subtract(10, "minutes").toDate();
+        const payins = await prisma.payin.findMany({
+            where: {
+                createdAt: { gte: startDate },
+            },
+            include: {
+                Merchant: true,
+            },
+        });
 
-    await notifyDroppedPayins(payins);
-}
+        await notifyDroppedPayins(payins);
+    } catch (error) {
+        logger.info("Error in gatherPayinData:", error.message);
+        logger.error(error.stack);
+        // Optional: Implement further error handling, such as logging to an external service
+    }
+};
 
 async function notifyDroppedPayins(payins) {
     for (const payin of payins) {
