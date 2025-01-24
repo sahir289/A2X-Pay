@@ -79,6 +79,8 @@ class UserRepo {
                     userName: true,         
                     isEnabled: true, 
                     role: true,
+                    createdAt: true,
+                    updatedAt: true,
                     vendor_code: true,
                     merchantAdminCode: true,
                 },
