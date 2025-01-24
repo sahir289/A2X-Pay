@@ -523,7 +523,7 @@ class PayInController {
               parseFloat(getBotDataRes?.amount)
             );
 
-          const payinCommission = await calculateCommission(
+          const payinCommission = calculateCommission(
             getBotDataRes?.amount,
             updateMerchantDataRes?.payin_commission
           );
@@ -611,6 +611,7 @@ class PayInController {
           amount: 0,
           payInId: payInId,
           merchant_order_id: getPayInData?.merchant_order_id,
+          return_url: getPayInData?.return_url,
         };
 
         return DefaultResponse(res, 200, "Status Pending", elseResponse);

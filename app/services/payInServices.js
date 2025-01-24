@@ -178,7 +178,20 @@ class PayInService {
         skip: skip,
         take: take,
         include: {
-          Merchant: true,
+          Merchant: {
+            select: {
+              id: true,
+              code: true,
+              min_payin: true,
+              max_payin: true,
+              payin_commission: true,
+              min_payout: true,
+              max_payout: true,
+              payout_commission: true,
+              balance: true,
+              allow_intent: true,
+            },
+          }
         },
         orderBy: {
           sno: "desc",
