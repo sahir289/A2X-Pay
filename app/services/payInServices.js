@@ -190,6 +190,7 @@ class PayInService {
               payout_commission: true,
               balance: true,
               allow_intent: true,
+              child_code: true,
             },
           }
         },
