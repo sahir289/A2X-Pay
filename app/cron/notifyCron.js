@@ -16,16 +16,25 @@ const gatherPayinData = async (timezone = "Asia/Kolkata") => {
             where: {
                 createdAt: { gte: startDate },
             },
-            include: {
-                Merchant: true,
+            select: {
+                id: true,
+                amount: true,
+                createdAt: true,
+                user_id: true,
+                status: true,
+                notify_url: true,
+                merchant_order_id: true,
+                Merchant: {
+                    select: {
+                        id: true,
+                        code: true,
+                    }
+                },
             },
         });
-
         await notifyDroppedPayins(payins);
     } catch (error) {
-        logger.info("Error in gatherPayinData:", error.message);
-        logger.error(error.stack);
-        // Optional: Implement further error handling, such as logging to an external service
+        logger.error("Error in gatherPayinData:", error?.message);
     }
 };
 
