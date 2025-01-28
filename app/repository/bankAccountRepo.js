@@ -186,7 +186,7 @@ class BankAccountRepo {
     }
   }
 
-  async getAllBankAccounts(query) {
+  async getAllBankAccounts(query, user) {
     const {
       ac_no,
       ac_name,
@@ -219,9 +219,19 @@ class BankAccountRepo {
       ...(ac_name && { ac_name: { contains: ac_name, mode: "insensitive" } }),
       ...(upi_id && { upi_id: { contains: upi_id, mode: "insensitive" } }),
       ...(bank_used_for && { bank_used_for }),
-      ...(role !== "ADMIN" && code && { code }),
+      ...(user.loggedInUserRole !== "ADMIN" && code && { code }),
       ...(vendor_code && { vendor_code }),
     };
+
+    const extraQuery = user.loggedInUserRole !== 'VENDOR' ? {
+      include: {
+        Merchant_Bank: {
+          include: {
+            merchant: true,
+          },
+        },
+      }
+    } : {};
 
     try {
       const [bankAccRes, totalRecords] = await Promise.all([
@@ -233,13 +243,7 @@ class BankAccountRepo {
             { is_enabled: "desc" },
             { updatedAt: "desc" },
           ],
-          include: {
-            Merchant_Bank: {
-              include: {
-                merchant: true,
-              },
-            },
-          },
+          ...extraQuery,
         }),
         prisma.bankAccount.count({ where: filter }),
       ]);
@@ -249,11 +253,12 @@ class BankAccountRepo {
         bankAccRes.map(async (bank) => {
           const transformedBank = {
             ...bank,
-            merchants: bank.Merchant_Bank.map(
-              (merchantBank) => merchantBank.merchant
-            ),
           };
+
           delete transformedBank.Merchant_Bank;
+          transformedBank.merchants = user.loggedInUserRole !== 'VENDOR' ?
+            bank.Merchant_Bank.map((merchantBank) => merchantBank.merchant) :
+            [];
 
           if (bank.bank_used_for === "payIn") {
             transformedBank.payInData = await prisma.payin.findMany({
