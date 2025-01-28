@@ -74,7 +74,8 @@ const RazorHook = async (req, res) => {
             approved_at: new Date(),
             duration,
             utr: acquirer_data?.rrn,
-            user_submitted_utr: acquirer_data?.rrn
+            user_submitted_utr: acquirer_data?.rrn,
+            method: 'Razorpay',
         };
 
         if (status === "SUCCESS") {

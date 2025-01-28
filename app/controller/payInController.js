@@ -1198,6 +1198,7 @@ class PayInController {
         is_url_expires: true,
         user_submitted_image: null,
         duration: duration,
+        method: 'Cashfree',
       }
 
       const updatePayinRes = await payInRepo.updatePayInData(
