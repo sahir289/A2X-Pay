@@ -36,7 +36,18 @@ const locationRestrictMiddleware = async (req, res, next) => {
         return res.status(403).send('403: Access denied');
       }
 
-      if (country !== 'India' && country !== 'United Arab Emirates' && country !== 'Pakistan') {
+      const europeanCountries = [
+        'Albania', 'Andorra', 'Armenia', 'Austria', 'Azerbaijan', 'Belarus', 'Belgium', 
+        'Bosnia and Herzegovina', 'Bulgaria', 'Croatia', 'Cyprus', 'Czech Republic', 
+        'Denmark', 'Estonia', 'Finland', 'France', 'Georgia', 'Germany', 'Greece', 
+        'Hungary', 'Iceland', 'Ireland', 'Italy', 'Kazakhstan', 'Kosovo', 'Latvia', 
+        'Liechtenstein', 'Lithuania', 'Luxembourg', 'Malta', 'Moldova', 'Monaco', 
+        'Montenegro', 'Netherlands', 'North Macedonia', 'Norway', 'Poland', 'Portugal', 
+        'Romania', 'San Marino', 'Serbia', 'Slovakia', 'Slovenia', 'Spain', 'Sweden', 
+        'Switzerland', 'Turkey', 'Ukraine', 'United Kingdom', 'Vatican City'
+      ];
+
+      if (country !== 'India' && country !== 'United Arab Emirates' && !europeanCountries.includes(country)) {
         logger.error(`Access restricted for users from ${country}.`, userData);
         return res.status(403).send('403: Access denied');
       }
