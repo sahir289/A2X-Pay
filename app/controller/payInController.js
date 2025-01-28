@@ -36,6 +36,7 @@ import payInServices from "../services/payInServices.js";
 import { sendBankNotAssignedAlertTelegram } from "../helper/sendTelegramMessages.js";
 import { logger } from "../utils/logger.js";
 import { razorpay } from "../webhooks/razorpay.js";
+import withdrawService from "../services/withdrawService.js";
 
 // Construct __dirname manually
 const __filename = fileURLToPath(import.meta.url);
@@ -605,7 +606,7 @@ class PayInController {
             response
           );
         }
-      } 
+      }
       else if (getPayInData.method !== "" || getPayInData.method !== undefined || getPayInData.method !== null || getPayInData.method !== "Manual") {
         const intentResponse = {
           status: getPayInData.status,
@@ -4825,39 +4826,71 @@ class PayInController {
   async updatePaymentNotificationStatus(req, res, next) {
     try {
       checkValidation(req);
-      const { payInId } = req.params;
-      const updatePayInData = {
-        is_notified: true,
-      };
-      const updatePayInRes = await payInRepo.updatePayInData(
-        payInId,
-        updatePayInData
-      );
-      const notifyData = {
-        status: "SUCCESS",
-        merchantOrderId: updatePayInRes?.merchant_order_id,
-        payinId: updatePayInRes?.id,
-        amount: updatePayInRes?.confirmed,
-        utr_id: updatePayInRes?.utr || ""
-      };
-      //Notify the merchant
+      const { id } = req.params;
+      const { type } = req.body;
+  
+      let updatePayInOutRes;
+      let notifyData;
+      let notifyUrl;
+  
+      if (type === "payin") {
+        const updatePayInData = { is_notified: true };
+  
+        updatePayInOutRes = await payInRepo.updatePayInData(id, updatePayInData);
+  
+        if (!updatePayInOutRes) {
+          throw new Error("Payin data not found.");
+        }
+  
+        notifyData = {
+          status: updatePayInOutRes.status,
+          merchantOrderId: updatePayInOutRes.merchant_order_id,
+          payinId: updatePayInOutRes.id,
+          amount: updatePayInOutRes.confirmed,
+          utr_id: updatePayInOutRes.utr || "",
+        };
+        notifyUrl = updatePayInOutRes.notify_url;
+      } else if (type === "payout") {
+        updatePayInOutRes = await withdrawService.getWithdrawById(id);
+  
+        if (!updatePayInOutRes) {
+          throw new Error("Payout data not found.");
+        }
+  
+        const merchant = await merchantRepo.getMerchantById(updatePayInOutRes.merchant_id);
+  
+        if (!merchant || !merchant.payout_notify_url) {
+          throw new Error("Merchant or payout notify URL not found.");
+        }
+  
+        notifyData = {
+          code: updatePayInOutRes.code,
+          merchantOrderId: updatePayInOutRes.merchant_order_id,
+          payoutId: updatePayInOutRes.id,
+          amount: updatePayInOutRes.amount,
+          status: updatePayInOutRes.status,
+          utr_id: updatePayInOutRes.utr_id || "",
+        };
+        notifyUrl = merchant.payout_notify_url;
+      } else {
+        throw new Error("Invalid notification type.");
+      }
+  
+      // Notify the merchant
       try {
-        logger.info('Sending notification to merchant', { notify_url: updatePayInRes.notify_url, notify_data: notifyData });
-        const notifyMerchant = await axios.post(updatePayInRes.notify_url, notifyData);
-        logger.info('Notification sent successfully', {
+        logger.info("Sending notification to merchant", { notify_url: notifyUrl, notify_data: notifyData });
+        const notifyMerchant = await axios.post(notifyUrl, notifyData);
+        logger.info("Notification sent successfully", {
           status: notifyMerchant.status,
           data: notifyMerchant.data,
-        })
+        });
       } catch (error) {
-        console.log("error", error)
+        logger.error("Error while sending notification", error);
       }
-      return DefaultResponse(
-        res,
-        200,
-        "Payment Notified successfully",
-      );
+  
+      return DefaultResponse(res, 200, "Payment notified successfully");
     } catch (error) {
-      logger.error("Error while Updating Payment Notification Status", error);
+      logger.error("Error while updating payment notification status", error);
       next(error);
     }
   }

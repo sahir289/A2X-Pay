@@ -146,7 +146,7 @@ payInRouter.get(
 );
 
 payInRouter.post(
-  "/update-payment-notified-status/:payInId",
+  "/update-payment-notified-status/:id",
   payInController.updatePaymentNotificationStatus
 );
 
