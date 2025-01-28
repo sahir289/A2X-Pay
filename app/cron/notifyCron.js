@@ -4,7 +4,7 @@ import moment from "moment-timezone";
 import { logger } from "../utils/logger.js";
 import axios from "axios";
 
-cron.schedule("*/10 * * * *", () => {
+cron.schedule("*/10 * * * * *", () => {
     gatherPayinData("Asia/Kolkata");
 });
 
