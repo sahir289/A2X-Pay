@@ -605,7 +605,19 @@ class PayInController {
             response
           );
         }
-      } else {
+      } 
+      else if (getPayInData.method !== "" || getPayInData.method !== undefined || getPayInData.method !== null || getPayInData.method !== "Manual") {
+        const intentResponse = {
+          status: getPayInData.status,
+          amount: getPayInData.confirmed,
+          utr_id: getPayInData?.utr,
+          merchant_order_id: getPayInData?.merchant_order_id,
+          return_url: getPayInData?.return_url,
+        };
+
+        return DefaultResponse(res, 200, "Status Pending", intentResponse);
+      }
+      else {
         const elseResponse = {
           status: "PENDING",
           amount: 0,
