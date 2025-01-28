@@ -1259,12 +1259,12 @@ class PayInController {
         merchantCode,
         vendorCode,
         userId,
-        // userSubmittedUtr,
         utr,
         payInId,
         dur,
         status,
         bank,
+        method,
         filterToday,
       } = req.query;
       const page = parseInt(req.query.page) || 1;
@@ -1285,12 +1285,12 @@ class PayInController {
         merchantCode,
         vendorCode,
         userId,
-        // userSubmittedUtr,
         utr,
         payInId,
         dur,
         status,
         bank,
+        method,
         filterTodayBool
       );
 

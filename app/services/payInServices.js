@@ -78,12 +78,12 @@ class PayInService {
     merchantCode,
     vendorCode,
     userId,
-    // userSubmittedUtr,
     utr,
     payInId,
     dur,
     status,
     accountName, // changed variable from bankName to accountName
+    method,
     filterToday
   ) {
     try {
@@ -138,6 +138,9 @@ class PayInService {
         ...(payInId && { id: { equals: payInId } }),
         ...(upiShortCode && {
           upi_short_code: { contains: upiShortCode, mode: "insensitive" },
+        }),
+        ...(method && {
+          method: { contains: method, mode: "insensitive" },
         }),
         ...(confirmed && { confirmed: { equals: confirmed } }),
         ...(amount && { amount: { equals: amount } }),
