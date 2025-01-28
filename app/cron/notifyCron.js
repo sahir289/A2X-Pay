@@ -33,6 +33,7 @@ const gatherPayinData = async (timezone = "Asia/Kolkata") => {
             },
         });
         await notifyDroppedPayins(payins);
+        logger.info("Cron job gatherPayinData running successfully.", startDate);
     } catch (error) {
         logger.error("Error in gatherPayinData:", error?.message);
     }
