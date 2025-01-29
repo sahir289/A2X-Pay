@@ -84,7 +84,8 @@ class PayInService {
     status,
     accountName, // changed variable from bankName to accountName
     method,
-    filterToday
+    filterToday,
+    userRole,
   ) {
     try {
       const Data = await prisma.payin.updateMany({
@@ -176,11 +177,10 @@ class PayInService {
       //   }
       // })
 
-      const payInData = await prisma.payin.findMany({
-        where: filters,
-        skip: skip,
-        take: take,
-        include: {
+      const extraQuery = {};
+
+      if (userRole !== 'VENDOR') {
+        extraQuery.include = {
           Merchant: {
             select: {
               id: true,
@@ -196,10 +196,28 @@ class PayInService {
               child_code: true,
             },
           }
-        },
+        }
+      }
+
+      if (userRole === 'VENDOR') {
+        extraQuery.omit = {
+          merchant_id: true,
+          merchant_order_id: true,
+          payin_commission: true,
+          notify_url: true,
+          return_url: true,
+          method: true,
+        }
+      }
+
+      const payInData = await prisma.payin.findMany({
+        where: filters,
+        skip: skip,
+        take: take,
         orderBy: {
           sno: "desc",
         },
+        ...extraQuery,
       });
 
       const totalRecords = await prisma.payin.count({

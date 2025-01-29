@@ -1267,6 +1267,7 @@ class PayInController {
         bank,
         method,
         filterToday,
+        loggedInUserRole,
       } = req.query;
       const page = parseInt(req.query.page) || 1;
       const pageSize = parseInt(req.query.pageSize) || 20;
@@ -1292,7 +1293,8 @@ class PayInController {
         status,
         bank,
         method,
-        filterTodayBool
+        filterTodayBool,
+        loggedInUserRole,
       );
 
       return DefaultResponse(
