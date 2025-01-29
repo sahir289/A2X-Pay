@@ -35,7 +35,7 @@ class WithdrawController {
       if (restrictedMerchants.includes(code)) {
         const getMerchantNetBalance = await payInServices.getMerchantsNetBalance([code]);
         if (getMerchantNetBalance.totalNetBalance < num) {
-          return DefaultResponse(res, 401, `${code} have Insufficient Balance to create Payout`);
+          return DefaultResponse(res, 401, `Insufficient Balance to create Payout`);
         }
         const ekoBalanceEnquiry = await this.ekoWalletBalanceEnquiryInternally();
         if (Number(ekoBalanceEnquiry.data.balance) < num) {
