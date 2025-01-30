@@ -322,5 +322,21 @@ class Withdraw {
       logger.error('Error updating Vendor Codes', error);
     }
   }
+
+  async getPayOutDataByMerchantOrderId(merchantOrderId) {
+    try {
+        const payOutDataRes = await prisma.payout.findFirst({
+            where: {
+                merchant_order_id: merchantOrderId,
+            },
+            include: {
+                Merchant: true
+            }
+        })
+        return payOutDataRes;
+    } catch (err) {
+        logger.info('Error fetching PayIn data by merchant order id:', err.message);
+    }
+}
 }
 export default new Withdraw();

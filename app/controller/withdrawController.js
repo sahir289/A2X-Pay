@@ -31,7 +31,7 @@ class WithdrawController {
       checkValidation(req);
       const { user_id, bank_name, acc_no, acc_holder_name, ifsc_code, amount, vendor_code, merchant_order_id, code } = req.body;
       const num = Number(amount);
-      
+
       if (restrictedMerchants.includes(code)) {
         const getMerchantNetBalance = await payInServices.getMerchantsNetBalance([code]);
         if (getMerchantNetBalance.totalNetBalance < num) {
@@ -46,35 +46,42 @@ class WithdrawController {
       if (!merchant) {
         throw new CustomError(404, "Merchant does not exist");
       }
-      
+
       if (req.headers["x-api-key"] !== merchant.api_key) {
         throw new CustomError(404, "Enter valid Api key");
       }
-      delete req.body.code;
-      const ifsc = ifsc_code.toUpperCase();
-      
-      const data = await withdrawService.createWithdraw({
-        user_id,
-        bank_name,
-        acc_no,
-        acc_holder_name,
-        ifsc_code: ifsc,
-        amount,
-        vendor_code,
-        status: "INITIATED",
-        merchant_id: merchant.id,
-        merchant_order_id: merchant_order_id,
-        payout_commision: getAmountFromPerc(
-          merchant.payout_commission,
-          req.body.amount
-        ),
-        currency: "INR",
-      });
-      logger.info('Payout created successfully', {
-        status: data.status,
-        data: data.data,
-      })
-      return DefaultResponse(res, 201, "Payout created successfully", { merchantOrderId: data?.merchant_order_id, payoutId: data?.id, amount: data?.amount });
+
+      const merchantOrderIdPayoutData = merchant_order_id ? await withdrawService.getPayOutDataByMerchantOrderId(merchant_order_id) : "";
+      if (merchantOrderIdPayoutData || merchantOrderIdPayoutData?.length > 0) {
+        throw new CustomError(400, "Merchant Order ID already exists");
+      }
+      else {
+        delete req.body.code;
+        const ifsc = ifsc_code.toUpperCase();
+  
+        const data = await withdrawService.createWithdraw({
+          user_id,
+          bank_name,
+          acc_no,
+          acc_holder_name,
+          ifsc_code: ifsc,
+          amount,
+          vendor_code,
+          status: "INITIATED",
+          merchant_id: merchant.id,
+          merchant_order_id: merchant_order_id,
+          payout_commision: getAmountFromPerc(
+            merchant.payout_commission,
+            req.body.amount
+          ),
+          currency: "INR",
+        });
+        logger.info('Payout created successfully', {
+          status: data.status,
+          data: data.data,
+        })
+        return DefaultResponse(res, 201, "Payout created successfully", { merchantOrderId: data?.merchant_order_id, payoutId: data?.id, amount: data?.amount });
+      }
     } catch (err) {
       logger.info(err);
       next(err);
