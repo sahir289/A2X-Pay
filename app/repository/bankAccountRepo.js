@@ -203,6 +203,7 @@ class BankAccountRepo {
     const pageSize = parseInt(query.pageSize) || 10; // Ensure `pageSize` is an integer
     const skip = (page - 1) * pageSize;
     const take = pageSize;
+    const isVendor = user.loggedInUserRole !== 'VENDOR';
 
     // Date Filter Setup
     const dateFilter = {};
@@ -223,7 +224,7 @@ class BankAccountRepo {
       ...(vendor_code && { vendor_code }),
     };
 
-    const extraQuery = user.loggedInUserRole !== 'VENDOR' ? {
+    const extraQuery = !isVendor ? {
       include: {
         Merchant_Bank: {
           include: {
@@ -256,7 +257,7 @@ class BankAccountRepo {
           };
 
           delete transformedBank.Merchant_Bank;
-          transformedBank.merchants = user.loggedInUserRole !== 'VENDOR' ?
+          transformedBank.merchants = !isVendor ?
             bank.Merchant_Bank.map((merchantBank) => merchantBank.merchant) :
             [];
 
@@ -268,6 +269,9 @@ class BankAccountRepo {
                 approved_at: dateFilter,
               },
               orderBy: { approved_at: "desc" },
+              select: {
+                confirmed: true,
+              }
             });
           } else {
             transformedBank.payOutData = await prisma.payout.findMany({
@@ -277,6 +281,15 @@ class BankAccountRepo {
                 approved_at: dateFilter,
               },
               orderBy: { approved_at: "desc" },
+              omit: {
+                merchant_id: true,
+                merchant_order_id: true,
+                method: true,
+                banck_account_id: true,
+                bank_name: true,
+                notify_url: true,
+                payout_commision: true,
+              }
             });
           }
           return transformedBank;
