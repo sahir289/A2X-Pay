@@ -64,7 +64,8 @@ class Withdraw {
     commission,
     utr_id,
     acc_holder_name,
-    includeSubMerchant
+    includeSubMerchant,
+    userRole,
   ) {
     try {
       const where = {};
@@ -89,10 +90,10 @@ class Withdraw {
       });
 
       let merchantCodes = code?.split(',')
-      
+
       if (code) {
         let allNewMerchantCodes = [];
-        if (includeSubMerchant  === 'false') {
+        if (includeSubMerchant === 'false') {
           for (const code of merchantCodes) {
             const merchantData = await merchantRepo.getMerchantByCode(code);
             if (merchantData) {
@@ -110,6 +111,28 @@ class Withdraw {
         }
       }
 
+      const extraQuery = {};
+      if (userRole !== 'VENDOR') {
+        extraQuery.include = {
+          Merchant: {
+            select: {
+              id: true,
+              code: true,
+            },
+          },
+        }
+      }
+
+      if(userRole === 'VENDOR'){
+        extraQuery.omit = {
+          merchant_id: true,
+          merchant_order_id: true,
+          payout_commision: true,
+          notify_url: true,
+          method: true,
+        }
+      }
+
       const data = await prisma.payout.findMany({
         where,
         skip,
@@ -117,14 +140,7 @@ class Withdraw {
         orderBy: {
           sno: "desc",
         },
-        include: {
-          Merchant: {
-            select: {
-              id: true,
-              code: true,
-            },
-          },
-        },
+        ...extraQuery,
       });
       const totalRecords = await prisma.payout.count({
         where
@@ -208,7 +224,7 @@ class Withdraw {
         code: Array.isArray(merchantCodes)
           ? { in: merchantCodes }
           : merchantCodes,
-      },
+      },  
       status: status === "REVERSED" ? "REJECTED" : status,
     };
 

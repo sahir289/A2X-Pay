@@ -558,7 +558,8 @@ class WithdrawController {
         commission,
         utr_id,
         acc_holder_name,
-        includeSubMerchant
+        includeSubMerchant,
+        req.user.loggedInUserRole,
       );
       logger.info('Get All Payout', {
         status: data.status,

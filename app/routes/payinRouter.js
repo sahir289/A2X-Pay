@@ -59,7 +59,7 @@ payInRouter.post(
 
 payInRouter.get(
   "/validate-payIn-url/:payInId",
-  // locationRestrictMiddleware,
+  locationRestrictMiddleware,
   validatePayInIdUrl,
   payInController.validatePayInUrl
 );
@@ -106,6 +106,7 @@ payInRouter.post(
   payInController.payInIntentGenerateOrder
 );
 
+// cashfree webhook to update payment status
 payInRouter.post(
   "/update-payment-cashfree-webhook",
   payInController.payInUpdateCashfreeWebhook

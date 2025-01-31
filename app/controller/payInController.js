@@ -1095,7 +1095,7 @@ class PayInController {
         body: JSON.stringify({
           order_amount: amount,
           order_currency: "INR",
-          order_id: getPayInData.merchant_order_id,
+          order_id: getPayInData.id,
           order_meta: { notify_url: "https://hello.com" },
           customer_details: {
             customer_id: getPayInData.user_id,
@@ -1107,77 +1107,69 @@ class PayInController {
       try {
         const response = await fetch(createOrderUrl, optionsToCreateOrder);
         cashfreeResponse = await response.json();
-        console.log(cashfreeResponse, "cashfreeResponseCashfreeResponse")
         logger.info('cashfree order created Successfully');
       } catch (err) {
-        console.error('Error:', err);
         logger.error('getting error while creating order', err);
       }
-      const now = new Date();
-      now.setUTCMinutes(now.getUTCMinutes() + 5);
-      const istOffset = 5.5 * 60;
-      const startTime = new Date(now.getTime() + istOffset * 60000);
-      const endTime = new Date(startTime.getTime() + 5 * 60000);
-      const approveTime = new Date(startTime.getTime() + 1 * 60000);
+      // const now = new Date();
+      // now.setUTCMinutes(now.getUTCMinutes() + 5);
+      // const istOffset = 5.5 * 60;
+      // const startTime = new Date(now.getTime() + istOffset * 60000);
+      // const endTime = new Date(startTime.getTime() + 5 * 60000);
+      // const approveTime = new Date(startTime.getTime() + 1 * 60000);
 
-      const payOrderUrl = config.cashfreePayOrderUrl;
-      const optionsToOrderPay = {
-        method: 'POST',
-        headers: {
-          'x-api-version': '2025-01-01',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          payment_method: {
-            upi: {
-              channel: "link",
-              authorization: {
-                start_time: startTime,
-                end_time: endTime,
-                approve_by: approveTime
-              },
-              authorize_only: false,
-              upi_expiry_minutes: 5,
-              // upi_id: "testsuccess@gocash",
-              upi_redirect_url: true
-            }
-          },
-          payment_session_id: cashfreeResponse.payment_session_id,
-        })
-      };
+      // const payOrderUrl = config.cashfreePayOrderUrl;
+      // const optionsToOrderPay = {
+      //   method: 'POST',
+      //   headers: {
+      //     'x-api-version': '2025-01-01',
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({
+      //     payment_method: {
+      //       upi: {
+      //         channel: "link",
+      //         authorization: {
+      //           start_time: startTime,
+      //           end_time: endTime,
+      //           approve_by: approveTime
+      //         },
+      //         authorize_only: false,
+      //         upi_expiry_minutes: 5,
+      //         // upi_id: "testsuccess@gocash",
+      //         upi_redirect_url: true
+      //       }
+      //     },
+      //     payment_session_id: cashfreeResponse.payment_session_id,
+      //   })
+      // };
 
 
-      let payOrderResponse;
-      try {
-        const orderPay = await fetch(payOrderUrl, optionsToOrderPay);
-        payOrderResponse = await orderPay.json();
-        console.log(payOrderResponse, "payOrderResponse")
-        logger.info('cashfree pay order links generated Successfully');
-      } catch (err) {
-        console.error('Error:', err);
-        logger.error('getting error while generating pay order links', err);
-      }
+      // let payOrderResponse;
+      // try {
+        // const orderPay = await fetch(payOrderUrl, optionsToOrderPay);
+        // payOrderResponse = await orderPay.json();
+        // console.log(payOrderResponse, "payOrderResponse")
+      //   logger.info('cashfree pay order links generated Successfully');
+      // } catch (err) {
+      //   console.error('Error:', err);
+      //   logger.error('getting error while generating pay order links', err);
+      // }
 
-      const payInData = {
-        status: payOrderResponse.cf_payment_id ? "PENDING" : 'FAILED',
-      };
+      // const payInData = {
+      //   status: payOrderResponse.cf_payment_id ? "PENDING" : 'FAILED',
+      // };
 
-      const updatePayinRes = await payInRepo.updatePayInData(
-        payInId,
-        payInData
-      );
+      // const updatePayinRes = await payInRepo.updatePayInData(
+      //   payInId,
+      //   payInData
+      // );
 
       const response = {
-        status: updatePayinRes?.status,
         payment_amount: amount,
         payment_session_id: cashfreeResponse.payment_session_id,
-        merchant_order_id: updatePayinRes?.merchant_order_id,
         payin_id: payInId,
-        cf_payment_id: payOrderResponse.cf_payment_id,
-        payment_method: payOrderResponse.payment_method,
-        data: payOrderResponse.data,
       };
-
       return DefaultResponse(res, 200, 'Payment initiated successfully', response);
 
     } catch (error) {
@@ -1188,47 +1180,45 @@ class PayInController {
 
   async payInUpdateCashfreeWebhook(req, res, next) {
     const payload = req.body;
-    res.sendStatus(200);
+    res.json({status: 200, message: 'Cashfree Webhook Called successfully'});
     try {
-      console.log(payload, "payloadpayload");
-
-      const payInDataByMerchantOrderId = await payInRepo.getPayInDataByMerchantOrderId(payload.data.order_id);
-      if (!payInDataByMerchantOrderId) {
+      const payInDataById = await payInRepo.getPayInData(payload.data.order.order_id);
+      if (!payInDataById) {
         logger.error('Payment not found');
       }
 
-      const durMs = new Date() - payInDataByMerchantOrderId.createdAt;
+      const durMs = new Date() - payInDataById.createdAt;
       const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
       const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
       const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
       const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
-      if (payload.data.payment_status === 'FAILED' || payload.data.payment_status === 'USER_DROPPED') {
-        logger.info('Payment Failed due to:', data.payment.payment_message);
+      if (payload.data.payment.payment_status === 'FAILED' || payload.data.payment.payment_status === 'USER_DROPPED') {
+        logger.info('Payment Failed due to:', payload.data.payment.payment_message);
       }
 
       const payInData = {
-        confirmed: payload.data.order_amount,
-        amount: payload.data.order_amount,
-        status: payload.data.payment_status === 'USER_DROPPED' ? 'DROPPED' : payload.data.payment_status,
-        utr: payload.data.cf_payment_id,
-        user_submitted_utr: payload.data.cf_payment_id,
+        confirmed: payload.data.order.order_amount,
+        amount: payload.data.order.order_amount,
+        status: payload.data.payment.payment_status === 'USER_DROPPED' ? 'DROPPED' : payload.data.payment.payment_status,
+        utr: payload.data.payment.cf_payment_id,
+        user_submitted_utr: payload.data.payment.cf_payment_id,
         approved_at: new Date(),
         is_url_expires: true,
         user_submitted_image: null,
         duration: duration,
         method: 'CashFree',
+        is_notified: true
       }
 
       const updatePayinRes = await payInRepo.updatePayInData(
-        payInId,
+        payInDataById.id,
         payInData
       );
-
       const notifyData = {
         status: updatePayinRes?.status,
         merchantOrderId: updatePayinRes?.merchant_order_id,
-        payinId: payInId,
+        payinId: payInDataById.id,
         amount: updatePayinRes?.confirmed,
         req_amount: amount,
         utr_id: (updatePayinRes?.status === "SUCCESS" || updatePayinRes?.status === "DISPUTE") ? updatePayinRes?.utr : ""
@@ -1246,10 +1236,8 @@ class PayInController {
       } catch (error) {
         logger.error("Error sending notification:", error);
       }
-      return DefaultResponse(res, 200, "data received from cashfree webhook successfully");
     } catch (error) {
       logger.error("Error in getting response from cashfree webhook:", error);
-      next(error);
     }
   }
 
@@ -1273,6 +1261,7 @@ class PayInController {
         bank,
         method,
         filterToday,
+        loggedInUserRole,
       } = req.query;
       const page = parseInt(req.query.page) || 1;
       const pageSize = parseInt(req.query.pageSize) || 20;
@@ -1298,7 +1287,8 @@ class PayInController {
         status,
         bank,
         method,
-        filterTodayBool
+        filterTodayBool,
+        loggedInUserRole,
       );
 
       return DefaultResponse(
