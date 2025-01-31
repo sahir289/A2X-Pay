@@ -1209,13 +1209,11 @@ class PayInController {
         duration: duration,
         method: 'CashFree',
       }
-      console.log(payInData, "payInData000")
 
       const updatePayinRes = await payInRepo.updatePayInData(
         payInDataById.id,
         payInData
       );
-      console.log(updatePayinRes, "updatePayinRes")
       const notifyData = {
         status: updatePayinRes?.status,
         merchantOrderId: updatePayinRes?.merchant_order_id,
