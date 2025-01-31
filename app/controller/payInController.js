@@ -1864,7 +1864,32 @@ class PayInController {
       next(error);
     }
   }
+  async getAllPayInDataByVendorAll(req, res, next) {
+    try {
+      let { vendorCode, startDate, endDate } = req.query;
+      if (vendorCode == null) {
+        vendorCode = [];
+      } else if (typeof vendorCode === "string") {
+        vendorCode = [vendorCode];
+      }
 
+      const payInDataRes = await payInServices.getAllPayInDataByVendorAll(
+        vendorCode,
+        startDate,
+        endDate,
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        "PayIn vendor data fetched successfully",
+        payInDataRes
+      );
+    } catch (error) {
+      logger.error("Error in fetching pay-in data by vendor:", error);
+      next(error);
+    }
+  }
   //new get All pay In data.
   async getAllPayInDataWithRange(req, res, next) {
     try {

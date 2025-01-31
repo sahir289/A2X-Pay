@@ -609,6 +609,8 @@ class PayInService {
         },
       });
 
+      
+
       const reversedPayOutData = await prisma.payout.findMany({
         where: {
           status: "REJECTED",
@@ -652,6 +654,94 @@ class PayInService {
       logger.error("Error in getAllPayInDataByVendor", err);
     }
   }
+  async getAllPayInDataByVendorAll(vendorCode, startDate, endDate) {
+    try {
+        let bankIds = [];
+        let dateFilter = {};
+
+        // Apply date range filter if both startDate and endDate are provided
+        if (startDate && endDate) {
+            const end = new Date(endDate);
+            dateFilter = {
+                updatedAt: {
+                    gte: new Date(startDate),
+                    lte: end,
+                },
+            };
+        }
+
+        // Fetch bank IDs for the given vendorCode
+        if (vendorCode) {
+            const data = await prisma.bankAccount.findMany({
+                where: {
+                    vendor_code: Array.isArray(vendorCode) ? { in: vendorCode } : vendorCode,
+                },
+            });
+
+            bankIds = data?.map((item) => item.id);
+        }
+
+        // Create filter object for bank accounts
+        const filter = {
+            ...(vendorCode && {
+                bank_acc_id: {
+                    in: bankIds,
+                },
+            }),
+        };
+
+        // Fetch PayIn data (No status filter)
+        const payInData = await prisma.payin.findMany({
+            where: {
+                ...filter,
+                approved_at: {
+                    gte: new Date(startDate),
+                    lte: new Date(endDate),
+                },
+            },
+        });
+
+        // Fetch PayOut data (No status filter)
+        const payOutData = await prisma.payout.findMany({
+            where: {
+                vendor_code: Array.isArray(vendorCode) ? { in: vendorCode } : vendorCode,
+                approved_at: {
+                    gte: new Date(startDate),
+                    lte: new Date(endDate),
+                },
+            },
+        });
+
+        // Fetch reversed PayOut data (No status filter)
+        const reversedPayOutData = await prisma.payout.findMany({
+            where: {
+                vendor_code: Array.isArray(vendorCode) ? { in: vendorCode } : vendorCode,
+                approved_at: {
+                    not: null,
+                },
+                rejected_at: {
+                    gte: new Date(startDate),
+                    lte: new Date(endDate),
+                },
+            },
+        });
+
+        // Fetch settlement data (No status filter)
+        const settlementData = await prisma.vendorSettlement.findMany({
+            where: {
+                Vendor: {
+                    vendor_code: Array.isArray(vendorCode) ? { in: vendorCode } : vendorCode,
+                },
+                ...dateFilter,
+            },
+        });
+
+        return { payInOutData: { payInData, payOutData, settlementData, reversedPayOutData } };
+    } catch (err) {
+        logger.error("Error in getAllPayInDataByVendor", err);
+        throw new Error("Failed to fetch PayIn/PayOut data.");
+    }
+}
 
   //new service for pay in data
   async getAllPayInDataWithRange(merchantCodes, status, startDate, endDate) {

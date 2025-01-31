@@ -144,6 +144,10 @@ payInRouter.get(
   "/get-payInDataVendor",
   payInController.getAllPayInDataByVendor
 );
+payInRouter.get(
+  "/get-payInDataVendorAll",
+  payInController.getAllPayInDataByVendorAll
+);
 
 payInRouter.post(
   "/update-payment-notified-status/:payInId",
