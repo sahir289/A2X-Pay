@@ -119,6 +119,12 @@ payInRouter.get(
 );
 
 payInRouter.get(
+  "/get-payInDataMerchant-allStatus",
+  payInController.getAllPayInDataByMerchantAllStatus
+);
+
+
+payInRouter.get(
   "/get-merchants-net-balance",
   payInController.getMerchantsNetBalance
 );

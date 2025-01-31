@@ -1770,6 +1770,63 @@ class PayInController {
     }
   }
 
+ async getAllPayInDataByMerchantAllStatus (req, res, next){
+  try {
+    let { merchantCode, startDate, endDate, includeSubMerchant } = req.query;
+
+    if (merchantCode == null) {
+      merchantCode = [];
+    } else if (typeof merchantCode === "string") {
+      merchantCode = [merchantCode];
+    }
+
+    if (includeSubMerchant === 'false') {
+      let allNewMerchantCodes = [];
+      for (const code of merchantCode) {
+        const merchantData = await merchantRepo.getMerchantByCode(code);
+        if (merchantData) {
+          allNewMerchantCodes = [
+            ...allNewMerchantCodes,
+            ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+            merchantData.code,
+          ];
+        }
+      }
+
+      const payInDataRes = await payInServices.getAllPayInDataByMerchantAllStatus(
+        allNewMerchantCodes,
+        startDate,
+        endDate
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        "PayIn data fetched successfully",
+        payInDataRes
+      );
+
+    } else {
+      const payInDataRes = await payInServices.getAllPayInDataByMerchantAllStatus(
+        merchantCode,
+        startDate,
+        endDate
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        "PayIn data fetched successfully",
+        payInDataRes
+      );
+    }
+
+  } catch (error) {
+    logger.error("Error in fetching pay-in data by Merchant:", error);
+    next(error);
+  }
+ }
+
   async getMerchantsNetBalance(req, res, next) {
     try {
       let { merchantCode, includeSubMerchant } = req.query;

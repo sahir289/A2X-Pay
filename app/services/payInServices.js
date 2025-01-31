@@ -301,6 +301,85 @@ class PayInService {
     }
   }
 
+  async getAllPayInDataByMerchantAllStatus(merchantCode, startDate, endDate) {
+    try {
+      const dateFilter = {};
+      if (startDate) {
+        dateFilter.gte = new Date(startDate); // Greater than or equal to startDate
+      }
+      if (endDate) {
+        let end = new Date(endDate);
+
+        // end.setDate(end.getDate() + 1);
+
+        dateFilter.lte = end; // Less than or equal to endDate
+      }
+      const payInData = await prisma.payin.findMany({
+        where: {
+          Merchant: {
+            code: Array.isArray(merchantCode)
+              ? { in: merchantCode }
+              : merchantCode,
+          },
+          approved_at: dateFilter,
+        },
+      });
+
+      const payOutData = await prisma.payout.findMany({
+        where: {
+          Merchant: {
+            code: Array.isArray(merchantCode)
+              ? { in: merchantCode }
+              : merchantCode,
+          },
+          approved_at: dateFilter,
+        },
+      });
+
+      const reversedPayOutData = await prisma.payout.findMany({
+        where: {
+          Merchant: {
+            code: Array.isArray(merchantCode)
+              ? { in: merchantCode }
+              : merchantCode,
+          },
+          approved_at: {
+            not: null,
+          },
+          rejected_at: dateFilter,
+        },
+      });
+
+      const settlementData = await prisma.settlement.findMany({
+        where: {
+          Merchant: {
+            code: Array.isArray(merchantCode)
+              ? { in: merchantCode }
+              : merchantCode,
+          },
+          updatedAt: dateFilter,
+        },
+      });
+
+      const lienData = await prisma.lien.findMany({
+        where: {
+          Merchant: {
+            code: Array.isArray(merchantCode)
+              ? { in: merchantCode }
+              : merchantCode,
+          },
+          updatedAt: dateFilter,
+        },
+      });
+
+      return { payInOutData: { payInData, payOutData, reversedPayOutData, settlementData, lienData } };
+    } catch (err) {
+      logger.error("Error in getAllPayInDataByMerchant", err);
+    }
+  }
+
+
+
   async getMerchantsNetBalance(merchantCodes) {
     try {
       const codesArray = Array.isArray(merchantCodes)
