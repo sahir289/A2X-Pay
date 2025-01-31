@@ -1096,19 +1096,19 @@ class PayInController {
           order_amount: amount,
           order_currency: "INR",
           order_id: getPayInData.id,
-          order_meta: { notify_url: "https://hello.com" },
           customer_details: {
             customer_id: getPayInData.user_id,
             customer_phone: "9898900909",
           },
           order_meta: {
             payment_methods: ["upi"], 
-            display_name: "Payment Gateway",  
+            display_name: "Payment Gateway", 
+            notify_url: "https://hello.com", 
             theme: {
               color: "#FFFFFF", 
               background_color: "#2C86FF" 
             }
-        }
+          },
         }),
       };
       let cashfreeResponse;
