@@ -1180,10 +1180,9 @@ class PayInController {
 
   async payInUpdateCashfreeWebhook(req, res, next) {
     const payload = req.body;
-    res.sendStatus(200);
+    res.json({status: 200, message: 'Cashfree Webhook Called successfully'});
     try {
-
-      const payInDataById = await payInRepo.getPayInData(payload.data.order_id);
+      const payInDataById = await payInRepo.getPayInData(payload.data.order.order_id);
       if (!payInDataById) {
         logger.error('Payment not found');
       }
@@ -1210,12 +1209,13 @@ class PayInController {
         duration: duration,
         method: 'CashFree',
       }
+      console.log(payInData, "payInData000")
 
       const updatePayinRes = await payInRepo.updatePayInData(
-        payInId,
+        payInDataById.id,
         payInData
       );
-
+      console.log(updatePayinRes, "updatePayinRes")
       const notifyData = {
         status: updatePayinRes?.status,
         merchantOrderId: updatePayinRes?.merchant_order_id,
@@ -1237,10 +1237,8 @@ class PayInController {
       } catch (error) {
         logger.error("Error sending notification:", error);
       }
-      return DefaultResponse(res, 200, "data received from cashfree webhook successfully");
     } catch (error) {
       logger.error("Error in getting response from cashfree webhook:", error);
-      next(error);
     }
   }
 

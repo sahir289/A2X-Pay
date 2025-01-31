@@ -59,6 +59,9 @@ class PayInRepo {
     }
 
     async getPayInData(payInId, isSno = false) {
+        if(!payInId){
+            throw new CustomError(401, "PayIn Id is missing");
+        }
         try {
             let condition = {
                 id: payInId
