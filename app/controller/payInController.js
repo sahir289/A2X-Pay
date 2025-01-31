@@ -1217,7 +1217,7 @@ class PayInController {
       const notifyData = {
         status: updatePayinRes?.status,
         merchantOrderId: updatePayinRes?.merchant_order_id,
-        payinId: payInId,
+        payinId: payInDataById.id,
         amount: updatePayinRes?.confirmed,
         req_amount: amount,
         utr_id: (updatePayinRes?.status === "SUCCESS" || updatePayinRes?.status === "DISPUTE") ? updatePayinRes?.utr : ""
