@@ -438,7 +438,7 @@ class PayInService {
 
   async getVendorsNetBalance(vendorCode) {
     try {
-      let bankIds = [];
+      let bankName = [];
       if (vendorCode) {
         const data = await prisma.bankAccount.findMany({
           where: {
@@ -448,23 +448,16 @@ class PayInService {
           },
         });
 
-        bankIds = data?.map((item) => item.id);
+        bankName = data?.map((item) => item.ac_name);
       }
       const filter = {
-        ...(vendorCode && {
-          bank_acc_id: {
-            in: bankIds,
-          },
-        }),
-      };
-      const payInData = await prisma.payin.findMany({
-        where: {
-          status: "SUCCESS",
-          ...filter,
-          approved_at: {
-            not: null,
-          },
+        bankName: {
+          in: bankName,
         },
+      };
+      const payInData = await prisma.telegramResponse.findMany({
+        where: filter,
+        distinct: ['utr'],
       });
 
       const payOutData = await prisma.payout.findMany({
@@ -589,7 +582,7 @@ class PayInService {
 
   async getAllPayInDataByVendor(vendorCode, startDate, endDate) {
     try {
-      let bankIds = [];
+      let bankName = [];
       let dateFilter = {};
       // if both start and end date provided then apply range filter
       if (startDate && endDate) {
@@ -611,24 +604,22 @@ class PayInService {
           },
         });
 
-        bankIds = data?.map((item) => item.id);
+        bankName = data?.map((item) => item.ac_name);
       }
       const filter = {
-        ...(vendorCode && {
-          bank_acc_id: {
-            in: bankIds,
-          },
-        }),
+        bankName: {
+          in: bankName,
+        },
       };
-      const payInData = await prisma.payin.findMany({
+      const payInData = await prisma.telegramResponse.findMany({
         where: {
-          status: "SUCCESS",
           ...filter,
-          approved_at: {
+          createdAt: {
             gte: new Date(startDate),
             lte: new Date(endDate),
           },
         },
+        distinct: ['utr'],
       });
 
       const payOutData = await prisma.payout.findMany({
