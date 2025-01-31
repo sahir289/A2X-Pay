@@ -1101,6 +1101,17 @@ class PayInController {
             customer_id: getPayInData.user_id,
             customer_phone: "9898900909",
           },
+          order_meta: {
+            // notify_url: "https://hello.com",
+            // return_url: "https://yourwebsite.com/payment-success",
+            payment_methods: ["upi"], 
+            display_name: "Payment Gateway", 
+            // logo: "https://yourwebsite.com/logo.png", 
+            theme: {
+              color: "#FFFFFF", 
+              background_color: "#2C86FF" 
+            }
+        }
         }),
       };
       let cashfreeResponse;
