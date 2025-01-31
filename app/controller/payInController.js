@@ -87,76 +87,82 @@ class PayInController {
         throw new CustomError(404, "Bank Account has not been linked with Merchant");
       }
 
-      if (!merchant_order_id && ot) {
-        payInData = {
-          code: code,
-          amount,
-          api_key: getMerchantApiKeyByCode?.api_key,
-          merchant_order_id: uuidv4(),
-          user_id: user_id,
-          return_url: returnUrl ? returnUrl : getMerchantApiKeyByCode?.return_url,
-          // isTest:isTest
-        };
-        // Uncomment and use your service to generate PayIn URL
-        const generatePayInUrlRes = await payInServices.generatePayInUrl(
-          getMerchantApiKeyByCode,
-          payInData,
-          bankAccountLinkRes[0] // to add the bank_id when url is generated from api
-        );
-        let updateRes;
-        if (isTest && (isTest === 'true' || isTest === true)) {
-          updateRes = {
-            expirationDate: generatePayInUrlRes?.expirationDate,
-            payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}?t=true`, // use env
-            payInId: generatePayInUrlRes?.id,
-            merchantOrderId: merchant_order_id,
+      const merchantOrderIdPayinData = merchant_order_id ? await payInRepo.getPayInDataByMerchantOrderId(merchant_order_id) : "";
+      if (merchantOrderIdPayinData || merchantOrderIdPayinData?.length > 0) {
+        throw new CustomError(400, "Merchant Order ID already exists");
+      }
+      else {
+        if (!merchant_order_id && ot) {
+          payInData = {
+            code: code,
+            amount,
+            api_key: getMerchantApiKeyByCode?.api_key,
+            merchant_order_id: uuidv4(),
+            user_id: user_id,
+            return_url: returnUrl ? returnUrl : getMerchantApiKeyByCode?.return_url,
+            // isTest:isTest
           };
+          // Uncomment and use your service to generate PayIn URL
+          const generatePayInUrlRes = await payInServices.generatePayInUrl(
+            getMerchantApiKeyByCode,
+            payInData,
+            bankAccountLinkRes[0] // to add the bank_id when url is generated from api
+          );
+          let updateRes;
+          if (isTest && (isTest === 'true' || isTest === true)) {
+            updateRes = {
+              expirationDate: generatePayInUrlRes?.expirationDate,
+              payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}?t=true`, // use env
+              payInId: generatePayInUrlRes?.id,
+              merchantOrderId: merchant_order_id,
+            };
+          } else {
+            updateRes = {
+              expirationDate: generatePayInUrlRes?.expirationDate,
+              payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
+              payInId: generatePayInUrlRes?.id,
+              merchantOrderId: merchant_order_id,
+
+            };
+          }
+
+          if (ot === "y") {
+            return DefaultResponse(
+              res,
+              200,
+              "Payment is assigned & url is sent successfully",
+              updateRes
+            );
+          } else {
+            res.redirect(302, updateRes?.payInUrl);
+          }
         } else {
-          updateRes = {
+          payInData = {
+            code,
+            merchant_order_id,
+            user_id,
+            amount,
+            return_url: returnUrl ? returnUrl : getMerchantApiKeyByCode?.return_url,
+          };
+
+          const generatePayInUrlRes = await payInServices.generatePayInUrl(
+            getMerchantApiKeyByCode,
+            payInData,
+            bankAccountLinkRes[0] // to add the bank_id when url is generated from api
+          );
+          const updateRes = {
             expirationDate: generatePayInUrlRes?.expirationDate,
             payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
             payInId: generatePayInUrlRes?.id,
             merchantOrderId: merchant_order_id,
-
           };
-        }
-
-        if (ot === "y") {
           return DefaultResponse(
             res,
             200,
             "Payment is assigned & url is sent successfully",
             updateRes
           );
-        } else {
-          res.redirect(302, updateRes?.payInUrl);
         }
-      } else {
-        payInData = {
-          code,
-          merchant_order_id,
-          user_id,
-          amount,
-          return_url: returnUrl ? returnUrl : getMerchantApiKeyByCode?.return_url,
-        };
-
-        const generatePayInUrlRes = await payInServices.generatePayInUrl(
-          getMerchantApiKeyByCode,
-          payInData,
-          bankAccountLinkRes[0] // to add the bank_id when url is generated from api
-        );
-        const updateRes = {
-          expirationDate: generatePayInUrlRes?.expirationDate,
-          payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
-          payInId: generatePayInUrlRes?.id,
-          merchantOrderId: merchant_order_id,
-        };
-        return DefaultResponse(
-          res,
-          200,
-          "Payment is assigned & url is sent successfully",
-          updateRes
-        );
       }
     } catch (err) {
       // Handle errors and pass them to the next middleware
@@ -4821,20 +4827,20 @@ class PayInController {
       checkValidation(req);
       const { id } = req.params;
       const { type } = req.body;
-  
+
       let updatePayInOutRes;
       let notifyData;
       let notifyUrl;
-  
+
       if (type === "payin") {
         const updatePayInData = { is_notified: true };
-  
+
         updatePayInOutRes = await payInRepo.updatePayInData(id, updatePayInData);
-  
+
         if (!updatePayInOutRes) {
           throw new Error("Payin data not found.");
         }
-  
+
         notifyData = {
           status: updatePayInOutRes.status,
           merchantOrderId: updatePayInOutRes.merchant_order_id,
@@ -4845,17 +4851,17 @@ class PayInController {
         notifyUrl = updatePayInOutRes.notify_url;
       } else if (type === "payout") {
         updatePayInOutRes = await withdrawService.getWithdrawById(id);
-  
+
         if (!updatePayInOutRes) {
           throw new Error("Payout data not found.");
         }
-  
+
         const merchant = await merchantRepo.getMerchantById(updatePayInOutRes.merchant_id);
-  
+
         if (!merchant || !merchant.payout_notify_url) {
           throw new Error("Merchant or payout notify URL not found.");
         }
-  
+
         notifyData = {
           code: updatePayInOutRes.code,
           merchantOrderId: updatePayInOutRes.merchant_order_id,
@@ -4868,7 +4874,7 @@ class PayInController {
       } else {
         throw new Error("Invalid notification type.");
       }
-  
+
       // Notify the merchant
       try {
         logger.info("Sending notification to merchant", { notify_url: notifyUrl, notify_data: notifyData });
@@ -4880,7 +4886,7 @@ class PayInController {
       } catch (error) {
         logger.error("Error while sending notification", error);
       }
-  
+
       return DefaultResponse(res, 200, "Payment notified successfully");
     } catch (error) {
       logger.error("Error while updating payment notification status", error);
