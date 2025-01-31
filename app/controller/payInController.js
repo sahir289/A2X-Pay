@@ -1208,6 +1208,7 @@ class PayInController {
         user_submitted_image: null,
         duration: duration,
         method: 'CashFree',
+        is_notified: true
       }
 
       const updatePayinRes = await payInRepo.updatePayInData(
