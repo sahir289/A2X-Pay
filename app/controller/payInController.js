@@ -1101,7 +1101,7 @@ class PayInController {
             customer_phone: "9898900909",
           },
           order_meta: {
-            payment_methods: ["upi"], 
+            payment_method: ["upi"], 
             display_name: "Payment Gateway", 
             notify_url: "https://hello.com", 
             theme: {
