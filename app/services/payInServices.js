@@ -750,22 +750,24 @@ class PayInService {
   }
 
   //new service for pay in data
-  async getAllPayInDataWithRange(merchantCodes, status, startDate, endDate) {
+  async getAllPayInDataWithRange(merchantCodes, method, status, startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
     try {
       const condition = {
         Merchant: {
-          code: Array.isArray(merchantCodes)
-            ? { in: merchantCodes }
-            : merchantCodes,
+          code: Array.isArray(merchantCodes) ? { in: merchantCodes } : merchantCodes,
         },
       };
-
-      if (status != "All") {
+  
+      if (method && ['RazorPay', 'CashFree', 'PayU', null].includes(method)) {
+        condition.method = method;
+      }
+      // Handle status filtering
+      if (status !== "All") {
         condition.status = status;
       }
-
+  
       if (status === "SUCCESS") {
         condition.approved_at = {
           gte: start,
@@ -778,39 +780,39 @@ class PayInService {
         };
       }
       try {
-        const pageSize = 1000;
-        let page = 0;
-        let allPayInData = [];
-
-        while (true) {
-          const payInData = await prisma.payin.findMany({
-            where: condition,
-            skip: page * pageSize,
-            take: pageSize,
-            include: {
-              Merchant: true,
-            },
+      const pageSize = 1000;
+      let page = 0;
+      let allPayInData = [];
+  
+      while (true) {
+        const payInData = await prisma.payin.findMany({
+          where: condition,
+          skip: page * pageSize,
+          take: pageSize,
+          include: {
+            Merchant: true,
+          },
             orderBy: status === "SUCCESS"
               ? { approved_at: "asc" }
               : { updatedAt: "asc" },
-          });
-
-          if (payInData.length === 0) {
-            break;
-          }
-
-          allPayInData = [...allPayInData, ...payInData];
-          page++;
+        });
+  
+        if (payInData.length === 0) {
+          break;
         }
-        return allPayInData;
-      } catch (error) {
+  
+        allPayInData = [...allPayInData, ...payInData];
+        page++;
+      }
+      return allPayInData;
+    } catch (error) {
         logger.error('getting error while fetching pay in data', error);
       }
     } catch (error) {
       logger.error('getting error while downloading payin reports', error);
     }
   }
-
+  
   async oneTimeExpire(payInId) {
     try {
       const expirePayInUrlRes = await prisma.payin.update({

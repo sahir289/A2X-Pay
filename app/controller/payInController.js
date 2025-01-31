@@ -1941,7 +1941,7 @@ class PayInController {
   async getAllPayInDataWithRange(req, res, next) {
     try {
       checkValidation(req);
-      let { merchantCode, status, startDate, endDate, includeSubMerchant } = req.body;
+      let { merchantCode,method, status, startDate, endDate, includeSubMerchant } = req.body;
 
       // const start = new Date(startDate);
       // const end = new Date(endDate);
@@ -2031,6 +2031,7 @@ class PayInController {
         }
         const payInDataRes = await payInServices.getAllPayInDataWithRange(
           allNewMerchantCodes,
+          method,
           status,
           startDate,
           endDate
@@ -2045,6 +2046,7 @@ class PayInController {
       } else {
         const payInDataRes = await payInServices.getAllPayInDataWithRange(
           merchantCode,
+          method,
           status,
           startDate,
           endDate
