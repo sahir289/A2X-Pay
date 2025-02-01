@@ -1831,15 +1831,9 @@ class PayInController {
 
       if (vendorCode == null) {
         vendorCode = [];
+      } else if (typeof vendorCode === "string") {
+        vendorCode = [vendorCode];
       }
-
-      // const vendorCodes = Array.isArray(vendorCode)
-      //   ? vendorCode
-      //   : vendorCode.split(',');
-
-      // if (vendorCodes.length === 0) {
-      //   return res.status(400).json({ error: 'No merchant codes provided' });
-      // }
 
       const payInDataRes = await payInServices.getVendorsNetBalance(
         vendorCode
