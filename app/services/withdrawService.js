@@ -41,6 +41,7 @@ class Withdraw {
           Merchant: true,
         },
       });
+      
       return data;
     } catch (err) {
       logger.info("Error checking Payout Status", err);
@@ -198,11 +199,19 @@ class Withdraw {
       logger.info('PayOut data fetch Failed', error);
     }
   }
+  async getAllVendorPayOutDataWithRange(vendorCodes) {
+    const rawQuery = `SELECT * FROM "Payout" WHERE "vendor_code" = ANY($1)`;
+    const rawResults = await prisma.$queryRawUnsafe(rawQuery, vendorCodes);
+    // console.log("Raw SQL results:", rawResults);
+    return rawResults;
+  }
+
+
 
   async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate, method) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-
+    // console.log("hiii")
     const condition = {
       Merchant: {
         code: Array.isArray(merchantCodes)

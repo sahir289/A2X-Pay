@@ -710,7 +710,7 @@ class WithdrawController {
       }
       return DefaultResponse(res, 200, "Payout Updated!", data);
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       logger.info(err);
       next(err);
     }
@@ -774,7 +774,41 @@ class WithdrawController {
       logger.info(err)
     }
   }
-
+  //  vendor payouts reports
+  async getAllVendorPayOutDataWithRange(req, res, next) {
+    try {
+      // console.log("Fetching vendor payout data...");
+  
+      let { vendorCode, status, startDate, endDate, method } = req.body;
+  
+      // Ensure vendorCode is always an array
+      if (!vendorCode) {
+        vendorCode = [];
+      } else if (typeof vendorCode === "string") {
+        vendorCode = [vendorCode];
+      }
+  
+      // Call the service function to get payout data
+      const payOutDataRes = await withdrawService.getAllVendorPayOutDataWithRange(
+        vendorCode
+        // status,
+        // startDate,
+        // endDate,
+        // method
+      );
+  
+      logger.info("Get all payout with range", {
+        recordCount: payOutDataRes.length,
+      });
+  
+      return DefaultResponse(res, 200, "Payout data fetched successfully", payOutDataRes);
+    } catch (error) {
+      logger.error("Error fetching payout data", error);
+      next(error);
+    }
+  }
+  
+ 
   // Reports
   async getAllPayOutDataWithRange(req, res, next) {
     try {

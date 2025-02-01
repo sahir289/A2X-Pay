@@ -87,6 +87,12 @@ withdrawRouter.put(
   withdrawController.updateVendorCode
 );
 
+withdrawRouter.post(
+  "/get-all-vendor-payouts",
+  payOutInAllDataValidator,
+  // isAuthenticated,
+  withdrawController.getAllVendorPayOutDataWithRange
+);
 //new payout router
 withdrawRouter.post(
   "/get-all-payouts",
