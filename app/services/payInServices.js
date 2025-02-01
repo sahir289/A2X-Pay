@@ -612,7 +612,7 @@ class PayInService {
 
       const payInData = await prisma.$queryRawUnsafe(`
         WITH used_entries AS (
-          SELECT utr, "bankName", "amount"
+          SELECT utr, "bankName", "amount", "createdAt"
           FROM Public."TelegramResponse"
           WHERE is_used = true
           AND "bankName" IN (
@@ -624,7 +624,7 @@ class PayInService {
         ),
 
         unused_entries AS (
-          SELECT utr, "bankName", "amount"
+          SELECT utr, "bankName", "amount", "createdAt"
           FROM Public."TelegramResponse"
           WHERE is_used = false
           AND utr NOT IN (SELECT utr FROM used_entries)
@@ -638,14 +638,14 @@ class PayInService {
         ),
 
         batch_1 AS (
-          SELECT utr, "bankName", "amount"
+          SELECT utr, "bankName", "amount", "createdAt"
           FROM Public."TelegramResponse"
           WHERE utr IN (SELECT utr FROM unused_entries LIMIT 500) AND is_used = false
           AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
         ),
 
         batch_2 AS (
-          SELECT utr, "bankName", "amount"
+          SELECT utr, "bankName", "amount", "createdAt"
           FROM Public."TelegramResponse"
           WHERE utr IN (SELECT utr FROM unused_entries OFFSET 500 LIMIT 500) AND is_used = false
           AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
