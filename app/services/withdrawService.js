@@ -192,6 +192,35 @@ class Withdraw {
     }
   }
 
+  async getWithdrawByIds(ids) {
+    try {
+      const result = []; 
+      for (const id of ids) {
+        const payoutData = await prisma.payout.findFirst({
+          where: {
+            id,
+          },
+          include: {
+            Merchant: {
+              select: {
+                id: true,
+                code: true,
+              },
+            },
+          },
+        });
+        if (payoutData) {
+          result.push(payoutData); // Push each found payout to the result array
+        }
+      }
+      return result; // Return the result array after the loop
+    } catch (error) {
+      logger.info('PayOut data fetch Failed', error);
+      throw error; 
+    }
+  }
+  
+
   //created to get eko tid 
   async getWithdrawByTid(tid) {
     try {
