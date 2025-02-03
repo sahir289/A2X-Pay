@@ -506,7 +506,7 @@ class PayInController {
         throw new CustomError(404, "Payment does not exist");
       }
 
-      if (getPayInData?.is_url_expires === true) {
+      if (getPayInData?.is_url_expires === true && getPayInData?.method !== 'CashFree') {
         throw new CustomError(400, "Url is already used");
       }
 
@@ -1209,8 +1209,8 @@ class PayInController {
         confirmed: payload.data.order.order_amount,
         amount: payload.data.order.order_amount,
         status: payload.data.payment.payment_status === 'USER_DROPPED' ? 'DROPPED' : payload.data.payment.payment_status,
-        utr: payload.data.payment.cf_payment_id,
-        user_submitted_utr: payload.data.payment.cf_payment_id,
+        utr: payload.data.payment.bank_reference,
+        user_submitted_utr: payload.data.payment.bank_reference,
         approved_at: new Date(),
         is_url_expires: true,
         user_submitted_image: null,
