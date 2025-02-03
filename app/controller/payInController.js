@@ -506,7 +506,7 @@ class PayInController {
         throw new CustomError(404, "Payment does not exist");
       }
 
-      if (getPayInData?.is_url_expires === true) {
+      if (getPayInData?.is_url_expires === true && getPayInData?.method !== 'CashFree') {
         throw new CustomError(400, "Url is already used");
       }
 
