@@ -729,7 +729,7 @@ class WithdrawController {
     try {
       const ids = req.body.map(item => item.id);      
       const withdrawals = await withdrawService.getWithdrawByIds(ids);
-  console.log(withdrawals, "111");
+ 
       if (withdrawals.length === 0) {
         return DefaultResponse(res, 404, "Withdrawals not found.");
       }
@@ -737,35 +737,15 @@ class WithdrawController {
       const updatedWithdrawals = [];
       const payloadMap = new Map();
   
-      // Map the payloads from the request body based on their ids
       for (const requestPayload of req.body) {
         if (requestPayload.id) {
           payloadMap.set(requestPayload.id, requestPayload);
         }
       }
   
-      // Loop over the withdrawals and update them based on the payloads
       for (const singleWithdrawData of withdrawals) {
-        const payload = payloadMap.get(singleWithdrawData.id) || {}; // Get the corresponding payload
-  
-        // Handle different payload conditions (e.g., SUCCESS, REJECTED, INITIATED)
-        if (payload.utr_id && !payload.status) {
-          payload.status = "SUCCESS";
-          payload.approved_at = new Date();
-        }
-  
-        if (payload.rejected_reason) {
-          payload.status = "REJECTED";
-          payload.rejected_reason = payload.rejected_reason;
-          payload.rejected_at = new Date();
-        }
-  
-        if (payload.status === "INITIATED") {
-          payload.utr_id = "";
-          payload.rejected_reason = "";
-        }
-  
-        // Handle method-specific logic (Eko or BlazePe)
+        const payload = payloadMap.get(singleWithdrawData.id) || {}; 
+       
         if (payload.method === "eko") {
           try {
             const client_ref_id = Math.floor(Date.now() / 1000);
