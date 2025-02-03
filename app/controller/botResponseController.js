@@ -15,6 +15,7 @@ class BotResponseController {
   async botResponse(req, res, next) {
     try {
       const data = req.body?.message?.text;
+      console.log( data,"utr")
       const splitData = data.split(" ");
 
       const status = splitData[0];
@@ -22,7 +23,7 @@ class BotResponseController {
       const amount_code = splitData[2];
       const utr = splitData[3];
       const bankName = splitData[4];
-
+ 
       // Validate amount, amount_code, and utr
       const isValidAmount = amount;
       const isValidAmountCode =
@@ -30,6 +31,22 @@ class BotResponseController {
       const isValidUtr = utr.length === 12;
       const acceptedStatus = ["SUCCESS", "DISPUTE", "BANK_MISMATCH", "FAILED", "DUPLICATE"]
 
+
+      if (utr) {
+        const isUtrExist = await botResponseRepo.getBotResByUtr(utr)
+        console.log(typeof utr, "utr")
+        if (isUtrExist) {
+          const updateBotRes = await botResponseRepo?.updateStatusBotResponse(utr)
+          console.log("payInData", updateBotRes)
+
+          return DefaultResponse(
+            res,
+            200,
+            "Duplicate",
+            updateBotRes
+          );
+        }
+      }
 
 
       if (isValidAmount) {
@@ -58,6 +75,8 @@ class BotResponseController {
           utr,
           amount_code,
         );
+
+
 
         if (checkPayInUtr?.length > 0) {
           if (amount_code && isValidAmountCode) {

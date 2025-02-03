@@ -1,4 +1,5 @@
 import { prisma } from "../client/prisma.js";
+import { logger } from "../utils/logger.js";
 
 class BotResponseRepo {
   async botResponse(data) {
@@ -57,6 +58,26 @@ class BotResponseRepo {
       logger.info(`Error fetching bot response for UTR: ${usrSubmittedUtr}`, error);
     }
   }
+
+  async updateStatusBotResponse(utr) {
+    try {
+      const payInUrlRes = await prisma.telegramResponse.update({
+        where: {
+          utr: utr,
+        },
+        data: {
+          // is_used: true,  
+          status: "DUPLICATE",
+        },
+      })
+      console.log('payInUrlRes', payInUrlRes)
+
+      return payInUrlRes
+    } catch (error) {
+      logger.info('Payin data did not updated', error);
+    }
+  }
+
 
   async getBotResDataByUtr(usrSubmittedUtr) {
     try {

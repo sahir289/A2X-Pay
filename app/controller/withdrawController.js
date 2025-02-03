@@ -205,7 +205,6 @@ class WithdrawController {
   }
 
   async createEkoWithdraw(payload, client_ref_id) {
-console.log("inside eko")
     const newObj = {
       amount: payload?.amount,
       client_ref_id,
@@ -747,9 +746,7 @@ console.log("inside eko")
             const client_ref_id = Math.floor(Date.now() / 1000);
         
             const ekoResponse = await  this.createEkoWithdraw(singleWithdrawData, client_ref_id);
-            console.log("Eko Response:", ekoResponse); 
             if (ekoResponse?.status === 0) {
-              console.log('ekoResponse', ekoResponse)
               payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS' ? 'SUCCESS' : 'PENDING';
               payload.approved_at = payload.status === 'SUCCESS' ? new Date() : null;
               payload.utr_id = ekoResponse?.data?.tid;
