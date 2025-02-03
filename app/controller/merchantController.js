@@ -108,7 +108,18 @@ class MerchantController {
         merchants = await merchantRepo.getAllMerchants(payload);
       } else {
         const merchant = await merchantRepo.getMerchantByCode(merchantCode);
-        merchants = { merchants: merchant ? [merchant] : [] };
+        let subMerchants = [];
+        if (merchant && merchant.child_code.length > 0) {
+          subMerchants = await Promise.all(
+            merchant.child_code.map(async (childCode) => {
+              return merchantRepo.getMerchantByCode(childCode);
+            })
+          );
+        }
+
+        merchants = {
+          merchants: merchant ? [{ ...merchant, subMerchants }] : [],
+        };
       }
       
       return DefaultResponse(

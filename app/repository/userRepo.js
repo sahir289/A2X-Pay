@@ -72,7 +72,18 @@ class UserRepo {
             const users = await prisma.user.findMany({
                 where: filters,
                 skip: skip,
-                take: take
+                take: take,
+                select: {
+                    id: true,
+                    fullName: true,   
+                    userName: true,         
+                    isEnabled: true, 
+                    role: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    vendor_code: true,
+                    merchantAdminCode: true,
+                },
             });
 
             const totalRecords = await prisma.user.count({

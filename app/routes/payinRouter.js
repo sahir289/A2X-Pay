@@ -106,6 +106,7 @@ payInRouter.post(
   payInController.payInIntentGenerateOrder
 );
 
+// cashfree webhook to update payment status
 payInRouter.post(
   "/update-payment-cashfree-webhook",
   payInController.payInUpdateCashfreeWebhook
@@ -150,7 +151,7 @@ payInRouter.get(
 );
 
 payInRouter.post(
-  "/update-payment-notified-status/:payInId",
+  "/update-payment-notified-status/:id",
   payInController.updatePaymentNotificationStatus
 );
 

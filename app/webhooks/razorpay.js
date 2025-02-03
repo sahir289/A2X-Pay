@@ -13,7 +13,7 @@ export const razorpay = new Razorpay({
 })
 
 const RazorHook = async (req, res) => {
-    res.json({status: 200, message: 'Webhook Called successfully'});
+    res.json({status: 200, message: 'RazorPay Webhook Called successfully'});
     try {
         const webhookSecret = 'trust-pay-stg#001188';
         const receivedSignature = req.headers['x-razorpay-signature'];
@@ -74,7 +74,8 @@ const RazorHook = async (req, res) => {
             approved_at: new Date(),
             duration,
             utr: acquirer_data?.rrn,
-            user_submitted_utr: acquirer_data?.rrn
+            user_submitted_utr: acquirer_data?.rrn,
+            method: 'RazorPay',
         };
 
         if (status === "SUCCESS") {
