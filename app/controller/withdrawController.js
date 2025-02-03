@@ -727,20 +727,16 @@ class WithdrawController {
 
   async updateAllWithdraw(req, res, next) {
     try {
-      const idsString = req.params.ids; // '[96ece744-967d-4a42-bc2d-8a89c8fc7724,94989999-532a-498a-8080-291a8f7bdc1f,0a5f1ab3-d29d-4216-b94f-adcefea83f40]'
-    
-      // Removing the square brackets and splitting the ids by comma
-      const ids = idsString.slice(1, -1).split(','); // ['96ece744-967d-4a42-bc2d-8a89c8fc7724', '94989999-532a-498a-8080-291a8f7bdc1f', '0a5f1ab3-d29d-4216-b94f-adcefea83f40']
-  
+      const ids = req.body.map(item => item.id);      
       const withdrawals = await withdrawService.getWithdrawByIds(ids);
+ 
       if (withdrawals.length === 0) {
         return DefaultResponse(res, 404, "Withdrawals not found.");
       }
   
       const updatedWithdrawals = [];
       const payloadMap = new Map();
-      
-      // Store the latest payload per withdrawal ID
+  
       for (const requestPayload of req.body) {
         if (requestPayload.id) {
           payloadMap.set(requestPayload.id, requestPayload);
@@ -749,25 +745,7 @@ class WithdrawController {
   
       for (const singleWithdrawData of withdrawals) {
         const payload = payloadMap.get(singleWithdrawData.id) || {}; 
-  
-        // Handle payload adjustments based on conditions
-        if (payload.utr_id && !payload.status) {
-          payload.status = "SUCCESS";
-          payload.approved_at = new Date();
-        }
-  
-        if (payload.rejected_reason) {
-          payload.status = "REJECTED";
-          payload.rejected_reason = payload.rejected_reason;
-          payload.rejected_at = new Date();
-        }
-  
-        if (payload.status === "INITIATED") {
-          payload.utr_id = "";
-          payload.rejected_reason = "";
-        }
-  
-        // Process method-specific logic (Eko or BlazePe)
+       
         if (payload.method === "eko") {
           try {
             const client_ref_id = Math.floor(Date.now() / 1000);
@@ -825,17 +803,14 @@ class WithdrawController {
           }
         }
   
-        // Update withdrawal data with the modified payload
         const data = await withdrawService.updateWithdraw(singleWithdrawData.id, payload);
         updatedWithdrawals.push(data);
   
-        // Update bank account balance if necessary
         if (payload.from_bank) {
           const bankAccountRes = await bankAccountRepo.getBankNickName(data.from_bank);
           await bankAccountRepo.updatePayoutBankAccountBalance(bankAccountRes.id, parseFloat(data.amount), payload.status);
         }
   
-        // Notify merchant if payout URL exists
         const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
         if (merchant.payout_notify_url) {
           const merchantPayoutData = {
