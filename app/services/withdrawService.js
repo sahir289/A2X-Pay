@@ -194,7 +194,7 @@ class Withdraw {
 
   async getWithdrawByIds(ids) {
     try {
-      const result = []; // Renamed to avoid conflict with `data`
+      const result = []; 
       for (const id of ids) {
         const payoutData = await prisma.payout.findFirst({
           where: {
