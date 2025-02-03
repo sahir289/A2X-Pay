@@ -563,16 +563,16 @@ export const payoutGetValidator = [
 
 //new pay in validator
 export const payOutInAllDataValidator = [
-  body("merchantCode")
-  .notEmpty()
-  .withMessage("Code is required")
-  .isArray()
-  .withMessage("Invalid Merchant Code format!"),
+  // body("merchantCode")
+  // .notEmpty()
+  // .withMessage("Code is required")
+  // .isArray()
+  // .withMessage("Invalid Merchant Code format!"),
   body("status")
     .notEmpty()
-    .withMessage("Status is required")
-    .isIn([...statusEnums, "All"])
-    .withMessage(`Invalid status, Should be one of these ${[...statusEnums, "All"]}`),
+    .withMessage("Status is required"),
+    // .isIn([...statusEnums, "All"])
+    // .withMessage(`Invalid status, Should be one of these ${[...statusEnums, "All"]}`),
   body("startDate").notEmpty().withMessage("Start date is required"),
   body("endDate").notEmpty().withMessage("End date is required"),
 ];
