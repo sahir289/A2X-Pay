@@ -215,18 +215,29 @@ class Withdraw {
     }
   }
 
-  async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate, method) {
+  async getAllPayOutDataWithRange(merchantCodes, status, startDate, endDate, method, vendorCodes) {
     const start = new Date(startDate);
     const end = new Date(endDate);
+    let condition;
 
-    const condition = {
-      Merchant: {
-        code: Array.isArray(merchantCodes)
-          ? { in: merchantCodes }
-          : merchantCodes,
-      },  
-      status: status === "REVERSED" ? "REJECTED" : status,
-    };
+    if (vendorCodes.length > 0) {
+      condition = {
+          vendor_code: Array.isArray(vendorCodes)
+            ? { in: vendorCodes }
+            : vendorCodes,
+        status: status === "REVERSED" ? "REJECTED" : status,
+      };
+    }
+    else {
+      condition = {
+        Merchant: {
+          code: Array.isArray(merchantCodes)
+            ? { in: merchantCodes }
+            : merchantCodes,
+        },  
+        status: status === "REVERSED" ? "REJECTED" : status,
+      };
+    }
 
     if (status === "SUCCESS") {
       delete condition.status;
@@ -263,7 +274,7 @@ class Withdraw {
         lte: end,
       };
     }
-    if (method) {
+    if (method && method != "All") {
       condition.method = method;
     }
 
