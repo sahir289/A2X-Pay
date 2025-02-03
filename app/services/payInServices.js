@@ -462,27 +462,18 @@ class PayInService {
             FROM Public."BankAccount"
             WHERE vendor_code IN (${vendorCodesList})
           )
-          LIMIT 1000
         ),
 
         batch_1 AS (
           SELECT utr, "bankName", "amount"
           FROM Public."TelegramResponse"
-          WHERE utr IN (SELECT utr FROM unused_entries LIMIT 500) AND is_used = false
-        ),
-
-        batch_2 AS (
-          SELECT utr, "bankName", "amount"
-          FROM Public."TelegramResponse"
-          WHERE utr IN (SELECT utr FROM unused_entries OFFSET 500 LIMIT 500) AND is_used = false
+          WHERE utr IN (SELECT utr FROM unused_entries) AND is_used = false
         )
 
         -- Combine used entries and unused entries
         SELECT * FROM used_entries
         UNION ALL
-        SELECT * FROM batch_1
-        UNION ALL
-        SELECT * FROM batch_2;
+        SELECT * FROM batch_1;
       `);
 
       const payOutData = await prisma.payout.findMany({
@@ -634,29 +625,19 @@ class PayInService {
             WHERE vendor_code IN (${vendorCodesList})
           )
           AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
-          LIMIT 1000
         ),
 
         batch_1 AS (
           SELECT utr, "bankName", "amount", "createdAt"
           FROM Public."TelegramResponse"
-          WHERE utr IN (SELECT utr FROM unused_entries LIMIT 500) AND is_used = false
-          AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
-        ),
-
-        batch_2 AS (
-          SELECT utr, "bankName", "amount", "createdAt"
-          FROM Public."TelegramResponse"
-          WHERE utr IN (SELECT utr FROM unused_entries OFFSET 500 LIMIT 500) AND is_used = false
+          WHERE utr IN (SELECT utr FROM unused_entries) AND is_used = false
           AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
         )
 
         -- Combine used entries and unused entries
         SELECT * FROM used_entries
         UNION ALL
-        SELECT * FROM batch_1
-        UNION ALL
-        SELECT * FROM batch_2;
+        SELECT * FROM batch_1;
       `);
 
       const payOutData = await prisma.payout.findMany({

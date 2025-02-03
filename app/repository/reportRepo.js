@@ -320,45 +320,31 @@ class ReportRepo {
                     FROM Public."TelegramResponse" tr
                     JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
                     WHERE tr.is_used = true
+                    AND DATE(tr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
                     AND ba."vendor_code" IN (${vendorCodesList})
                 ),
-            
                 unused_entries AS (
                     SELECT tr.utr, tr."bankName", tr."amount", ba."vendor_code", tr."createdAt" AS "approved_date"
                     FROM Public."TelegramResponse" tr
                     JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
                     WHERE tr.is_used = false
+                    AND DATE(tr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
                     AND tr.utr NOT IN (SELECT utr FROM used_entries)
                     AND ba."vendor_code" IN (${vendorCodesList})
-                    LIMIT 1000
                 ),
-            
                 batch_1 AS (
-                    SELECT * FROM unused_entries LIMIT 500
+                    SELECT * FROM unused_entries
                 ),
-            
-                batch_2 AS (
-                    SELECT * FROM unused_entries OFFSET 500 LIMIT 500
-                ),
-            
                 unified_data AS (
-                    SELECT tr.utr, tr."bankName", tr."amount", ba."vendor_code", tr."createdAt" AS "approved_date", NULL AS "commission", 'Payin' AS "type"
+                    SELECT tr.utr, tr."bankName", tr."amount", ba."vendor_code", tr."createdAt" AS "approved_date", 0 AS "commission", 'Payin' AS "type"
                     FROM Public."TelegramResponse" tr
                     JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
                     WHERE tr.is_used = true
+                    AND DATE(tr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
                     UNION ALL
-                    SELECT tr.utr, tr."bankName", tr."amount", ba."vendor_code", tr."createdAt" AS "approved_date", NULL AS "commission", 'Payin' AS "type"
-                    FROM Public."TelegramResponse" tr
-                    JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
-                    WHERE tr.is_used = false AND tr.utr NOT IN (SELECT utr FROM used_entries)
-                    UNION ALL
-                    SELECT b1.utr, b1."bankName", b1."amount", b1."vendor_code", b1."approved_date", NULL AS "commission", 'Payin' AS "type"
+                    SELECT b1.utr, b1."bankName", b1."amount", b1."vendor_code", b1."approved_date", 0 AS "commission", 'Payin' AS "type"
                     FROM batch_1 b1
-                    UNION ALL
-                    SELECT b2.utr, b2."bankName", b2."amount", b2."vendor_code", b2."approved_date", NULL AS "commission", 'Payin' AS "type"
-                    FROM batch_2 b2
                 ),
-            
                 combined_data AS (
                     SELECT po."approved_at" AS "approved_date", po."vendor_code", po."amount" AS "amount", po."payout_commision" AS "commission", 'Payout' AS "type"
                     FROM public."Payout" po
@@ -366,7 +352,8 @@ class ReportRepo {
                     UNION ALL
                     SELECT rpo."rejected_at" AS "approved_date", rpo."vendor_code", rpo."amount" AS "amount", rpo."payout_commision" AS "commission", 'ReversedPayout' AS "type"
                     FROM public."Payout" rpo
-                    WHERE rpo.status = 'REJECTED' AND rpo.approved_at IS NOT NULL
+                    WHERE rpo.status = 'REJECTED' 
+                    AND rpo.approved_at IS NOT NULL
                     UNION ALL
                     SELECT vs."updatedAt" AS "approved_date", v."vendor_code", vs."amount" AS "amount", NULL AS "commission", 'Settlement' AS "type"
                     FROM public."VendorSettlement" vs
@@ -374,29 +361,26 @@ class ReportRepo {
                     WHERE vs.status = 'SUCCESS' 
                     AND v."vendor_code" IN (${vendorCodesList})
                 ),
-            
                 filtered_vendors AS (
                     SELECT DISTINCT v."vendor_code"
                     FROM public."Vendor" v
                     WHERE v."vendor_code" IN (${vendorCodesList})
                 ),
-            
                 data_with_vendor AS (
-                    SELECT data."approved_date", data."amount", COALESCE(data."commission"::text, '0') AS "commission", data."type", fv."vendor_code"
+                    SELECT data."approved_date", data."amount", data."commission" AS "commission", data."type", fv."vendor_code"
                     FROM unified_data data
                     JOIN filtered_vendors fv ON data."vendor_code" = fv."vendor_code"
                     UNION ALL
-                    SELECT data."approved_date", data."amount", COALESCE(data."commission"::text, '0') AS "commission", data."type", fv."vendor_code"
+                    SELECT data."approved_date", data."amount", data."commission" AS "commission", data."type", fv."vendor_code"
                     FROM combined_data data
                     JOIN filtered_vendors fv ON data."vendor_code" = fv."vendor_code"
                 ),
-            
                 previous_balance AS (
                     SELECT data."vendor_code",
                         ROUND(
                             (
                                 SUM(CASE WHEN data."type" = 'Payin' THEN data."amount" ELSE 0 END) -
-                                SUM(CASE WHEN data."type" = 'Payout' THEN data."amount" ELSE 0 END) -
+                                SUM(CASE WHEN data."type" = 'Payout' THEN data."amount" ELSE 0 END) +
                                 SUM(CASE WHEN data."type" = 'Settlement' THEN data."amount" ELSE 0 END) + 
                                 SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."amount" ELSE 0 END)
                             ), 2
@@ -405,30 +389,79 @@ class ReportRepo {
                     WHERE DATE(data."approved_date" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') < '${startDate}'
                     GROUP BY data."vendor_code"
                 ),
-            
                 data_with_results AS (
-                    SELECT DATE(data."approved_date" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') AS "date",
-                        data."vendor_code",
+                    SELECT 
+                        DATE(data."approved_date" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') AS "date",
+                        v."vendor_code" AS "vendor_code",
+
+                        -- Payin Data
                         COUNT(CASE WHEN data."type" = 'Payin' THEN data."amount" END) AS "payInCount",
                         ROUND(SUM(CASE WHEN data."type" = 'Payin' THEN data."amount" ELSE 0 END), 2) AS "totalPayinAmount",
+                        ROUND(SUM(CASE WHEN data."type" = 'Payin' THEN data."commission"::NUMERIC ELSE 0 END), 2) AS "payinCommission",
+
+                        -- Payout Data
                         COUNT(CASE WHEN data."type" = 'Payout' THEN data."amount" END) AS "payOutCount",
                         ROUND(SUM(CASE WHEN data."type" = 'Payout' THEN data."amount" ELSE 0 END), 2) AS "totalPayoutAmount",
+                        ROUND(SUM(CASE WHEN data."type" = 'Payout' THEN data."commission"::NUMERIC ELSE 0 END), 2) AS "payoutCommission",
+
+                        -- Reversed Payout Data
                         COUNT(CASE WHEN data."type" = 'ReversedPayout' THEN data."amount" END) AS "reversedPayOutCount",
                         ROUND(SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."amount" ELSE 0 END), 2) AS "reversedTotalPayoutAmount",
+                        ROUND(SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."commission"::NUMERIC ELSE 0 END), 2) AS "reversedPayoutCommission",
+
+                        -- Settlement Data
                         COUNT(CASE WHEN data."type" = 'Settlement' THEN data."amount" END) AS "settlementCount",
-                        ROUND(SUM(CASE WHEN data."type" = 'Settlement' THEN data."amount" ELSE 0 END), 2) AS "totalSettlementAmount"
+                        ROUND(SUM(CASE WHEN data."type" = 'Settlement' THEN data."amount" ELSE 0 END), 2) AS "totalSettlementAmount",
+
+                        -- Lien Data
+                        COUNT(CASE WHEN data."type" = 'Lien' THEN data."amount" END) AS "lienCount",
+                        ROUND(SUM(CASE WHEN data."type" = 'Lien' THEN data."amount" ELSE 0 END), 2) AS "totalLienAmount",
+
+                        -- Net Balance
+                        ROUND(
+                            (
+                                SUM(CASE WHEN data."type" = 'Payin' THEN data."amount" ELSE 0 END) -
+                                SUM(CASE WHEN data."type" = 'Payout' THEN data."amount" ELSE 0 END) - 
+                                (
+                                    SUM(CASE WHEN data."type" = 'Payin' THEN data."commission"::NUMERIC ELSE 0 END) + 
+                                    SUM(CASE WHEN data."type" = 'Payout' THEN data."commission"::NUMERIC ELSE 0 END) -
+                                    SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."commission"::NUMERIC ELSE 0 END)
+                                ) + 
+                                SUM(CASE WHEN data."type" = 'Settlement' THEN data."amount" ELSE 0 END) - 
+                                SUM(CASE WHEN data."type" = 'Lien' THEN data."amount" ELSE 0 END) + 
+                                SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."amount" ELSE 0 END)
+                            ), 2
+                        ) AS "netBalance"
                     FROM data_with_vendor data
-                    WHERE DATE(data."approved_date" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
-                    GROUP BY DATE(data."approved_date" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'), data."vendor_code"
+                    JOIN public."Vendor" v ON data."vendor_code" = v."vendor_code"
+                    WHERE 
+                        DATE(data."approved_date" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
+                        AND v."vendor_code" IN (${vendorCodesList})
+                    GROUP BY 
+                        DATE(data."approved_date" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'), v."vendor_code"
+                ),
+                data_with_total_balance AS (
+                    SELECT 
+                        dwr.*,
+                        COALESCE(pb."previous_balance", 0) AS "previous_balance", -- Ensure previous_balance is never NULL
+                        COALESCE(
+                            SUM(dwr."netBalance") OVER (
+                                PARTITION BY dwr."vendor_code"
+                                ORDER BY dwr."date"
+                                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                            ), 0
+                        ) + COALESCE(pb."previous_balance", 0) AS "totalBalance" -- Ensure totalBalance is never NULL
+                    FROM data_with_results dwr
+                    LEFT JOIN previous_balance pb ON dwr."vendor_code" = pb."vendor_code"
                 )
-            
-                SELECT * FROM data_with_results
+                SELECT * FROM data_with_total_balance
                 ORDER BY "vendor_code", "date";
-            `);
+            `);            
 
             return result;
 
         } catch (error) {
+            console.log(error);
             logger.error("Error in getting vendor account report", error);
         }
     }
