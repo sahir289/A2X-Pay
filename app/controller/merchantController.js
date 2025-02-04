@@ -93,7 +93,10 @@ class MerchantController {
   async getAllMerchants(req, res, next) {
     try {
       checkValidation(req);
-      const { id: userId } = req.user;
+      const { id: userId, loggedInUserRole } = req.user;
+      if(loggedInUserRole !== 'ADMIN'){
+        
+      }
 
       const {merchantCode, page, pageSize} = req.query;
       const payload = {
