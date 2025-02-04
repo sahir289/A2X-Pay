@@ -35,7 +35,7 @@ class BotResponseController {
       if (isValidAmount) {
         const utrAlreadyExist = await botResponseRepo.getBotResByUtr(utr);
         const updatedData = {
-          status : utrAlreadyExist ? "REPEATED" : "SUCCESS",
+          status : utrAlreadyExist ? "/repeated" : "/success",
           amount,
           utr,
           bankName
