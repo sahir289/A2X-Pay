@@ -59,25 +59,7 @@ class BotResponseRepo {
     }
   }
 
-  async updateStatusBotResponse(utr) {
-    try {
-      const payInUrlRes = await prisma.telegramResponse.update({
-        where: {
-          utr: utr,
-        },
-        data: {
-          // is_used: true,  
-          status: "DUPLICATE",
-        },
-      })
-      console.log('payInUrlRes', payInUrlRes)
-
-      return payInUrlRes
-    } catch (error) {
-      logger.info('Payin data did not updated', error);
-    }
-  }
-
+  
 
   async getBotResDataByUtr(usrSubmittedUtr) {
     try {

@@ -15,7 +15,6 @@ class BotResponseController {
   async botResponse(req, res, next) {
     try {
       const data = req.body?.message?.text;
-      console.log( data,"utr")
       const splitData = data.split(" ");
 
       const status = splitData[0];
@@ -30,23 +29,6 @@ class BotResponseController {
         amount_code !== "nil" && amount_code.length === 5;
       const isValidUtr = utr.length === 12;
       const acceptedStatus = ["SUCCESS", "DISPUTE", "BANK_MISMATCH", "FAILED", "DUPLICATE"]
-
-
-      if (utr) {
-        const isUtrExist = await botResponseRepo.getBotResByUtr(utr)
-        console.log(typeof utr, "utr")
-        if (isUtrExist) {
-          const updateBotRes = await botResponseRepo?.updateStatusBotResponse(utr)
-          console.log("payInData", updateBotRes)
-
-          return DefaultResponse(
-            res,
-            200,
-            "Duplicate",
-            updateBotRes
-          );
-        }
-      }
 
 
       if (isValidAmount) {
