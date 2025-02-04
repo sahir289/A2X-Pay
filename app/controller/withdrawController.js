@@ -411,8 +411,8 @@ class WithdrawController {
         status: payload.txstatus_desc.toUpperCase() == 'SUCCESS' ? payload.txstatus_desc.toUpperCase() : 'REJECTED',
         amount: Number(payload.amount),
         utr_id: payload.tid ? String(payload.tid) : "",
-        approved_at: payload.status == 'SUCCESS' ? new Date() : null,
-        rejected_at: payload.status != 'SUCCESS' ? new Date() : null,
+        approved_at: payload.txstatus_desc.toUpperCase() == 'SUCCESS' ? payload.timestamp : null,
+        rejected_at: payload.txstatus_desc.toUpperCase() != 'SUCCESS' ? payload.timestamp : null,
       }
 
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
