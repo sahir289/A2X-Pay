@@ -604,8 +604,8 @@ class PayInService {
             ? { in: vendorCode }
             : vendorCode,
           approved_at: {
-            gte: new Date(new Date(startDate).setDate(new Date(startDate).getDate() + 1)),
-            lte: new Date(new Date(endDate).setDate(new Date(endDate).getDate() + 1)),
+            gte: new Date(startDate),
+            lte: new Date(endDate),
           },
         },
       });
@@ -620,8 +620,8 @@ class PayInService {
             not: null,
           },
           rejected_at: {
-            gte: new Date(new Date(startDate).setDate(new Date(startDate).getDate() + 1)),
-            lte: new Date(new Date(endDate).setDate(new Date(endDate).getDate() + 1)),
+            gte: new Date(startDate),
+            lte: new Date(endDate),
           },
         },
       });
@@ -635,8 +635,8 @@ class PayInService {
               : vendorCode,
           },
           updatedAt: {
-              gte: new Date(new Date(startDate).setDate(new Date(startDate).getDate() + 1)),
-              lte: new Date(new Date(endDate).setDate(new Date(endDate).getDate() + 1)),
+            gte: new Date(startDate),
+            lte: new Date(endDate),
           },
         },
       });
@@ -688,7 +688,7 @@ class PayInService {
 
       if (method != "All") {
         if (method === "Manual") {
-          condition.method = {is: null};
+          condition.method = { is: null };
         }
         else {
           condition.method = method;
@@ -786,7 +786,7 @@ class PayInService {
           -- Combine used entries and unused entries
           SELECT * FROM used_entries;
         `);
-  
+
         return payInData;
       }
       else if (status === "Used") {
@@ -812,7 +812,7 @@ class PayInService {
           -- Combine used entries and unused entries
           SELECT * FROM used_entries;
         `);
-  
+
         return payInData;
       }
       else if (status === "UnUsed") {
@@ -838,7 +838,7 @@ class PayInService {
           -- Combine used entries and unused entries
           SELECT * FROM used_entries;
         `);
-  
+
         return payInData;
       }
     } catch (error) {
