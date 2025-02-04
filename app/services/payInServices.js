@@ -819,6 +819,7 @@ class PayInService {
             JOIN Public."BankAccount" b 
               ON t."bankName" = b.ac_name
             WHERE t.is_used = true
+            AND t.status = '/success'
             AND b.vendor_code IN (${vendorCodesList})
             AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
           ),
@@ -836,6 +837,7 @@ class PayInService {
             JOIN Public."BankAccount" b 
             ON t."bankName" = b.ac_name
             WHERE t.is_used = false
+            AND t.status = '/success'
             AND utr NOT IN (SELECT utr FROM used_entries)
             AND b.vendor_code IN (${vendorCodesList})
             AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
@@ -855,6 +857,7 @@ class PayInService {
               ON t."bankName" = b.ac_name
             WHERE t.utr IN (SELECT utr FROM unused_entries) 
               AND t.is_used = false
+              AND t.status = '/success'
               AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
           )
 
@@ -882,6 +885,7 @@ class PayInService {
             JOIN Public."BankAccount" b 
               ON t."bankName" = b.ac_name
             WHERE t.is_used = true
+            AND t.status = '/success'
             AND b.vendor_code IN (${vendorCodesList})
             AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
           )
@@ -890,7 +894,6 @@ class PayInService {
           ORDER BY utr, "createdAt" ASC
           `,
         );
-        console.log(payInData);
   
         return payInData;
       }
@@ -910,6 +913,7 @@ class PayInService {
             JOIN Public."BankAccount" b 
               ON t."bankName" = b.ac_name
             WHERE t.is_used = false
+            AND t.status = '/success'
             AND b.vendor_code IN (${vendorCodesList})
             AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
           )
@@ -918,7 +922,6 @@ class PayInService {
           ORDER BY utr, "createdAt" ASC
           `,
         );
-        console.log(payInData);
   
         return payInData;
       }
