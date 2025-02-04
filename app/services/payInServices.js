@@ -578,7 +578,6 @@ class PayInService {
 
   async getAllPayInDataByVendor(vendorCode, startDate, endDate) {
     try {
-      let dateFilter = {};
       const vendorCodesList = vendorCode.map(vendor_code => `'${vendor_code}'`).join(", ");
 
       const payInData = await prisma.$queryRawUnsafe(`
@@ -605,8 +604,8 @@ class PayInService {
             ? { in: vendorCode }
             : vendorCode,
           approved_at: {
-            gte: new Date(startDate),
-            lte: new Date(endDate),
+            gte: new Date(new Date(startDate).setDate(new Date(startDate).getDate() + 1)),
+            lte: new Date(new Date(endDate).setDate(new Date(endDate).getDate() + 1)),
           },
         },
       });
@@ -621,8 +620,8 @@ class PayInService {
             not: null,
           },
           rejected_at: {
-            gte: new Date(startDate),
-            lte: new Date(endDate),
+            gte: new Date(new Date(startDate).setDate(new Date(startDate).getDate() + 1)),
+            lte: new Date(new Date(endDate).setDate(new Date(endDate).getDate() + 1)),
           },
         },
       });
@@ -635,7 +634,10 @@ class PayInService {
               ? { in: vendorCode }
               : vendorCode,
           },
-          ...dateFilter,
+          updatedAt: {
+              gte: new Date(new Date(startDate).setDate(new Date(startDate).getDate() + 1)),
+              lte: new Date(new Date(endDate).setDate(new Date(endDate).getDate() + 1)),
+          },
         },
       });
 
