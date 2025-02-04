@@ -33,8 +33,9 @@ class BotResponseController {
 
 
       if (isValidAmount) {
+        const utrAlreadyExist = await botResponseRepo.getBotResByUtr(utr);
         const updatedData = {
-          status,
+          status : utrAlreadyExist ? "DUPLICATE" : "SUCCESS",
           amount,
           utr,
           bankName
@@ -52,6 +53,9 @@ class BotResponseController {
 
         // We are adding the data in the bot res.
         const botRes = await botResponseRepo.botResponse(updatedData);
+        if (updatedData.status === "DUPLICATE") {
+          throw new CustomError(400, "Entry with DUPLICATE UTR Added")
+        }
 
         // We are getting the payin data
         const checkPayInUtr = await payInRepo.getPayInDataByUtrOrUpi(
