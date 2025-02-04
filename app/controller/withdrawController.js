@@ -26,16 +26,16 @@ class WithdrawController {
   }
 
   async createWithdraw(req, res, next) {
-    const restrictedMerchants = ['DHM','APPLE','CB','RK','MafiaMundeer','BERU','luna','Bita','treX', 'paycord', 'paycord-live', 'paycord-live-2', 'paycord-live-intent'];
+    const restrictedMerchants = ['DHM', 'APPLE', 'CB', 'RK', 'MafiaMundeer', 'BERU', 'luna', 'Bita', 'treX', 'paycord', 'paycord-live', 'paycord-live-2', 'paycord-live-intent'];
     try {
       checkValidation(req);
       const { user_id, bank_name, acc_no, acc_holder_name, ifsc_code, amount, vendor_code, merchant_order_id, code } = req.body;
       const num = Number(amount);
-      
+
       if (restrictedMerchants.includes(code)) {
         const getMerchantNetBalance = await payInServices.getMerchantsNetBalance([code]);
         if (getMerchantNetBalance.totalNetBalance < num) {
-          return DefaultResponse(res, 401, `${code} have Insufficient Balance to create Payout`);
+          return DefaultResponse(res, 401, `Insufficient Balance to create Payout`);
         }
         const ekoBalanceEnquiry = await this.ekoWalletBalanceEnquiryInternally();
         if (Number(ekoBalanceEnquiry.data.balance) < num) {
@@ -46,35 +46,42 @@ class WithdrawController {
       if (!merchant) {
         throw new CustomError(404, "Merchant does not exist");
       }
-      
+
       if (req.headers["x-api-key"] !== merchant.api_key) {
         throw new CustomError(404, "Enter valid Api key");
       }
-      delete req.body.code;
-      const ifsc = ifsc_code.toUpperCase();
-      
-      const data = await withdrawService.createWithdraw({
-        user_id,
-        bank_name,
-        acc_no,
-        acc_holder_name,
-        ifsc_code: ifsc,
-        amount,
-        vendor_code,
-        status: "INITIATED",
-        merchant_id: merchant.id,
-        merchant_order_id: merchant_order_id,
-        payout_commision: getAmountFromPerc(
-          merchant.payout_commission,
-          req.body.amount
-        ),
-        currency: "INR",
-      });
-      logger.info('Payout created successfully', {
-        status: data.status,
-        data: data.data,
-      })
-      return DefaultResponse(res, 201, "Payout created successfully", { merchantOrderId: data?.merchant_order_id, payoutId: data?.id, amount: data?.amount });
+
+      const merchantOrderIdPayoutData = merchant_order_id ? await withdrawService.getPayOutDataByMerchantOrderId(merchant_order_id) : "";
+      if (merchantOrderIdPayoutData || merchantOrderIdPayoutData?.length > 0) {
+        throw new CustomError(400, "Merchant Order ID already exists");
+      }
+      else {
+        delete req.body.code;
+        const ifsc = ifsc_code.toUpperCase();
+
+        const data = await withdrawService.createWithdraw({
+          user_id,
+          bank_name,
+          acc_no,
+          acc_holder_name,
+          ifsc_code: ifsc,
+          amount,
+          vendor_code,
+          status: "INITIATED",
+          merchant_id: merchant.id,
+          merchant_order_id: merchant_order_id,
+          payout_commision: getAmountFromPerc(
+            merchant.payout_commission,
+            req.body.amount
+          ),
+          currency: "INR",
+        });
+        logger.info('Payout created successfully', {
+          status: data.status,
+          data: data.data,
+        })
+        return DefaultResponse(res, 201, "Payout created successfully", { merchantOrderId: data?.merchant_order_id, payoutId: data?.id, amount: data?.amount });
+      }
     } catch (err) {
       logger.info(err);
       next(err);
@@ -83,10 +90,10 @@ class WithdrawController {
 
   async createBlazepeWithdraw(payload, merchantRefId) {
     const newObj = {
-      amount: payload?.amount, 
-      name : payload?.acc_holder_name, 
-      mode: "imps", 
-      ifsc: payload?.ifsc_code, 
+      amount: payload?.amount,
+      name: payload?.acc_holder_name,
+      mode: "imps",
+      ifsc: payload?.ifsc_code,
       bankAccount: payload?.acc_no,
       notifyUrl: `${config.ourUrlForGettingCallbackFromBlazePe}${payload.id}`,
       merchantRefId,
@@ -99,12 +106,12 @@ class WithdrawController {
       method: 'post',
       maxBodyLength: Infinity,
       url: url,
-      headers: { 
-        'merchant_code': merchant_code, 
-        'merchant_secret':  merchant_secret, 
+      headers: {
+        'merchant_code': merchant_code,
+        'merchant_secret': merchant_secret,
         'Content-Type': 'application/json'
       },
-      data : JSON.stringify(newObj)
+      data: JSON.stringify(newObj)
     };
 
     try {
@@ -112,8 +119,8 @@ class WithdrawController {
       const data = response?.data;
       return data;
     } catch (error) {
-        logger.error('Error processing BlazePe payout:', error.message);
-        throw new CustomError(401, "Error processing BlazePe payout");
+      logger.error('Error processing BlazePe payout:', error.message);
+      throw new CustomError(401, "Error processing BlazePe payout");
     }
   };
 
@@ -125,9 +132,9 @@ class WithdrawController {
     let newConfig = {
       method: 'get',
       url: url,
-      headers: { 
-        'merchant_code': merchant_code, 
-        'merchant_secret':  merchant_secret, 
+      headers: {
+        'merchant_code': merchant_code,
+        'merchant_secret': merchant_secret,
         'Content-Type': 'application/json'
       },
     };
@@ -135,10 +142,10 @@ class WithdrawController {
     try {
       const response = await axios.request(newConfig)
       const data = await response?.data;
-      return data;  
+      return data;
     } catch (error) {
-        logger.error('Error getting BlazePe payout status:', error.message);
-        throw new CustomError(401, "Error getting BlazePe payout status");
+      logger.error('Error getting BlazePe payout status:', error.message);
+      throw new CustomError(401, "Error getting BlazePe payout status");
     }
   }
 
@@ -157,7 +164,7 @@ class WithdrawController {
     const encodedParams = new URLSearchParams();
     encodedParams.set('service_code', config?.ekoServiceCode);
     encodedParams.set('user_code', config?.ekoUserCode);
-    encodedParams.set('initiator_id', config?.ekoInitiatorId);  
+    encodedParams.set('initiator_id', config?.ekoInitiatorId);
 
     const url = config?.ekoPaymentsActivateUrl;
     const options = {
@@ -170,8 +177,8 @@ class WithdrawController {
         'content-type': 'application/x-www-form-urlencoded'
       },
       body: encodedParams
-  };
-    try{
+    };
+    try {
       const response = await fetch(url, options);
       const responseText = await response.text();
 
@@ -184,13 +191,13 @@ class WithdrawController {
       }
 
       return DefaultResponse(
-      res,
-      response.ok ? 200 : response.status,
-      parsedData?.message,
-      parsedData
-    );
-      
-    }catch (error){
+        res,
+        response.ok ? 200 : response.status,
+        parsedData?.message,
+        parsedData
+      );
+
+    } catch (error) {
       logger.error(error)
     }
   }
@@ -198,11 +205,11 @@ class WithdrawController {
   async createEkoWithdraw(payload, client_ref_id) {
 
     const newObj = {
-      amount: payload?.amount, 
+      amount: payload?.amount,
       client_ref_id,
-      recipient_name : payload?.acc_holder_name, 
-      ifsc: payload?.ifsc_code, 
-      account: payload?.acc_no, 
+      recipient_name: payload?.acc_holder_name,
+      ifsc: payload?.ifsc_code,
+      account: payload?.acc_no,
       sender_name: "TrustPay"
     }
 
@@ -214,7 +221,7 @@ class WithdrawController {
 
     const encodedParams = new URLSearchParams();
     encodedParams.set('service_code', config?.ekoServiceCode);
-    encodedParams.set('initiator_id', config?.ekoInitiatorId); 
+    encodedParams.set('initiator_id', config?.ekoInitiatorId);
     encodedParams.set('amount', newObj.amount);
     encodedParams.set('payment_mode', '5');
     encodedParams.set('client_ref_id', newObj.client_ref_id);
@@ -224,8 +231,8 @@ class WithdrawController {
     encodedParams.set('sender_name', newObj.sender_name);
     encodedParams.set('source', 'NEWCONNECT');
     encodedParams.set('tag', 'Logistic');
-    encodedParams.set('beneficiary_account_type', 1); 
-    
+    encodedParams.set('beneficiary_account_type', 1);
+
     const url = `${config?.ekoPaymentsInitiateUrl}:${config?.ekoUserCode}/settlement`;
     const options = {
       method: 'POST',
@@ -237,9 +244,9 @@ class WithdrawController {
         'content-type': 'application/x-www-form-urlencoded'
       },
       body: encodedParams
-  };
+    };
 
-    try{
+    try {
       const response = await fetch(url, options);
       const responseText = await response.text();
 
@@ -251,12 +258,12 @@ class WithdrawController {
         parsedData = responseText;
       }
       return parsedData;
-    //   return DefaultResponse(
-    //   res,
-    //   response.status,
-    //   parsedData?.message,
-    //   parsedData
-    // );
+      //   return DefaultResponse(
+      //   res,
+      //   response.status,
+      //   parsedData?.message,
+      //   parsedData
+      // );
     } catch (error) {
       logger.error(error);
     }
@@ -280,9 +287,9 @@ class WithdrawController {
         'secret-key-timestamp': secretKeyTimestamp,
         'content-type': 'application/x-www-form-urlencoded'
       },
-  };
+    };
 
-    try{
+    try {
       const response = await fetch(url, options);
       const responseText = await response.text();
 
@@ -295,12 +302,12 @@ class WithdrawController {
         parsedData = responseText;
       }
       return parsedData;
-    //   return DefaultResponse(
-    //   res,
-    //   response.ok ? 200 : response.status,
-    //   parsedData?.message,
-    //   parsedData
-    // );
+      //   return DefaultResponse(
+      //   res,
+      //   response.ok ? 200 : response.status,
+      //   parsedData?.message,
+      //   parsedData
+      // );
     } catch (error) {
       logger.error(error);
     }
@@ -323,9 +330,9 @@ class WithdrawController {
         'secret-key-timestamp': secretKeyTimestamp,
         'content-type': 'application/x-www-form-urlencoded'
       },
-  };
+    };
 
-    try{
+    try {
       const response = await fetch(url, options);
       const responseText = await response.text();
 
@@ -338,11 +345,11 @@ class WithdrawController {
       }
 
       return DefaultResponse(
-      res,
-      response.ok ? 200 : response.status,
-      parsedData?.message,
-      parsedData
-    );
+        res,
+        response.ok ? 200 : response.status,
+        parsedData?.message,
+        parsedData
+      );
     } catch (error) {
       logger.error(error);
     }
@@ -365,9 +372,9 @@ class WithdrawController {
         'secret-key-timestamp': secretKeyTimestamp,
         'content-type': 'application/x-www-form-urlencoded'
       },
-  };
+    };
 
-    try{
+    try {
       const response = await fetch(url, options);
       const responseText = await response.text();
 
@@ -380,12 +387,12 @@ class WithdrawController {
       }
       return parsedData;
 
-    //   return DefaultResponse(
-    //   res,
-    //   response.ok ? 200 : response.status,
-    //   parsedData?.message,
-    //   parsedData
-    // );
+      //   return DefaultResponse(
+      //   res,
+      //   response.ok ? 200 : response.status,
+      //   parsedData?.message,
+      //   parsedData
+      // );
     } catch (error) {
       logger.error(error);
     }
@@ -397,15 +404,15 @@ class WithdrawController {
 
     try {
       const singleWithdrawData = await withdrawService.getWithdrawByTid(tid);
-      if(!singleWithdrawData){
+      if (!singleWithdrawData) {
         return DefaultResponse(res, 404, "Payment not found");
       }
       const updatedData = {
         status: payload.txstatus_desc.toUpperCase() == 'SUCCESS' ? payload.txstatus_desc.toUpperCase() : 'REJECTED',
         amount: Number(payload.amount),
-        utr_id: payload.tid ? String(payload.tid): "",
-        approved_at: payload.status == 'SUCCESS'? new Date() : null,
-        rejected_at: payload.status != 'SUCCESS'? new Date() : null,
+        utr_id: payload.tid ? String(payload.tid) : "",
+        approved_at: payload.txstatus_desc.toUpperCase() == 'SUCCESS' ? payload.timestamp : null,
+        rejected_at: payload.txstatus_desc.toUpperCase() != 'SUCCESS' ? payload.timestamp : null,
       }
 
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
@@ -416,7 +423,7 @@ class WithdrawController {
 
       if (payload.from_bank) {
         const bankAccountRes = await bankAccountRepo.getBankNickName(data.from_bank);
-  
+
         await bankAccountRepo.updatePayoutBankAccountBalance(
           bankAccountRes.id,
           parseFloat(data.amount),
@@ -427,7 +434,7 @@ class WithdrawController {
       const merchantPayoutUrl = merchant.payout_notify_url;
       if (merchantPayoutUrl !== null) {
         let merchantPayoutData = {
-          code:merchant.code,
+          code: merchant.code,
           merchantOrderId: singleWithdrawData.merchant_order_id,
           payoutId: singleWithdrawData.id,
           amount: singleWithdrawData.amount,
@@ -478,7 +485,7 @@ class WithdrawController {
         merchantCode,
         merchantOrderId
       );
-      
+
       if (!data) {
         logger.info('Payout not found');
         return DefaultResponse(res, 404, "Payout not found");
@@ -551,7 +558,8 @@ class WithdrawController {
         commission,
         utr_id,
         acc_holder_name,
-        includeSubMerchant
+        includeSubMerchant,
+        req.user.loggedInUserRole,
       );
       logger.info('Get All Payout', {
         status: data.status,
@@ -601,68 +609,68 @@ class WithdrawController {
 
       if (req?.body?.method === 'eko') {
         try {
-              const client_ref_id = Math.floor(Date.now() / 1000);
-              const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, client_ref_id);
-              if (ekoResponse?.status === 0) {
-                  // added == instead of ===, due the type of txstatus_desc is not string
-                  payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS'? ekoResponse?.data?.txstatus_desc?.toUpperCase(): 'PENDING';
-                  payload.approved_at = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS'? new Date() : null;
-                  payload.utr_id = ekoResponse?.data?.tid;
+          const client_ref_id = Math.floor(Date.now() / 1000);
+          const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, client_ref_id);
+          if (ekoResponse?.status === 0) {
+            // added == instead of ===, due the type of txstatus_desc is not string
+            payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS' ? ekoResponse?.data?.txstatus_desc?.toUpperCase() : 'PENDING';
+            payload.approved_at = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS' ? new Date() : null;
+            payload.utr_id = ekoResponse?.data?.tid;
 
-                  logger.info(`Payment initiated: ${ekoResponse?.message}`, ekoResponse?.message);
-              } else {
-                let getEkoPayoutStatus;
-                if(ekoResponse.status === 1328){
-                  getEkoPayoutStatus = await this.ekoPayoutStatus(client_ref_id);
-                }
-                  payload.status = 'REJECTED';
-                  payload.rejected_reason = ekoResponse?.message;
-                  payload.rejected_at = new Date();
-                  payload.utr_id = getEkoPayoutStatus ? getEkoPayoutStatus?.data.tid : null;
-                  logger.error(`Payment rejected by eko due to ${ekoResponse?.message}`, ekoResponse?.message);
-              }
-            } catch (error) {
-                logger.error('Error processing Eko method:', error);
+            logger.info(`Payment initiated: ${ekoResponse?.message}`, ekoResponse?.message);
+          } else {
+            let getEkoPayoutStatus;
+            if (ekoResponse.status === 1328) {
+              getEkoPayoutStatus = await this.ekoPayoutStatus(client_ref_id);
             }
+            payload.status = 'REJECTED';
+            payload.rejected_reason = ekoResponse?.message;
+            payload.rejected_at = new Date();
+            payload.utr_id = getEkoPayoutStatus ? getEkoPayoutStatus?.data.tid : null;
+            logger.error(`Payment rejected by eko due to ${ekoResponse?.message}`, ekoResponse?.message);
+          }
+        } catch (error) {
+          logger.error('Error processing Eko method:', error);
         }
+      }
 
-      if(req.body?.method === 'blazepe'){
+      if (req.body?.method === 'blazepe') {
         payload.method = req.body?.method;
         try {
           const merchantRefId = generatePrefix(req.body?.method);
           const blazePeResponse = await this.createBlazepeWithdraw(singleWithdrawData, merchantRefId);
           if (blazePeResponse?.success === true) {
-              payload.status = 'PENDING';
-              payload.utr_id = merchantRefId;
-              logger.info(`New payout with merchantRefId: ${merchantRefId} has been created`, blazePeResponse?.message);
-          } else if(blazePeResponse?.success === false){
-            logger.error(`New payout with merchantRefId: ${merchantRefId} has been failed to initiate`,blazePeResponse?.message);
+            payload.status = 'PENDING';
+            payload.utr_id = merchantRefId;
+            logger.info(`New payout with merchantRefId: ${merchantRefId} has been created`, blazePeResponse?.message);
+          } else if (blazePeResponse?.success === false) {
+            logger.error(`New payout with merchantRefId: ${merchantRefId} has been failed to initiate`, blazePeResponse?.message);
 
-            const getStatus = await this.checkBlazepePayoutStatus(merchantRefId); 
-    
-                if (getStatus?.status === 'REFUNDED' || getStatus?.status === 'REVERSED') {
-                    payload.status = 'REJECTED';
-                    payload.rejected_reason = getStatus?.message;
-                    payload.rejected_at = new Date();
-                    // payload.utr_id = getStatus?.utr;
-                    logger.error(`Status is ${payload.status}`, getStatus?.message);
-                } else if(getStatus?.status === 'SUCCESS'){
-                  payload.status = getStatus?.status.toUpperCase();
-                  payload.approved_at = new Date();
-                  // payload.utr_id = getStatus?.utr;
-                  logger.info(`Status is ${payload.status}`, getStatus?.message);
-                } else {
-                    payload.status = getStatus?.status? getStatus?.status.toUpperCase() : 'REJECTED';
-                    payload.rejected_reason = getStatus?.message;
-                    payload.rejected_at = new Date();
-                    logger.error(`Status is ${payload.status}`, getStatus?.message);
-                }
+            const getStatus = await this.checkBlazepePayoutStatus(merchantRefId);
+
+            if (getStatus?.status === 'REFUNDED' || getStatus?.status === 'REVERSED') {
+              payload.status = 'REJECTED';
+              payload.rejected_reason = getStatus?.message;
+              payload.rejected_at = new Date();
+              // payload.utr_id = getStatus?.utr;
+              logger.error(`Status is ${payload.status}`, getStatus?.message);
+            } else if (getStatus?.status === 'SUCCESS') {
+              payload.status = getStatus?.status.toUpperCase();
+              payload.approved_at = new Date();
+              // payload.utr_id = getStatus?.utr;
+              logger.info(`Status is ${payload.status}`, getStatus?.message);
+            } else {
+              payload.status = getStatus?.status ? getStatus?.status.toUpperCase() : 'REJECTED';
+              payload.rejected_reason = getStatus?.message;
+              payload.rejected_at = new Date();
+              logger.error(`Status is ${payload.status}`, getStatus?.message);
+            }
           }
-          } catch (error) {
-              logger.error('Error processing BlazePe method:', error);
-          }
+        } catch (error) {
+          logger.error('Error processing BlazePe method:', error);
+        }
       }
-    
+
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
       const data = await withdrawService.updateWithdraw(req.params.id, payload);
       logger.info('Payout Updated', {
@@ -672,7 +680,7 @@ class WithdrawController {
 
       if (payload.from_bank) {
         const bankAccountRes = await bankAccountRepo.getBankNickName(data.from_bank);
-  
+
         await bankAccountRepo.updatePayoutBankAccountBalance(
           bankAccountRes.id,
           parseFloat(data.amount),
@@ -683,7 +691,7 @@ class WithdrawController {
       const merchantPayoutUrl = merchant.payout_notify_url;
       if (merchantPayoutUrl !== null) {
         let merchantPayoutData = {
-          code:merchant.code,
+          code: merchant.code,
           merchantOrderId: singleWithdrawData.merchant_order_id,
           payoutId: req.params.id,
           amount: singleWithdrawData.amount,
@@ -721,14 +729,14 @@ class WithdrawController {
       const payload = req.body;
       const { id } = req.params;
       const singleWithdrawData = await withdrawService.getWithdrawById(id);
-      if(!singleWithdrawData){
+      if (!singleWithdrawData) {
         return DefaultResponse(res, 404, "withdrawal not found");
       }
       const updatedData = {
         status: payload.status,
         amount: Number(payload.amount),
-        utr_id: payload.utr ? payload.utr: "",
-        approved_at: payload.status === 'SUCCESS'? new Date() : null,
+        utr_id: payload.utr ? payload.utr : "",
+        approved_at: payload.status === 'SUCCESS' ? new Date() : null,
       }
 
       const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
@@ -739,7 +747,7 @@ class WithdrawController {
 
       if (payload.from_bank) {
         const bankAccountRes = await bankAccountRepo.getBankNickName(data.from_bank);
-  
+
         await bankAccountRepo.updatePayoutBankAccountBalance(
           bankAccountRes.id,
           parseFloat(data.amount),
@@ -750,7 +758,7 @@ class WithdrawController {
       const merchantPayoutUrl = merchant.payout_notify_url;
       if (merchantPayoutUrl !== null) {
         let merchantPayoutData = {
-          code:merchant.code,
+          code: merchant.code,
           merchantOrderId: singleWithdrawData.merchant_order_id,
           payoutId: id,
           amount: singleWithdrawData.amount,
@@ -779,7 +787,7 @@ class WithdrawController {
   async getAllPayOutDataWithRange(req, res, next) {
     try {
       checkValidation(req);
-      let { merchantCode, status, startDate, endDate, method, includeSubMerchant } = req.body;
+      let { merchantCode, vendorCode, status, startDate, endDate, method, includeSubMerchant } = req.body;
 
       if (!merchantCode) {
         merchantCode = [];
@@ -787,56 +795,87 @@ class WithdrawController {
         merchantCode = [merchantCode];
       }
 
-      if(!includeSubMerchant) {
-        let allNewMerchantCodes = [];
-        for (const code of merchantCode) {
-          const merchantData = await merchantRepo.getMerchantByCode(code);
-          if (merchantData) {
-            allNewMerchantCodes = [
-              ...allNewMerchantCodes,
-              ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
-              merchantData.code,
-            ];
-          }
-        }
+      if (!vendorCode) {
+        vendorCode = [];
+      } else if (typeof vendorCode === "string") {
+        vendorCode = [vendorCode];
+      }
 
+      if (vendorCode) {
         const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
-          allNewMerchantCodes,
+          merchantCode = [],
           status,
           startDate,
           endDate,
-          method
+          method,
+          vendorCode,
         );
         logger.info('Get all payout with range', {
           status: payOutDataRes.status,
           // data: payOutDataRes.data,
         })
-  
+
         return DefaultResponse(
           res,
           200,
           "Payout data fetched successfully",
           payOutDataRes
         );
-      } else {
-        const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
-          merchantCode,
-          status,
-          startDate,
-          endDate,
-          method
-        );
-        logger.info('Get all payout with range', {
-          status: payOutDataRes.status,
-          // data: payOutDataRes.data,
-        })
-  
-        return DefaultResponse(
-          res,
-          200,
-          "Payout data fetched successfully",
-          payOutDataRes
-        );
+      }
+      else {
+        if (!includeSubMerchant) {
+          let allNewMerchantCodes = [];
+          for (const code of merchantCode) {
+            const merchantData = await merchantRepo.getMerchantByCode(code);
+            if (merchantData) {
+              allNewMerchantCodes = [
+                ...allNewMerchantCodes,
+                ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+                merchantData.code,
+              ];
+            }
+          }
+
+          const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
+            allNewMerchantCodes,
+            status,
+            startDate,
+            endDate,
+            method,
+            vendorCode = [],
+          );
+          logger.info('Get all payout with range', {
+            status: payOutDataRes.status,
+            // data: payOutDataRes.data,
+          })
+
+          return DefaultResponse(
+            res,
+            200,
+            "Payout data fetched successfully",
+            payOutDataRes
+          );
+        } else {
+          const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
+            merchantCode,
+            status,
+            startDate,
+            endDate,
+            method,
+            vendorCode = [],
+          );
+          logger.info('Get all payout with range', {
+            status: payOutDataRes.status,
+            // data: payOutDataRes.data,
+          })
+
+          return DefaultResponse(
+            res,
+            200,
+            "Payout data fetched successfully",
+            payOutDataRes
+          );
+        }
       }
     } catch (error) {
       logger.info(error);

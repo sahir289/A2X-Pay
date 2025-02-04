@@ -87,76 +87,82 @@ class PayInController {
         throw new CustomError(404, "Bank Account has not been linked with Merchant");
       }
 
-      if (!merchant_order_id && ot) {
-        payInData = {
-          code: code,
-          amount,
-          api_key: getMerchantApiKeyByCode?.api_key,
-          merchant_order_id: uuidv4(),
-          user_id: user_id,
-          return_url: returnUrl ? returnUrl : getMerchantApiKeyByCode?.return_url,
-          // isTest:isTest
-        };
-        // Uncomment and use your service to generate PayIn URL
-        const generatePayInUrlRes = await payInServices.generatePayInUrl(
-          getMerchantApiKeyByCode,
-          payInData,
-          bankAccountLinkRes[0] // to add the bank_id when url is generated from api
-        );
-        let updateRes;
-        if (isTest && (isTest === 'true' || isTest === true)) {
-          updateRes = {
-            expirationDate: generatePayInUrlRes?.expirationDate,
-            payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}?t=true`, // use env
-            payInId: generatePayInUrlRes?.id,
-            merchantOrderId: merchant_order_id,
+      const merchantOrderIdPayinData = merchant_order_id ? await payInRepo.getPayInDataByMerchantOrderId(merchant_order_id) : "";
+      if (merchantOrderIdPayinData || merchantOrderIdPayinData?.length > 0) {
+        throw new CustomError(400, "Merchant Order ID already exists");
+      }
+      else {
+        if (!merchant_order_id && ot) {
+          payInData = {
+            code: code,
+            amount,
+            api_key: getMerchantApiKeyByCode?.api_key,
+            merchant_order_id: uuidv4(),
+            user_id: user_id,
+            return_url: returnUrl ? returnUrl : getMerchantApiKeyByCode?.return_url,
+            // isTest:isTest
           };
+          // Uncomment and use your service to generate PayIn URL
+          const generatePayInUrlRes = await payInServices.generatePayInUrl(
+            getMerchantApiKeyByCode,
+            payInData,
+            bankAccountLinkRes[0] // to add the bank_id when url is generated from api
+          );
+          let updateRes;
+          if (isTest && (isTest === 'true' || isTest === true)) {
+            updateRes = {
+              expirationDate: generatePayInUrlRes?.expirationDate,
+              payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}?t=true`, // use env
+              payInId: generatePayInUrlRes?.id,
+              merchantOrderId: merchant_order_id,
+            };
+          } else {
+            updateRes = {
+              expirationDate: generatePayInUrlRes?.expirationDate,
+              payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
+              payInId: generatePayInUrlRes?.id,
+              merchantOrderId: merchant_order_id,
+
+            };
+          }
+
+          if (ot === "y") {
+            return DefaultResponse(
+              res,
+              200,
+              "Payment is assigned & url is sent successfully",
+              updateRes
+            );
+          } else {
+            res.redirect(302, updateRes?.payInUrl);
+          }
         } else {
-          updateRes = {
+          payInData = {
+            code,
+            merchant_order_id,
+            user_id,
+            amount,
+            return_url: returnUrl ? returnUrl : getMerchantApiKeyByCode?.return_url,
+          };
+
+          const generatePayInUrlRes = await payInServices.generatePayInUrl(
+            getMerchantApiKeyByCode,
+            payInData,
+            bankAccountLinkRes[0] // to add the bank_id when url is generated from api
+          );
+          const updateRes = {
             expirationDate: generatePayInUrlRes?.expirationDate,
             payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
             payInId: generatePayInUrlRes?.id,
             merchantOrderId: merchant_order_id,
-
           };
-        }
-
-        if (ot === "y") {
           return DefaultResponse(
             res,
             200,
             "Payment is assigned & url is sent successfully",
             updateRes
           );
-        } else {
-          res.redirect(302, updateRes?.payInUrl);
         }
-      } else {
-        payInData = {
-          code,
-          merchant_order_id,
-          user_id,
-          amount,
-          return_url: returnUrl ? returnUrl : getMerchantApiKeyByCode?.return_url,
-        };
-
-        const generatePayInUrlRes = await payInServices.generatePayInUrl(
-          getMerchantApiKeyByCode,
-          payInData,
-          bankAccountLinkRes[0] // to add the bank_id when url is generated from api
-        );
-        const updateRes = {
-          expirationDate: generatePayInUrlRes?.expirationDate,
-          payInUrl: `${config.reactPaymentOrigin}/transaction/${generatePayInUrlRes?.id}`, // use env
-          payInId: generatePayInUrlRes?.id,
-          merchantOrderId: merchant_order_id,
-        };
-        return DefaultResponse(
-          res,
-          200,
-          "Payment is assigned & url is sent successfully",
-          updateRes
-        );
       }
     } catch (err) {
       // Handle errors and pass them to the next middleware
@@ -500,7 +506,7 @@ class PayInController {
         throw new CustomError(404, "Payment does not exist");
       }
 
-      if (getPayInData?.is_url_expires === true) {
+      if (getPayInData?.is_url_expires === true && getPayInData?.method !== 'CashFree') {
         throw new CustomError(400, "Url is already used");
       }
 
@@ -1089,11 +1095,19 @@ class PayInController {
         body: JSON.stringify({
           order_amount: amount,
           order_currency: "INR",
-          order_id: getPayInData.merchant_order_id,
-          order_meta: { notify_url: "https://hello.com" },
+          order_id: getPayInData.id,
           customer_details: {
             customer_id: getPayInData.user_id,
             customer_phone: "9898900909",
+          },
+          order_meta: {
+            payment_method: ["upi"], 
+            display_name: "Payment Gateway", 
+            notify_url: "https://hello.com", 
+            theme: {
+              color: "#FFFFFF", 
+              background_color: "#2C86FF" 
+            }
           },
         }),
       };
@@ -1101,77 +1115,69 @@ class PayInController {
       try {
         const response = await fetch(createOrderUrl, optionsToCreateOrder);
         cashfreeResponse = await response.json();
-        console.log(cashfreeResponse, "cashfreeResponseCashfreeResponse")
         logger.info('cashfree order created Successfully');
       } catch (err) {
-        console.error('Error:', err);
         logger.error('getting error while creating order', err);
       }
-      const now = new Date();
-      now.setUTCMinutes(now.getUTCMinutes() + 5);
-      const istOffset = 5.5 * 60;
-      const startTime = new Date(now.getTime() + istOffset * 60000);
-      const endTime = new Date(startTime.getTime() + 5 * 60000);
-      const approveTime = new Date(startTime.getTime() + 1 * 60000);
+      // const now = new Date();
+      // now.setUTCMinutes(now.getUTCMinutes() + 5);
+      // const istOffset = 5.5 * 60;
+      // const startTime = new Date(now.getTime() + istOffset * 60000);
+      // const endTime = new Date(startTime.getTime() + 5 * 60000);
+      // const approveTime = new Date(startTime.getTime() + 1 * 60000);
 
-      const payOrderUrl = config.cashfreePayOrderUrl;
-      const optionsToOrderPay = {
-        method: 'POST',
-        headers: {
-          'x-api-version': '2025-01-01',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          payment_method: {
-            upi: {
-              channel: "link",
-              authorization: {
-                start_time: startTime,
-                end_time: endTime,
-                approve_by: approveTime
-              },
-              authorize_only: false,
-              upi_expiry_minutes: 5,
-              // upi_id: "testsuccess@gocash",
-              upi_redirect_url: true
-            }
-          },
-          payment_session_id: cashfreeResponse.payment_session_id,
-        })
-      };
+      // const payOrderUrl = config.cashfreePayOrderUrl;
+      // const optionsToOrderPay = {
+      //   method: 'POST',
+      //   headers: {
+      //     'x-api-version': '2025-01-01',
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({
+      //     payment_method: {
+      //       upi: {
+      //         channel: "link",
+      //         authorization: {
+      //           start_time: startTime,
+      //           end_time: endTime,
+      //           approve_by: approveTime
+      //         },
+      //         authorize_only: false,
+      //         upi_expiry_minutes: 5,
+      //         // upi_id: "testsuccess@gocash",
+      //         upi_redirect_url: true
+      //       }
+      //     },
+      //     payment_session_id: cashfreeResponse.payment_session_id,
+      //   })
+      // };
 
 
-      let payOrderResponse;
-      try {
-        const orderPay = await fetch(payOrderUrl, optionsToOrderPay);
-        payOrderResponse = await orderPay.json();
-        console.log(payOrderResponse, "payOrderResponse")
-        logger.info('cashfree pay order links generated Successfully');
-      } catch (err) {
-        console.error('Error:', err);
-        logger.error('getting error while generating pay order links', err);
-      }
+      // let payOrderResponse;
+      // try {
+        // const orderPay = await fetch(payOrderUrl, optionsToOrderPay);
+        // payOrderResponse = await orderPay.json();
+        // console.log(payOrderResponse, "payOrderResponse")
+      //   logger.info('cashfree pay order links generated Successfully');
+      // } catch (err) {
+      //   console.error('Error:', err);
+      //   logger.error('getting error while generating pay order links', err);
+      // }
 
-      const payInData = {
-        status: payOrderResponse.cf_payment_id ? "PENDING" : 'FAILED',
-      };
+      // const payInData = {
+      //   status: payOrderResponse.cf_payment_id ? "PENDING" : 'FAILED',
+      // };
 
-      const updatePayinRes = await payInRepo.updatePayInData(
-        payInId,
-        payInData
-      );
+      // const updatePayinRes = await payInRepo.updatePayInData(
+      //   payInId,
+      //   payInData
+      // );
 
       const response = {
-        status: updatePayinRes?.status,
         payment_amount: amount,
         payment_session_id: cashfreeResponse.payment_session_id,
-        merchant_order_id: updatePayinRes?.merchant_order_id,
         payin_id: payInId,
-        cf_payment_id: payOrderResponse.cf_payment_id,
-        payment_method: payOrderResponse.payment_method,
-        data: payOrderResponse.data,
       };
-
       return DefaultResponse(res, 200, 'Payment initiated successfully', response);
 
     } catch (error) {
@@ -1182,47 +1188,45 @@ class PayInController {
 
   async payInUpdateCashfreeWebhook(req, res, next) {
     const payload = req.body;
-    res.sendStatus(200);
+    res.json({status: 200, message: 'Cashfree Webhook Called successfully'});
     try {
-      console.log(payload, "payloadpayload");
-
-      const payInDataByMerchantOrderId = await payInRepo.getPayInDataByMerchantOrderId(payload.data.order_id);
-      if (!payInDataByMerchantOrderId) {
+      const payInDataById = await payInRepo.getPayInData(payload.data.order.order_id);
+      if (!payInDataById) {
         logger.error('Payment not found');
       }
 
-      const durMs = new Date() - payInDataByMerchantOrderId.createdAt;
+      const durMs = new Date() - payInDataById.createdAt;
       const durSeconds = Math.floor((durMs / 1000) % 60).toString().padStart(2, '0');
       const durMinutes = Math.floor((durSeconds / 60) % 60).toString().padStart(2, '0');
       const durHours = Math.floor((durMinutes / 60) % 24).toString().padStart(2, '0');
       const duration = `${durHours}:${durMinutes}:${durSeconds}`;
 
-      if (payload.data.payment_status === 'FAILED' || payload.data.payment_status === 'USER_DROPPED') {
-        logger.info('Payment Failed due to:', data.payment.payment_message);
+      if (payload.data.payment.payment_status === 'FAILED' || payload.data.payment.payment_status === 'USER_DROPPED') {
+        logger.info('Payment Failed due to:', payload.data.payment.payment_message);
       }
 
       const payInData = {
-        confirmed: payload.data.order_amount,
-        amount: payload.data.order_amount,
-        status: payload.data.payment_status === 'USER_DROPPED' ? 'DROPPED' : payload.data.payment_status,
-        utr: payload.data.cf_payment_id,
-        user_submitted_utr: payload.data.cf_payment_id,
+        confirmed: payload.data.order.order_amount,
+        amount: payload.data.order.order_amount,
+        status: payload.data.payment.payment_status === 'USER_DROPPED' ? 'DROPPED' : payload.data.payment.payment_status,
+        utr: payload.data.payment.bank_reference,
+        user_submitted_utr: payload.data.payment.bank_reference,
         approved_at: new Date(),
         is_url_expires: true,
         user_submitted_image: null,
         duration: duration,
         method: 'CashFree',
+        is_notified: true
       }
 
       const updatePayinRes = await payInRepo.updatePayInData(
-        payInId,
+        payInDataById.id,
         payInData
       );
-
       const notifyData = {
         status: updatePayinRes?.status,
         merchantOrderId: updatePayinRes?.merchant_order_id,
-        payinId: payInId,
+        payinId: payInDataById.id,
         amount: updatePayinRes?.confirmed,
         req_amount: amount,
         utr_id: (updatePayinRes?.status === "SUCCESS" || updatePayinRes?.status === "DISPUTE") ? updatePayinRes?.utr : ""
@@ -1240,10 +1244,8 @@ class PayInController {
       } catch (error) {
         logger.error("Error sending notification:", error);
       }
-      return DefaultResponse(res, 200, "data received from cashfree webhook successfully");
     } catch (error) {
       logger.error("Error in getting response from cashfree webhook:", error);
-      next(error);
     }
   }
 
@@ -1267,6 +1269,7 @@ class PayInController {
         bank,
         method,
         filterToday,
+        loggedInUserRole,
       } = req.query;
       const page = parseInt(req.query.page) || 1;
       const pageSize = parseInt(req.query.pageSize) || 20;
@@ -1292,7 +1295,8 @@ class PayInController {
         status,
         bank,
         method,
-        filterTodayBool
+        filterTodayBool,
+        loggedInUserRole,
       );
 
       return DefaultResponse(
@@ -1884,15 +1888,9 @@ class PayInController {
 
       if (vendorCode == null) {
         vendorCode = [];
+      } else if (typeof vendorCode === "string") {
+        vendorCode = [vendorCode];
       }
-
-      // const vendorCodes = Array.isArray(vendorCode)
-      //   ? vendorCode
-      //   : vendorCode.split(',');
-
-      // if (vendorCodes.length === 0) {
-      //   return res.status(400).json({ error: 'No merchant codes provided' });
-      // }
 
       const payInDataRes = await payInServices.getVendorsNetBalance(
         vendorCode
@@ -1941,10 +1939,7 @@ class PayInController {
   async getAllPayInDataWithRange(req, res, next) {
     try {
       checkValidation(req);
-      let { merchantCode,method, status, startDate, endDate, includeSubMerchant } = req.body;
-
-      // const start = new Date(startDate);
-      // const end = new Date(endDate);
+      let { merchantCode, vendorCode, status, method, startDate, endDate, includeSubMerchant } = req.body;
 
       if (!merchantCode) {
         merchantCode = [];
@@ -1952,112 +1947,69 @@ class PayInController {
         merchantCode = [merchantCode];
       }
 
-      // let allNewMerchantCodes = merchantCode;
-      // if (!includeSubMerchant) {
-      //   allNewMerchantCodes = [];
-      //   for (const code of merchantCode) {
-      //     const merchantData = await merchantRepo.getMerchantByCode(code);
-      //     if (merchantData) {
-      //       allNewMerchantCodes = [
-      //         ...allNewMerchantCodes,
-      //         ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
-      //         merchantData.code,
-      //       ];
-      //     }
-      //   }
-      // }
+      if (!vendorCode) {
+        vendorCode = [];
+      } else if (typeof vendorCode === "string") {
+        vendorCode = [vendorCode];
+      }
 
-      // console.log(allNewMerchantCodes, "allNewMerchantCodes")
+      if (vendorCode) {
+        const payInDataRes = await payInServices.getAllPayInDataWithRangeByVendor(
+          vendorCode,
+          status,
+          startDate,
+          endDate
+        );
 
-      // const chunkSize = 7;
-      // let currentDate = new Date(start);
-      // let allPayInData = [];
-      // let iterationCount = 0;
-      // console.log(allPayInData, "allPayInData")
-
-      // while (currentDate < end) {
-      // iterationCount++;
-
-      // if (iterationCount > 100) {
-      //   console.error("Too many iterations, possible infinite loop. Exiting.");
-      //   break;
-      // }
-      // const chunkEndDate = new Date(currentDate);
-      // chunkEndDate.setDate(chunkEndDate.getDate() + chunkSize);
-      // if (chunkEndDate > end) {
-      //   chunkEndDate = new Date(end);
-      // }
-
-      // try {
-      //   const payInDataRes = await payInServices.getAllPayInDataWithRange(
-      //     allNewMerchantCodes,
-      //     status,
-      //     startDate,
-      //     endDate
-      //   );
-      //   console.log("Data fetched for range:", currentDate, chunkEndDate);
-      //   allPayInData = [...allPayInData, ...payInDataRes];
-      //   console.log("allPayInData length:", allPayInData.length);
-
-      // } catch (error) {
-      //   console.error("Error fetching payIn data for range:", currentDate, chunkEndDate, error);
-      //   // break;
-      // }
-
-      // currentDate = new Date(chunkEndDate);
-      // currentDate.setDate(currentDate.getDate() + 1);
-      // }
-      // console.log("Exited the loop, allPayInData:", allPayInData.length);
-
-      // // Send the response once all data is fetched
-      // return DefaultResponse(
-      //   res,
-      //   200,
-      //   "PayIn data fetched successfully",
-      //   allPayInData
-      // );
-
-      if (!includeSubMerchant) {
-        let allNewMerchantCodes = [];
-        for (const code of merchantCode) {
-          const merchantData = await merchantRepo.getMerchantByCode(code);
-          if (merchantData) {
-            allNewMerchantCodes = [
-              ...allNewMerchantCodes,
-              ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
-              merchantData.code,
-            ];
+        return DefaultResponse(
+          res,
+          200,
+          "PayIn data fetched successfully",
+          payInDataRes
+        );
+      }
+      else {
+        if (!includeSubMerchant) {
+          let allNewMerchantCodes = [];
+          for (const code of merchantCode) {
+            const merchantData = await merchantRepo.getMerchantByCode(code);
+            if (merchantData) {
+              allNewMerchantCodes = [
+                ...allNewMerchantCodes,
+                ...(Array.isArray(merchantData.child_code) ? merchantData.child_code : []),
+                merchantData.code,
+              ];
+            }
           }
+          const payInDataRes = await payInServices.getAllPayInDataWithRange(
+            allNewMerchantCodes,
+            status,
+            method,
+            startDate,
+            endDate
+          );
+  
+          return DefaultResponse(
+            res,
+            200,
+            "PayIn data fetched successfully",
+            payInDataRes
+          );
+        } else {
+          const payInDataRes = await payInServices.getAllPayInDataWithRange(
+            merchantCode,
+            status,
+            startDate,
+            endDate
+          );
+  
+          return DefaultResponse(
+            res,
+            200,
+            "PayIn data fetched successfully",
+            payInDataRes
+          );
         }
-        const payInDataRes = await payInServices.getAllPayInDataWithRange(
-          allNewMerchantCodes,
-          method,
-          status,
-          startDate,
-          endDate
-        );
-
-        return DefaultResponse(
-          res,
-          200,
-          "PayIn data fetched successfully",
-          payInDataRes
-        );
-      } else {
-        const payInDataRes = await payInServices.getAllPayInDataWithRange(
-          merchantCode,
-          method,
-          status,
-          startDate,
-          endDate
-        );
-
-        return DefaultResponse(
-          res,
-          200,
-          "PayIn data fetched successfully",
-          payInDataRes
-        );
       }
     } catch (error) {
       logger.error("Error in fetching pay-in data with range:", error);
@@ -4887,20 +4839,20 @@ class PayInController {
       checkValidation(req);
       const { id } = req.params;
       const { type } = req.body;
-  
+
       let updatePayInOutRes;
       let notifyData;
       let notifyUrl;
-  
+
       if (type === "payin") {
         const updatePayInData = { is_notified: true };
-  
+
         updatePayInOutRes = await payInRepo.updatePayInData(id, updatePayInData);
-  
+
         if (!updatePayInOutRes) {
           throw new Error("Payin data not found.");
         }
-  
+
         notifyData = {
           status: updatePayInOutRes.status,
           merchantOrderId: updatePayInOutRes.merchant_order_id,
@@ -4911,17 +4863,17 @@ class PayInController {
         notifyUrl = updatePayInOutRes.notify_url;
       } else if (type === "payout") {
         updatePayInOutRes = await withdrawService.getWithdrawById(id);
-  
+
         if (!updatePayInOutRes) {
           throw new Error("Payout data not found.");
         }
-  
+
         const merchant = await merchantRepo.getMerchantById(updatePayInOutRes.merchant_id);
-  
+
         if (!merchant || !merchant.payout_notify_url) {
           throw new Error("Merchant or payout notify URL not found.");
         }
-  
+
         notifyData = {
           code: updatePayInOutRes.code,
           merchantOrderId: updatePayInOutRes.merchant_order_id,
@@ -4934,7 +4886,7 @@ class PayInController {
       } else {
         throw new Error("Invalid notification type.");
       }
-  
+
       // Notify the merchant
       try {
         logger.info("Sending notification to merchant", { notify_url: notifyUrl, notify_data: notifyData });
@@ -4946,7 +4898,7 @@ class PayInController {
       } catch (error) {
         logger.error("Error while sending notification", error);
       }
-  
+
       return DefaultResponse(res, 200, "Payment notified successfully");
     } catch (error) {
       logger.error("Error while updating payment notification status", error);

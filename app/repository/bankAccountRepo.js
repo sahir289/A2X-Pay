@@ -186,7 +186,7 @@ class BankAccountRepo {
     }
   }
 
-  async getAllBankAccounts(query) {
+  async getAllBankAccounts(query, user) {
     const {
       ac_no,
       ac_name,
@@ -219,9 +219,19 @@ class BankAccountRepo {
       ...(ac_name && { ac_name: { contains: ac_name, mode: "insensitive" } }),
       ...(upi_id && { upi_id: { contains: upi_id, mode: "insensitive" } }),
       ...(bank_used_for && { bank_used_for }),
-      ...(role !== "ADMIN" && code && { code }),
+      ...(user.loggedInUserRole !== "ADMIN" && code && { code }),
       ...(vendor_code && { vendor_code }),
     };
+
+    const extraQuery = user.loggedInUserRole !== 'VENDOR' ? {
+      include: {
+        Merchant_Bank: {
+          include: {
+            merchant: true,
+          },
+        },
+      }
+    } : {};
 
     try {
       const [bankAccRes, totalRecords] = await Promise.all([
@@ -233,13 +243,7 @@ class BankAccountRepo {
             { is_enabled: "desc" },
             { updatedAt: "desc" },
           ],
-          include: {
-            Merchant_Bank: {
-              include: {
-                merchant: true,
-              },
-            },
-          },
+          ...extraQuery,
         }),
         prisma.bankAccount.count({ where: filter }),
       ]);
@@ -249,21 +253,54 @@ class BankAccountRepo {
         bankAccRes.map(async (bank) => {
           const transformedBank = {
             ...bank,
-            merchants: bank.Merchant_Bank.map(
-              (merchantBank) => merchantBank.merchant
-            ),
           };
+
           delete transformedBank.Merchant_Bank;
+          transformedBank.merchants = user.loggedInUserRole !== 'VENDOR' ?
+            bank.Merchant_Bank.map((merchantBank) => merchantBank.merchant) :
+            [];
 
           if (bank.bank_used_for === "payIn") {
-            transformedBank.payInData = await prisma.payin.findMany({
+            // Fetch all is_used: true entries (these take priority)
+            const usedEntries = await prisma.telegramResponse.findMany({
               where: {
-                status: "SUCCESS",
-                bank_acc_id: bank.id,
-                approved_at: dateFilter,
+                bankName: bank.ac_name,
+                createdAt: dateFilter,
+                is_used: true,
               },
-              orderBy: { approved_at: "desc" },
+              orderBy: { createdAt: "desc" },
             });
+
+            // Extract UTRs from is_used: true entries
+            const usedUtrs = new Set(usedEntries.map(entry => entry.utr));
+
+            // Fetch oldest is_used: false entries per UTR, but only for UTRs not in usedUtrs
+            const unusedEntries = await prisma.telegramResponse.groupBy({
+              by: ["utr"], // Group by UTR
+              where: {
+                bankName: bank.ac_name,
+                createdAt: dateFilter,
+                is_used: false,
+                NOT: { utr: { in: Array.from(usedUtrs) } }, // Exclude UTRs already in is_used: true
+              },
+              _min: { createdAt: true }, // Get oldest createdAt for each UTR
+            });
+
+            // Fetch the actual records using the oldest timestamps
+            const oldestUnusedEntries = await Promise.all(
+              unusedEntries.map(async (entry) => {
+                return prisma.telegramResponse.findFirst({
+                  where: {
+                    utr: entry.utr, // Get entry with this UTR
+                    createdAt: entry._min.createdAt, // Ensure it's the oldest one
+                    is_used: false,
+                  },
+                });
+              })
+            );
+
+            // Merge the results
+            transformedBank.payInData = [...usedEntries, ...oldestUnusedEntries.filter(Boolean)];
           } else {
             transformedBank.payOutData = await prisma.payout.findMany({
               where: {
@@ -287,6 +324,7 @@ class BankAccountRepo {
         },
       };
     } catch (error) {
+      console.log(error);
       logger.info("Error processing bank accounts:", error);
     }
   }

@@ -193,8 +193,7 @@ class BankAccountController {
     try {
       checkValidation(req);
       const query = req.query;
-
-      const bankAccountRes = await bankAccountRepo.getAllBankAccounts(query);
+      const bankAccountRes = await bankAccountRepo.getAllBankAccounts(query, req.user);
 
       return DefaultResponse(
         res,
