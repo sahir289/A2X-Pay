@@ -320,6 +320,7 @@ class ReportRepo {
                     FROM Public."TelegramResponse" tr
                     JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
                     WHERE tr.is_used = true
+                    AND tr.status = '/success'
                     AND DATE(tr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
                     AND ba."vendor_code" IN (${vendorCodesList})
                 ),
@@ -328,6 +329,7 @@ class ReportRepo {
                     FROM Public."TelegramResponse" tr
                     JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
                     WHERE tr.is_used = false
+                    AND tr.status = '/success'
                     AND DATE(tr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
                     AND tr.utr NOT IN (SELECT utr FROM used_entries)
                     AND ba."vendor_code" IN (${vendorCodesList})
@@ -340,6 +342,7 @@ class ReportRepo {
                     FROM Public."TelegramResponse" tr
                     JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
                     WHERE tr.is_used = true
+                    AND tr.status = '/success'
                     AND DATE(tr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
                     UNION ALL
                     SELECT b1.utr, b1."bankName", b1."amount", b1."vendor_code", b1."approved_date", 0 AS "commission", 'Payin' AS "type"
