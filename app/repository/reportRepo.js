@@ -319,34 +319,16 @@ class ReportRepo {
                     SELECT tr.utr, tr."bankName", tr."amount", ba."vendor_code", tr."createdAt" AS "approved_date"
                     FROM Public."TelegramResponse" tr
                     JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
-                    WHERE tr.is_used = true
-                    AND tr.status = '/success'
+                    WHERE tr.status = '/success'
                     AND DATE(tr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
                     AND ba."vendor_code" IN (${vendorCodesList})
-                ),
-                unused_entries AS (
-                    SELECT tr.utr, tr."bankName", tr."amount", ba."vendor_code", tr."createdAt" AS "approved_date"
-                    FROM Public."TelegramResponse" tr
-                    JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
-                    WHERE tr.is_used = false
-                    AND tr.status = '/success'
-                    AND DATE(tr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
-                    AND tr.utr NOT IN (SELECT utr FROM used_entries)
-                    AND ba."vendor_code" IN (${vendorCodesList})
-                ),
-                batch_1 AS (
-                    SELECT * FROM unused_entries
                 ),
                 unified_data AS (
                     SELECT tr.utr, tr."bankName", tr."amount", ba."vendor_code", tr."createdAt" AS "approved_date", 0 AS "commission", 'Payin' AS "type"
                     FROM Public."TelegramResponse" tr
                     JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
-                    WHERE tr.is_used = true
-                    AND tr.status = '/success'
+                    WHERE tr.status = '/success'
                     AND DATE(tr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
-                    UNION ALL
-                    SELECT b1.utr, b1."bankName", b1."amount", b1."vendor_code", b1."approved_date", 0 AS "commission", 'Payin' AS "type"
-                    FROM batch_1 b1
                 ),
                 combined_data AS (
                     SELECT po."approved_at" AS "approved_date", po."vendor_code", po."amount" AS "amount", po."payout_commision" AS "commission", 'Payout' AS "type"
