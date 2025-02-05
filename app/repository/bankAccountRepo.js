@@ -304,11 +304,13 @@ class BankAccountRepo {
           } else {
             transformedBank.payOutData = await prisma.payout.findMany({
               where: {
-                status: "SUCCESS",
+                status: {
+                  in: ["SUCCESS", "REJECTED"],
+                },
                 from_bank: bank.ac_name,
-                approved_at: dateFilter,
+                updatedAt: dateFilter,
               },
-              orderBy: { approved_at: "desc" },
+              orderBy: { updatedAt: "desc" },
             });
           }
           return transformedBank;
