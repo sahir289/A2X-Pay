@@ -94,11 +94,11 @@ class MerchantController {
     try {
       checkValidation(req);
       const { id: userId, loggedInUserRole } = req.user;
-      if(loggedInUserRole !== 'ADMIN'){
-        
-      }
-
       const {merchantCode, page, pageSize} = req.query;
+
+      if(loggedInUserRole !== 'ADMIN' && !merchantCode){
+        throw new CustomError(400, "Not authorized to access")
+      }
       const payload = {
         page, 
         pageSize
@@ -140,9 +140,13 @@ class MerchantController {
   async getAllMerchantsGrouping(req, res, next) {
     try {
       checkValidation(req);
-      const { id: userId } = req.user;
-
+      const { id: userId, loggedInUserRole } = req.user;
       const {merchantCode, page, pageSize} = req.query;
+      
+      if(loggedInUserRole !== 'ADMIN' && !merchantCode){
+        throw new CustomError(400, "Not authorized to access")
+      }
+
       const payload = {
         page, 
         pageSize
