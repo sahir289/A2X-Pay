@@ -545,9 +545,9 @@ class WithdrawController {
       const take = Number(qTake) || 20;
       const skip = take * (Number(page || 1) - 1);
 
-      if(loggedInUserRole !== 'ADMIN' && !code){
-        throw new CustomError(400, "Not authorized to access")
-      }
+      // if(loggedInUserRole !== 'ADMIN' && !code){
+      //   throw new CustomError(400, "Not authorized to access")
+      // }
       
       const data = await withdrawService.getWithdraw(
         skip,

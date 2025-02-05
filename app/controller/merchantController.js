@@ -96,9 +96,9 @@ class MerchantController {
       const { id: userId, loggedInUserRole } = req.user;
       const {merchantCode, page, pageSize} = req.query;
 
-      if(loggedInUserRole !== 'ADMIN' && !merchantCode){
-        throw new CustomError(400, "Not authorized to access")
-      }
+      // if(loggedInUserRole !== 'ADMIN' && !merchantCode){
+      //   throw new CustomError(400, "Not authorized to access")
+      // }
       const payload = {
         page, 
         pageSize
@@ -143,9 +143,9 @@ class MerchantController {
       const { id: userId, loggedInUserRole } = req.user;
       const {merchantCode, page, pageSize} = req.query;
       
-      if(loggedInUserRole !== 'ADMIN' && !merchantCode){
-        throw new CustomError(400, "Not authorized to access")
-      }
+      // if(loggedInUserRole !== 'ADMIN' && !merchantCode){
+      //   throw new CustomError(400, "Not authorized to access")
+      // }
 
       const payload = {
         page, 
