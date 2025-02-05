@@ -450,6 +450,31 @@ class BankAccountRepo {
       logger.info(`Error updating bank details for ID: ${data.id}`, error);
     }
   }
+
+  async getPayoutBankReport(data) {
+    try {
+      const bankRes = await prisma.payout.findMany({
+        where: {
+          from_bank: data.bankName,
+          status: {
+            in: ["SUCCESS", "REJECTED"],
+          },
+          updatedAt: {
+            gte: new Date(data.startDate),
+            lte: new Date(data.endDate),
+          },
+          approved_at: {
+            not: null
+          }
+        },
+      });
+
+      return bankRes;
+    } catch (error) {
+      console.log(error)
+      logger.info(`Error fetching payout bank details`, error);
+    }
+  }
 }
 
 export default new BankAccountRepo();
