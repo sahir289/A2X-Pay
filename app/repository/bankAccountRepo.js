@@ -266,10 +266,7 @@ class BankAccountRepo {
                 SELECT utr, status, "bankName", "amount", "createdAt"
                 FROM Public."TelegramResponse"
                 WHERE status = '/success'
-                AND "bankName" IN (
-                  SELECT ac_name
-                  FROM Public."BankAccount"
-                )
+                AND "bankName" = '${transformedBank.ac_name}'
                 AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
               )
       
