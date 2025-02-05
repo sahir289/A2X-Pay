@@ -178,38 +178,21 @@ class BotResponseRepo {
 
   async getBankRecordsByBankName(bankName, startDate, endDate) {
     try {
-      // Initialize dateFilter object
-      const dateFilter = {};
+      const res = await prisma.$queryRawUnsafe(`
+        WITH used_entries AS (
+          SELECT utr, status, "bankName", "amount", "createdAt"
+          FROM Public."TelegramResponse"
+          WHERE status = '/success'
+          AND "bankName" IN (
+            SELECT ac_name
+            FROM Public."BankAccount"
+          )
+          AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
+        )
 
-      // Validate and parse startDate and endDate
-      if (startDate) {
-        const parsedStartDate = new Date(startDate);
-        if (isNaN(parsedStartDate)) {
-          throw new Error('Invalid start date');
-        }
-        dateFilter.gte = parsedStartDate;
-      }
-
-      if (endDate) {
-        const parsedEndDate = new Date(endDate);
-        if (isNaN(parsedEndDate)) {
-          throw new Error('Invalid end date');
-        }
-        dateFilter.lte = parsedEndDate;
-      }
-
-      // Query the records with the specified filters
-      const res = await prisma.telegramResponse.findMany({
-        where: {
-          bankName: bankName,
-          createdAt: dateFilter,
-        },
-      });
-
-      // Handle the case where no records are found
-      if (!res || res.length === 0) {
-        throw new Error('No records found for the given criteria');
-      }
+        -- Combine used entries and unused entries
+        SELECT * FROM used_entries
+      `);
 
       return res;
     } catch (error) {
