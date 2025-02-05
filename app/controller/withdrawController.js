@@ -539,8 +539,16 @@ class WithdrawController {
         acc_holder_name,
         includeSubMerchant,
       } = req.query;
+
+      const {loggedInUserRole} = req.user;
+
       const take = Number(qTake) || 20;
       const skip = take * (Number(page || 1) - 1);
+
+      if(loggedInUserRole !== 'ADMIN' && !code){
+        throw new CustomError(400, "Not authorized to access")
+      }
+      
       const data = await withdrawService.getWithdraw(
         skip,
         take,
@@ -559,7 +567,7 @@ class WithdrawController {
         utr_id,
         acc_holder_name,
         includeSubMerchant,
-        req.user.loggedInUserRole,
+        loggedInUserRole
       );
       logger.info('Get All Payout', {
         status: data.status,
