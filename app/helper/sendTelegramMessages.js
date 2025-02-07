@@ -384,13 +384,24 @@ export async function sendTelegramDashboardReportMessage(
 
   const formattedTime = `${startHour}${startAmpm}-${endHour}${endAmpm}`;
   const timeStamp = type === "Hourly Report" ? formattedTime : currentDate;
+
+  const excludeList = ["anna247", "anna777"];
+
+  const filteredPayIns = formattedPayIns.filter(
+    (item) => !excludeList.some((excluded) => item.startsWith(excluded))
+  );
+
+  const filteredPayOuts = formattedPayOuts.filter(
+    (item) => !excludeList.some((excluded) => item.startsWith(excluded))
+  );
+
   const message = `
 <b>${type} (${timeStamp}) IST</b>
 
 <b>💰 Deposits</b>
 ${
-  formattedPayIns.length > 0
-    ? formattedPayIns.join("\n")
+  filteredPayIns.length > 0
+    ? filteredPayIns.join("\n")
     : "No deposits available."
 }
 
@@ -398,8 +409,8 @@ ${
 
 <b>🏦 Withdrawals</b>
 ${
-  formattedPayOuts.length > 0
-    ? formattedPayOuts.join("\n")
+  filteredPayOuts.length > 0
+    ? filteredPayOuts.join("\n")
     : "No withdrawals available."
 }
 
@@ -473,13 +484,24 @@ export async function sendTelegramDashboardMerchantGroupingReportMessage(
 
   const formattedTime = `${startHour}${startAmpm}-${endHour}${endAmpm}`;
   const timeStamp = type === "Hourly Report" ? formattedTime : currentDate;
+
+  const excludeList = ["anna247", "anna777"];
+
+  const filteredPayIns = formattedPayIns.filter(
+    (item) => !excludeList.some((excluded) => item.startsWith(excluded))
+  );
+
+  const filteredPayOuts = formattedPayOuts.filter(
+    (item) => !excludeList.some((excluded) => item.startsWith(excluded))
+  );
+
   const message = `
 <b>${type} (${timeStamp}) IST</b>
 
 <b>💰 Deposits</b>
 ${
-  formattedPayIns.length > 0
-    ? formattedPayIns.join("\n")
+  filteredPayIns.length > 0
+    ? filteredPayIns.join("\n")
     : "No deposits available."
 }
 
@@ -487,8 +509,8 @@ ${
 
 <b>🏦 Withdrawals</b>
 ${
-  formattedPayOuts.length > 0
-    ? formattedPayOuts.join("\n")
+  filteredPayOuts.length > 0
+    ? filteredPayOuts.join("\n")
     : "No withdrawals available."
 }
 
