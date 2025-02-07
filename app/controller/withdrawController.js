@@ -19,6 +19,7 @@ class WithdrawController {
 
   constructor() {
     this.updateWithdraw = this.updateWithdraw.bind(this);
+    this.updateAllWithdraw = this.updateAllWithdraw.bind(this);
     this.createEkoWithdraw = this.createEkoWithdraw.bind(this);
     this.ekoPayoutStatus = this.ekoPayoutStatus.bind(this);
     this.ekoWalletBalanceEnquiryInternally = this.ekoWalletBalanceEnquiryInternally.bind(this);
