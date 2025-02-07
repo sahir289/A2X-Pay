@@ -737,7 +737,6 @@ class WithdrawController {
     try {
       const ids = req.body.map(item => item.id);      
       const withdrawals = await withdrawService.getWithdrawByIds(ids);
-  console.log(withdrawals, "111");
       if (withdrawals.length === 0) {
         return DefaultResponse(res, 404, "Withdrawals not found.");
       }
