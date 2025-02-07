@@ -179,21 +179,13 @@ class BotResponseRepo {
   async getBankRecordsByBankName(bankName, startDate, endDate) {
     try {
       const res = await prisma.$queryRawUnsafe(`
-        WITH used_entries AS (
-          SELECT utr, status, "bankName", "amount", "createdAt"
-          FROM Public."TelegramResponse"
-          WHERE status = '/success'
-          AND "bankName" IN (
-            SELECT ac_name
-            FROM Public."BankAccount"
-          )
-          AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
-        )
-
-        -- Combine used entries and unused entries
-        SELECT * FROM used_entries
+        SELECT utr, status, "bankName", "amount", "createdAt"
+        FROM Public."TelegramResponse"
+        WHERE status = '/success'
+        AND "bankName" = '${bankName}'
+        AND "bankName" IN (SELECT ac_name FROM Public."BankAccount")
+        AND "createdAt" BETWEEN '${startDate}' AND '${endDate}' 
       `);
-
       return res;
     } catch (error) {
       logger.info('Error fetching bank records by bank name and date range', error);

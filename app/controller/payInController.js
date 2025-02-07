@@ -1899,7 +1899,7 @@ class PayInController {
         vendorCode = [vendorCode];
       }
 
-      if (vendorCode) {
+      if (vendorCode.length > 0) {
         const payInDataRes = await payInServices.getAllPayInDataWithRangeByVendor(
           vendorCode,
           status,

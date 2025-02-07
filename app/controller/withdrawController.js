@@ -809,7 +809,7 @@ class WithdrawController {
         vendorCode = [vendorCode];
       }
 
-      if (vendorCode) {
+      if (vendorCode.length > 0) {
         const payOutDataRes = await withdrawService.getAllPayOutDataWithRange(
           merchantCode = [],
           status,
