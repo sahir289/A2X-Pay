@@ -81,6 +81,12 @@ withdrawRouter.put(
 );
 
 withdrawRouter.put(
+  "/update-all-payout",
+   isAuthenticated,
+  withdrawController.updateAllWithdraw
+);   
+
+withdrawRouter.put(
   "/update-vendor-code",
   updateVendorCodeValidator,
   isAuthenticated,

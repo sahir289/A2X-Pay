@@ -19,6 +19,7 @@ class WithdrawController {
 
   constructor() {
     this.updateWithdraw = this.updateWithdraw.bind(this);
+    this.updateAllWithdraw = this.updateAllWithdraw.bind(this);
     this.createEkoWithdraw = this.createEkoWithdraw.bind(this);
     this.ekoPayoutStatus = this.ekoPayoutStatus.bind(this);
     this.ekoWalletBalanceEnquiryInternally = this.ekoWalletBalanceEnquiryInternally.bind(this);
@@ -720,7 +721,6 @@ class WithdrawController {
           console.error("Error notifying merchant at payout URL:", error.message);
           logger.error("Error notifying merchant at payout URL:", error.message)
 
-          // Call your custom error function if necessary
           new CustomError(400, "Failed to notify merchant about payout"); // Or handle in a different way
         }
       }
@@ -731,6 +731,142 @@ class WithdrawController {
       next(err);
     }
   }
+
+
+  async updateAllWithdraw(req, res, next) {
+    try {
+      const ids = req.body.map(item => item.id);      
+      const withdrawals = await withdrawService.getWithdrawByIds(ids);
+  console.log(withdrawals, "111");
+      if (withdrawals.length === 0) {
+        return DefaultResponse(res, 404, "Withdrawals not found.");
+      }
+  
+      const updatedWithdrawals = [];
+      const payloadMap = new Map();
+  
+      for (const requestPayload of req.body) {
+        if (requestPayload.id) {
+          payloadMap.set(requestPayload.id, requestPayload);
+        }
+      }
+  
+      for (const singleWithdrawData of withdrawals) {
+        const payload = payloadMap.get(singleWithdrawData.id) || {}; 
+  
+        if (payload.utr_id && !payload.status) {
+          payload.status = "SUCCESS";
+          payload.approved_at = new Date();
+        }
+  
+        if (payload.rejected_reason) {
+          payload.status = "REJECTED";
+          payload.rejected_reason = payload.rejected_reason;
+          payload.rejected_at = new Date();
+        }
+  
+        if (payload.status === "INITIATED") {
+          payload.utr_id = "";
+          payload.rejected_reason = "";
+        }
+  
+        if (payload.method === "eko") {
+          try {
+            const client_ref_id = Math.floor(Date.now() / 1000);
+            const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, client_ref_id);
+  
+            if (ekoResponse?.status === 0) {
+              payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() === "SUCCESS" ? "SUCCESS" : "PENDING";
+              payload.approved_at = payload.status === "SUCCESS" ? new Date() : null;
+              payload.utr_id = ekoResponse?.data?.tid;
+              logger.info(`Payment initiated: ${ekoResponse?.message}`);
+            } else {
+              let getEkoPayoutStatus = null;
+              if (ekoResponse.status === 1328) {
+                getEkoPayoutStatus = await this.ekoPayoutStatus(client_ref_id);
+              }
+              payload.status = "REJECTED";
+              payload.rejected_reason = ekoResponse?.message;
+              payload.rejected_at = new Date();
+              payload.utr_id = getEkoPayoutStatus ? getEkoPayoutStatus?.data.tid : null;
+              logger.error(`Payment rejected by eko due to ${ekoResponse?.message}`);
+            }
+          } catch (error) {
+            logger.error("Error processing Eko method:", error);
+          }
+        }
+  
+        if (payload.method === "blazepe") {
+          try {
+            const merchantRefId = generatePrefix(payload?.method);
+            const blazePeResponse = await this.createBlazepeWithdraw(singleWithdrawData, merchantRefId);
+  
+            if (blazePeResponse?.success) {
+              payload.status = "PENDING";
+              payload.utr_id = merchantRefId;
+              logger.info(`New payout with merchantRefId: ${merchantRefId} has been created`);
+            } else {
+              logger.error(`New payout with merchantRefId: ${merchantRefId} failed to initiate`);
+              const getStatus = await this.checkBlazepePayoutStatus(merchantRefId);
+  
+              if (["REFUNDED", "REVERSED"].includes(getStatus?.status)) {
+                payload.status = "REJECTED";
+                payload.rejected_reason = getStatus?.message;
+                payload.rejected_at = new Date();
+              } else if (getStatus?.status === "SUCCESS") {
+                payload.status = "SUCCESS";
+                payload.approved_at = new Date();
+              } else {
+                payload.status = getStatus?.status || "REJECTED";
+                payload.rejected_reason = getStatus?.message;
+                payload.rejected_at = new Date();
+              }
+            }
+          } catch (error) {
+            logger.error("Error processing BlazePe method:", error);
+          }
+        }
+  
+        const data = await withdrawService.updateWithdraw(singleWithdrawData.id, payload);
+        updatedWithdrawals.push(data);
+  
+        if (payload.from_bank) {
+          const bankAccountRes = await bankAccountRepo.getBankNickName(data.from_bank);
+          await bankAccountRepo.updatePayoutBankAccountBalance(bankAccountRes.id, parseFloat(data.amount), payload.status);
+        }
+  
+        const merchant = await merchantRepo.getMerchantById(singleWithdrawData.merchant_id);
+        if (merchant.payout_notify_url) {
+          const merchantPayoutData = {
+            code: merchant.code,
+            merchantOrderId: singleWithdrawData.merchant_order_id,
+            payoutId: singleWithdrawData.id,
+            amount: singleWithdrawData.amount,
+            status: payload.status,
+            utr_id: payload.utr_id || "",
+          };
+  
+          try {
+            logger.info("Sending notification to merchant", { notify_url: merchant.payout_notify_url, notify_data: merchantPayoutData });
+            const response = await axios.post(merchant.payout_notify_url, merchantPayoutData);
+            logger.info("Notification sent successfully", { status: response.status, data: response.data });
+          } catch (error) {
+            logger.error("Error notifying merchant at payout URL:", error.message);
+          }
+        }
+      }
+  
+      return DefaultResponse(res, 200, "Payouts Updated!", updatedWithdrawals);
+    } catch (err) {
+      logger.error(err);
+      next(err);
+    }
+  }
+  
+  
+  
+
+
 
   async updateBlazePePayoutStatus(req, res) {
     try {
