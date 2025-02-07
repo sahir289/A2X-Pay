@@ -84,8 +84,7 @@ withdrawRouter.put(
   "/update-all-payout",
    isAuthenticated,
   withdrawController.updateAllWithdraw
-);   //PUT /update-all-eko-payout/1,2,3,4,5
-
+);   
 
 withdrawRouter.put(
   "/update-vendor-code",

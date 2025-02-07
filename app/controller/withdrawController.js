@@ -721,7 +721,6 @@ class WithdrawController {
           console.error("Error notifying merchant at payout URL:", error.message);
           logger.error("Error notifying merchant at payout URL:", error.message)
 
-          // Call your custom error function if necessary
           new CustomError(400, "Failed to notify merchant about payout"); // Or handle in a different way
         }
       }
@@ -746,18 +745,15 @@ class WithdrawController {
       const updatedWithdrawals = [];
       const payloadMap = new Map();
   
-      // Map the payloads from the request body based on their ids
       for (const requestPayload of req.body) {
         if (requestPayload.id) {
           payloadMap.set(requestPayload.id, requestPayload);
         }
       }
   
-      // Loop over the withdrawals and update them based on the payloads
       for (const singleWithdrawData of withdrawals) {
-        const payload = payloadMap.get(singleWithdrawData.id) || {}; // Get the corresponding payload
+        const payload = payloadMap.get(singleWithdrawData.id) || {}; 
   
-        // Handle different payload conditions (e.g., SUCCESS, REJECTED, INITIATED)
         if (payload.utr_id && !payload.status) {
           payload.status = "SUCCESS";
           payload.approved_at = new Date();
@@ -774,7 +770,6 @@ class WithdrawController {
           payload.rejected_reason = "";
         }
   
-        // Handle method-specific logic (Eko or BlazePe)
         if (payload.method === "eko") {
           try {
             const client_ref_id = Math.floor(Date.now() / 1000);
