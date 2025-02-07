@@ -75,4 +75,10 @@ bankAccountRouter.put(
   isAuthenticated,
   bankAccountController.updateBankAccountDetails
 );
+
+bankAccountRouter.post(
+  "/get-bank-payouts",
+  isAuthenticated,
+  bankAccountController.getPayoutBankReport
+);
 export default bankAccountRouter;
