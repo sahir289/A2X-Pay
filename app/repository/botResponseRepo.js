@@ -179,7 +179,7 @@ class BotResponseRepo {
   async getBankRecordsByBankName(bankName, startDate, endDate) {
     try {
       const res = await prisma.$queryRawUnsafe(`
-        SELECT utr, status, "bankName", "amount", "createdAt"
+        SELECT sno, utr, status, "bankName", "amount_code", "amount", "createdAt", is_used
         FROM Public."TelegramResponse"
         WHERE status = '/success'
         AND "bankName" = '${bankName}'
