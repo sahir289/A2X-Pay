@@ -622,8 +622,9 @@ class WithdrawController {
           const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, client_ref_id);
           if (ekoResponse?.status === 0) {
             // added == instead of ===, due the type of txstatus_desc is not string
-            payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS' ? ekoResponse?.data?.txstatus_desc?.toUpperCase() : 'PENDING';
+            payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS' ? ekoResponse?.data?.txstatus_desc?.toUpperCase() : 'REJECTED';
             payload.approved_at = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS' ? new Date() : null;
+            payload.rejected_at = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS' ? null : new Date();
             payload.utr_id = ekoResponse?.data?.tid;
 
             logger.info(`Payment initiated: ${ekoResponse?.message}`, ekoResponse?.message);
@@ -649,7 +650,8 @@ class WithdrawController {
           const merchantRefId = generatePrefix(req.body?.method);
           const blazePeResponse = await this.createBlazepeWithdraw(singleWithdrawData, merchantRefId);
           if (blazePeResponse?.success === true) {
-            payload.status = 'PENDING';
+            payload.status = 'REJECTED';
+            payload.rejected_at = new Date();
             payload.utr_id = merchantRefId;
             logger.info(`New payout with merchantRefId: ${merchantRefId} has been created`, blazePeResponse?.message);
           } else if (blazePeResponse?.success === false) {
@@ -775,8 +777,9 @@ class WithdrawController {
             const ekoResponse = await this.createEkoWithdraw(singleWithdrawData, client_ref_id);
   
             if (ekoResponse?.status === 0) {
-              payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() === "SUCCESS" ? "SUCCESS" : "PENDING";
+              payload.status = ekoResponse?.data?.txstatus_desc?.toUpperCase() === "SUCCESS" ? "SUCCESS" : "REJECTED";
               payload.approved_at = payload.status === "SUCCESS" ? new Date() : null;
+              payload.rejected_at = ekoResponse?.data?.txstatus_desc?.toUpperCase() == 'SUCCESS' ? null : new Date();
               payload.utr_id = ekoResponse?.data?.tid;
               logger.info(`Payment initiated: ${ekoResponse?.message}`);
             } else {
@@ -801,7 +804,8 @@ class WithdrawController {
             const blazePeResponse = await this.createBlazepeWithdraw(singleWithdrawData, merchantRefId);
   
             if (blazePeResponse?.success) {
-              payload.status = "PENDING";
+              payload.status = "REJECTED";
+              payload.rejected_at = new Date();
               payload.utr_id = merchantRefId;
               logger.info(`New payout with merchantRefId: ${merchantRefId} has been created`);
             } else {
