@@ -56,10 +56,11 @@ class UserController {
             const { id: userId, loggedInUserRole } = req.user
             
             const { name: fullName, userName, role, createdBy } = req.query;
+            const roles = ['ADMIN', 'CUSTOMER_SERVICE', 'TRANSACTIONS', 'OPERATIONS', 'MERCHANT', 'VENDOR', 'VENDOR_OPERATIONS', 'MERCHANT_OPERATIONS', 'MERCHANT_ADMIN']
 
-            // if(loggedInUserRole !== 'ADMIN' && !role){
-            //   throw new CustomError(400, "Not authorized to access")
-            // }
+            if (!roles.includes(loggedInUserRole.toUpperCase())) {
+              throw new CustomError(400, "Not authorized to access");
+            }
 
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 15

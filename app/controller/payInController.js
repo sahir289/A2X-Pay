@@ -1277,9 +1277,12 @@ class PayInController {
       const take = pageSize;
 
       const filterTodayBool = filterToday === "false"; // to check the today entry
-      // if(loggedInUserRole !== 'ADMIN' && !merchantCode[0] || !vendorCode){
-      //   throw new CustomError(400, "Not authorized to access")
-      // }
+      const roles = ['ADMIN', 'CUSTOMER_SERVICE', 'TRANSACTIONS', 'OPERATIONS', 'MERCHANT', 'VENDOR', 'VENDOR_OPERATIONS', 'MERCHANT_OPERATIONS', 'MERCHANT_ADMIN']
+
+      
+      if (!roles.includes(loggedInUserRole.toUpperCase())) {
+        throw new CustomError(400, "Not authorized to access");
+      }
 
       const payInDataRes = await payInServices.getAllPayInData(
         skip,
