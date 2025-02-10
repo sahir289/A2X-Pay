@@ -397,6 +397,26 @@ class BankAccountController {
       next(error);
     }
   }
+
+  async getPayoutBankReport(req, res, next) {
+    try {
+      checkValidation(req);
+      const data = req.body;
+      const bankAccountRes = await bankAccountRepo.getPayoutBankReport(
+        data
+      );
+
+      return DefaultResponse(
+        res,
+        200,
+        "Payout Bank Report Fetched successfully",
+        bankAccountRes
+      );
+    } catch (error) {
+      logger.info(error);
+      next(error);
+    }
+  }
 }
 
 export default new BankAccountController();

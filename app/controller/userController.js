@@ -54,11 +54,17 @@ class UserController {
         try {
             checkValidation(req)
             const { id: userId, loggedInUserRole } = req.user
+            
+            const { name: fullName, userName, role, createdBy } = req.query;
+            const roles = ['ADMIN', 'CUSTOMER_SERVICE', 'TRANSACTIONS', 'OPERATIONS', 'MERCHANT', 'VENDOR', 'VENDOR_OPERATIONS', 'MERCHANT_OPERATIONS', 'MERCHANT_ADMIN']
+
+            if (!roles.includes(loggedInUserRole.toUpperCase())) {
+              throw new CustomError(400, "Not authorized to access");
+            }
 
             const page = parseInt(req.query.page) || 1;
             const pageSize = parseInt(req.query.pageSize) || 15
 
-            const { name: fullName, userName, role, createdBy } = req.query;
             const skip = (page - 1) * pageSize
             const take = pageSize
 
@@ -75,6 +81,7 @@ class UserController {
             next(error)
         }
     }
+
     async updateUser(req, res, next) {
         try {
             checkValidation(req)

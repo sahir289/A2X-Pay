@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["omitApi"]
 }
 
@@ -290,4 +290,6 @@ enum Method {
   CASH
   AED
   CRYPTO
+  INTERNAL_BANK_TRANSFER
+  INTERNAL_QR_TRANSFER
 }

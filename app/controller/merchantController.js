@@ -93,9 +93,14 @@ class MerchantController {
   async getAllMerchants(req, res, next) {
     try {
       checkValidation(req);
-      const { id: userId } = req.user;
-
+      const { id: userId, loggedInUserRole } = req.user;
       const {merchantCode, page, pageSize} = req.query;
+
+      const roles = ['ADMIN', 'CUSTOMER_SERVICE', 'TRANSACTIONS', 'OPERATIONS', 'MERCHANT', 'VENDOR', 'VENDOR_OPERATIONS', 'MERCHANT_OPERATIONS', 'MERCHANT_ADMIN']
+      
+      if (!roles.includes(loggedInUserRole.toUpperCase())) {
+        throw new CustomError(400, "Not authorized to access");
+      }
       const payload = {
         page, 
         pageSize
@@ -137,9 +142,15 @@ class MerchantController {
   async getAllMerchantsGrouping(req, res, next) {
     try {
       checkValidation(req);
-      const { id: userId } = req.user;
-
+      const { id: userId, loggedInUserRole } = req.user;
       const {merchantCode, page, pageSize} = req.query;
+      const roles = ['ADMIN', 'CUSTOMER_SERVICE', 'TRANSACTIONS', 'OPERATIONS', 'MERCHANT', 'VENDOR', 'VENDOR_OPERATIONS', 'MERCHANT_OPERATIONS', 'MERCHANT_ADMIN']
+
+      
+      if (!roles.includes(loggedInUserRole.toUpperCase())) {
+        throw new CustomError(400, "Not authorized to access");
+      }
+
       const payload = {
         page, 
         pageSize

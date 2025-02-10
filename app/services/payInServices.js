@@ -444,36 +444,16 @@ class PayInService {
         WITH used_entries AS (
           SELECT utr, "bankName", "amount"
           FROM Public."TelegramResponse"
-          WHERE is_used = true
+          WHERE status = '/success'
           AND "bankName" IN (
             SELECT ac_name
             FROM Public."BankAccount"
             WHERE vendor_code IN (${vendorCodesList})
           )
-        ),
-
-        unused_entries AS (
-          SELECT utr, "bankName", "amount"
-          FROM Public."TelegramResponse"
-          WHERE is_used = false
-          AND utr NOT IN (SELECT utr FROM used_entries)
-          AND "bankName" IN (
-            SELECT ac_name
-            FROM Public."BankAccount"
-            WHERE vendor_code IN (${vendorCodesList})
-          )
-        ),
-
-        batch_1 AS (
-          SELECT utr, "bankName", "amount"
-          FROM Public."TelegramResponse"
-          WHERE utr IN (SELECT utr FROM unused_entries) AND is_used = false
         )
 
         -- Combine used entries and unused entries
         SELECT * FROM used_entries
-        UNION ALL
-        SELECT * FROM batch_1;
       `);
 
       const payOutData = await prisma.payout.findMany({
@@ -598,46 +578,23 @@ class PayInService {
 
   async getAllPayInDataByVendor(vendorCode, startDate, endDate) {
     try {
-      let dateFilter = {};
       const vendorCodesList = vendorCode.map(vendor_code => `'${vendor_code}'`).join(", ");
 
       const payInData = await prisma.$queryRawUnsafe(`
         WITH used_entries AS (
-          SELECT utr, "bankName", "amount", "createdAt"
+          SELECT utr, status, "bankName", "amount", "createdAt"
           FROM Public."TelegramResponse"
-          WHERE is_used = true
+          WHERE status = '/success'
           AND "bankName" IN (
             SELECT ac_name
             FROM Public."BankAccount"
             WHERE vendor_code IN (${vendorCodesList})
           )
-          AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
-        ),
-
-        unused_entries AS (
-          SELECT utr, "bankName", "amount", "createdAt"
-          FROM Public."TelegramResponse"
-          WHERE is_used = false
-          AND utr NOT IN (SELECT utr FROM used_entries)
-          AND "bankName" IN (
-            SELECT ac_name
-            FROM Public."BankAccount"
-            WHERE vendor_code IN (${vendorCodesList})
-          )
-          AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
-        ),
-
-        batch_1 AS (
-          SELECT utr, "bankName", "amount", "createdAt"
-          FROM Public."TelegramResponse"
-          WHERE utr IN (SELECT utr FROM unused_entries) AND is_used = false
           AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
         )
 
         -- Combine used entries and unused entries
         SELECT * FROM used_entries
-        UNION ALL
-        SELECT * FROM batch_1;
       `);
 
       const payOutData = await prisma.payout.findMany({
@@ -679,7 +636,10 @@ class PayInService {
               ? { in: vendorCode }
               : vendorCode,
           },
-          ...dateFilter,
+          updatedAt: {
+            gte: new Date(startDate),
+            lte: new Date(endDate),
+          },
         },
       });
 
@@ -818,7 +778,7 @@ class PayInService {
 
       if (method != "All") {
         if (method === "Manual") {
-          condition.method = {is: null};
+          condition.method = { is: null };
         }
         else {
           condition.method = method;
@@ -908,88 +868,48 @@ class PayInService {
             FROM Public."TelegramResponse" t
             JOIN Public."BankAccount" b 
               ON t."bankName" = b.ac_name
-            WHERE t.is_used = true
+            WHERE t.status = '/success'
             AND b.vendor_code IN (${vendorCodesList})
             AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
-          ),
+          )
 
-          unused_entries AS (
+          -- Combine used entries and unused entries
+          SELECT * FROM used_entries;
+        `);
+
+        return payInData;
+      }
+      else if (status === "Used") {
+        const payInData = await prisma.$queryRawUnsafe(`
+          WITH used_entries AS (
             SELECT 
-              t.sno,  
-              t.utr, 
-              t."bankName", 
-              t."amount", 
-              t.is_used,
-              t."createdAt",
-              b.vendor_code
-            FROM Public."TelegramResponse" t
-            JOIN Public."BankAccount" b 
-            ON t."bankName" = b.ac_name
-            WHERE t.is_used = false
-            AND utr NOT IN (SELECT utr FROM used_entries)
-            AND b.vendor_code IN (${vendorCodesList})
-            AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
-          ),
-
-          batch_1 AS (
-            SELECT  
               t.sno, 
               t.utr, 
               t."bankName", 
               t."amount", 
               t.is_used,
               t."createdAt",
-              b.vendor_code  -- Added vendor_code to match columns
+              b.vendor_code
             FROM Public."TelegramResponse" t
             JOIN Public."BankAccount" b 
               ON t."bankName" = b.ac_name
-            WHERE t.utr IN (SELECT utr FROM unused_entries) 
-              AND t.is_used = false
-              AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
+            WHERE t.status = '/success'
+            AND t.is_used = true
+            AND b.vendor_code IN (${vendorCodesList})
+            AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
           )
 
           -- Combine used entries and unused entries
-          SELECT * FROM used_entries
-          UNION ALL
-          SELECT * FROM batch_1;
+          SELECT * FROM used_entries;
         `);
-  
-        return payInData;
-      }
-      else if (status === "Used") {
-        const payInData = await prisma.$queryRawUnsafe(
-          `
-          WITH used_entries AS (
-            SELECT 
-              t.sno,  
-              t.utr, 
-              t."bankName", 
-              t."amount", 
-              t.is_used,
-              t."createdAt",
-              b.vendor_code
-            FROM Public."TelegramResponse" t
-            JOIN Public."BankAccount" b 
-              ON t."bankName" = b.ac_name
-            WHERE t.is_used = true
-            AND b.vendor_code IN (${vendorCodesList})
-            AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
-          )
-          SELECT DISTINCT ON (utr) * 
-          FROM used_entries
-          ORDER BY utr, "createdAt" ASC
-          `,
-        );
-        console.log(payInData);
-  
+
         return payInData;
       }
       else if (status === "UnUsed") {
-        const payInData = await prisma.$queryRawUnsafe(
-          `
-          WITH unused_entries AS (
+        const payInData = await prisma.$queryRawUnsafe(`
+          WITH used_entries AS (
             SELECT 
-              t.sno,  
+              t.sno, 
               t.utr, 
               t."bankName", 
               t."amount", 
@@ -999,17 +919,16 @@ class PayInService {
             FROM Public."TelegramResponse" t
             JOIN Public."BankAccount" b 
               ON t."bankName" = b.ac_name
-            WHERE t.is_used = false
+            WHERE t.status = '/success'
+            AND t.is_used = false
             AND b.vendor_code IN (${vendorCodesList})
             AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
           )
-          SELECT DISTINCT ON (utr) * 
-          FROM unused_entries
-          ORDER BY utr, "createdAt" ASC
-          `,
-        );
-        console.log(payInData);
-  
+
+          -- Combine used entries and unused entries
+          SELECT * FROM used_entries;
+        `);
+
         return payInData;
       }
     } catch (error) {

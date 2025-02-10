@@ -7,7 +7,6 @@ import { prisma } from '../client/prisma.js'
 import { v4 as uuidv4 } from "uuid";
 
 
-
 const merchantRouter = express();
 
 merchantRouter.post(

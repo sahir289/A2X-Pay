@@ -261,54 +261,28 @@ class BankAccountRepo {
             [];
 
           if (bank.bank_used_for === "payIn") {
-            // Fetch all is_used: true entries (these take priority)
-            const usedEntries = await prisma.telegramResponse.findMany({
-              where: {
-                bankName: bank.ac_name,
-                createdAt: dateFilter,
-                is_used: true,
-              },
-              orderBy: { createdAt: "desc" },
-            });
-
-            // Extract UTRs from is_used: true entries
-            const usedUtrs = new Set(usedEntries.map(entry => entry.utr));
-
-            // Fetch oldest is_used: false entries per UTR, but only for UTRs not in usedUtrs
-            const unusedEntries = await prisma.telegramResponse.groupBy({
-              by: ["utr"], // Group by UTR
-              where: {
-                bankName: bank.ac_name,
-                createdAt: dateFilter,
-                is_used: false,
-                NOT: { utr: { in: Array.from(usedUtrs) } }, // Exclude UTRs already in is_used: true
-              },
-              _min: { createdAt: true }, // Get oldest createdAt for each UTR
-            });
-
-            // Fetch the actual records using the oldest timestamps
-            const oldestUnusedEntries = await Promise.all(
-              unusedEntries.map(async (entry) => {
-                return prisma.telegramResponse.findFirst({
-                  where: {
-                    utr: entry.utr, // Get entry with this UTR
-                    createdAt: entry._min.createdAt, // Ensure it's the oldest one
-                    is_used: false,
-                  },
-                });
-              })
-            );
-
-            // Merge the results
-            transformedBank.payInData = [...usedEntries, ...oldestUnusedEntries.filter(Boolean)];
+            transformedBank.payInData = await prisma.$queryRawUnsafe(`
+              WITH used_entries AS (
+                SELECT utr, status, "bankName", "amount", "createdAt"
+                FROM Public."TelegramResponse"
+                WHERE status = '/success'
+                AND "bankName" = '${transformedBank.ac_name}'
+                AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
+              )
+      
+              -- Combine used entries and unused entries
+              SELECT * FROM used_entries
+            `);
           } else {
             transformedBank.payOutData = await prisma.payout.findMany({
               where: {
-                status: "SUCCESS",
+                status: {
+                  in: ["SUCCESS", "REJECTED"],
+                },
                 from_bank: bank.ac_name,
-                approved_at: dateFilter,
+                updatedAt: dateFilter,
               },
-              orderBy: { approved_at: "desc" },
+              orderBy: { updatedAt: "desc" },
             });
           }
           return transformedBank;
@@ -448,6 +422,31 @@ class BankAccountRepo {
       return bankRes;  // Return the updated bank account data
     } catch (error) {
       logger.info(`Error updating bank details for ID: ${data.id}`, error);
+    }
+  }
+
+  async getPayoutBankReport(data) {
+    try {
+      const bankRes = await prisma.payout.findMany({
+        where: {
+          from_bank: data.bankName,
+          status: {
+            in: ["SUCCESS", "REJECTED"],
+          },
+          updatedAt: {
+            gte: new Date(data.startDate),
+            lte: new Date(data.endDate),
+          },
+          approved_at: {
+            not: null
+          }
+        },
+      });
+
+      return bankRes;
+    } catch (error) {
+      console.log(error)
+      logger.info(`Error fetching payout bank details`, error);
     }
   }
 }
