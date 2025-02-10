@@ -3,7 +3,7 @@ import validator from "express-validator";
 import ifsc from 'ifsc';
 const { body, query } = validator;
 
-const methodEnums = ["BANK", "CASH", "CRYPTO", "AED"];
+const methodEnums = ["BANK", "CASH", "CRYPTO", "AED", "INTERNAL_BANK_TRANSFER", "INTERNAL_QR_TRANSFER"];
 const walletEnums = ["WALLET1", "WALLET2", "WALLET3"];
 const statusEnums = [
   "INITIATED",
