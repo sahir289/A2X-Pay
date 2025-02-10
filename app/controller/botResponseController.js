@@ -23,7 +23,7 @@ class BotResponseController {
       const amount_code = splitData[2];
       const utr = splitData[3];
       const bankName = splitData[4];
- 
+      
       // Validate amount, amount_code, and utr
       const isValidAmount = amount;
       const isValidAmountCode =
@@ -292,9 +292,7 @@ class BotResponseController {
                     );
                   }
                 }
-
                 // }
-
                 // check if duplicate and return error
                 const existingResponse = await prisma.telegramResponse.findMany({
                   where: {

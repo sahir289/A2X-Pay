@@ -40,6 +40,7 @@ class BotResponseRepo {
       });
 
       return updateBotRes;  // Return the updated response
+
     } catch (error) {
       logger.info(`Error updating bot response for amount_code: ${amount_code}`, error);
     }
@@ -92,6 +93,8 @@ class BotResponseRepo {
       logger.info(`Error fetching bot responses for UTR: ${usrSubmittedUtr}`, error);
     }
   }
+  
+  
 
   async updateBotResponseByUtr(id) {
     try {
@@ -110,7 +113,43 @@ class BotResponseRepo {
     }
   }
 
+  async updateBotResponseToInternalBank(id) {
+    try {
+      const updateBotRes = await prisma.telegramResponse.update({
+        where: {
+          id: id, 
+        },
+        data: {
+          status: '/banktransfer', 
+        },
+      });
+      return updateBotRes; 
+    } catch (error) {
+      logger.info(`Error updating bot response for ID: ${id}`, error);
+    }
+  }
+
+  async getBotResponseByUTR(utr) {
+    try {
+      // Fetch bot response by ID
+      const botRes = await prisma.telegramResponse.findFirst({
+        where: {
+          utr: utr,
+        },
+      });
+      // Check if the response is found, if not, throw an error or return a message
+      if (!botRes) {
+        throw new Error(`Bot response with ID ${id} not found.`);
+      }
+
+      return botRes;
+    } catch (error) {
+      logger.info(`Error fetching bot response by ID ${id}`, error);
+    }
+  }
+  
   async updateBotResponseToUnusedUtr(id) {
+    
     try {
       const updateBotRes = await prisma.telegramResponse.update({
         where: {
@@ -120,7 +159,7 @@ class BotResponseRepo {
           is_used: false, // Mark the response as unused
         },
       });
-
+      
       return updateBotRes; // Return the updated bot response
     } catch (error) {
       logger.info(`Error updating bot response to unused for ID: ${id}`, error);
@@ -163,7 +202,6 @@ class BotResponseRepo {
         orderBy: { sno: "desc" },
       });
 
-      // Get total count of records matching the filter
       const totalRecords = await prisma.telegramResponse.count({ where: filter });
 
       return {

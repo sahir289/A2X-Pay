@@ -12,7 +12,7 @@ class VendorSettlement {
             logger.info('Error creating settlement:', error.message);
         }
     }
-
+   
     async getSettlement(skip = 0, take = 10, id, code, status, amount, acc_no, method, refrence_id) {
         try {
             // Construct the `where` filter object
@@ -56,12 +56,12 @@ class VendorSettlement {
                 },
             });
     
-            // Count the total records matching the filters
+           
             const totalRecords = await prisma.vendorSettlement.count({
                 where,
             });
     
-            // Return the data and total record count
+            
             return {
                 data,
                 totalRecords,
@@ -75,7 +75,7 @@ class VendorSettlement {
         try {
             const settlement = await prisma.vendorSettlement.update({
                 where: {
-                    id: Number(id), // Ensure the ID is treated as a number
+                    id: Number(id), 
                 },
                 data: body,
             });

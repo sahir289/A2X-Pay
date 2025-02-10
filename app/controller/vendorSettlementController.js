@@ -1,12 +1,12 @@
 import { DefaultResponse } from "../helper/customResponse.js"
 import { checkValidation } from "../helper/validationHelper.js";
 import { CustomError } from "../models/customError.js";
+import botResponseRepo from "../repository/botResponseRepo.js";
 import merchantRepo from "../repository/merchantRepo.js";
 import userRepo from "../repository/userRepo.js";
 import vendorRepo from "../repository/vendorRepo.js";
 import vendorSettlementService from "../services/vendorSettlementService.js";
 import { logger } from "../utils/logger.js";
-
 class SettlementController {
 
     async createSettlement(req, res, next) {
@@ -15,6 +15,12 @@ class SettlementController {
             const vendor = await vendorRepo.getVendorByCode(req.body.code);
             if (!vendor) {
                 throw new CustomError(404, 'Vendor does not exist')
+            }
+            if (req.body.method === "INTERNAL_BANK_TRANSFER" || "INTERNAL_QR_TRANSFER" ) {
+                 const utrforbank =await botResponseRepo.getBotResponseByUTR(req.body.refrence_id);
+                  if (utrforbank) { 
+                    await botResponseRepo.updateBotResponseToInternalBank(utrforbank.id);
+                   }  
             }
             delete req.body.code;
             const data = await vendorSettlementService.createSettlement({
@@ -28,7 +34,7 @@ class SettlementController {
             next(err);
         }
     }
-
+    // INTERNAL_BANK_TRANSFER INTERNAL_QR_TRANSFER
     async getSettlement(req, res, next) {
         try {
             checkValidation(req)
@@ -47,7 +53,6 @@ class SettlementController {
             const user = await userRepo.getUserByUsernameRepo(req.user.userName)
 
             let Codes;
-
 
             if (user?.role !== "ADMIN"  && !code) {
                 Codes = user?.vendor_code
