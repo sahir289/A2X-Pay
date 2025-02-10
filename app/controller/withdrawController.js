@@ -909,13 +909,11 @@ class WithdrawController {
     try {
       checkValidation(req);
       let { merchantCode, vendorCode, status, startDate, endDate, method, includeSubMerchant } = req.body;
-
       if (!merchantCode) {
         merchantCode = [];
       } else if (typeof merchantCode === "string") {
         merchantCode = [merchantCode];
       }
-
       if (!vendorCode) {
         vendorCode = [];
       } else if (typeof vendorCode === "string") {
