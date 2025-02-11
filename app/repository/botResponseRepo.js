@@ -237,12 +237,16 @@ class BotResponseRepo {
   }
   async getEntryByReferenceIDRepo(utr) {
     try {
-      const userRes = await prisma.vendorSettlement.findFirst({
+      const res = await prisma.vendorSettlement.findFirst({
         where: {
-          reference_id: utr
+          refrence_id: utr,
+          OR: [
+            { method: "INTERNAL_QR_TRANSFER" },
+            { method: "INTERNAL_BANK_TRANSFER" }
+          ]
         }
-      });
-      return userRes;
+      });      
+      return res;
     } catch (error) {
       logger.info('Error fetching user by username:', error.message);
     }
