@@ -1,9 +1,9 @@
 import { DefaultResponse } from "../helper/customResponse.js"
 import { checkValidation } from "../helper/validationHelper.js";
 import { CustomError } from "../models/customError.js";
-import merchantRepo from "../repository/merchantRepo.js";
 import userRepo from "../repository/userRepo.js";
 import vendorRepo from "../repository/vendorRepo.js";
+import botResponseRepo from "../repository/botResponseRepo.js";
 import vendorSettlementService from "../services/vendorSettlementService.js";
 import { logger } from "../utils/logger.js";
 
@@ -27,6 +27,7 @@ class SettlementController {
                     status: "SUCCESS"
                 }
                 await vendorSettlementService.updateSettlement(data.id, payload);
+                await botResponseRepo.updateBotResponse(req.body.refrence_id)
             }
             return DefaultResponse(res, 201, "Settlement created successfully");
         } catch (err) {

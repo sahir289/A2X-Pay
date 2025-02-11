@@ -1,4 +1,5 @@
 import { prisma } from "../client/prisma.js";
+import { logger } from "../utils/logger.js";
 
 class BotResponseRepo {
   async botResponse(data) {
@@ -217,7 +218,37 @@ class BotResponseRepo {
     }
   }
 
-  async updateBotResponse(id, data) {
+  async updateBotResponse(id) {
+    try {
+      // Attempt to update the bot response
+      const updateBotRes = await prisma.telegramResponse.update({
+        where: {
+          utr: utr,
+        },
+        data: {
+          status: "/internalTransfer",
+        },
+      });
+
+      return updateBotRes;
+    } catch (error) {
+      logger.info(`Error updating bot response with ID ${id}`, error);
+    }
+  }
+  async getEntryByReferenceIDRepo(utr) {
+    try {
+      const userRes = await prisma.vendorSettlement.findFirst({
+        where: {
+          reference_id: utr
+        }
+      });
+      return userRes;
+    } catch (error) {
+      logger.info('Error fetching user by username:', error.message);
+    }
+  }
+
+  async updateBotResponseByUtrToInternalTransfer(id, data) {
     try {
       // Attempt to update the bot response
       const updateBotRes = await prisma.telegramResponse.update({
@@ -230,18 +261,6 @@ class BotResponseRepo {
       return updateBotRes;
     } catch (error) {
       logger.info(`Error updating bot response with ID ${id}`, error);
-    }
-  }
-  async getEntryByReferenceIDRepo(utr) {
-    try {
-      const userRes = await prisma.vendorSettlement.findUnique({
-        where: {
-          reference_id: utr
-        }
-      });
-      return userRes;
-    } catch (error) {
-      logger.info('Error fetching user by username:', error.message);
     }
   }
 
