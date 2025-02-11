@@ -10,7 +10,6 @@ import bankAccountRepo from "../repository/bankAccountRepo.js";
 import { prisma } from "../client/prisma.js";
 import { CustomError } from "../middlewares/errorHandler.js";
 import { logger } from "../utils/logger.js";
-import userRepo from "../repository/userRepo.js";
 
 class BotResponseController {
   async botResponse(req, res, next) {
@@ -54,6 +53,7 @@ class BotResponseController {
         let botRes
         const utrinternalTransfer = await botResponseRepo.getEntryByReferenceIDRepo(utr);
 
+        // We are adding the data in the bot res.
         if (utrinternalTransfer) {
           const updatedData = {
             status: "/internal_transfer",
@@ -65,7 +65,7 @@ class BotResponseController {
         } else {
           botRes = await botResponseRepo.botResponse(updatedData);
         }
-        // We are adding the data in the bot res.
+        
         if (updatedData.status === "REPEATED") {
           throw new CustomError(400, "Entry with REPEATED UTR Added")
         }
@@ -144,9 +144,6 @@ class BotResponseController {
                       );
                     }
                   }
-
-
-
                   else {
                     const payInData = {
                       confirmed: botRes?.amount,

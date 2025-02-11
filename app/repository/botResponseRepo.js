@@ -18,7 +18,7 @@ class BotResponseRepo {
       const botRes = await prisma.telegramResponse.findFirst({
         where: {
           amount_code: code,
-          status : "/Sucess"
+          status: "/success"
         },
       });
 
@@ -50,7 +50,7 @@ class BotResponseRepo {
       const botRes = await prisma.telegramResponse.findFirst({
         where: {
           utr: usrSubmittedUtr, // Search by user-submitted UTR
-           status : "/Sucess"
+          status: "/success"
         },
       });
 
@@ -65,7 +65,7 @@ class BotResponseRepo {
       const botRes = await prisma.telegramResponse.findMany({
         where: {
           utr: usrSubmittedUtr, // Fetch all responses matching the UTR
-           status : "/Sucess"
+          status: "/success"
         },
       });
 
@@ -170,7 +170,7 @@ class BotResponseRepo {
         },
         include: {
           Merchant_Bank: true, // Includes related Merchant_Bank data
-           status : "/Sucess"
+          status: "/success"
         },
       });
 
@@ -202,6 +202,7 @@ class BotResponseRepo {
       const botRes = await prisma.telegramResponse.findFirst({
         where: {
           id: id,
+          status: "/success"
         },
       });
 
@@ -233,16 +234,16 @@ class BotResponseRepo {
   }
   async getEntryByReferenceIDRepo(utr) {
     try {
-        const userRes = await prisma.vendorSettlement.findUnique({
-            where: {
-                reference_id: utr
-            }
-        });
-        return userRes;
+      const userRes = await prisma.vendorSettlement.findUnique({
+        where: {
+          reference_id: utr
+        }
+      });
+      return userRes;
     } catch (error) {
-        logger.info('Error fetching user by username:', error.message);
+      logger.info('Error fetching user by username:', error.message);
     }
-}
+  }
 
 }
 
