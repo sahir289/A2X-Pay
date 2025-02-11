@@ -10,6 +10,7 @@ import bankAccountRepo from "../repository/bankAccountRepo.js";
 import { prisma } from "../client/prisma.js";
 import { CustomError } from "../middlewares/errorHandler.js";
 import { logger } from "../utils/logger.js";
+import userRepo from "../repository/userRepo.js";
 
 class BotResponseController {
   async botResponse(req, res, next) {
@@ -35,7 +36,7 @@ class BotResponseController {
       if (isValidAmount) {
         const utrAlreadyExist = await botResponseRepo.getBotResByUtr(utr);
         const updatedData = {
-          status : utrAlreadyExist ? "/repeated" : "/success",
+          status: utrAlreadyExist ? "/repeated" : "/success",
           amount,
           utr,
           bankName
@@ -50,12 +51,25 @@ class BotResponseController {
           const botRes = await botResponseRepo.botResponse(updatedData);
           throw new CustomError(400, "Amount code already exist")
         }
+        let botRes
+        const utrinternalTransfer = await botResponseRepo.getEntryByReferenceIDRepo(utr);
 
+        if (utrinternalTransfer) {
+          const updatedData = {
+            status: "/internal_transfer",
+            amount,
+            utr,
+            bankName
+          };
+          botRes = await botResponseRepo.botResponse(updatedData);
+        } else {
+          botRes = await botResponseRepo.botResponse(updatedData);
+        }
         // We are adding the data in the bot res.
-        const botRes = await botResponseRepo.botResponse(updatedData);
         if (updatedData.status === "REPEATED") {
           throw new CustomError(400, "Entry with REPEATED UTR Added")
         }
+
 
         // We are getting the payin data
         const checkPayInUtr = await payInRepo.getPayInDataByUtrOrUpi(
@@ -71,6 +85,7 @@ class BotResponseController {
             if (acceptedStatus.includes(checkPayInUtr[0]?.status) && botUtrIsUsed) {
               throw new CustomError(400, `The entry with ${amount_code} Amount Code is already ${checkPayInUtr[0]?.status} with ${dataUtr} UTR`);
             }
+
             else {
               if (!botUtrIsUsed) {
 
@@ -128,7 +143,11 @@ class BotResponseController {
                         `⛔ UTR: ${utr} does not match with User Submitted UTR: ${checkPayInUtr.at(0)?.user_submitted_utr}`
                       );
                     }
-                  } else {
+                  }
+
+
+
+                  else {
                     const payInData = {
                       confirmed: botRes?.amount,
                       status: "BANK_MISMATCH",
@@ -880,7 +899,10 @@ class BotResponseController {
           message: "Response received successfully",
           data: updatedData,
         });
-      } else {
+      }
+
+
+      else {
         res.status(400).json({
           success: false,
           message: "Invalid data received",
