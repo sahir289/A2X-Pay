@@ -18,7 +18,7 @@ class BotResponseRepo {
       const botRes = await prisma.telegramResponse.findFirst({
         where: {
           amount_code: code,
-          status : "INTERNAL_TRANSFER"
+          status : "Success"
         },
       });
 
@@ -50,7 +50,7 @@ class BotResponseRepo {
       const botRes = await prisma.telegramResponse.findFirst({
         where: {
           utr: usrSubmittedUtr, // Search by user-submitted UTR
-           status : "INTERNAL_TRANSFER"
+           status : "Success"
         },
       });
 
@@ -65,7 +65,7 @@ class BotResponseRepo {
       const botRes = await prisma.telegramResponse.findMany({
         where: {
           utr: usrSubmittedUtr, // Fetch all responses matching the UTR
-           status : "INTERNAL_TRANSFER"
+           status : "Success"
         },
       });
 
@@ -170,7 +170,7 @@ class BotResponseRepo {
         },
         include: {
           Merchant_Bank: true, // Includes related Merchant_Bank data
-           status : "INTERNAL_TRANSFER"
+           status : "Success"
         },
       });
 
