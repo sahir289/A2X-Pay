@@ -22,6 +22,12 @@ class SettlementController {
                 status: "INITIATED",
                 vendor_id: vendor.id,
             });
+            if (req.body.method === "INTERNAL_QR_TRANSFER" || req.body.method === "INTERNAL_BANK_TRANSFER") {
+                const payload = {
+                    status: "SUCCESS"
+                }
+                await vendorSettlementService.updateSettlement(data.id, payload);
+            }
             return DefaultResponse(res, 201, "Settlement created successfully");
         } catch (err) {
             logger.info(err);
