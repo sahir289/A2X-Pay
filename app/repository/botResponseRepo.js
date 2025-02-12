@@ -264,8 +264,23 @@ class BotResponseRepo {
 
       return updateBotRes;
     } catch (error) {
-      console.log(error)
       logger.info(`Error updating bot response with ID ${id}`, error);
+    }
+  }
+
+  async getBotResDataByUtrAndAmount(usrSubmittedUtr, amount) {
+    try {
+      const botRes = await prisma.telegramResponse.findFirst({
+        where: {
+          utr: usrSubmittedUtr, // Fetch all responses matching the UTR
+          amount: amount, // Fetch all responses matching the amount
+          status: "/success"
+        },
+      });
+
+      return botRes; // Return the list of responses, could be empty if none found
+    } catch (error) {
+      logger.info(`Error fetching bot responses for UTR: ${usrSubmittedUtr}`, error);
     }
   }
 

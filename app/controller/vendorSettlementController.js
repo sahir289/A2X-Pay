@@ -17,18 +17,31 @@ class SettlementController {
                 throw new CustomError(404, 'Vendor does not exist')
             }
             delete req.body.code;
-            const data = await vendorSettlementService.createSettlement({
-                ...req.body,
-                status: "INITIATED",
-                vendor_id: vendor.id,
-            });
+            let res;
             if (req.body.method === "INTERNAL_QR_TRANSFER" || req.body.method === "INTERNAL_BANK_TRANSFER") {
-                const payload = {
-                    status: "SUCCESS"
+                const botRes = await botResponseRepo.getBotResDataByUtrAndAmount(req.body.refrence_id, req.body.amount)
+                if (botRes.length > 0) {
+                    res = await vendorSettlementService.createSettlement({
+                        ...req.body,
+                        status: "INITIATED",
+                        vendor_id: vendor.id,
+                    });
+                    const payload = {
+                        status: "SUCCESS"
+                    }
+                    await vendorSettlementService.updateSettlement(res.id, payload);
+                    await botResponseRepo.updateBotResponseByUtrToInternalTransfer(botRes[0].id)
                 }
-                await vendorSettlementService.updateSettlement(data.id, payload);
-                const botRes = await botResponseRepo.getBotResDataByUtr(req.body.refrence_id)
-                await botResponseRepo.updateBotResponseByUtrToInternalTransfer(botRes[0].id)
+                else {
+                    throw new CustomError(400, 'Invalid reference id or amount')
+                }
+            }
+            else {
+                res = await vendorSettlementService.createSettlement({
+                    ...req.body,
+                    status: "INITIATED",
+                    vendor_id: vendor.id,
+                });
             }
             return DefaultResponse(res, 201, "Settlement created successfully");
         } catch (err) {
@@ -57,7 +70,7 @@ class SettlementController {
             let Codes;
 
 
-            if (user?.role !== "ADMIN"  && !code) {
+            if (user?.role !== "ADMIN" && !code) {
                 Codes = user?.vendor_code
             }
             else {
