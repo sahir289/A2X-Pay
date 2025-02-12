@@ -665,9 +665,9 @@ class PayInController {
 
       // check tht usrSubmittedUtr is previously used or not if it is thn send Duplicate utr.
       let isUsrSubmittedUtrUsed
-      isUsrSubmittedUtrUsed = await payInRepo.getPayinDataByUtr(usrSubmittedUtr);
+      isUsrSubmittedUtrUsed = await botResponseRepo.getBotResByUtr(usrSubmittedUtr);
       if (isUsrSubmittedUtrUsed.length == 0) {
-        isUsrSubmittedUtrUsed = await payInRepo.getPayinDataByUsrSubmittedUtr(usrSubmittedUtr);
+        isUsrSubmittedUtrUsed = await botResponseRepo.getBotResDataByUtr(usrSubmittedUtr);
       }
 
       const durMs = new Date() - getPayInData.createdAt;
