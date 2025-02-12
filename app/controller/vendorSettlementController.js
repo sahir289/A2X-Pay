@@ -123,7 +123,6 @@ class SettlementController {
             const data = await vendorSettlementService.updateSettlement(req.params.id, payload);
             return DefaultResponse(res, 200, "Settlement Updated!", data);
         } catch (err) {
-            console.log(err)
             logger.info(err);
             next(err);
         }
