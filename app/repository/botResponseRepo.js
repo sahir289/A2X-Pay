@@ -218,16 +218,14 @@ class BotResponseRepo {
     }
   }
 
-  async updateBotResponse(id) {
+  async updateBotResponse(id, data) {
     try {
       // Attempt to update the bot response
       const updateBotRes = await prisma.telegramResponse.update({
         where: {
-          utr: utr,
+          id: id,
         },
-        data: {
-          status: "/internalTransfer",
-        },
+        data: data,
       });
 
       return updateBotRes;
@@ -252,18 +250,21 @@ class BotResponseRepo {
     }
   }
 
-  async updateBotResponseByUtrToInternalTransfer(id, data) {
+  async updateBotResponseByUtrToInternalTransfer(id) {
     try {
       // Attempt to update the bot response
       const updateBotRes = await prisma.telegramResponse.update({
         where: {
           id: id,
         },
-        data: data,
+        data: {
+          status: "/internalTransfer",
+        },
       });
 
       return updateBotRes;
     } catch (error) {
+      console.log(error)
       logger.info(`Error updating bot response with ID ${id}`, error);
     }
   }

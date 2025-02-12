@@ -27,7 +27,8 @@ class SettlementController {
                     status: "SUCCESS"
                 }
                 await vendorSettlementService.updateSettlement(data.id, payload);
-                await botResponseRepo.updateBotResponse(req.body.refrence_id)
+                const botRes = await botResponseRepo.getBotResDataByUtr(req.body.refrence_id)
+                await botResponseRepo.updateBotResponseByUtrToInternalTransfer(botRes[0].id)
             }
             return DefaultResponse(res, 201, "Settlement created successfully");
         } catch (err) {
