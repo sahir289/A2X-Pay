@@ -1076,10 +1076,6 @@ class PayInController {
       // const expirationTimestamp = new Date(new Date().getTime() + _10_MINUTES);
       // const expirationTimeFormatted = expirationTimestamp.toISOString().replace('T', ' ').split('.')[0];
 
-      // const PAYU_MERCHANT_KEY = "TK0TDL";
-      // const PAYU_SALT = "MfAQ5hetYks7H39yly7UE0fORjUH1Z0g";
-      // const PAYU_URL = "https://test.payu.in/_payment";
-
       if(PayU = true){
         try {
           console.log(amount, "amiuounttt")
