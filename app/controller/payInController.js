@@ -789,7 +789,7 @@ class PayInController {
 
         let getBankDataByBotRes;
         // we are making sure that we get bank name then only we move forward
-        if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
+        if (matchDataFromBotRes && matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
           // We check bank exist here as we have to add the data to the res no matter what comes.
 
           getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)

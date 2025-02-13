@@ -265,7 +265,7 @@ class BankAccountRepo {
               WITH used_entries AS (
                 SELECT utr, status, "bankName", "amount", "createdAt"
                 FROM Public."TelegramResponse"
-                WHERE status = '/success'
+                WHERE status IN ('/success', '/internalTransfer')
                 AND "bankName" = '${transformedBank.ac_name}'
                 AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'
               )

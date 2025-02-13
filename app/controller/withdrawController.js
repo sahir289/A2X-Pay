@@ -387,13 +387,6 @@ class WithdrawController {
         parsedData = responseText;
       }
       return parsedData;
-
-      //   return DefaultResponse(
-      //   res,
-      //   response.ok ? 200 : response.status,
-      //   parsedData?.message,
-      //   parsedData
-      // );
     } catch (error) {
       logger.error(error);
     }

@@ -444,7 +444,7 @@ class PayInService {
         WITH used_entries AS (
           SELECT utr, "bankName", "amount"
           FROM Public."TelegramResponse"
-          WHERE status = '/success'
+          WHERE status IN ('/success', '/internalTransfer')
           AND "bankName" IN (
             SELECT ac_name
             FROM Public."BankAccount"
@@ -584,7 +584,7 @@ class PayInService {
         WITH used_entries AS (
           SELECT utr, status, "bankName", "amount", "createdAt"
           FROM Public."TelegramResponse"
-          WHERE status = '/success'
+          WHERE status IN ('/success', '/internalTransfer')
           AND "bankName" IN (
             SELECT ac_name
             FROM Public."BankAccount"
@@ -778,7 +778,7 @@ class PayInService {
             FROM Public."TelegramResponse" t
             JOIN Public."BankAccount" b 
               ON t."bankName" = b.ac_name
-            WHERE t.status = '/success'
+            WHERE t.status IN ('/success', '/internalTransfer')
             AND b.vendor_code IN (${vendorCodesList})
             AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
           )
@@ -803,7 +803,7 @@ class PayInService {
             FROM Public."TelegramResponse" t
             JOIN Public."BankAccount" b 
               ON t."bankName" = b.ac_name
-            WHERE t.status = '/success'
+            WHERE t.status IN ('/success', '/internalTransfer')
             AND t.is_used = true
             AND b.vendor_code IN (${vendorCodesList})
             AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'
@@ -829,7 +829,7 @@ class PayInService {
             FROM Public."TelegramResponse" t
             JOIN Public."BankAccount" b 
               ON t."bankName" = b.ac_name
-            WHERE t.status = '/success'
+            WHERE t.status IN ('/success', '/internalTransfer')
             AND t.is_used = false
             AND b.vendor_code IN (${vendorCodesList})
             AND t."createdAt" BETWEEN '${startDate}' AND '${endDate}'

@@ -1,9 +1,9 @@
 import { DefaultResponse } from "../helper/customResponse.js"
 import { checkValidation } from "../helper/validationHelper.js";
 import { CustomError } from "../models/customError.js";
-import merchantRepo from "../repository/merchantRepo.js";
 import userRepo from "../repository/userRepo.js";
 import vendorRepo from "../repository/vendorRepo.js";
+import botResponseRepo from "../repository/botResponseRepo.js";
 import vendorSettlementService from "../services/vendorSettlementService.js";
 import { logger } from "../utils/logger.js";
 
@@ -17,13 +17,40 @@ class SettlementController {
                 throw new CustomError(404, 'Vendor does not exist')
             }
             delete req.body.code;
-            const data = await vendorSettlementService.createSettlement({
-                ...req.body,
-                status: "INITIATED",
-                vendor_id: vendor.id,
-            });
+            let data;
+            if (req.body.method === "INTERNAL_QR_TRANSFER" || req.body.method === "INTERNAL_BANK_TRANSFER") {
+                const botRes = await botResponseRepo.getBotResDataByUtrAndAmount(req.body.refrence_id, req.body.amount.replace("-", ""));
+                if (botRes || botRes !== null) {
+                    data = await vendorSettlementService.createSettlement({
+                        ...req.body,
+                        status: "INITIATED",
+                        vendor_id: vendor.id,
+                    });
+                    if (data) {
+                        const payload = {
+                            status: "SUCCESS"
+                        }
+                        await vendorSettlementService.updateSettlement(data.id, payload);
+                        const apiData = {
+                            status: "/internalTransfer",
+                        }
+                        await botResponseRepo.updateBotResponseByUtrToInternalTransfer(botRes.id, apiData);
+                    }
+                }
+                else {
+                    throw new CustomError(400, 'Invalid reference id or amount')
+                }
+            }
+            else {
+                data = await vendorSettlementService.createSettlement({
+                    ...req.body,
+                    status: "INITIATED",
+                    vendor_id: vendor.id,
+                });
+            }
             return DefaultResponse(res, 201, "Settlement created successfully");
         } catch (err) {
+            console.log(err)
             logger.info(err);
             next(err);
         }
@@ -49,7 +76,7 @@ class SettlementController {
             let Codes;
 
 
-            if (user?.role !== "ADMIN"  && !code) {
+            if (user?.role !== "ADMIN" && !code) {
                 Codes = user?.vendor_code
             }
             else {
@@ -68,6 +95,18 @@ class SettlementController {
 
     async updateSettlement(req, res, next) {
         try {
+            if (req.body.status == "INITIATED") {
+                const take = 20;
+                const skip = take * (1 - 1);
+                const settlement = await vendorSettlementService.getSettlement(skip, take, parseInt(req.params.id))
+                if (settlement.data[0].method === "INTERNAL_QR_TRANSFER" || settlement.data[0].method === "INTERNAL_BANK_TRANSFER") {
+                    const botRes = await botResponseRepo.getBotResDataByinternalTransfer(settlement.data[0].refrence_id, String(settlement.data[0].amount).replace("-", ""));
+                    const apiData = {
+                        status: "/success",
+                    }
+                    await botResponseRepo.updateBotResponseByUtrToInternalTransfer(botRes.id, apiData);
+                }
+            }
             const payload = {
                 ...req.body,
             }

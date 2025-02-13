@@ -1,4 +1,5 @@
 import { prisma } from "../client/prisma.js";
+import { logger } from "../utils/logger.js";
 
 class BotResponseRepo {
   async botResponse(data) {
@@ -18,6 +19,7 @@ class BotResponseRepo {
       const botRes = await prisma.telegramResponse.findFirst({
         where: {
           amount_code: code,
+          status: "/success"
         },
       });
 
@@ -49,6 +51,7 @@ class BotResponseRepo {
       const botRes = await prisma.telegramResponse.findFirst({
         where: {
           utr: usrSubmittedUtr, // Search by user-submitted UTR
+          status: "/success"
         },
       });
 
@@ -63,6 +66,7 @@ class BotResponseRepo {
       const botRes = await prisma.telegramResponse.findMany({
         where: {
           utr: usrSubmittedUtr, // Fetch all responses matching the UTR
+          status: "/success"
         },
       });
 
@@ -167,6 +171,7 @@ class BotResponseRepo {
         },
         include: {
           Merchant_Bank: true, // Includes related Merchant_Bank data
+          status: "/success"
         },
       });
 
@@ -198,6 +203,7 @@ class BotResponseRepo {
       const botRes = await prisma.telegramResponse.findFirst({
         where: {
           id: id,
+          status: "/success"
         },
       });
 
@@ -225,6 +231,70 @@ class BotResponseRepo {
       return updateBotRes;
     } catch (error) {
       logger.info(`Error updating bot response with ID ${id}`, error);
+    }
+  }
+  async getEntryByReferenceIDRepo(utr) {
+    try {
+      const res = await prisma.vendorSettlement.findFirst({
+        where: {
+          refrence_id: utr,
+          OR: [
+            { method: "INTERNAL_QR_TRANSFER" },
+            { method: "INTERNAL_BANK_TRANSFER" }
+          ]
+        }
+      });      
+      return res;
+    } catch (error) {
+      logger.info('Error fetching user by username:', error.message);
+    }
+  }
+
+  async updateBotResponseByUtrToInternalTransfer(id, data) {
+    try {
+      // Attempt to update the bot response
+      const updateBotRes = await prisma.telegramResponse.update({
+        where: {
+          id: id,
+        },
+        data: data,
+      });
+
+      return updateBotRes;
+    } catch (error) {
+      logger.info(`Error updating bot response with ID ${id}`, error);
+    }
+  }
+
+  async getBotResDataByUtrAndAmount(usrSubmittedUtr, amount) {
+    try {
+      const botRes = await prisma.telegramResponse.findFirst({
+        where: {
+          utr: usrSubmittedUtr, // Fetch all responses matching the UTR
+          amount: amount, // Fetch all responses matching the amount
+          status: "/success"
+        },
+      });
+
+      return botRes; // Return the list of responses, could be empty if none found
+    } catch (error) {
+      logger.info(`Error fetching bot responses for UTR: ${usrSubmittedUtr}`, error);
+    }
+  }
+
+  async getBotResDataByinternalTransfer(usrSubmittedUtr, amount) {
+    try {
+      const botRes = await prisma.telegramResponse.findFirst({
+        where: {
+          utr: usrSubmittedUtr, // Fetch all responses matching the UTR
+          amount: amount, // Fetch all responses matching the amount
+          status: "/internalTransfer"
+        },
+      });
+
+      return botRes; // Return the list of responses, could be empty if none found
+    } catch (error) {
+      logger.info(`Error fetching bot responses for UTR: ${usrSubmittedUtr}`, error);
     }
   }
 
