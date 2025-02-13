@@ -4,15 +4,17 @@ import merchantRepo from '../repository/merchantRepo.js';
 import axios from 'axios';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
-import Razorpay from 'razorpay';
-import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils.js';
+import PayU from 'payu-websdk';
 
-export const razorpay = new Razorpay({
-    key_id: process.env.RAZOR_PAY_ID,
-    key_secret: process.env.RAZOR_PAY_SECRET
-})
+const payu_key = "TK0TDL";
+const payu_salt = "MfAQ5hetYks7H39yly7UE0fORjUH1Z0g";
 
-const RazorHook = async (req, res) => {
+const payuClient = new PayU({
+    key: payu_key,
+    salt: payu_salt,
+  },"TEST");     // Possible value  = TEST/LIVE
+
+const PayUHook = async (req, res) => {
     res.json({status: 200, message: 'Payu Webhook Called successfully'});
     try {
         const { amount, email, phone, txnid } = req.body;
@@ -102,5 +104,8 @@ const RazorHook = async (req, res) => {
     }
 };
 
+const verifyPayUTransaction = async () => {
 
-export default RazorHook;
+}
+
+export { payuClient, payu_key, payu_salt, PayUHook, verifyPayUTransaction}

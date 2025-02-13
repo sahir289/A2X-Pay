@@ -37,6 +37,8 @@ import { sendBankNotAssignedAlertTelegram } from "../helper/sendTelegramMessages
 import { logger } from "../utils/logger.js";
 import { razorpay } from "../webhooks/razorpay.js";
 import withdrawService from "../services/withdrawService.js";
+import { error } from "console";
+import { payuClient, payu_key, payu_salt } from "../webhooks/payu.js";
 
 // Construct __dirname manually
 const __filename = fileURLToPath(import.meta.url);
@@ -1063,6 +1065,7 @@ class PayInController {
       const { payInId } = req.params;
       // const userIp = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
       const { amount, isRazorpay } = req.body;
+      let PayU;
 
       const getPayInData = await payInRepo.getPayInData(payInId);
       if (!getPayInData) {
@@ -1072,6 +1075,35 @@ class PayInController {
       // const _10_MINUTES = 1000 * 60 * 10;
       // const expirationTimestamp = new Date(new Date().getTime() + _10_MINUTES);
       // const expirationTimeFormatted = expirationTimestamp.toISOString().replace('T', ' ').split('.')[0];
+
+      // const PAYU_MERCHANT_KEY = "TK0TDL";
+      // const PAYU_SALT = "MfAQ5hetYks7H39yly7UE0fORjUH1Z0g";
+      // const PAYU_URL = "https://test.payu.in/_payment";
+
+      if(PayU = true){
+        try {
+          console.log(amount, "amiuounttt")
+          const txnid = "Txn" + new Date().getTime();
+          const data = payuClient.paymentInitiate({
+            key: payu_key,
+            txnid: txnid,
+            amount: amount,
+            productinfo: "productinfo",
+            firstname: "lucifer",
+            email: "lucifer000@gmail.com",
+            phone: 9090990900,
+            surl: 'http://localhost:8080/v1/payu/success',
+            furl: 'http://localhost:8080/v1/payu/failed',
+            hash: payu_salt
+          })
+          // return res.send(data);
+          console.log(data, "data here")
+          return DefaultResponse(res, 200, 'PauU Payment initiated successfully', data);
+        } catch (error) {
+          logger.info('getting error while creating order', error);
+        }
+       
+      }
 
       if (isRazorpay) {
         const orderRes = await razorpay.orders.create({
@@ -1119,60 +1151,7 @@ class PayInController {
       } catch (err) {
         logger.error('getting error while creating order', err);
       }
-      // const now = new Date();
-      // now.setUTCMinutes(now.getUTCMinutes() + 5);
-      // const istOffset = 5.5 * 60;
-      // const startTime = new Date(now.getTime() + istOffset * 60000);
-      // const endTime = new Date(startTime.getTime() + 5 * 60000);
-      // const approveTime = new Date(startTime.getTime() + 1 * 60000);
-
-      // const payOrderUrl = config.cashfreePayOrderUrl;
-      // const optionsToOrderPay = {
-      //   method: 'POST',
-      //   headers: {
-      //     'x-api-version': '2025-01-01',
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({
-      //     payment_method: {
-      //       upi: {
-      //         channel: "link",
-      //         authorization: {
-      //           start_time: startTime,
-      //           end_time: endTime,
-      //           approve_by: approveTime
-      //         },
-      //         authorize_only: false,
-      //         upi_expiry_minutes: 5,
-      //         // upi_id: "testsuccess@gocash",
-      //         upi_redirect_url: true
-      //       }
-      //     },
-      //     payment_session_id: cashfreeResponse.payment_session_id,
-      //   })
-      // };
-
-
-      // let payOrderResponse;
-      // try {
-        // const orderPay = await fetch(payOrderUrl, optionsToOrderPay);
-        // payOrderResponse = await orderPay.json();
-        // console.log(payOrderResponse, "payOrderResponse")
-      //   logger.info('cashfree pay order links generated Successfully');
-      // } catch (err) {
-      //   console.error('Error:', err);
-      //   logger.error('getting error while generating pay order links', err);
-      // }
-
-      // const payInData = {
-      //   status: payOrderResponse.cf_payment_id ? "PENDING" : 'FAILED',
-      // };
-
-      // const updatePayinRes = await payInRepo.updatePayInData(
-      //   payInId,
-      //   payInData
-      // );
-
+     
       const response = {
         payment_amount: amount,
         payment_session_id: cashfreeResponse.payment_session_id,
