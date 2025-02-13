@@ -665,9 +665,9 @@ class PayInController {
 
       // check tht usrSubmittedUtr is previously used or not if it is thn send Duplicate utr.
       let isUsrSubmittedUtrUsed
-      isUsrSubmittedUtrUsed = await botResponseRepo.getBotResByUtr(usrSubmittedUtr);
+      isUsrSubmittedUtrUsed = await payInRepo.getPayinDataByUtr(usrSubmittedUtr);
       if (isUsrSubmittedUtrUsed.length == 0) {
-        isUsrSubmittedUtrUsed = await botResponseRepo.getBotResDataByUtr(usrSubmittedUtr);
+        isUsrSubmittedUtrUsed = await payInRepo.getPayinDataByUsrSubmittedUtr(usrSubmittedUtr);
       }
 
       const durMs = new Date() - getPayInData.createdAt;
@@ -787,7 +787,7 @@ class PayInController {
 
         let getBankDataByBotRes;
         // we are making sure that we get bank name then only we move forward
-        if (matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
+        if (matchDataFromBotRes && matchDataFromBotRes?.bankName !== getPayInData?.bank_name) {
           // We check bank exist here as we have to add the data to the res no matter what comes.
 
           getBankDataByBotRes = await botResponseRepo?.getBankDataByBankName(matchDataFromBotRes?.bankName)
