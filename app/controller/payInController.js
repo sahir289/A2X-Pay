@@ -37,7 +37,7 @@ import { sendBankNotAssignedAlertTelegram } from "../helper/sendTelegramMessages
 import { logger } from "../utils/logger.js";
 import { razorpay } from "../webhooks/razorpay.js";
 import withdrawService from "../services/withdrawService.js";
-import { error } from "console";
+import crypto from 'crypto';
 import { payuClient, payu_key, payu_salt } from "../webhooks/payu.js";
 
 // Construct __dirname manually
@@ -1078,23 +1078,63 @@ class PayInController {
 
       if(PayU = true){
         try {
-          console.log(amount, "amiuounttt")
-          const txnid = "Txn" + new Date().getTime();
-          const data = payuClient.paymentInitiate({
-            key: payu_key,
-            txnid: txnid,
-            amount: amount,
-            productinfo: "productinfo",
-            firstname: "lucifer",
-            email: "lucifer000@gmail.com",
-            phone: 9090990900,
-            surl: 'http://localhost:8080/v1/payu/success',
-            furl: 'http://localhost:8080/v1/payu/failed',
-            hash: payu_salt
-          })
+          // const data = payuClient.paymentInitiate({
+          //   key: payu_key,
+          //   txnid: txnid,
+          //   amount: amount,
+          //   productinfo: "productinfo",
+          //   firstname: "lucifer",
+          //   email: "lucifer000@gmail.com",
+          //   phone: 9090990900,
+          //   surl: 'http://localhost:8080/v1/payu/success',
+          //   furl: 'http://localhost:8080/v1/payu/failed',
+          //   hash: payu_salt
+          // })
           // return res.send(data);
-          console.log(data, "data here")
-          return DefaultResponse(res, 200, 'PauU Payment initiated successfully', data);
+          // const url = 'https://test.payu.in/_payment';
+
+          // const data = new URLSearchParams({
+          //   key: 'EeueTA',
+          //   txnid: txnid,
+          //   amount: '10.00',
+          //   firstname: 'PayU User',
+          //   email: 'test@gmail.com',
+          //   phone: '9876543210',
+          //   productinfo: 'iPhone',
+          //   surl: 'https://apiplayground-response.herokuapp.com/',
+          //   furl: 'https://apiplayground-response.herokuapp.com',
+          //   hash: 'iM1CmoIM8evrpZ6ei4VhckDakvbLAqTJ'
+          // });
+          
+          // const headers = {
+          //   'Accept': 'application/json',
+          //   'Content-Type': 'application/x-www-form-urlencoded'
+          // };
+          // console.log('first')
+          // const response = await fetch(url, {
+          //   method: 'POST',
+          //   headers,
+          //   body: data
+          // });
+          // console.log(response, "reepoo")
+          // const result = await response.text();
+          // console.log(result, 'resssult');
+          // console.log(data, "data here")
+
+          const txnid = 'PQI6MqpYrjEefU';
+          // "Txn" + new Date().getTime();
+          const key = 'EeueTA';
+          const productinfo = 'productinfo';
+          const firstname = 'PayU User';
+          const email = 'payuuser@dummy.com';
+
+          const salt = 'iM1CmoIM8evrpZ6ei4VhckDakvbLAqTJ';
+
+          const hashString = `${key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|||||||||||${salt}`;
+          
+          // Generate SHA-512 hash
+          const hash = crypto.createHash('sha512').update(hashString).digest('hex');
+          return DefaultResponse(res, 200, 'PauU hash created successfully', hash);
         } catch (error) {
           logger.info('getting error while creating order', error);
         }
