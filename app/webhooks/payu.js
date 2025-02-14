@@ -5,49 +5,38 @@ import axios from 'axios';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
 import PayU from 'payu-websdk';
+import config from '../../config.js';
 
-const payu_key = "TK0TDL";
-const payu_salt = "MfAQ5hetYks7H39yly7UE0fORjUH1Z0g";
+const payu_key = config.payu_key
+const payu_salt = config.payu_salt
 
-const payuClient = new PayU({
-    key: payu_key,
-    salt: payu_salt,
-  },"TEST");     // Possible value  = TEST/LIVE
 
 const PayUHook = async (req, res) => {
-    res.json({status: 200, message: 'Payu Webhook Called successfully'});
+    res.json({status: 200, message: 'PayU Webhook Called successfully'});
     try {
-        const { amount, email, phone, txnid } = req.body;
 
-    const payuData = {
-      key: PAYU_MERCHANT_KEY,
-      txnid,
-      amount,
-      productinfo: "Test Product",
-      firstname: "User",
-      email,
-      phone,
-      surl: "https://test.com/success", 
-      furl: "https://test.com/failure", 
-      service_provider: "payu_paisa",
-      payment_method: "upi", 
-    };
+        const data = req.body;
+        const { txnid, amount, productinfo, firstname, email, status, hash } = data;
 
-    // Create hash for PayU payment
-    const hashString = `${payuData.key}|${payuData.txnid}|${payuData.amount}|${payuData.productinfo}|${payuData.firstname}|${payuData.email}|||||||||||${PAYU_MERCHANT_SALT}`;
-    const hash = crypto.createHash("sha512").update(hashString).digest("hex");
+        console.log(data, "PaUUUUUUU data")
 
-    payuData.hash = hash;
+        // Recalculate the hash to verify authenticity
+        const hashString = `${salt}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
+        const calculatedHash = crypto.createHash('sha512').update(hashString).digest('hex');
 
-        // if webhook is called with none of handled events or transaction id not received
-        if (!status || !sno) {
-            logger.error("Status or sno not found!");
-            return;
+        console.log(calculatedHash, "calculatedHash", hash, "hash");
+
+        if (calculatedHash !== hash) {
+            console.log("Invalid Hash: Possible Fraud Attempt");
+            return res.status(400).json({ success: false, message: 'Invalid hash' });
         }
 
-        const payInData = await payInRepo.getPayInData(sno, true);
+         // ✅ Update the transaction status in your database
+         console.log(`Transaction ${txnid} is ${status}`);
+
+        const payInData = await payInRepo.getPayInData(txnid, true);
         if (!payInData) {
-            throw new Error("Payment does not exist");
+            logger.error("Payment does not exist");
         }
 
         const merchantData = await merchantRepo.getMerchantById(payInData.merchant_id);
@@ -70,7 +59,7 @@ const PayUHook = async (req, res) => {
             duration,
             utr: acquirer_data?.rrn,
             user_submitted_utr: acquirer_data?.rrn,
-            method: 'RazorPay',
+            method: 'PayU',
         };
 
         if (status === "SUCCESS") {
@@ -100,7 +89,7 @@ const PayUHook = async (req, res) => {
 
         logger.info("Transaction status updated successfully");
     } catch (err) {
-        logger.error("Razorpay webhook error", err);
+        logger.error("PayU webhook error", err);
     }
 };
 
@@ -108,4 +97,4 @@ const verifyPayUTransaction = async () => {
 
 }
 
-export { payuClient, payu_key, payu_salt, PayUHook, verifyPayUTransaction}
+export { payu_key, payu_salt, PayUHook, verifyPayUTransaction}

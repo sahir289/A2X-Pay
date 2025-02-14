@@ -13,7 +13,7 @@ import vendorSettlementRouter from "./vendorSettlementRoute.js";
 import duplicateDisputeTransactionRouter from "./duplicateDisputeTransactionRoute.js";
 import lienRouter from "./lienRouter.js";
 import weeklyReportRouter from "./weeklyReportRouter.js";
-import { RazorHook } from "../webhooks/index.js";
+import { PayUHook, RazorHook } from "../webhooks/index.js";
 
 const router = express();
 
@@ -34,6 +34,9 @@ router.use("/v1", duplicateDisputeTransactionRouter); // add router to handle du
 router.use("/v1", lienRouter);
 router.use("/v1", weeklyReportRouter);
 router.all("/v1/webhook/razor-pay-callback", RazorHook);
+router.all("/v1/webhook/payU/success", PayUHook);
+router.all("/v1/webhook/payU/failure", PayUHook);
+
 
 
 // Middleware for handling 404 errors
