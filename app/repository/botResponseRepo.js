@@ -171,7 +171,6 @@ class BotResponseRepo {
         },
         include: {
           Merchant_Bank: true, // Includes related Merchant_Bank data
-          status: "/success"
         },
       });
 
