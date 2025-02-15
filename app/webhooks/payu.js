@@ -22,13 +22,12 @@ const PayUHook = async (req, res) => {
         const hashString = `${payu_salt}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${payu_key}`;
         const calculatedHash = crypto.createHash('sha512').update(hashString).digest('hex');
 
-        console.log(calculatedHash, "calculatedHash", hash, "hash");
+        const statusUpper = status.toUpperCase();
 
         if (calculatedHash !== hash) {
             logger.info("Invalid Hash: Possible Fraud Attempt");
         }
-
-        const payInData = await payInRepo.getPayInData(txnid, true);
+        const payInData = await payInRepo.getPayInData(txnid, false);
         if (!payInData) {
             logger.error("Payment does not exist");
         }
@@ -47,7 +46,7 @@ const PayUHook = async (req, res) => {
 
         const payload = {
             confirmed: amount,
-            status,
+            status: statusUpper,
             is_notified: true,
             approved_at: new Date(),
             duration,
