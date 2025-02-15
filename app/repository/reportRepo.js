@@ -408,9 +408,7 @@ class ReportRepo {
                                 SUM(CASE WHEN data."type" = 'Payin' THEN data."amount" ELSE 0 END) -
                                 SUM(CASE WHEN data."type" = 'Payout' THEN data."amount" ELSE 0 END) - 
                                 (
-                                    SUM(CASE WHEN data."type" = 'Payin' THEN data."commission"::NUMERIC ELSE 0 END) + 
-                                    SUM(CASE WHEN data."type" = 'Payout' THEN data."commission"::NUMERIC ELSE 0 END) -
-                                    SUM(CASE WHEN data."type" = 'ReversedPayout' THEN data."commission"::NUMERIC ELSE 0 END)
+                                   0
                                 ) + 
                                 SUM(CASE WHEN data."type" = 'Settlement' THEN data."amount" ELSE 0 END) - 
                                 SUM(CASE WHEN data."type" = 'Lien' THEN data."amount" ELSE 0 END) + 
