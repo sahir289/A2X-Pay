@@ -5,6 +5,7 @@ import axios from 'axios';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
 import config from '../../config.js';
+import crypto from 'crypto';
 
 const payu_key = config.payu_key
 const payu_salt = config.payu_salt
@@ -17,8 +18,6 @@ const PayUHook = async (req, res) => {
         const data = req.body;
         const { txnid, amount, productinfo, firstname, email, status, hash, bank_ref_num} = data;
 
-        console.log(data, "PaUUUUUUU data")
-
         // Recalculate the hash to verify authenticity
         const hashString = `${payu_salt}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${payu_key}`;
         const calculatedHash = crypto.createHash('sha512').update(hashString).digest('hex');
@@ -28,9 +27,6 @@ const PayUHook = async (req, res) => {
         if (calculatedHash !== hash) {
             logger.info("Invalid Hash: Possible Fraud Attempt");
         }
-
-         // ✅ Update the transaction status in your database
-         console.log(`Transaction ${txnid} is ${status}`);
 
         const payInData = await payInRepo.getPayInData(txnid, true);
         if (!payInData) {
