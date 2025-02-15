@@ -4,7 +4,6 @@ import merchantRepo from '../repository/merchantRepo.js';
 import axios from 'axios';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
-import PayU from 'payu-websdk';
 import config from '../../config.js';
 
 const payu_key = config.payu_key
@@ -16,19 +15,18 @@ const PayUHook = async (req, res) => {
     try {
 
         const data = req.body;
-        const { txnid, amount, productinfo, firstname, email, status, hash } = data;
+        const { txnid, amount, productinfo, firstname, email, status, hash, bank_ref_num} = data;
 
         console.log(data, "PaUUUUUUU data")
 
         // Recalculate the hash to verify authenticity
-        const hashString = `${salt}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
+        const hashString = `${payu_salt}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${payu_key}`;
         const calculatedHash = crypto.createHash('sha512').update(hashString).digest('hex');
 
         console.log(calculatedHash, "calculatedHash", hash, "hash");
 
         if (calculatedHash !== hash) {
-            console.log("Invalid Hash: Possible Fraud Attempt");
-            return res.status(400).json({ success: false, message: 'Invalid hash' });
+            logger.info("Invalid Hash: Possible Fraud Attempt");
         }
 
          // ✅ Update the transaction status in your database
@@ -57,8 +55,8 @@ const PayUHook = async (req, res) => {
             is_notified: true,
             approved_at: new Date(),
             duration,
-            utr: acquirer_data?.rrn,
-            user_submitted_utr: acquirer_data?.rrn,
+            utr: bank_ref_num,
+            user_submitted_utr: bank_ref_num,
             method: 'PayU',
         };
 

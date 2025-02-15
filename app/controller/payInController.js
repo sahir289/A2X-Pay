@@ -1093,8 +1093,8 @@ class PayInController {
             productinfo,
             firstname,
             email,
-            surl: "https://stg-trust-pay.com/v1/webhook/payU/success",
-            furl: "https://stg-trust-pay.com/v1/webhook/payU/failure",
+            surl: getPayInData.return_url,
+            furl: getPayInData.return_url,
           }
           return DefaultResponse(res, 200, 'PauU hash created successfully', response);
         } catch (error) {
