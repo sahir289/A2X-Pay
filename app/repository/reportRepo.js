@@ -319,7 +319,7 @@ class ReportRepo {
                     SELECT tr.utr, tr."bankName", tr."amount", ba."vendor_code", tr."createdAt" AS "approved_date"
                     FROM Public."TelegramResponse" tr
                     JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
-                    WHERE tr.status = '/success'
+                    WHERE tr.status IN ('/success', '/internalTransfer')
                     AND DATE(tr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
                     AND ba."vendor_code" IN (${vendorCodesList})
                 ),
@@ -327,7 +327,7 @@ class ReportRepo {
                     SELECT tr.utr, tr."bankName", tr."amount", ba."vendor_code", tr."createdAt" AS "approved_date", 0 AS "commission", 'Payin' AS "type"
                     FROM Public."TelegramResponse" tr
                     JOIN Public."BankAccount" ba ON tr."bankName" = ba.ac_name
-                    WHERE tr.status = '/success'
+                    WHERE tr.status IN ('/success', '/internalTransfer')
                     AND DATE(tr."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') BETWEEN '${startDate}' AND '${endDate}'
                 ),
                 combined_data AS (
