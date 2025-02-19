@@ -125,9 +125,15 @@ class BotResponseController {
                       };
 
                       try {
-                        //when we get the correct notify url;
+                        logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                        //When we get the notify url we will add it.
                         const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                        logger.info('Notification sent successfully', {
+                          status: notifyMerchant.status,
+                          data: notifyMerchant.data,
+                        })
                       } catch (error) {
+                          logger.error("Error sending notification:", error);
                       }
 
                       return DefaultResponse(
@@ -176,9 +182,15 @@ class BotResponseController {
                     };
 
                     try {
-                      //when we get the correct notify url;
-                      const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                      logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                        //When we get the notify url we will add it.
+                        const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                        logger.info('Notification sent successfully', {
+                          status: notifyMerchant.status,
+                          data: notifyMerchant.data,
+                        })
                     } catch (error) {
+                        logger.error("Error sending notification:", error);
                     }
 
                     return DefaultResponse(
@@ -226,9 +238,15 @@ class BotResponseController {
                       };
 
                       try {
-                        //when we get the correct notify url;
+                        logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                        //When we get the notify url we will add it.
                         const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                        logger.info('Notification sent successfully', {
+                          status: notifyMerchant.status,
+                          data: notifyMerchant.data,
+                        })
                       } catch (error) {
+                          logger.error("Error sending notification:", error);
                       }
 
                       return DefaultResponse(
@@ -276,9 +294,15 @@ class BotResponseController {
                     };
 
                     try {
-                      //when we get the correct notify url;
-                      const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                      logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                        //When we get the notify url we will add it.
+                        const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                        logger.info('Notification sent successfully', {
+                          status: notifyMerchant.status,
+                          data: notifyMerchant.data,
+                        })
                     } catch (error) {
+                        logger.error("Error sending notification:", error);
                     }
 
                     return DefaultResponse(
@@ -349,9 +373,15 @@ class BotResponseController {
                         utr_id: updatePayInDataRes?.utr
                       };
                       try {
-                        //when we get the correct notify url;
+                        logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                        //When we get the notify url we will add it.
                         const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                        logger.info('Notification sent successfully', {
+                          status: notifyMerchant.status,
+                          data: notifyMerchant.data,
+                        })
                       } catch (error) {
+                          logger.error("Error sending notification:", error);
                       }
                     } else {
                       return DefaultResponse(
@@ -394,9 +424,15 @@ class BotResponseController {
                       utr_id: updatePayInDataRes?.utr
                     };
                     try {
-                      //when we get the correct notify url;
-                      const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                      logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                        //When we get the notify url we will add it.
+                        const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                        logger.info('Notification sent successfully', {
+                          status: notifyMerchant.status,
+                          data: notifyMerchant.data,
+                        })
                     } catch (error) {
+                      logger.error("Error sending notification:", error);
                     }
                   }
                 }
@@ -434,9 +470,15 @@ class BotResponseController {
                       };
 
                       try {
-                        //when we get the correct notify url;
+                        logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                        //When we get the notify url we will add it.
                         const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                        logger.info('Notification sent successfully', {
+                          status: notifyMerchant.status,
+                          data: notifyMerchant.data,
+                        })
                       } catch (error) {
+                        logger.error("Error sending notification:", error);
                       }
                     } else {
                       return DefaultResponse(
@@ -477,9 +519,15 @@ class BotResponseController {
                     };
 
                     try {
-                      //when we get the correct notify url;
-                      const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                      logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                        //When we get the notify url we will add it.
+                        const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                        logger.info('Notification sent successfully', {
+                          status: notifyMerchant.status,
+                          data: notifyMerchant.data,
+                        })
                     } catch (error) {
+                      logger.error("Error sending notification:", error);
                     }
                   }
                 }
@@ -524,9 +572,15 @@ class BotResponseController {
                     };
 
                     try {
-                      //when we get the correct notify url;
-                      const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                      logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                        //When we get the notify url we will add it.
+                        const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                        logger.info('Notification sent successfully', {
+                          status: notifyMerchant.status,
+                          data: notifyMerchant.data,
+                        })
                     } catch (error) {
+                      logger.error("Error sending notification:", error);
                     }
 
                     return DefaultResponse(
@@ -574,9 +628,15 @@ class BotResponseController {
                   };
 
                   try {
-                    //when we get the correct notify url;
+                    logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                    //When we get the notify url we will add it.
                     const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                    logger.info('Notification sent successfully', {
+                      status: notifyMerchant.status,
+                      data: notifyMerchant.data,
+                    })
                   } catch (error) {
+                    logger.error("Error sending notification:", error);
                   }
 
                   return DefaultResponse(
@@ -624,9 +684,15 @@ class BotResponseController {
                     };
 
                     try {
-                      //when we get the correct notify url;
-                      const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                      logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                    //When we get the notify url we will add it.
+                    const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                    logger.info('Notification sent successfully', {
+                      status: notifyMerchant.status,
+                      data: notifyMerchant.data,
+                    })
                     } catch (error) {
+                      logger.error("Error sending notification:", error);
                     }
 
                     return DefaultResponse(
@@ -674,9 +740,15 @@ class BotResponseController {
                   };
 
                   try {
-                    //when we get the correct notify url;
+                    logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                    //When we get the notify url we will add it.
                     const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                    logger.info('Notification sent successfully', {
+                      status: notifyMerchant.status,
+                      data: notifyMerchant.data,
+                    })
                   } catch (error) {
+                    logger.error("Error sending notification:", error);
                   }
 
                   return DefaultResponse(
@@ -725,10 +797,12 @@ class BotResponseController {
                       payin_commission: payinCommission
                     };
 
+
                     const updatePayInDataRes = await payInRepo.updatePayInData(
                       checkPayInUtr[0]?.id,
                       payInData
                     );
+
 
                     if (checkPayInUtr[0]?.bank_acc_id) {
                       const updateBankRes = await bankAccountRepo.updateBankAccountBalance(
@@ -748,8 +822,14 @@ class BotResponseController {
                     };
                     try {
                       //when we get the correct notify url;
+                      logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
                       const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                      logger.info('Notification sent successfully', {
+                        status: notifyMerchant.status,
+                        data: notifyMerchant.data,
+                      })
                     } catch (error) {
+                      logger.error("Error sending notification:", error);
                     }
                   } else {
                     return DefaultResponse(
@@ -792,9 +872,15 @@ class BotResponseController {
                     utr_id: updatePayInDataRes?.utr
                   };
                   try {
+                    logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
                     //when we get the correct notify url;
                     const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                    logger.info('Notification sent successfully', {
+                      status: notifyMerchant.status,
+                      data: notifyMerchant.data,
+                    })
                   } catch (error) {
+                      logger.error("Error sending notification:", error);
                   }
                 }
               }
@@ -832,9 +918,15 @@ class BotResponseController {
                     };
 
                     try {
+                      logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
                       //when we get the correct notify url;
                       const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                      logger.info('Notification sent successfully', {
+                        status: notifyMerchant.status,
+                        data: notifyMerchant.data,
+                      })
                     } catch (error) {
+                        logger.error("Error sending notification:", error);
                     }
                   } else {
                     return DefaultResponse(
@@ -875,9 +967,15 @@ class BotResponseController {
                   };
 
                   try {
-                    //when we get the correct notify url;
-                    const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                    logger.info('Sending notification to merchant', { notify_url: checkPayInUtr[0]?.notify_url, notify_data: notifyData });
+                      //when we get the correct notify url;
+                      const notifyMerchant = await axios.post(checkPayInUtr[0]?.notify_url, notifyData)
+                      logger.info('Notification sent successfully', {
+                        status: notifyMerchant.status,
+                        data: notifyMerchant.data,
+                      })
                   } catch (error) {
+                      logger.error("Error sending notification:", error);
                   }
                 }
               }

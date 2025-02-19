@@ -80,7 +80,7 @@ const PayUHook = async (req, res) => {
             logger.error("Error notifying merchant:", err);
         });
 
-        logger.info("Transaction status updated successfully");
+        logger.info("PayU Transaction status updated successfully");
     } catch (err) {
         logger.error("PayU webhook error", err);
     }

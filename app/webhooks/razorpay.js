@@ -103,7 +103,7 @@ const RazorHook = async (req, res) => {
             logger.error("Error notifying merchant:", err);
         });
 
-        logger.info("Transaction status updated successfully");
+        logger.info("Razorpay Transaction status updated successfully");
     } catch (err) {
         logger.error("Razorpay webhook error", err);
     }
