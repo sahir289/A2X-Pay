@@ -79,6 +79,7 @@ const PayUHook = async (req, res) => {
         await axios.post(payInData.notify_url, notifyData).catch((err) => {
             logger.error("Error notifying merchant:", err);
         });
+        logger.info('Sending notification to merchant for PayU', { notify_url: payInData.notify_url, notify_data: notifyData });
 
         logger.info("PayU Transaction status updated successfully");
     } catch (err) {

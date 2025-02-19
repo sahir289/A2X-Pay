@@ -102,6 +102,7 @@ const RazorHook = async (req, res) => {
         await axios.post(payInData.notify_url, notifyData).catch((err) => {
             logger.error("Error notifying merchant:", err);
         });
+        logger.info('Sending notification to merchant for RazorPay', { notify_url: payInData.notify_url, notify_data: notifyData });
 
         logger.info("Razorpay Transaction status updated successfully");
     } catch (err) {
