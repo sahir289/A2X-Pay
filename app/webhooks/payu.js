@@ -46,7 +46,7 @@ const PayUHook = async (req, res) => {
 
         const payload = {
             confirmed: amount,
-            status: statusUpper,
+            status: statusUpper === 'FAILURE' ? 'FAILED' : statusUpper,
             is_notified: true,
             approved_at: new Date(),
             duration,
