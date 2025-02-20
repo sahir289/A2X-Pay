@@ -55,7 +55,7 @@ const PayUHook = async (req, res) => {
             method: 'PayU',
         };
 
-        if (status === "SUCCESS") {
+        if (statusUpper === "SUCCESS") {
             const payinCommission = calculateCommission(amount, merchantData.payin_commission);
             payload.payin_commission = payinCommission;
         }
@@ -69,7 +69,7 @@ const PayUHook = async (req, res) => {
         await merchantRepo.updateMerchant(payInData.merchant_id, amount);
 
         const notifyData = {
-            status,
+            status: statusUpper,
             merchantOrderId: updatePayInDataRes?.merchant_order_id,
             payinId: updatePayInDataRes?.id,
             amount: updatePayInDataRes?.confirmed,
