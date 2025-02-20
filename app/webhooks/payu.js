@@ -48,7 +48,7 @@ const PayUHook = async (req, res) => {
             confirmed: amount,
             status: statusUpper === 'FAILURE' ? 'FAILED' : statusUpper,
             is_notified: true,
-            approved_at: new Date(),
+            approved_at: status === 'SUCCESS' ? new Date() : null,
             duration,
             utr: bank_ref_num,
             user_submitted_utr: bank_ref_num,
