@@ -6,6 +6,7 @@ import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
 import config from '../../config.js';
 import crypto from 'crypto';
+import botResponseRepo from '../repository/botResponseRepo.js';
 
 const payu_key = config.payu_key
 const payu_salt = config.payu_salt
@@ -23,6 +24,8 @@ const PayUHook = async (req, res) => {
         const calculatedHash = crypto.createHash('sha512').update(hashString).digest('hex');
 
         const statusUpper = status.toUpperCase();
+        const statusLower = status.toLowerCase();
+
 
         if (calculatedHash !== hash) {
             logger.info("Invalid Hash: Possible Fraud Attempt");
@@ -61,6 +64,16 @@ const PayUHook = async (req, res) => {
         }
 
         const updatePayInDataRes = await payInRepo.updatePayInData(payInData.id, payload);
+
+        // Calculate pay-in records for the dashboard and today's amount received in bank
+        const updatedData = {
+            status: `/${statusLower}`,
+            amount_code: null,
+            amount,
+            utr: `${bank_ref_num}-Intent`,
+            bankName : updatePayInDataRes?.bank_name
+          };
+        await botResponseRepo.botResponse(updatedData);
 
         if (payInData.bank_acc_id) {
             await bankAccountRepo.updateBankAccountBalance(payInData.bank_acc_id, parseFloat(amount));

@@ -132,6 +132,7 @@ class BotResponseRepo {
         ...(amount_code && { amount_code: { contains: amount_code, mode: "insensitive" } }),
         ...(utr && { utr: utr }),
         ...(bankName && { bankName: bankName }),
+        NOT: { utr: { contains: "-Intent", mode: "insensitive" } },
       };
 
       if (query.is_used !== undefined) {

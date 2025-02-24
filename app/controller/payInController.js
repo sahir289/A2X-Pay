@@ -1200,6 +1200,18 @@ class PayInController {
         payInDataById.id,
         payInData
       );
+
+      // Calculate pay-in records for the dashboard and today's amount received in bank
+      const statusLower = payload.data.payment.payment_status.toLowerCase();
+      const updatedData = {
+          status: `/${statusLower}`,
+          amount_code: null,
+          amount: payload.data.order.order_amount,
+          utr: `${payload.data.payment.bank_reference}-Intent`,
+          bankName : updatePayinRes?.bank_name
+        };
+      await botResponseRepo.botResponse(updatedData);
+
       const notifyData = {
         status: updatePayinRes?.status,
         merchantOrderId: updatePayinRes?.merchant_order_id,

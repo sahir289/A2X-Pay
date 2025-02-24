@@ -6,6 +6,7 @@ import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
 import Razorpay from 'razorpay';
 import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils.js';
+import botResponseRepo from '../repository/botResponseRepo.js';
 
 export const razorpay = new Razorpay({
     key_id: process.env.RAZOR_PAY_ID,
@@ -84,6 +85,17 @@ const RazorHook = async (req, res) => {
         }
 
         const updatePayInDataRes = await payInRepo.updatePayInData(payInData.id, payload);
+
+        // Calculate pay-in records for the dashboard and today's amount received in bank
+        const statusLower = status.toLowerCase();
+        const updatedData = {
+            status: `/${statusLower}`,
+            amount_code: null,
+            amount,
+            utr: `${acquirer_data?.rrn}-Intent`,
+            bankName : updatePayInDataRes?.bank_name
+          };
+        await botResponseRepo.botResponse(updatedData);
 
         if (payInData.bank_acc_id) {
             await bankAccountRepo.updateBankAccountBalance(payInData.bank_acc_id, parseFloat(amount));
