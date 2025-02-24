@@ -1208,6 +1208,7 @@ class PayInController {
           amount_code: null,
           amount: payload.data.order.order_amount,
           utr: `${payload.data.payment.bank_reference}-Intent`,
+          is_used: true,
           bankName : updatePayinRes?.bank_name
         };
       await botResponseRepo.botResponse(updatedData);

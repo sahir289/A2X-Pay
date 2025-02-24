@@ -71,6 +71,7 @@ const PayUHook = async (req, res) => {
             amount_code: null,
             amount,
             utr: `${bank_ref_num}-Intent`,
+            is_used: true,
             bankName : updatePayInDataRes?.bank_name
           };
         await botResponseRepo.botResponse(updatedData);

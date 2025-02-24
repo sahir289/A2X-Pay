@@ -93,6 +93,7 @@ const RazorHook = async (req, res) => {
             amount_code: null,
             amount,
             utr: `${acquirer_data?.rrn}-Intent`,
+            is_used: true,
             bankName : updatePayInDataRes?.bank_name
           };
         await botResponseRepo.botResponse(updatedData);
