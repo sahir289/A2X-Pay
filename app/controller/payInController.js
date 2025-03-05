@@ -1026,12 +1026,9 @@ class PayInController {
         };
 
         try {
-          console.log(getPayInData)
           logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
           //When we get the notify url we will add it.
-          console.log("1")
           const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
-          console.log("2")
           logger.info('Notification sent successfully', {
             status: notifyMerchant.status,
             data: notifyMerchant.data,
