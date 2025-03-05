@@ -46,16 +46,16 @@ const PayUHook = async (req, res) => {
 
         const payload = {
             confirmed: amount,
-            status: statusUpper,
+            status: statusUpper === 'FAILURE' ? 'FAILED' : statusUpper,
             is_notified: true,
-            approved_at: new Date(),
+            approved_at: status === 'SUCCESS' ? new Date() : null,
             duration,
             utr: bank_ref_num,
             user_submitted_utr: bank_ref_num,
             method: 'PayU',
         };
 
-        if (status === "SUCCESS") {
+        if (statusUpper === "SUCCESS") {
             const payinCommission = calculateCommission(amount, merchantData.payin_commission);
             payload.payin_commission = payinCommission;
         }
@@ -69,7 +69,7 @@ const PayUHook = async (req, res) => {
         await merchantRepo.updateMerchant(payInData.merchant_id, amount);
 
         const notifyData = {
-            status,
+            status: statusUpper,
             merchantOrderId: updatePayInDataRes?.merchant_order_id,
             payinId: updatePayInDataRes?.id,
             amount: updatePayInDataRes?.confirmed,
@@ -79,8 +79,9 @@ const PayUHook = async (req, res) => {
         await axios.post(payInData.notify_url, notifyData).catch((err) => {
             logger.error("Error notifying merchant:", err);
         });
+        logger.info('Sending notification to merchant for PayU', { notify_url: payInData.notify_url, notify_data: notifyData });
 
-        logger.info("Transaction status updated successfully");
+        logger.info("PayU Transaction status updated successfully");
     } catch (err) {
         logger.error("PayU webhook error", err);
     }

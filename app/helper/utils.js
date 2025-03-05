@@ -11,6 +11,8 @@ export const getAmountFromPerc = (perc, amount)=>{
     return (amount/100) * perc;
 }
 
-export const calculateCommission = (amount, percentage) => {
+export const calculateCommission = (amt, percentage) => {
+    const amount = Number(amt)
     return (amount * percentage) / 100;
   };
+
