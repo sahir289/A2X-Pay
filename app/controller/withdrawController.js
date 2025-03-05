@@ -27,7 +27,7 @@ class WithdrawController {
   }
 
   async createWithdraw(req, res, next) {
-    const restrictedMerchants = ['DHM', 'APPLE', 'CB', 'RK', 'MafiaMundeer', 'BERU', 'luna', 'Bita', 'treX', 'paycord', 'paycord-live', 'paycord-live-2', 'paycord-live-intent'];
+    const restrictedMerchants = ['DHM', 'APPLE', 'CB', 'RK', 'MafiaMundeer', 'BERU', 'luna', 'Bita', 'treX', 'paycord', 'paycord-live', 'paycord-live-2', 'paycord-live-intent', 'Berker'];
     try {
       checkValidation(req);
       const { user_id, bank_name, acc_no, acc_holder_name, ifsc_code, amount, vendor_code, merchant_order_id, code } = req.body;
