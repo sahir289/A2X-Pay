@@ -1027,17 +1027,27 @@ class PayInController {
 
         try {
           logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-          //When we get the notify url we will add it.
-          const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+        
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => {
+            controller.abort();
+          }, 10000); // 10 seconds timeout
+        
+          const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData, { signal: controller.signal });
+        
+          clearTimeout(timeoutId); // Clear timeout if request completes
+        
           logger.info('Notification sent successfully', {
-            status: notifyMerchant.status,
-            data: notifyMerchant.data,
-          })
-
+            status: notifyMerchant?.status,
+            data: notifyMerchant?.data,
+          });
         } catch (error) {
-          logger.error("Error sending notification:", error);
+          if (axios.isCancel(error)) {
+            logger.error('Error: Request timed out after 10 seconds');
+          } else {
+            logger.error('Error sending notification:', error);
+          }
         }
-
 
         const response = {
           status: updatePayinRes?.status,
