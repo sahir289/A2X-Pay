@@ -14,6 +14,7 @@ import duplicateDisputeTransactionRouter from "./duplicateDisputeTransactionRout
 import lienRouter from "./lienRouter.js";
 import weeklyReportRouter from "./weeklyReportRouter.js";
 import { PayUHook, RazorHook } from "../webhooks/index.js";
+import A2Pay from "../webhooks/a2Pay.js";
 
 const router = express();
 
@@ -36,6 +37,7 @@ router.use("/v1", weeklyReportRouter);
 router.all("/v1/webhook/razor-pay-callback", RazorHook);
 router.all("/v1/webhook/payU/success", PayUHook);
 router.all("/v1/webhook/payU/failure", PayUHook);
+router.all("/v1/webhook/a2Pay", A2Pay);
 
 
 
