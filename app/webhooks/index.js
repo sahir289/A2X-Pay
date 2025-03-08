@@ -1,3 +1,4 @@
 import RazorHook from "./razorpay.js";
 import { verifyPayUTransaction, PayUHook } from "./payu.js";
-export {RazorHook, verifyPayUTransaction, PayUHook}
+import A2Pay from "./a2Pay.js";
+export {RazorHook, verifyPayUTransaction, PayUHook, A2Pay}

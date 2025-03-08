@@ -1074,15 +1074,38 @@ class PayInController {
       checkValidation(req);
       const { payInId } = req.params;
       // const userIp = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
-      const { amount, isRazorpay } = req.body;
-      let PayU;
+      const { amount, isRazorpay, a2pay, PayU } = req.body;
 
       const getPayInData = await payInRepo.getPayInData(payInId);
       if (!getPayInData) {
         throw new CustomError(404, "Payment does not exist");
+      } 
+
+      if(a2pay){
+        try {
+          const totalAmount = amount;
+          const order_id = payInId
+          const collectionId = config.a2_pay_collection_id;
+          const salt = config.a2_pay_Salt;
+
+          const hashString =`${collectionId}|${totalAmount}|${order_id}|${salt}`;
+          console.log(hashString, "hashString")
+          const hash = crypto.createHash('sha512').update(hashString).digest('hex');
+          console.log(hash, "hash");
+          const response = {
+            hash,
+            collectionId,
+            order_id,
+            amount,
+          }
+          return DefaultResponse(res, 200, 'A2PAY hash created successfully', response);
+        } catch (error) {
+          logger.info('getting error while creating Transaction', error);
+        }
+       
       }
 
-      if(PayU = true){
+      if(PayU){
         try {
           const totalAmount = String(amount);
           const txnid = payInId
