@@ -1085,20 +1085,35 @@ class PayInController {
         try {
           const totalAmount = amount;
           const order_id = payInId
-          const collectionId = config.a2_pay_collection_id;
+          const collection_id = config.a2_pay_collection_id;
           const salt = config.a2_pay_Salt;
+          const url = config.a2_pay_Url;
 
-          const hashString =`${collectionId}|${totalAmount}|${order_id}|${salt}`;
-          console.log(hashString, "hashString")
+          const hashString =`${collection_id}|${totalAmount}|${order_id}|${salt}`;
           const hash = crypto.createHash('sha512').update(hashString).digest('hex');
-          console.log(hash, "hash");
-          const response = {
+          const payload = {
             hash,
-            collectionId,
+            collection_id,
             order_id,
             amount,
           }
-          return DefaultResponse(res, 200, 'A2PAY hash created successfully', response);
+
+          try {
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(payload),
+            });
+        
+            const data = await response.json();
+        
+            return DefaultResponse(res, 200, 'A2PAY hash created successfully', data);
+          } catch (error) {
+            logger.error('Error creating transaction:', error);
+            next(error);
+          }
         } catch (error) {
           logger.info('getting error while creating Transaction', error);
         }

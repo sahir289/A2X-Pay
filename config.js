@@ -62,7 +62,8 @@ function config(Env) {
         payu_salt: Env?.PAYU_SALT,
         payu_url: Env?.PAYU_URL,
         a2_pay_collection_id: Env?.A2PAY_COLLECTION_ID,
-        a2_pay_Salt: Env?.A2PAY_SALT
+        a2_pay_Salt: Env?.A2PAY_SALT,
+        a2_pay_Url: Env?.A2PAY_URL,
     };
 }
 
