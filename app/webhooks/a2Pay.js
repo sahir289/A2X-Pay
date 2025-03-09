@@ -18,7 +18,6 @@ const A2Pay = async (req, res) => {
         
         const { amount, transaction_id, status, hash, order_id } = data.transaction;
         const statusValue = status === 'completed' ? 'SUCCESS' : status === 'dropped' ? 'DROPPED' : 'PENDING';
-
         // Recalculate the hash to verify authenticity
         const hashString =`${collectionId}|${amount}|${order_id}|${salt}`;
         const calculatedHash = crypto.createHash('sha512').update(hashString).digest('hex');
@@ -60,6 +59,18 @@ const A2Pay = async (req, res) => {
         }
 
         const updatePayInDataRes = await payInRepo.updatePayInData(payInData.id, payload);
+
+        // Calculate pay-in records for the dashboard and today's amount received in bank
+        const updatedData = {
+            status: `/${status}`,
+            amount_code: null,
+            amount,
+            utr: `${transaction_id}-Intent`,
+            is_used: true,
+            bankName : updatePayInDataRes?.bank_name
+          };
+        await botResponseRepo.botResponse(updatedData);
+
 
         if (payInData.bank_acc_id) {
             await bankAccountRepo.updateBankAccountBalance(payInData.bank_acc_id, parseFloat(amount));
