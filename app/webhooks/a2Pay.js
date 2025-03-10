@@ -62,8 +62,9 @@ const A2Pay = async (req, res) => {
         const updatePayInDataRes = await payInRepo.updatePayInData(payInData.id, payload);
 
         // Calculate pay-in records for the dashboard and today's amount received in bank
+        const lowerCase = statusValue.toLowerCase();
         const updatedData = {
-            status: `/${statusValue}`,
+            status: `/${lowerCase}`,
             amount_code: null,
             amount,
             utr: `${transaction_id}-Intent`,
@@ -71,7 +72,7 @@ const A2Pay = async (req, res) => {
             bankName : updatePayInDataRes?.bank_name
           };
         await botResponseRepo.botResponse(updatedData);
-
+  
         if (payInData.bank_acc_id) {
             await bankAccountRepo.updateBankAccountBalance(payInData.bank_acc_id, parseFloat(amount));
         }
