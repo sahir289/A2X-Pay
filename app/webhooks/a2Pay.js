@@ -6,17 +6,18 @@ import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
 import config from '../../config.js';
 import crypto from 'crypto';
+import botResponseRepo from '../repository/botResponseRepo.js';
 
 
 const A2Pay = async (req, res) => {
     res.json({status: 200, message: 'A2Pay Webhook Called successfully'});
     try {
 
-        const data = req.body;
+        const response = req.body;
         const collectionId = config.a2_pay_collection_id;
         const salt = config.a2_pay_Salt;
         
-        const { amount, transaction_id, status, hash, order_id } = data.transaction;
+        const { amount, transaction_id, status, hash, order_id, data } = response.transaction;
         const statusValue = status === 'completed' ? 'SUCCESS' : status === 'dropped' ? 'DROPPED' : 'PENDING';
         // Recalculate the hash to verify authenticity
         const hashString =`${collectionId}|${amount}|${order_id}|${salt}`;
@@ -48,8 +49,8 @@ const A2Pay = async (req, res) => {
             is_notified: true,
             approved_at: statusValue === 'SUCCESS' ? new Date() : null,
             duration,
-            utr: transaction_id,
-            user_submitted_utr: transaction_id,
+            utr: data?.utr,
+            user_submitted_utr: data?.utr,
             method: 'A2Pay',
         };
 
@@ -62,7 +63,7 @@ const A2Pay = async (req, res) => {
 
         // Calculate pay-in records for the dashboard and today's amount received in bank
         const updatedData = {
-            status: `/${status}`,
+            status: `/${statusValue}`,
             amount_code: null,
             amount,
             utr: `${transaction_id}-Intent`,
@@ -70,7 +71,6 @@ const A2Pay = async (req, res) => {
             bankName : updatePayInDataRes?.bank_name
           };
         await botResponseRepo.botResponse(updatedData);
-
 
         if (payInData.bank_acc_id) {
             await bankAccountRepo.updateBankAccountBalance(payInData.bank_acc_id, parseFloat(amount));
