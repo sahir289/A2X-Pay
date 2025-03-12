@@ -1077,6 +1077,8 @@ class PayInController {
       const { amount, isRazorpay, a2pay, PayU } = req.body;
 
       const getPayInData = await payInRepo.getPayInData(payInId);
+
+      const merchantData = await merchantRepo.getMerchantByCode(getPayInData?.Merchant.code);
       if (!getPayInData) {
         throw new CustomError(404, "Payment does not exist");
       } 
@@ -1093,7 +1095,7 @@ class PayInController {
           const hash = crypto.createHash('sha512').update(hashString).digest('hex');
           const payload = {
             hash,
-            redirect_url: getPayInData?.return_url,
+            redirect_url: getPayInData?.return_url ? getPayInData?.return_url : merchantData?.return_url,
             collection_id,
             order_id,
             amount,
