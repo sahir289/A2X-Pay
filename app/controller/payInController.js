@@ -1093,6 +1093,7 @@ class PayInController {
           const hash = crypto.createHash('sha512').update(hashString).digest('hex');
           const payload = {
             hash,
+            redirect_url: getPayInData?.return_url,
             collection_id,
             order_id,
             amount,
