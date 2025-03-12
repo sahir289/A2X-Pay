@@ -67,11 +67,13 @@ const A2Pay = async (req, res) => {
             status: `/${lowerCase}`,
             amount_code: null,
             amount,
-            utr: `${transaction_id}-Intent`,
+            utr: `${data?.utr}-Intent`,
             is_used: true,
             bankName : updatePayInDataRes?.bank_name
           };
-        await botResponseRepo.botResponse(updatedData);
+        if (statusValue === "SUCCESS") {
+          await botResponseRepo.botResponse(updatedData);
+        }
   
         if (payInData.bank_acc_id) {
             await bankAccountRepo.updateBankAccountBalance(payInData.bank_acc_id, parseFloat(amount));
