@@ -1090,6 +1090,7 @@ class PayInController {
           const collection_id = config.a2_pay_collection_id;
           const salt = config.a2_pay_Salt;
           const url = config.a2_pay_Url;
+          const userId = getPayInData.user_id;
 
           const hashString =`${collection_id}|${totalAmount}|${order_id}|${salt}`;
           const hash = crypto.createHash('sha512').update(hashString).digest('hex');
@@ -1099,6 +1100,7 @@ class PayInController {
             collection_id,
             order_id,
             amount,
+            user_id: userId,
           }
 
           try {
