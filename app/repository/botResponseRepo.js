@@ -271,7 +271,8 @@ class BotResponseRepo {
         where: {
           utr: usrSubmittedUtr, // Fetch all responses matching the UTR
           amount: amount, // Fetch all responses matching the amount
-          status: "/success"
+          status: "/success",
+          is_used: false
         },
       });
 
@@ -281,7 +282,7 @@ class BotResponseRepo {
     }
   }
 
-  async getBotResDataByinternalTransfer(usrSubmittedUtr, amount) {
+  async getBotResDataByInternalTransfer(usrSubmittedUtr, amount) {
     try {
       const botRes = await prisma.telegramResponse.findFirst({
         where: {

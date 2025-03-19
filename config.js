@@ -57,8 +57,10 @@ function config(Env) {
         cashfreeClientId:Env?.CLIENT_ID,
         cashfreeClientSecret:Env?.CLIENT_SECRET,
         cashfreeCreateOrderUrl:Env?.CREATE_ORDER_URL,
-        cashfreePayOrderUrl:Env?.PAY_ORDER_URL
-
+        cashfreePayOrderUrl:Env?.PAY_ORDER_URL,
+        payu_key: Env?.PAYU_KEY,
+        payu_salt: Env?.PAYU_SALT,
+        payu_url: Env?.PAYU_URL,
     };
 }
 

@@ -37,6 +37,8 @@ import { sendBankNotAssignedAlertTelegram } from "../helper/sendTelegramMessages
 import { logger } from "../utils/logger.js";
 import { razorpay } from "../webhooks/razorpay.js";
 import withdrawService from "../services/withdrawService.js";
+import crypto from 'crypto';
+import { payu_key, payu_salt } from "../webhooks/payu.js";
 
 // Construct __dirname manually
 const __filename = fileURLToPath(import.meta.url);
@@ -1025,17 +1027,27 @@ class PayInController {
 
         try {
           logger.info('Sending notification to merchant', { notify_url: getPayInData.notify_url, notify_data: notifyData });
-          //When we get the notify url we will add it.
-          const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData);
+        
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => {
+            controller.abort();
+          }, 10000); // 10 seconds timeout
+        
+          const notifyMerchant = await axios.post(getPayInData.notify_url, notifyData, { signal: controller.signal });
+        
+          clearTimeout(timeoutId); // Clear timeout if request completes
+        
           logger.info('Notification sent successfully', {
-            status: notifyMerchant.status,
-            data: notifyMerchant.data,
-          })
-
+            status: notifyMerchant?.status,
+            data: notifyMerchant?.data,
+          });
         } catch (error) {
-          logger.error("Error sending notification:", error);
+          if (axios.isCancel(error)) {
+            logger.error('Error: Request timed out after 10 seconds');
+          } else {
+            logger.error('Error sending notification:', error);
+          }
         }
-
 
         const response = {
           status: updatePayinRes?.status,
@@ -1063,15 +1075,43 @@ class PayInController {
       const { payInId } = req.params;
       // const userIp = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
       const { amount, isRazorpay } = req.body;
+      let PayU;
 
       const getPayInData = await payInRepo.getPayInData(payInId);
       if (!getPayInData) {
         throw new CustomError(404, "Payment does not exist");
       }
 
-      // const _10_MINUTES = 1000 * 60 * 10;
-      // const expirationTimestamp = new Date(new Date().getTime() + _10_MINUTES);
-      // const expirationTimeFormatted = expirationTimestamp.toISOString().replace('T', ' ').split('.')[0];
+      if(PayU = true){
+        try {
+          const totalAmount = String(amount);
+          const txnid = payInId
+          const key = payu_key;
+          const productinfo = 'productinfo';
+          const firstname = 'PayU User';
+          const email = 'payuuser@dummy.com';
+          const salt = payu_salt;
+
+          const hashString =`${key}|${txnid}|${totalAmount}|${productinfo}|${firstname}|${email}|||||||||||${salt}`;
+          // Generate SHA-512 hash
+          const hash = crypto.createHash('sha512').update(hashString).digest('hex');
+          const response = {
+            hash,
+            key,
+            txnid,
+            amount,
+            productinfo,
+            firstname,
+            email,
+            surl: getPayInData.return_url,
+            furl: getPayInData.return_url,
+          }
+          return DefaultResponse(res, 200, 'PauU hash created successfully', response);
+        } catch (error) {
+          logger.info('getting error while creating order', error);
+        }
+       
+      }
 
       if (isRazorpay) {
         const orderRes = await razorpay.orders.create({
@@ -1119,60 +1159,7 @@ class PayInController {
       } catch (err) {
         logger.error('getting error while creating order', err);
       }
-      // const now = new Date();
-      // now.setUTCMinutes(now.getUTCMinutes() + 5);
-      // const istOffset = 5.5 * 60;
-      // const startTime = new Date(now.getTime() + istOffset * 60000);
-      // const endTime = new Date(startTime.getTime() + 5 * 60000);
-      // const approveTime = new Date(startTime.getTime() + 1 * 60000);
-
-      // const payOrderUrl = config.cashfreePayOrderUrl;
-      // const optionsToOrderPay = {
-      //   method: 'POST',
-      //   headers: {
-      //     'x-api-version': '2025-01-01',
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({
-      //     payment_method: {
-      //       upi: {
-      //         channel: "link",
-      //         authorization: {
-      //           start_time: startTime,
-      //           end_time: endTime,
-      //           approve_by: approveTime
-      //         },
-      //         authorize_only: false,
-      //         upi_expiry_minutes: 5,
-      //         // upi_id: "testsuccess@gocash",
-      //         upi_redirect_url: true
-      //       }
-      //     },
-      //     payment_session_id: cashfreeResponse.payment_session_id,
-      //   })
-      // };
-
-
-      // let payOrderResponse;
-      // try {
-        // const orderPay = await fetch(payOrderUrl, optionsToOrderPay);
-        // payOrderResponse = await orderPay.json();
-        // console.log(payOrderResponse, "payOrderResponse")
-      //   logger.info('cashfree pay order links generated Successfully');
-      // } catch (err) {
-      //   console.error('Error:', err);
-      //   logger.error('getting error while generating pay order links', err);
-      // }
-
-      // const payInData = {
-      //   status: payOrderResponse.cf_payment_id ? "PENDING" : 'FAILED',
-      // };
-
-      // const updatePayinRes = await payInRepo.updatePayInData(
-      //   payInId,
-      //   payInData
-      // );
-
+     
       const response = {
         payment_amount: amount,
         payment_session_id: cashfreeResponse.payment_session_id,

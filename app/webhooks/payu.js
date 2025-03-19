@@ -4,48 +4,32 @@ import merchantRepo from '../repository/merchantRepo.js';
 import axios from 'axios';
 import bankAccountRepo from '../repository/bankAccountRepo.js';
 import { logger } from '../utils/logger.js';
-import Razorpay from 'razorpay';
-import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils.js';
+import config from '../../config.js';
+import crypto from 'crypto';
 
-export const razorpay = new Razorpay({
-    key_id: process.env.RAZOR_PAY_ID,
-    key_secret: process.env.RAZOR_PAY_SECRET
-})
+const payu_key = config.payu_key
+const payu_salt = config.payu_salt
 
-const RazorHook = async (req, res) => {
-    res.json({status: 200, message: 'Payu Webhook Called successfully'});
+
+const PayUHook = async (req, res) => {
+    res.json({status: 200, message: 'PayU Webhook Called successfully'});
     try {
-        const { amount, email, phone, txnid } = req.body;
 
-    const payuData = {
-      key: PAYU_MERCHANT_KEY,
-      txnid,
-      amount,
-      productinfo: "Test Product",
-      firstname: "User",
-      email,
-      phone,
-      surl: "https://test.com/success", 
-      furl: "https://test.com/failure", 
-      service_provider: "payu_paisa",
-      payment_method: "upi", 
-    };
+        const data = req.body;
+        const { txnid, amount, productinfo, firstname, email, status, hash, bank_ref_num} = data;
 
-    // Create hash for PayU payment
-    const hashString = `${payuData.key}|${payuData.txnid}|${payuData.amount}|${payuData.productinfo}|${payuData.firstname}|${payuData.email}|||||||||||${PAYU_MERCHANT_SALT}`;
-    const hash = crypto.createHash("sha512").update(hashString).digest("hex");
+        // Recalculate the hash to verify authenticity
+        const hashString = `${payu_salt}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${payu_key}`;
+        const calculatedHash = crypto.createHash('sha512').update(hashString).digest('hex');
 
-    payuData.hash = hash;
+        const statusUpper = status.toUpperCase();
 
-        // if webhook is called with none of handled events or transaction id not received
-        if (!status || !sno) {
-            logger.error("Status or sno not found!");
-            return;
+        if (calculatedHash !== hash) {
+            logger.info("Invalid Hash: Possible Fraud Attempt");
         }
-
-        const payInData = await payInRepo.getPayInData(sno, true);
+        const payInData = await payInRepo.getPayInData(txnid, false);
         if (!payInData) {
-            throw new Error("Payment does not exist");
+            logger.error("Payment does not exist");
         }
 
         const merchantData = await merchantRepo.getMerchantById(payInData.merchant_id);
@@ -62,16 +46,16 @@ const RazorHook = async (req, res) => {
 
         const payload = {
             confirmed: amount,
-            status,
+            status: statusUpper === 'FAILURE' ? 'FAILED' : statusUpper,
             is_notified: true,
-            approved_at: new Date(),
+            approved_at: status === 'SUCCESS' ? new Date() : null,
             duration,
-            utr: acquirer_data?.rrn,
-            user_submitted_utr: acquirer_data?.rrn,
-            method: 'RazorPay',
+            utr: bank_ref_num,
+            user_submitted_utr: bank_ref_num,
+            method: 'PayU',
         };
 
-        if (status === "SUCCESS") {
+        if (statusUpper === "SUCCESS") {
             const payinCommission = calculateCommission(amount, merchantData.payin_commission);
             payload.payin_commission = payinCommission;
         }
@@ -85,7 +69,7 @@ const RazorHook = async (req, res) => {
         await merchantRepo.updateMerchant(payInData.merchant_id, amount);
 
         const notifyData = {
-            status,
+            status: statusUpper,
             merchantOrderId: updatePayInDataRes?.merchant_order_id,
             payinId: updatePayInDataRes?.id,
             amount: updatePayInDataRes?.confirmed,
@@ -95,12 +79,16 @@ const RazorHook = async (req, res) => {
         await axios.post(payInData.notify_url, notifyData).catch((err) => {
             logger.error("Error notifying merchant:", err);
         });
+        logger.info('Sending notification to merchant for PayU', { notify_url: payInData.notify_url, notify_data: notifyData });
 
-        logger.info("Transaction status updated successfully");
+        logger.info("PayU Transaction status updated successfully");
     } catch (err) {
-        logger.error("Razorpay webhook error", err);
+        logger.error("PayU webhook error", err);
     }
 };
 
+const verifyPayUTransaction = async () => {
 
-export default RazorHook;
+}
+
+export { payu_key, payu_salt, PayUHook, verifyPayUTransaction}

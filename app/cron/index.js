@@ -139,13 +139,13 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       0
     );
 
-    const bankPayIns = await prisma.payin.groupBy({
-      by: ["bank_acc_id"],
+    const bankPayIns = await prisma.telegramResponse.groupBy({
+      by: ["bankName"],
       _sum: { amount: true },
       _count: { id: true },
       where: {
-        status: "SUCCESS",
-        approved_at: { gte: startDate, lte: endDate },
+        status: "/success",
+        createdAt: { gte: startDate, lte: endDate },
       },
     });
 
@@ -410,8 +410,7 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
 
     const formattedBankPayIns = bankPayIns
       .map((payIn) => {
-        const { bank_acc_id, _sum, _count } = payIn;
-        const bankName = bankNamesMap[bank_acc_id];
+        const { bankName, _sum, _count } = payIn;
         return bankName
           ? `${bankName}: ${formatePrice(_sum.amount)} (${_count.id})`
           : null;

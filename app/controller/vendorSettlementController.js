@@ -100,11 +100,13 @@ class SettlementController {
                 const skip = take * (1 - 1);
                 const settlement = await vendorSettlementService.getSettlement(skip, take, parseInt(req.params.id))
                 if (settlement.data[0].method === "INTERNAL_QR_TRANSFER" || settlement.data[0].method === "INTERNAL_BANK_TRANSFER") {
-                    const botRes = await botResponseRepo.getBotResDataByinternalTransfer(settlement.data[0].refrence_id, String(settlement.data[0].amount).replace("-", ""));
-                    const apiData = {
-                        status: "/success",
+                    const botRes = await botResponseRepo.getBotResDataByInternalTransfer(settlement.data[0].refrence_id, String(settlement.data[0].amount).replace("-", ""));
+                    if (botRes || botRes!== null) {
+                        const apiData = {
+                            status: "/success",
+                        }
+                        await botResponseRepo.updateBotResponseByUtrToInternalTransfer(botRes.id, apiData);
                     }
-                    await botResponseRepo.updateBotResponseByUtrToInternalTransfer(botRes.id, apiData);
                 }
             }
             const payload = {
