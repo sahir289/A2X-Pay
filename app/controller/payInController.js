@@ -424,6 +424,7 @@ class PayInController {
     }
   }
 
+  // skip due to duplicate
   async payinAssignment(req, res, next) {
     try {
       checkValidation(req);
@@ -498,6 +499,7 @@ class PayInController {
     }
   }
 
+  // skip due to telegram
   // To Check Payment Status using code. (telegram) From payment site
   async checkPaymentStatus(req, res, next) {
     try {
@@ -643,6 +645,7 @@ class PayInController {
     }
   }
 
+  // question, how to process payment
   // To Handle payment process
   async payInProcess(req, res, next) {
     try {
@@ -1069,6 +1072,8 @@ class PayInController {
     }
   }
 
+
+  // TODO: move into 2.0
   async payInIntentGenerateOrder(req, res, next) {
     try {
       checkValidation(req);
@@ -1216,6 +1221,7 @@ class PayInController {
     }
   }
 
+  // TODO: move into 2.o webhook folder
   async payInUpdateCashfreeWebhook(req, res, next) {
     const payload = req.body;
     res.json({status: 200, message: 'Cashfree Webhook Called successfully'});
@@ -1360,6 +1366,7 @@ class PayInController {
     }
   }
 
+  // question, does image flow will be included in new flow
   // handle payin using img
   async payInProcessByImg(req, res, next) {
     try {
@@ -2009,6 +2016,7 @@ class PayInController {
     }
   }
 
+  // Move into 2.0
   async telegramResHandler(req, res, next) {
     const TELEGRAM_BOT_TOKEN = config?.telegramOcrBotToken;
 
@@ -3441,6 +3449,7 @@ class PayInController {
     }
   }
 
+  // Move into 2.0
   async telegramCheckUtrHandler(req, res, next) {
     const TELEGRAM_BOT_TOKEN = config?.telegramCheckUtrBotToken;
     try {
@@ -4785,6 +4794,8 @@ class PayInController {
       next(error);
     }
   }
+
+
   // For test modal pop up
   async updatePaymentStatus(req, res, next) {
     try {
@@ -4826,6 +4837,7 @@ class PayInController {
     }
   }
 
+  // move to 2.0
   async updatePaymentNotificationStatus(req, res, next) {
     try {
       checkValidation(req);
@@ -4898,6 +4910,7 @@ class PayInController {
     }
   }
 
+  // move to 2.0
   async updateDepositStatus(req, res, next) {
     try {
       const { id } = req.params;
@@ -5033,6 +5046,7 @@ class PayInController {
     }
   }
 
+  // move to 2.0
   async resetDeposit(req, res, next) {
     try {
       const { merchant_order_id } = req.body;
