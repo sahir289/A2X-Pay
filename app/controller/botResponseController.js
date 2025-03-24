@@ -64,7 +64,6 @@ class BotResponseController {
           botRes = await botResponseRepo.botResponse(updatedData);
         } else {
           botRes = await botResponseRepo.botResponse(updatedData);
-          console.log(botRes, "asdfghjkjhg")
         }
         
         if (updatedData.status === "REPEATED") {
@@ -812,7 +811,6 @@ class BotResponseController {
                       );
                     }
                     const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
-                    console.log(updateBotRes, "updateBotRes2134567")
 
                     const updateMerchantData = await merchantRepo?.updateMerchant(checkPayInUtr[0]?.merchant_id, amount)
                     const notifyData = {
