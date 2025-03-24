@@ -28,7 +28,7 @@ class BotResponseController {
       const isValidAmountCode =
         amount_code !== "nil" && amount_code.length === 5;
       const isValidUtr = utr.length === 12;
-      const acceptedStatus = ["SUCCESS", "DISPUTE", "BANK_MISMATCH", "FAILED", "DUPLICATE"]
+      const acceptedStatus = ["SUCCESS", "DISPUTE", "BANK_MISMATCH", "FAILED", "DUPLICATE"] //assinged pening dropped
 
 
 
@@ -64,6 +64,7 @@ class BotResponseController {
           botRes = await botResponseRepo.botResponse(updatedData);
         } else {
           botRes = await botResponseRepo.botResponse(updatedData);
+          console.log(botRes, "asdfghjkjhg")
         }
         
         if (updatedData.status === "REPEATED") {
@@ -811,6 +812,7 @@ class BotResponseController {
                       );
                     }
                     const updateBotRes = await botResponseRepo?.updateBotResponseByUtr(botRes?.id)
+                    console.log(updateBotRes, "updateBotRes2134567")
 
                     const updateMerchantData = await merchantRepo?.updateMerchant(checkPayInUtr[0]?.merchant_id, amount)
                     const notifyData = {
@@ -982,7 +984,6 @@ class BotResponseController {
             }
           }
         }
-
         // Notify all connected clients about the new entry
         io.emit("new-entry", {
           message: 'New entry added',
