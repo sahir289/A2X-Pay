@@ -102,6 +102,7 @@ class PayInController {
             merchant_order_id: uuidv4(),
             user_id: user_id,
             return_url: returnUrl ? returnUrl : getMerchantApiKeyByCode?.return_url,
+            notify_url: notifyUrl ? notifyUrl : getMerchantApiKeyByCode?.notify_url,
             // isTest:isTest
           };
           // Uncomment and use your service to generate PayIn URL
