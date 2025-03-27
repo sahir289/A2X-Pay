@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "TZ='Asia/Kolkata' nodemon --max-old-space-size=6144 index.js"
+    "start": "TZ='Asia/Kolkata' node --max-old-space-size=6144 index.js",
+    "dev": "TZ='Asia/Kolkata' nodemon --exec \"node --max-old-space-size=6144 index.js\""
   },
   "keywords": [],
   "author": "",

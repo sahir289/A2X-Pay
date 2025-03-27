@@ -1,7 +1,9 @@
 import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
+import process from 'process';
 import cookieParser from "cookie-parser"
+import v8 from 'v8';
 import router from "./app/routes/index.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -32,6 +34,7 @@ app.use((err, req, res, next) => {
 });
 
 const httpServer = createServer(app);
+
 const io = new Server(httpServer, {
     cors: {
         origin: [`${config?.reactFrontOrigin}`, `${config?.reactPaymentOrigin}`],
@@ -65,6 +68,12 @@ io.on('connection', (socket) => {
 
 export { io };
 
+setInterval(() => {
+    const { rss, heapTotal, heapUsed } = process.memoryUsage();
+    console.log(`[${PORT}] RSS: ${rss / 1024 / 1024} MB, Heap Total: ${heapTotal / 1024 / 1024} MB, Heap Used: ${heapUsed / 1024 / 1024} MB`);
+}, 60000);
+
+console.log(`Heap limit: ${v8.getHeapStatistics().total_available_size / 1024 / 1024} MB`);
 
 httpServer.listen(PORT, () => {
     console.log(`app is running on Port ${PORT}`);
