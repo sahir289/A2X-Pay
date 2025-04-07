@@ -2,6 +2,7 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
+import { prisma } from '../client/prisma.js';
 import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
 import config from "../../config.js";
@@ -958,8 +959,6 @@ class PayInController {
               "Bank mismatch",
               response
             );
-            //   }
-            // }
           }
 
           await botResponseRepo.updateBotResponseByUtr(
@@ -1013,10 +1012,45 @@ class PayInController {
           }
         }
 
-        const updatePayinRes = await payInRepo.updatePayInData(
-          payInId,
-          payInData
-        );
+        let updatePayinRes;
+        try {
+          const lockKey = `${getPayInData.bank_acc_id}|${usrSubmittedUtr}`;
+
+          const lockResult = await prisma.$queryRawUnsafe(
+            `SELECT pg_try_advisory_xact_lock(hashtext($1)) AS locked`,
+            lockKey
+          );
+          const lockAcquired = lockResult[0]?.locked;
+      
+          if (!lockAcquired) {
+            throw new CustomError(409, 'Another process is handling this UTR, please retry shortly.');
+          }
+        } catch (err) {
+          logger.error('Lock acquisition failed:', err.message || err);
+          throw err;
+        }
+
+        try {
+          await prisma.$transaction(async (tx) => {
+      
+            const existing = await tx.payin.findFirst({
+              where: {
+                user_submitted_utr: usrSubmittedUtr,
+                bank_acc_id: getPayInData.bank_acc_id,
+                NOT: { id: payInId },
+              },
+            });
+      
+            if (existing) {
+              throw new CustomError(409, 'UTR already submitted.');
+            }
+      
+            updatePayinRes = await payInRepo.updatePayInData(payInId, payInData, tx);
+          });
+        } catch (error) { 
+          logger.error('Error inside transaction:', error.message || error);
+          throw error;
+        }
 
         const notifyData = {
           status: updatePayinRes?.status,

@@ -81,9 +81,10 @@ class PayInRepo {
         }
     }
 
-    async updatePayInData(payInId, data) {
+    async updatePayInData(payInId, data, tx) {
         try {
-            const payInUrlRes = await prisma.payin.update({
+            const client = tx || prisma;
+            const payInUrlRes = await client.payin.update({
                 where: {
                     id: payInId
                 },
@@ -92,6 +93,7 @@ class PayInRepo {
             return payInUrlRes
         } catch (error) {
             logger.info('Payin data did not updated', error);
+            throw error;
         }
     }
 
