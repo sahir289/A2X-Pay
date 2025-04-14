@@ -1044,8 +1044,15 @@ class PayInController {
             if (existing) {
               throw new CustomError(409, 'UTR already submitted.');
             }
-      
-            updatePayinRes = await payInRepo.updatePayInData(payInId, payInData, tx);
+            async function delayedDbUpdate(payInId, payInData, tx) {
+              const delay = Math.floor(Math.random() * 10) + 1; // 1 to 10 ms
+              await new Promise(resolve => setTimeout(resolve, delay));
+            
+              // Now perform the DB update
+              return await payInRepo.updatePayInData(payInId, payInData, tx);
+            }
+            updatePayinRes = await delayedDbUpdate(payInId, payInData, tx);
+            // updatePayinRes = await payInRepo.updatePayInData(payInId, payInData, tx);
           });
         } catch (error) { 
           logger.error('Error inside transaction:', error.message || error);
