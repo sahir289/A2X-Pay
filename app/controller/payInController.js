@@ -1013,25 +1013,39 @@ class PayInController {
         }
 
         let updatePayinRes;
-        try {
-          const lockKey = `${getPayInData.bank_acc_id}|${usrSubmittedUtr}`;
+        // try {
+        //   const lockKey = `${getPayInData.bank_acc_id}|${usrSubmittedUtr}`;
 
-          const lockResult = await prisma.$queryRawUnsafe(
-            `SELECT pg_try_advisory_xact_lock(hashtext($1)) AS locked`,
-            lockKey
-          );
-          const lockAcquired = lockResult[0]?.locked;
+        //   const lockResult = await prisma.$queryRawUnsafe(
+        //     `SELECT pg_try_advisory_xact_lock(hashtext($1)) AS locked`,
+        //     lockKey
+        //   );
+        //   const lockAcquired = lockResult[0]?.locked;
+        //   logger.log('Lock acquired:', lockAcquired);
       
-          if (!lockAcquired) {
-            throw new CustomError(409, 'Another process is handling this UTR, please retry shortly.');
-          }
-        } catch (err) {
-          logger.error('Lock acquisition failed:', err.message || err);
-          throw err;
-        }
+        //   if (!lockAcquired) {
+        //     throw new CustomError(409, 'Another process is handling this UTR, please retry shortly.');
+        //   }
+        // } catch (err) {
+        //   logger.error('Lock acquisition failed:', err.message || err);
+        //   throw err;
+        // }
 
         try {
           await prisma.$transaction(async (tx) => {
+
+            const lockKey = `${getPayInData.bank_acc_id}|${usrSubmittedUtr}`;
+
+            // Acquire advisory lock inside the transaction
+            const lockResult = await tx.$queryRawUnsafe(
+              `SELECT (SELECT pg_try_advisory_xact_lock(hashtext($1))) AS locked`,
+              lockKey
+            );
+            const lockAcquired = lockResult[0]?.locked;
+
+            if (!lockAcquired) {
+              throw new CustomError(409, 'Another process is handling this UTR, please retry shortly.');
+            }
       
             const existing = await tx.payin.findFirst({
               where: {
@@ -1044,15 +1058,15 @@ class PayInController {
             if (existing) {
               throw new CustomError(409, 'UTR already submitted.');
             }
-            async function delayedDbUpdate(payInId, payInData, tx) {
-              const delay = Math.floor(Math.random() * 10) + 1; // 1 to 10 ms
-              await new Promise(resolve => setTimeout(resolve, delay));
+            // async function delayedDbUpdate(payInId, payInData, tx) {
+            //   const delay = Math.floor(Math.random() * 10) + 1; // 1 to 10 ms
+            //   await new Promise(resolve => setTimeout(resolve, delay));
             
-              // Now perform the DB update
-              return await payInRepo.updatePayInData(payInId, payInData, tx);
-            }
-            updatePayinRes = await delayedDbUpdate(payInId, payInData, tx);
-            // updatePayinRes = await payInRepo.updatePayInData(payInId, payInData, tx);
+            //   // Now perform the DB update
+            //   return await payInRepo.updatePayInData(payInId, payInData, tx);
+            // }
+            // updatePayinRes = await delayedDbUpdate(payInId, payInData, tx);
+            updatePayinRes = await payInRepo.updatePayInData(payInId, payInData, tx);
           });
         } catch (error) { 
           logger.error('Error inside transaction:', error.message || error);
