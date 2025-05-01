@@ -554,16 +554,9 @@ ${
 
 export async function sendTelegramDashboardSuccessRatioMessage(
   chatId,
-  // merchantCode,
-  fullMessage,
+  message,
   TELEGRAM_BOT_TOKEN
 ) {
-  const message = fullMessage
-  .map(({ merchantCode, intervalDetails, intervalDetailsUtr }) => {
-    return `🔔<b>${merchantCode}</b> - SR 🔔\n\n<b>Payin SR:</b>\n${intervalDetails}\n\n<b>UTR SR:</b>\n${intervalDetailsUtr}`;
-  })
-  .join('\n\n');
-
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
   try {

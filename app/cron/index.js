@@ -260,13 +260,16 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
             { label: "Last 24h", duration: 24 * 60 * 60 * 1000 },
           ];
       
-          // fetch all transactions
           const allPayins = await prisma.payin.findMany({
             where: { updatedAt: { gte: startDate } },
-            select: { merchant_id: true, updatedAt: true, status: true, user_submitted_utr: true },
+            select: {
+              merchant_id: true,
+              updatedAt: true,
+              status: true,
+              user_submitted_utr: true,
+            },
           });
       
-          // group transactions by merchant_id
           const transactionsByMerchant = allPayins.reduce((map, payin) => {
             if (!map[payin.merchant_id]) map[payin.merchant_id] = [];
             map[payin.merchant_id].push({
@@ -277,20 +280,23 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
             return map;
           }, {});
       
-          // filter merchants to include only those with transactions available
-          const merchantsWithTransactions = merchants.filter((merchant) =>
-            transactionsByMerchant[merchant.id]
-          );
-          const fullMessages = [];
-          // process only merchants with transactions available
+          const merchantsWithTransactions = merchants.filter(
+            (merchant) => transactionsByMerchant[merchant.id]
+          );      
+          let payinSuccessMsg = "Payin SR:\n";
+          let utrSubmissionMsg = "UTR SR:\n";
+
+          const noTransactions = merchantsWithTransactions.every(m => m.child_code.length === 0);
+
+          if (merchantsWithTransactions.length === 0 || noTransactions) {
+            payinSuccessMsg = `🔔 No Transaction For This Hour`;
+          }
           for (const merchant of merchantsWithTransactions) {
             const merchantTransactions = transactionsByMerchant[merchant.id];
       
             const intervalDetails = intervals
               .map(({ label, duration }) => {
                 const startTime = new Date(now - duration);
-      
-                // filter transactions within the interval
                 const filteredTransactions = merchantTransactions.filter(
                   (tx) => tx.updatedAt >= startTime
                 );
@@ -298,52 +304,53 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
                 const total = filteredTransactions.length;
                 const success = filteredTransactions.filter(
                   (tx) => tx.status === "SUCCESS"
-                ).length;   
+                ).length;
       
                 const successRatio =
-                  total === 0 ? "0.00%" : Math.min(((success / total) * 100).toFixed(2), 100) + "%";
+                  total === 0
+                    ? "0.00%"
+                    : Math.min(((success / total) * 100).toFixed(2), 100) + "%";
                 const statusIcon = success === 0 ? "⚠️" : "✅";
       
                 return `${statusIcon} ${label}: ${success}/${total} = ${successRatio}`;
               })
-              .join("\n")
-
+              .join("\n");
+      
             const intervalDetailsUtr = intervals
-            .map(({ label, duration }) => {
-              const startTime = new Date(now - duration);
-    
-              // filter transactions within the interval
-              const filteredTransactions = merchantTransactions.filter(
-                (tx) => tx.updatedAt >= startTime
-              );
-    
-              const total = filteredTransactions.length;
-
-              const utrSubmission = filteredTransactions.filter(
-                (tx) => tx.user_submitted_utr && tx.user_submitted_utr.length > 0
-              ).length;      
-
-              const statusIcon = utrSubmission === 0 ? "⚠️" : "✅";
-
-              const utrSubmissionRatio =
-                total === 0 ? "0.00%" : Math.min(((utrSubmission / total) * 100).toFixed(2), 100) + "%";  
-    
-              return `${statusIcon} ${label}: ${utrSubmission}/${total} = ${utrSubmissionRatio}`;
-            })
-            .join("\n")
-
-            const fullMessage = {
-              merchantCode: merchant.code,
-              intervalDetails,
-              intervalDetailsUtr
-            }
-            fullMessages.push(fullMessage)
+              .map(({ label, duration }) => {
+                const startTime = new Date(now - duration);
+                const filteredTransactions = merchantTransactions.filter(
+                  (tx) => tx.updatedAt >= startTime
+                );
+      
+                const total = filteredTransactions.length;
+                const utrSubmission = filteredTransactions.filter(
+                  (tx) => tx.user_submitted_utr && tx.user_submitted_utr.length > 0
+                ).length;
+      
+                const statusIcon = utrSubmission === 0 ? "⚠️" : "✅";
+                const utrSubmissionRatio =
+                  total === 0
+                    ? "0.00%"
+                    : Math.min(((utrSubmission / total) * 100).toFixed(2), 100) + "%";
+      
+                return `${statusIcon} ${label}: ${utrSubmission}/${total} = ${utrSubmissionRatio}`;
+              })
+              .join("\n");
+      
+            payinSuccessMsg += `🔔${merchant.code} - SR 🔔\n${intervalDetails}\n\n`;
+            utrSubmissionMsg += `🔔${merchant.code} - SR 🔔\n${intervalDetailsUtr}\n\n`;
           }
-          
+      
           await sendTelegramDashboardSuccessRatioMessage(
             config?.telegramRatioAlertsChatId,
-            // merchant.code,
-            fullMessages,
+            payinSuccessMsg,
+            config?.telegramBotToken
+          );
+      
+          await sendTelegramDashboardSuccessRatioMessage(
+            config?.telegramRatioAlertsChatId,
+            utrSubmissionMsg,
             config?.telegramBotToken
           );
         } catch (error) {
