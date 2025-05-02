@@ -289,7 +289,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
           const noTransactions = merchantsWithTransactions.every(m => m.child_code.length === 0);
 
           if (merchantsWithTransactions.length === 0 || noTransactions) {
-            payinSuccessMsg = `🔔 No Transaction For This Hour`;
+            payinSuccessMsg = `🔔 No Deposit For This Hour`;
+            utrSubmissionMsg = `🔔 No UTR Submission Ratio For This Hour`;
           }
           for (const merchant of merchantsWithTransactions) {
             const merchantTransactions = transactionsByMerchant[merchant.id];
