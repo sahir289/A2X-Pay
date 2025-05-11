@@ -14,6 +14,10 @@ cron.schedule("0 1-23 * * *", () => {
   gatherAllData("H", "Asia/Kolkata");
 });
 
+cron.schedule("*/5 * * * *", () => {
+  formattedSuccessRatiosByMerchant("Asia/Kolkata");
+});
+
 const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
   try {
     const empty = "-- -- -- ";
@@ -467,6 +471,161 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
     console.error("========= CRON ERROR =========", err);
   }
 };
+
+const empty = "-- -- -- ";
+const timezone = "Asia/Kolkata";
+const type = "H";
+    let startDate,
+      endDate,
+      oneHourAgo,
+      successRatioPercentage,
+      hourlySuccessRatioPercentage;
+    let totalDepositAmount = 0;
+    let totalWithdrawAmount = 0;
+    let totalBankDepositAmount = 0;
+    let totalBankWithdrawAmount = 0;
+
+    if (typeof timezone !== "string") {
+      timezone = "Asia/Kolkata";
+    }
+
+    const currentDate = moment().tz(timezone, true);
+
+    if (type === "H") {
+      // Hourly Report: Start at 12 AM today, end at the current hour today
+      startDate = currentDate.clone().startOf("day").toDate(); // Start of today at 12 AM
+      endDate = currentDate.clone().toDate(); // Current time
+
+      // Calculate one hour date for hourly success ratio
+      oneHourAgo = currentDate.clone().subtract(1, "hour").toDate();
+    }
+
+    if (type === "N") {
+      // Daily Report: Start at 12 AM yesterday, end at 11:59 PM yesterday
+      startDate = currentDate
+        .clone()
+        .subtract(1, "day")
+        .startOf("day")
+        .toDate(); // Start of yesterday
+      endDate = currentDate.clone().subtract(1, "day").endOf("day").toDate(); // End of yesterday at 11:59 PM
+    }
+
+const merchants = await prisma.merchant.findMany({
+  select: { id: true, code: true, child_code: true },
+});
+
+const formattedSuccessRatiosByMerchant = async () => {
+  try {
+    const now = new Date();
+    const intervals = [
+      { label: "Last 5m", duration: 5 * 60 * 1000 },
+      // { label: "Last 15m", duration: 15 * 60 * 1000 },
+      // { label: "Last 30m", duration: 30 * 60 * 1000 },
+      // { label: "Last 1h", duration: 60 * 60 * 1000 },
+      // { label: "Last 3h", duration: 3 * 60 * 60 * 1000 },
+      // { label: "Last 24h", duration: 24 * 60 * 60 * 1000 },
+    ];
+
+    const allPayins = await prisma.payin.findMany({
+      where: { updatedAt: { gte: startDate } },
+      select: {
+        merchant_id: true,
+        updatedAt: true,
+        status: true,
+        user_submitted_utr: true,
+      },
+    });
+
+    const transactionsByMerchant = allPayins.reduce((map, payin) => {
+      if (!map[payin.merchant_id]) map[payin.merchant_id] = [];
+      map[payin.merchant_id].push({
+        updatedAt: new Date(payin.updatedAt),
+        status: payin.status,
+        user_submitted_utr: payin.user_submitted_utr,
+      });
+      return map;
+    }, {});
+
+    const merchantsWithTransactions = merchants.filter(
+      (merchant) => transactionsByMerchant[merchant.id]
+    );      
+    let payinSuccessMsg = "Payin SR:\n";
+    let utrSubmissionMsg = "UTR SR:\n";
+
+    const noTransactions = merchantsWithTransactions.every(m => m.child_code.length === 0);
+
+    if (merchantsWithTransactions.length === 0 && noTransactions) {
+      payinSuccessMsg = `🔔 No Deposit For This Hour`;
+      utrSubmissionMsg = `🔔 No UTR Submission Ratio For This Hour`;
+    }
+    for (const merchant of merchantsWithTransactions) {
+      const merchantTransactions = transactionsByMerchant[merchant.id];
+
+      const intervalDetails = intervals
+        .map(({ label, duration }) => {
+          const startTime = new Date(now - duration);
+          const filteredTransactions = merchantTransactions.filter(
+            (tx) => tx.updatedAt >= startTime
+          );
+
+          const total = filteredTransactions.length;
+          const success = filteredTransactions.filter(
+            (tx) => tx.status === "SUCCESS"
+          ).length;
+
+          const successRatio =
+            total === 0
+              ? "0.00%"
+              : Math.min(((success / total) * 100).toFixed(2), 100) + "%";
+          const statusIcon = success === 0 ? "⚠️" : "✅";
+
+          return `${statusIcon} ${label}: ${success}/${total} = ${successRatio}`;
+        })
+        .join("\n");
+
+      const intervalDetailsUtr = intervals
+        .map(({ label, duration }) => {
+          const startTime = new Date(now - duration);
+          const filteredTransactions = merchantTransactions.filter(
+            (tx) => tx.updatedAt >= startTime
+          );
+
+          const total = filteredTransactions.length;
+          const utrSubmission = filteredTransactions.filter(
+            (tx) => tx.user_submitted_utr && tx.user_submitted_utr.length > 0
+          ).length;
+
+          const statusIcon = utrSubmission === 0 ? "⚠️" : "✅";
+          const utrSubmissionRatio =
+            total === 0
+              ? "0.00%"
+              : Math.min(((utrSubmission / total) * 100).toFixed(2), 100) + "%";
+
+          return `${statusIcon} ${label}: ${utrSubmission}/${total} = ${utrSubmissionRatio}`;
+        })
+        .join("\n");
+
+      payinSuccessMsg += `🔔${merchant.code} - SR 🔔\n${intervalDetails}\n\n`;
+      utrSubmissionMsg += `🔔${merchant.code} - SR 🔔\n${intervalDetailsUtr}\n\n`;
+    }
+
+    await sendTelegramDashboardSuccessRatioMessage(
+      config?.telegramRatioAlertsChatId,
+      payinSuccessMsg,
+      config?.telegramBotToken
+    );
+
+    await sendTelegramDashboardSuccessRatioMessage(
+      config?.telegramRatioAlertsChatId,
+      utrSubmissionMsg,
+      config?.telegramBotToken
+    );
+  } catch (error) {
+    console.error("Error calculating interval success ratios:", error.message);
+  }
+}; 
+
+formattedSuccessRatiosByMerchant();
 
 // gatherAllData("H", "Asia/Kolkata")
 
