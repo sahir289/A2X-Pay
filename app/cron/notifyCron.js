@@ -64,7 +64,7 @@ async function notifyDroppedPayins(payins) {
             }
         } catch (error) {
             logger.error("Error sending notification:", {
-                error: error.message,
+                error: error?.message?.message,
                 payinId: payin.id,
                 notify_url: payin.notify_url
             });
