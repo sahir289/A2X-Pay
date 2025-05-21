@@ -716,7 +716,7 @@ class PayInController {
           })
 
         } catch (error) {
-          logger.error("Error sending notification:", error);
+          logger.error("Error sending notification:", error.message);
         }
 
         return DefaultResponse(res, 200, message, response);
@@ -758,7 +758,7 @@ class PayInController {
             })
 
           } catch (error) {
-            logger.error("Error sending notification:", error);
+            logger.error("Error sending notification:", error.message);
           }
 
           const response = {
@@ -846,7 +846,7 @@ class PayInController {
               })
 
             } catch (error) {
-              logger.error("Error sending notification:", error);
+              logger.error("Error sending notification:", error.message);
             }
 
             const response = {
@@ -942,7 +942,7 @@ class PayInController {
               })
 
             } catch (error) {
-              logger.error("Error sending notification:", error);
+              logger.error("Error sending notification:", error.message);
             }
 
             const response = {
@@ -1342,7 +1342,7 @@ class PayInController {
         })
 
       } catch (error) {
-        logger.error("Error sending notification:", error);
+        logger.error("Error sending notification:", error.message);
       }
     } catch (error) {
       logger.error("Error in getting response from cashfree webhook:", error);
@@ -1773,7 +1773,7 @@ class PayInController {
             data: notifyMerchant.data,
           })
         } catch (error) {
-          logger.error("Error sending notification:", error);
+          logger.error("Error sending notification:", error.message);
         }
         // }
 
@@ -2362,7 +2362,7 @@ class PayInController {
                           data: notifyMerchant.data,
                         })
                       } catch (error) {
-                        console.error("Error sending notification:", error);
+                        logger.error("Error sending notification:", error.message);
                       }
 
                       return res.status(200).json({ message: "true" });
@@ -2468,7 +2468,7 @@ class PayInController {
                         data: notifyMerchant.data,
                       })
                     } catch (error) {
-                      console.error("Error sending notification:", error);
+                      logger.error("Error sending notification:", error.message);
                     }
 
                     return res.status(200).json({ message: "true" });
@@ -2563,7 +2563,7 @@ class PayInController {
                               data: notifyMerchant.data,
                             })
                           } catch (error) {
-                            console.error("Error sending notification to merchant:", error);
+                            logger.error("Error sending notification to merchant:", error.message);
                           }
                           return res.status(200).json({ message: "true" });
                         }
@@ -2638,7 +2638,7 @@ class PayInController {
                             data: notifyMerchant.data,
                           })
                         } catch (error) {
-                          console.error("Error sending notification to merchant:", error);
+                          logger.error("Error sending notification to merchant:", error.message);
                         }
                         return res.status(200).json({ message: "true" });
                       }
@@ -2701,7 +2701,7 @@ class PayInController {
                               data: notifyMerchant.data,
                             })
                           } catch (error) {
-                            console.error("Error sending notification:", error);
+                            logger.error("Error sending notification:", error.message);
                           }
 
                           return res.status(200).json({ message: "true" });
@@ -2774,7 +2774,7 @@ class PayInController {
                             data: notifyMerchant.data,
                           })
                         } catch (error) {
-                          console.error("Error sending notification:", error);
+                          logger.error("Error sending notification:", error.message);
                         }
 
                         return res.status(200).json({ message: "true" });
@@ -2951,7 +2951,7 @@ class PayInController {
                               data: notifyMerchant.data,
                             })
                           } catch (error) {
-                            console.error("Error sending notification:", error);
+                            logger.error("Error sending notification:", error.message);
                           }
 
                           return res.status(200).json({ message: "true" });
@@ -3049,7 +3049,7 @@ class PayInController {
                                     data: notifyMerchant.data,
                                   })
                                 } catch (error) {
-                                  console.error("Error sending notification:", error);
+                                  logger.error("Error sending notification:", error.message);
                                 }
 
                                 return res.status(200).json({ message: "true" });
@@ -3155,7 +3155,7 @@ class PayInController {
                                   data: notifyMerchant.data,
                                 })
                               } catch (error) {
-                                console.error("Error sending notification:", error);
+                                logger.error("Error sending notification:", error.message);
                               }
 
                               return res.status(200).json({ message: "true" });
@@ -3222,7 +3222,7 @@ class PayInController {
                                     data: notifyMerchant.data,
                                   })
                                 } catch (error) {
-                                  console.error("Error sending notification to merchant:", error);
+                                  logger.error("Error sending notification to merchant:", error);
                                 }
                                 return res.status(200).json({ message: "true" });
                               }
@@ -3297,7 +3297,7 @@ class PayInController {
                                   data: notifyMerchant.data,
                                 })
                               } catch (error) {
-                                console.error("Error sending notification to merchant:", error);
+                                logger.error("Error sending notification to merchant:", error);
                               }
                               return res.status(200).json({ message: "true" });
                             }
@@ -3364,7 +3364,7 @@ class PayInController {
                                 data: notifyMerchant.data,
                               })
                             } catch (error) {
-                              console.error("Error sending notification:", error);
+                              logger.error("Error sending notification:", error.message);
                             }
 
                             return res.status(200).json({ message: "true" });
@@ -3437,7 +3437,7 @@ class PayInController {
                               data: notifyMerchant.data,
                             })
                           } catch (error) {
-                            console.error("Error sending notification:", error);
+                            logger.error("Error sending notification:", error.message);
                           }
 
                           return res.status(200).json({ message: "true" });
@@ -3726,7 +3726,7 @@ class PayInController {
                           data: notifyMerchant.data,
                         })
                       } catch (error) {
-                        console.error("Error sending notification:", error);
+                        logger.error("Error sending notification:", error.message);
                       }
 
 
@@ -3816,7 +3816,7 @@ class PayInController {
                         data: notifyMerchant.data,
                       })
                     } catch (error) {
-                      console.error("Error sending notification:", error);
+                      logger.error("Error sending notification:", error.message);
                     }
 
 
@@ -3914,7 +3914,7 @@ class PayInController {
                         data: notifyMerchant.data,
                       })
                     } catch (error) {
-                      console.error("Error sending notification:", error);
+                      logger.error("Error sending notification:", error.message);
                     }
 
 
@@ -3985,7 +3985,7 @@ class PayInController {
                             data: notifyMerchant.data,
                           })
                         } catch (error) {
-                          console.error("Error sending notification to merchant:", error);
+                          logger.error("Error sending notification to merchant:", error);
                         }
                         if (fromUI) {
                           return res.status(200).json({ message: response });
@@ -4071,7 +4071,7 @@ class PayInController {
                           data: notifyMerchant.data,
                         })
                       } catch (error) {
-                        console.error("Error sending notification to merchant:", error);
+                        logger.error("Error sending notification to merchant:", error);
                       }
                       if (fromUI) {
                         return res.status(200).json({ message: response });
@@ -4179,7 +4179,7 @@ class PayInController {
                             data: notifyMerchant.data,
                           })
                         } catch (error) {
-                          console.error("Error sending notification:", error);
+                          logger.error("Error sending notification:", error.message);
                         }
 
                         if (fromUI) {
@@ -4267,7 +4267,7 @@ class PayInController {
                           data: notifyMerchant.data,
                         })
                       } catch (error) {
-                        console.error("Error sending notification:", error);
+                        logger.error("Error sending notification:", error.message);
                       }
 
                       if (fromUI) {
@@ -4455,7 +4455,7 @@ class PayInController {
                       data: notifyMerchant.data,
                     })
                   } catch (error) {
-                    console.error("Error sending notification:", error);
+                    logger.error("Error sending notification:", error.message);
                   }
 
                   return
@@ -4520,7 +4520,7 @@ class PayInController {
                           data: notifyMerchant.data,
                         })
                       } catch (error) {
-                        console.error("Error sending notification to merchant:", error);
+                        logger.error("Error sending notification to merchant:", error);
                       }
                       if (fromUI) {
                         return res.status(200).json({ message: response });
@@ -4606,7 +4606,7 @@ class PayInController {
                         data: notifyMerchant.data,
                       })
                     } catch (error) {
-                      console.error("Error sending notification to merchant:", error);
+                      logger.error("Error sending notification to merchant:", error);
                     }
                     if (fromUI) {
                       return res.status(200).json({ message: response });
@@ -4714,7 +4714,7 @@ class PayInController {
                           data: notifyMerchant.data,
                         })
                       } catch (error) {
-                        console.error("Error sending notification:", error);
+                        logger.error("Error sending notification:", error.message);
                       }
 
                       if (fromUI) {
@@ -4802,7 +4802,7 @@ class PayInController {
                         data: notifyMerchant.data,
                       })
                     } catch (error) {
-                      console.error("Error sending notification:", error);
+                      logger.error("Error sending notification:", error.message);
                     }
 
                     if (fromUI) {

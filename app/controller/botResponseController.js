@@ -133,7 +133,7 @@ class BotResponseController {
                           data: notifyMerchant.data,
                         })
                       } catch (error) {
-                          logger.error("Error sending notification:", error);
+                          logger.error("Error sending notification:", error.message);
                       }
 
                       return DefaultResponse(
@@ -190,7 +190,7 @@ class BotResponseController {
                           data: notifyMerchant.data,
                         })
                     } catch (error) {
-                        logger.error("Error sending notification:", error);
+                        logger.error("Error sending notification:", error.message);
                     }
 
                     return DefaultResponse(
@@ -246,7 +246,7 @@ class BotResponseController {
                           data: notifyMerchant.data,
                         })
                       } catch (error) {
-                          logger.error("Error sending notification:", error);
+                          logger.error("Error sending notification:", error.message);
                       }
 
                       return DefaultResponse(
@@ -302,7 +302,7 @@ class BotResponseController {
                           data: notifyMerchant.data,
                         })
                     } catch (error) {
-                        logger.error("Error sending notification:", error);
+                        logger.error("Error sending notification:", error.message);
                     }
 
                     return DefaultResponse(
@@ -381,7 +381,7 @@ class BotResponseController {
                           data: notifyMerchant.data,
                         })
                       } catch (error) {
-                          logger.error("Error sending notification:", error);
+                          logger.error("Error sending notification:", error.message);
                       }
                     } else {
                       return DefaultResponse(
@@ -432,7 +432,7 @@ class BotResponseController {
                           data: notifyMerchant.data,
                         })
                     } catch (error) {
-                      logger.error("Error sending notification:", error);
+                      logger.error("Error sending notification:", error.message);
                     }
                   }
                 }
@@ -478,7 +478,7 @@ class BotResponseController {
                           data: notifyMerchant.data,
                         })
                       } catch (error) {
-                        logger.error("Error sending notification:", error);
+                        logger.error("Error sending notification:", error.message);
                       }
                     } else {
                       return DefaultResponse(
@@ -527,7 +527,7 @@ class BotResponseController {
                           data: notifyMerchant.data,
                         })
                     } catch (error) {
-                      logger.error("Error sending notification:", error);
+                      logger.error("Error sending notification:", error.message);
                     }
                   }
                 }
@@ -580,7 +580,7 @@ class BotResponseController {
                           data: notifyMerchant.data,
                         })
                     } catch (error) {
-                      logger.error("Error sending notification:", error);
+                      logger.error("Error sending notification:", error.message);
                     }
 
                     return DefaultResponse(
@@ -636,7 +636,7 @@ class BotResponseController {
                       data: notifyMerchant.data,
                     })
                   } catch (error) {
-                    logger.error("Error sending notification:", error);
+                    logger.error("Error sending notification:", error.message);
                   }
 
                   return DefaultResponse(
@@ -692,7 +692,7 @@ class BotResponseController {
                       data: notifyMerchant.data,
                     })
                     } catch (error) {
-                      logger.error("Error sending notification:", error);
+                      logger.error("Error sending notification:", error.message);
                     }
 
                     return DefaultResponse(
@@ -748,7 +748,7 @@ class BotResponseController {
                       data: notifyMerchant.data,
                     })
                   } catch (error) {
-                    logger.error("Error sending notification:", error);
+                    logger.error("Error sending notification:", error.message);
                   }
 
                   return DefaultResponse(
@@ -829,7 +829,7 @@ class BotResponseController {
                         data: notifyMerchant.data,
                       })
                     } catch (error) {
-                      logger.error("Error sending notification:", error);
+                      logger.error("Error sending notification:", error.message);
                     }
                   } else {
                     return DefaultResponse(
@@ -880,7 +880,7 @@ class BotResponseController {
                       data: notifyMerchant.data,
                     })
                   } catch (error) {
-                      logger.error("Error sending notification:", error);
+                      logger.error("Error sending notification:", error.message);
                   }
                 }
               }
@@ -926,7 +926,7 @@ class BotResponseController {
                         data: notifyMerchant.data,
                       })
                     } catch (error) {
-                        logger.error("Error sending notification:", error);
+                        logger.error("Error sending notification:", error.message);
                     }
                   } else {
                     return DefaultResponse(
@@ -975,7 +975,7 @@ class BotResponseController {
                         data: notifyMerchant.data,
                       })
                   } catch (error) {
-                      logger.error("Error sending notification:", error);
+                      logger.error("Error sending notification:", error.message);
                   }
                 }
               }

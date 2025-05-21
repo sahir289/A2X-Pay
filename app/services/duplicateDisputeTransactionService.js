@@ -34,7 +34,7 @@ class DuplicateDisputeTransactionService {
                 })
 
             } catch (error) {
-                logger.error("Error sending notification:", error);
+                logger.error("Error sending notification:", error.message);
             }
             return duplicateDisputeTransactionData;
         }

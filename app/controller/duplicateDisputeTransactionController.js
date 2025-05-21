@@ -91,7 +91,7 @@ class DuplicateDisputeTransactionController {
                                     })
             
                                 } catch (error) {
-                                    logger.error("Error sending notification:", error);
+                                    logger.error("Error sending notification:", error.message);
                                 }
             
                                 delete req?.body?.merchant_order_id // deleted to avoid updating merchant_order_id in existing payin data
@@ -153,7 +153,7 @@ class DuplicateDisputeTransactionController {
                                 })
         
                             } catch (error) {
-                                logger.error("Error sending notification:", error);
+                                logger.error("Error sending notification:", error.message);
                             }
         
                             delete req?.body?.merchant_order_id // deleted to avoid updating merchant_order_id in existing payin data
