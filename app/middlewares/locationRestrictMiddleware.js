@@ -1,9 +1,15 @@
 import axios from "axios";
 import config from "../../config.js";
 import { logger } from "../utils/logger.js";
+import payInRepo from "../repository/payInRepo.js";
 
 const locationRestrictMiddleware = async (req, res, next) => {
   const API_KEY = config?.proxyCheckApiKey;
+  const {payInId} = req.params;
+
+  const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
+  const merchantCode = urlValidationRes?.Merchant?.code;
+
   const userIp =
     req.headers["x-forwarded-for"] || req.ip || req.connection.remoteAddress;
   logger.info(`Request Details:
@@ -24,6 +30,9 @@ const locationRestrictMiddleware = async (req, res, next) => {
   };
   const radiusKm = 60;
   const restrictedStates = ["Haryana", "Rajasthan"];
+  if(merchantCode === 'RP' || merchantCode === 'RP-STG') {
+    restrictedStates.push("Gujarat");
+  }
 
   try {
     const response = await axios.get(
@@ -44,10 +53,10 @@ const locationRestrictMiddleware = async (req, res, next) => {
       return res.status(403).send("403: Access denied, Please do not use VPN");
     }
 
-    // if (country === 'India' && restrictedStates.includes(region)) {
-    //   logger.error(`Access restricted for users in ${region}.`, userData);
-    //   return res.status(403).send('403: Access denied, Please do not use VPN');
-    // }
+    if (country === 'India' && restrictedStates.includes(region)) {
+      logger.error(`Access restricted for users in ${region}.`, userData);
+      return res.status(403).send('403: Access denied');
+    }
 
     // const europeanCountries = [
     //   'Albania', 'Andorra', 'Armenia', 'Austria', 'Azerbaijan', 'Belarus', 'Belgium',

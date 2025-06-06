@@ -19,6 +19,13 @@ class PayInRepo {
             const validateUrlRes = await prisma.payin.findFirst({
                 where: {
                     id: payInId
+                },
+                include: {
+                    Merchant: {
+                        select: {
+                            code: true
+                        }
+                    }
                 }
             })
             return validateUrlRes
