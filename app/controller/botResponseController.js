@@ -56,7 +56,7 @@ class BotResponseController {
         // We are adding the data in the bot res.
         if (utrinternalTransfer) {
           const updatedData = {
-            status: "/internalTransfer",
+            status: "/repeated",
             amount,
             utr,
             bankName
