@@ -51,20 +51,20 @@ class BotResponseController {
           throw new CustomError(400, "Amount code already exist")
         }
         let botRes
-        // const utrinternalTransfer = await botResponseRepo.getEntryByReferenceIDRepo(utr);
+        const utrinternalTransfer = await botResponseRepo.getEntryByReferenceIDRepo(utr);
 
-        // // We are adding the data in the bot res.
-        // if (utrinternalTransfer) {
-        //   const updatedData = {
-        //     status: "/internalTransfer",
-        //     amount,
-        //     utr,
-        //     bankName
-        //   };
-        //   botRes = await botResponseRepo.botResponse(updatedData);
-        // } else {
+        // We are adding the data in the bot res.
+        if (utrinternalTransfer) {
+          const updatedData = {
+            status: "/repeated",
+            amount,
+            utr,
+            bankName
+          };
           botRes = await botResponseRepo.botResponse(updatedData);
-        // }
+        } else {
+          botRes = await botResponseRepo.botResponse(updatedData);
+        }
         
         if (updatedData.status === "REPEATED") {
           throw new CustomError(400, "Entry with REPEATED UTR Added")
