@@ -44,15 +44,16 @@ const locationRestrictMiddleware = async (req, res, next) => {
       logger.warn("No data found for the provided IP.");
       return res.status(500).send("500: Access denied");
     }
-    const { latitude, longitude, vpn, region, country } = userData;
+    const { latitude, longitude, vpn, region, country} = userData;
     logger.info("user data here", userData);
+
     if (vpn === "yes") {
       logger.warn("VPN detected. Access denied.", userData);
       return res.status(403).send("403: Access denied, Please do not use VPN");
     }
 
     if(merchantCode !== 'RP' || merchantCode !== 'RP-STG') {
-      if (country === 'India' && restrictedStates.includes(region)) {
+      if (country === 'India' && restrictedStates) {
         logger.error(`Access restricted for users in ${region}.`, userData);
         return res.status(403).send('403: Access denied');
       }
