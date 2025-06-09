@@ -1,9 +1,15 @@
 import axios from "axios";
 import config from "../../config.js";
 import { logger } from "../utils/logger.js";
+import payInRepo from "../repository/payInRepo.js";
 
 const locationRestrictMiddleware = async (req, res, next) => {
   const API_KEY = config?.proxyCheckApiKey;
+  const {payInId} = req.params;
+
+  const urlValidationRes = await payInRepo.validatePayInUrl(payInId);
+  const merchantCode = urlValidationRes?.Merchant?.code;
+
   const userIp =
     req.headers["x-forwarded-for"] || req.ip || req.connection.remoteAddress;
   logger.info(`Request Details:
@@ -23,7 +29,8 @@ const locationRestrictMiddleware = async (req, res, next) => {
     longitude: config?.longitudeBlock,
   };
   const radiusKm = 60;
-  const restrictedStates = ["Haryana", "Rajasthan"];
+  const restrictedStates = ["Haryana", "Rajasthan", "Gujarat"];
+  
 
   try {
     const response = await axios.get(
@@ -37,17 +44,21 @@ const locationRestrictMiddleware = async (req, res, next) => {
       logger.warn("No data found for the provided IP.");
       return res.status(500).send("500: Access denied");
     }
-    const { latitude, longitude, vpn, region, country } = userData;
+    const { latitude, longitude, vpn, region, country} = userData;
     logger.info("user data here", userData);
+
     if (vpn === "yes") {
       logger.warn("VPN detected. Access denied.", userData);
       return res.status(403).send("403: Access denied, Please do not use VPN");
     }
+    const codes = ['RP', 'RP-STG'];
 
-    // if (country === 'India' && restrictedStates.includes(region)) {
-    //   logger.error(`Access restricted for users in ${region}.`, userData);
-    //   return res.status(403).send('403: Access denied, Please do not use VPN');
-    // }
+    if(!codes.includes(merchantCode)) {
+      if (country === 'India' && restrictedStates.includes(region)) {
+        logger.error(`Access restricted for users in ${region}.`, userData);
+        return res.status(403).send('403: Access denied');
+      }
+    }
 
     // const europeanCountries = [
     //   'Albania', 'Andorra', 'Armenia', 'Austria', 'Azerbaijan', 'Belarus', 'Belgium',
