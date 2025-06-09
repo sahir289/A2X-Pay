@@ -53,7 +53,7 @@ const locationRestrictMiddleware = async (req, res, next) => {
     }
 
     if(merchantCode !== 'RP' || merchantCode !== 'RP-STG') {
-      if (country === 'India' && restrictedStates) {
+      if (country === 'India' && restrictedStates.includes(region)) {
         logger.error(`Access restricted for users in ${region}.`, userData);
         return res.status(403).send('403: Access denied');
       }
