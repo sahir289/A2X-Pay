@@ -51,8 +51,9 @@ const locationRestrictMiddleware = async (req, res, next) => {
       logger.warn("VPN detected. Access denied.", userData);
       return res.status(403).send("403: Access denied, Please do not use VPN");
     }
+    const codes = ['RP', 'RP-STG'];
 
-    if(merchantCode !== 'RP-STG') {
+    if(!codes.includes(merchantCode)) {
       if (country === 'India' && restrictedStates.includes(region)) {
         logger.error(`Access restricted for users in ${region}.`, userData);
         return res.status(403).send('403: Access denied');
