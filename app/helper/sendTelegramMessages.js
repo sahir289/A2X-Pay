@@ -411,7 +411,8 @@ export async function sendTelegramDashboardReportMessage(
     return sum + amount;
   }, 0);
 
-  totalDepositAmount -= excludeListPayinsAmount;
+  totalDepositAmount = 
+    (Number(totalDepositAmount) || 0) - (Number(excludeListPayinsAmount) || 0);
 
   const filteredPayOuts = formattedPayOuts.filter(
     (item) => !excludeList.some((excluded) => item.startsWith(excluded))
@@ -435,7 +436,8 @@ export async function sendTelegramDashboardReportMessage(
     return sum + amount;
   }, 0);
 
-  totalWithdrawAmount -= excludeListPayoutsAmount;
+  totalWithdrawAmount = 
+    (Number(totalWithdrawAmount) || 0) - (Number(excludeListPayoutsAmount) || 0);
 
   const message = `
 <b>${type} (${timeStamp}) IST</b>
@@ -447,7 +449,7 @@ ${
     : "No deposits available."
 }
 
-<b>Total Deposits:</b> ${totalDepositAmount}
+<b>Total Deposits:</b> ${totalDepositAmount > 0 ? totalDepositAmount : 0}
 
 <b>🏦 Withdrawals</b>
 ${
@@ -456,7 +458,7 @@ ${
     : "No withdrawals available."
 }
 
-<b>Total Withdrawals:</b> ${totalWithdrawAmount}
+<b>Total Withdrawals:</b> ${totalWithdrawAmount > 0 ? totalWithdrawAmount : 0}
 
 <b>✅ Bank Account Deposits</b>
 ${
@@ -655,7 +657,8 @@ export async function sendTelegramDashboardMerchantGroupingReportMessage(
     return sum + amount;
   }, 0);
 
-  totalDepositAmount -= excludeListPayinsAmount;
+  totalDepositAmount = 
+    (Number(totalDepositAmount) || 0) - (Number(excludeListPayinsAmount) || 0);
 
   const filteredPayOuts = formattedPayOuts.filter(
     (item) => !excludeList.some((excluded) => item.startsWith(excluded))
@@ -691,7 +694,7 @@ ${
     : "No deposits available."
 }
 
-<b>Total Deposits:</b> ${totalDepositAmount}
+<b>Total Deposits:</b> ${totalDepositAmount > 0 ? totalDepositAmount : 0}
 
 <b>🏦 Withdrawals</b>
 ${
@@ -700,7 +703,7 @@ ${
     : "No withdrawals available."
 }
 
-<b>Total Withdrawals:</b> ${totalWithdrawAmount}
+<b>Total Withdrawals:</b> ${totalWithdrawAmount > 0 ? totalWithdrawAmount : 0}
 
 <b>✅ Bank Account Deposits</b>
 ${
