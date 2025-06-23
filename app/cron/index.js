@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { prisma } from "../client/prisma.js";
-import { sendTelegramDashboardMerchantGroupingReportMessage, sendTelegramDashboardReportMessage, sendTelegramDashboardSuccessRatioMessage } from "../helper/sendTelegramMessages.js";
+import { sendTelegramAnnaDashboardReportMessage, sendTelegramDashboardMerchantGroupingReportMessage, sendTelegramDashboardReportMessage, sendTelegramDashboardSuccessRatioMessage } from "../helper/sendTelegramMessages.js";
 import config from "../../config.js";
 import moment from "moment-timezone";
 
@@ -450,6 +450,15 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       formatePrice(totalWithdrawAmount),
       formatePrice(totalBankDepositAmount),
       formatePrice(totalBankWithdrawAmount),
+      // formattedRatios
+    );
+
+    await sendTelegramAnnaDashboardReportMessage(
+      config?.telegramAnnaDashboardChatId,
+      formattedPayIns,
+      formattedPayOuts,
+      type === "H" ? "Hourly Report" : "Daily Report",
+      config?.telegramBotToken,
       // formattedRatios
     );
 

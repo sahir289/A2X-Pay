@@ -476,6 +476,95 @@ ${
   }
 }
 
+export async function sendTelegramAnnaDashboardReportMessage(
+  chatId,
+  formattedPayIns,
+  formattedPayOuts,
+  type,
+  TELEGRAM_BOT_TOKEN,
+  // formattedRatios
+) {
+  const currentDate = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const istTime = new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
+
+  let startHour = istTime.getHours() - 1;
+  let endHour = (startHour + 1) % 24; // Wrap around if it's 23 (to handle midnight)
+
+  const startAmpm = startHour >= 12 ? "PM" : "AM";
+  const endAmpm = endHour >= 12 ? "PM" : "AM";
+
+  // Convert hours to 12-hour format
+  startHour = startHour % 12 || 12;
+  endHour = endHour % 12 || 12;
+
+  const formattedTime = `${startHour}${startAmpm}-${endHour}${endAmpm}`;
+  const timeStamp = type === "Hourly Report" ? formattedTime : currentDate;
+
+  const excludeList = ["anna247", "anna777"];
+
+  // Get only the excluded payins and sum their amounts
+  const excludeListPayins = formattedPayIns
+    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+
+  const excludeListPayinsAmount = excludeListPayins.reduce((sum, item) => {
+    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
+    const amount = match ? parseFloat(match[1]) : 0;
+    return sum + amount;
+  }, 0);
+
+  // Get only the excluded payouts and sum their amounts
+  const excludeListPayouts = formattedPayOuts
+    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+
+  const excludeListPayoutsAmount = excludeListPayouts.reduce((sum, item) => {
+    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
+    const amount = match ? parseFloat(match[1]) : 0;
+    return sum + amount;
+  }, 0);
+
+
+  const message = `
+<b>${type} (${timeStamp}) IST</b>
+
+<b>💰 Deposits</b>
+${
+  excludeListPayins.length > 0
+    ? excludeListPayins.join("\n")
+    : "No deposits available."
+}
+
+<b>Total Deposits:</b> ${excludeListPayinsAmount}
+
+<b>🏦 Withdrawals</b>
+${
+  excludeListPayouts.length > 0
+    ? excludeListPayouts.join("\n")
+    : "No withdrawals available."
+}
+
+<b>Total Withdrawals:</b> ${excludeListPayoutsAmount}
+    `;
+
+  // Send the message to Telegram
+  const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+  try {
+    const response = await axios.post(sendMessageUrl, {
+      chat_id: chatId,
+      text: message,
+      parse_mode: "HTML",
+    });
+  } catch (error) {
+    console.error(
+      "Error sending Telegram message:",
+      error.response?.data || error.message
+    );
+  }
+}
+
 export async function sendTelegramDashboardMerchantGroupingReportMessage(
   chatId,
   formattedPayIns,
@@ -515,9 +604,33 @@ export async function sendTelegramDashboardMerchantGroupingReportMessage(
     (item) => !excludeList.some((excluded) => item.startsWith(excluded))
   );
 
+  // Get only the excluded payins and sum their amounts
+  const excludeListPayins = formattedPayIns
+    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+
+  const excludeListPayinsAmount = excludeListPayins.reduce((sum, item) => {
+    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
+    const amount = match ? parseFloat(match[1]) : 0;
+    return sum + amount;
+  }, 0);
+
+  totalDepositAmount -= excludeListPayinsAmount;
+
   const filteredPayOuts = formattedPayOuts.filter(
     (item) => !excludeList.some((excluded) => item.startsWith(excluded))
   );
+
+  // Get only the excluded payouts and sum their amounts
+  const excludeListPayouts = formattedPayOuts
+    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+
+  const excludeListPayoutsAmount = excludeListPayouts.reduce((sum, item) => {
+    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
+    const amount = match ? parseFloat(match[1]) : 0;
+    return sum + amount;
+  }, 0);
+
+  totalWithdrawAmount -= excludeListPayoutsAmount;
 
   const message = `
 <b>${type} (${timeStamp}) IST</b>
