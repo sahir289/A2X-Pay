@@ -385,7 +385,7 @@ export async function sendTelegramDashboardReportMessage(
   const formattedTime = `${startHour}${startAmpm}-${endHour}${endAmpm}`;
   const timeStamp = type === "Hourly Report" ? formattedTime : currentDate;
 
-  const excludeList = ["anna247", "anna777"];
+  const excludeList = ["anna247", "anna777", "matkafun"];
 
   const filteredPayIns = formattedPayIns.filter(
     (item) => !excludeList.some((excluded) => item.startsWith(excluded))
@@ -503,7 +503,7 @@ export async function sendTelegramAnnaDashboardReportMessage(
   const formattedTime = `${startHour}${startAmpm}-${endHour}${endAmpm}`;
   const timeStamp = type === "Hourly Report" ? formattedTime : currentDate;
 
-  const excludeList = ["anna247", "anna777"];
+  const excludeList = ["anna247", "anna777", "matkafun"];
 
   // Get only the excluded payins and sum their amounts
   const excludeListPayins = formattedPayIns
@@ -598,7 +598,7 @@ export async function sendTelegramDashboardMerchantGroupingReportMessage(
   const formattedTime = `${startHour}${startAmpm}-${endHour}${endAmpm}`;
   const timeStamp = type === "Hourly Report" ? formattedTime : currentDate;
 
-  const excludeList = ["anna247", "anna777"];
+  const excludeList = ["anna247", "anna777", "matkafun"];
 
   const filteredPayIns = formattedPayIns.filter(
     (item) => !excludeList.some((excluded) => item.startsWith(excluded))
