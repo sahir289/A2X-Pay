@@ -396,8 +396,8 @@ export async function sendTelegramDashboardReportMessage(
     .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
 
   const excludeListPayinsAmount = excludeListPayins.reduce((sum, item) => {
-    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
-    const amount = match ? parseFloat(match[1]) : 0;
+    // If item is an object with an 'amount' key, use it directly
+    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
     return sum + amount;
   }, 0);
 
@@ -412,8 +412,8 @@ export async function sendTelegramDashboardReportMessage(
     .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
 
   const excludeListPayoutsAmount = excludeListPayouts.reduce((sum, item) => {
-    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
-    const amount = match ? parseFloat(match[1]) : 0;
+    // If item is an object with an 'amount' key, use it directly
+    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
     return sum + amount;
   }, 0);
 
@@ -510,8 +510,8 @@ export async function sendTelegramAnnaDashboardReportMessage(
     .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
 
   const excludeListPayinsAmount = excludeListPayins.reduce((sum, item) => {
-    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
-    const amount = match ? parseFloat(match[1]) : 0;
+    // If item is an object with an 'amount' key, use it directly
+    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
     return sum + amount;
   }, 0);
 
@@ -520,8 +520,8 @@ export async function sendTelegramAnnaDashboardReportMessage(
     .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
 
   const excludeListPayoutsAmount = excludeListPayouts.reduce((sum, item) => {
-    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
-    const amount = match ? parseFloat(match[1]) : 0;
+    // If item is an object with an 'amount' key, use it directly
+    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
     return sum + amount;
   }, 0);
 
@@ -609,8 +609,8 @@ export async function sendTelegramDashboardMerchantGroupingReportMessage(
     .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
 
   const excludeListPayinsAmount = excludeListPayins.reduce((sum, item) => {
-    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
-    const amount = match ? parseFloat(match[1]) : 0;
+    // If item is an object with an 'amount' key, use it directly
+    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
     return sum + amount;
   }, 0);
 
@@ -625,8 +625,8 @@ export async function sendTelegramDashboardMerchantGroupingReportMessage(
     .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
 
   const excludeListPayoutsAmount = excludeListPayouts.reduce((sum, item) => {
-    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
-    const amount = match ? parseFloat(match[1]) : 0;
+    // If item is an object with an 'amount' key, use it directly
+    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
     return sum + amount;
   }, 0);
 
