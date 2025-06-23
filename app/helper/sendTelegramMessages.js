@@ -354,6 +354,13 @@ export async function sendBankNotAssignedAlertTelegram(
   }
 }
 
+const formatePrice = (price, currencySymbol = "₹") => {
+  return `${currencySymbol} ${Number(price).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
 export async function sendTelegramDashboardReportMessage(
   chatId,
   formattedPayIns,
@@ -449,7 +456,7 @@ ${
     : "No deposits available."
 }
 
-<b>Total Deposits:</b> ${totalDepositAmount > 0 ? totalDepositAmount : 0}
+<b>Total Deposits:</b> ${Number(totalDepositAmount) > 0 ? formatePrice(Number(totalDepositAmount)) : 0}
 
 <b>🏦 Withdrawals</b>
 ${
@@ -458,7 +465,7 @@ ${
     : "No withdrawals available."
 }
 
-<b>Total Withdrawals:</b> ${totalWithdrawAmount > 0 ? totalWithdrawAmount : 0}
+<b>Total Withdrawals:</b> ${Number(totalWithdrawAmount) > 0 ? formatePrice(Number(totalWithdrawAmount)) : 0}
 
 <b>✅ Bank Account Deposits</b>
 ${
@@ -571,7 +578,7 @@ ${
     : "No deposits available."
 }
 
-<b>Total Deposits:</b> ${excludeListPayinsAmount}
+<b>Total Deposits:</b> ${formatePrice(excludeListPayinsAmount)}
 
 <b>🏦 Withdrawals</b>
 ${
@@ -580,7 +587,7 @@ ${
     : "No withdrawals available."
 }
 
-<b>Total Withdrawals:</b> ${excludeListPayoutsAmount}
+<b>Total Withdrawals:</b> ${formatePrice(excludeListPayoutsAmount)}
     `;
 
   // Send the message to Telegram
@@ -682,7 +689,9 @@ export async function sendTelegramDashboardMerchantGroupingReportMessage(
     return sum + amount;
   }, 0);
 
-  totalWithdrawAmount -= excludeListPayoutsAmount;
+
+  totalWithdrawAmount = 
+    (Number(totalWithdrawAmount) || 0) - (Number(excludeListPayoutsAmount) || 0);
 
   const message = `
 <b>${type} (${timeStamp}) IST</b>
@@ -694,7 +703,7 @@ ${
     : "No deposits available."
 }
 
-<b>Total Deposits:</b> ${totalDepositAmount > 0 ? totalDepositAmount : 0}
+<b>Total Deposits:</b> ${Number(totalDepositAmount) > 0 ? formatePrice(Number(totalDepositAmount)) : 0}
 
 <b>🏦 Withdrawals</b>
 ${
@@ -703,7 +712,7 @@ ${
     : "No withdrawals available."
 }
 
-<b>Total Withdrawals:</b> ${totalWithdrawAmount > 0 ? totalWithdrawAmount : 0}
+<b>Total Withdrawals:</b> ${Number(totalWithdrawAmount) > 0 ? formatePrice(Number(totalWithdrawAmount)) : 0}
 
 <b>✅ Bank Account Deposits</b>
 ${

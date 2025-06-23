@@ -446,8 +446,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       formattedBankPayOuts,
       type === "H" ? "Hourly Report" : "Daily Report",
       config?.telegramBotToken,
-      formatePrice(totalDepositAmount),
-      formatePrice(totalWithdrawAmount),
+      totalDepositAmount,
+      totalWithdrawAmount,
       formatePrice(totalBankDepositAmount),
       formatePrice(totalBankWithdrawAmount),
       // formattedRatios
@@ -470,8 +470,8 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       formattedBankPayOuts,
       type === "H" ? "Hourly Report" : "Daily Report",
       config?.telegramBotToken,
-      formatePrice(totalDepositAmount),
-      formatePrice(totalWithdrawAmount),
+      totalDepositAmount,
+      totalWithdrawAmount,
       formatePrice(totalBankDepositAmount),
       formatePrice(totalBankWithdrawAmount),
       // formattedRatios
