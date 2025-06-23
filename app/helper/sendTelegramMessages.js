@@ -159,10 +159,14 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
   getPayInData,
   fromUI
 ) {
-  let payinData
-  const hasSuccess = existingPayinData.some((item) => item.status === 'SUCCESS');
+  let payinData;
+  const hasSuccess = existingPayinData.some(
+    (item) => item.status === "SUCCESS"
+  );
   if (hasSuccess) {
-    payinData = existingPayinData.filter((item) => item.status === 'SUCCESS')[0];
+    payinData = existingPayinData.filter(
+      (item) => item.status === "SUCCESS"
+    )[0];
   } else {
     payinData = existingPayinData[existingPayinData.length - 1];
   }
@@ -174,8 +178,7 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
     } else {
       message = `🚨 UTR ${utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
     }
-  }
-  else {
+  } else {
     if (getPayInData?.status === "SUCCESS") {
       message = `🚨 Merchant Order ID: ${getPayInData.merchant_order_id}
                 is Already Confirmed with UTR: ${getPayInData.user_submitted_utr}`;
@@ -184,7 +187,6 @@ export async function sendAlreadyConfirmedMessageTelegramBot(
                 is Already Marked ${getPayInData.status} with UTR: ${getPayInData.user_submitted_utr}`;
     }
   }
-
 
   if (!fromUI) {
     const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -363,7 +365,7 @@ export async function sendTelegramDashboardReportMessage(
   totalDepositAmount,
   totalWithdrawAmount,
   totalBankDepositAmount,
-  totalBankWithdrawAmount,
+  totalBankWithdrawAmount
   // formattedRatios
 ) {
   const currentDate = new Date().toISOString().split("T")[0];
@@ -392,12 +394,20 @@ export async function sendTelegramDashboardReportMessage(
   );
 
   // Get only the excluded payins and sum their amounts
-  const excludeListPayins = formattedPayIns
-    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+  const excludeListPayins = formattedPayIns.filter((item) =>
+    excludeList.some((excluded) => item.startsWith(excluded))
+  );
 
   const excludeListPayinsAmount = excludeListPayins.reduce((sum, item) => {
-    // If item is an object with an 'amount' key, use it directly
-    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
+    let amount = 0;
+    if (typeof item === "string") {
+      const match = item.match(/₹\s*([\d,]+\.\d{2})/);
+      if (match) {
+        amount = parseFloat(match[1].replace(/,/g, ""));
+      }
+    } else if (item.amount) {
+      amount = parseFloat(item.amount);
+    }
     return sum + amount;
   }, 0);
 
@@ -408,12 +418,20 @@ export async function sendTelegramDashboardReportMessage(
   );
 
   // Get only the excluded payouts and sum their amounts
-  const excludeListPayouts = formattedPayOuts
-    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+  const excludeListPayouts = formattedPayOuts.filter((item) =>
+    excludeList.some((excluded) => item.startsWith(excluded))
+  );
 
   const excludeListPayoutsAmount = excludeListPayouts.reduce((sum, item) => {
-    // If item is an object with an 'amount' key, use it directly
-    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
+    let amount = 0;
+    if (typeof item === "string") {
+      const match = item.match(/₹\s*([\d,]+\.\d{2})/);
+      if (match) {
+        amount = parseFloat(match[1].replace(/,/g, ""));
+      }
+    } else if (item.amount) {
+      amount = parseFloat(item.amount);
+    }
     return sum + amount;
   }, 0);
 
@@ -481,7 +499,7 @@ export async function sendTelegramAnnaDashboardReportMessage(
   formattedPayIns,
   formattedPayOuts,
   type,
-  TELEGRAM_BOT_TOKEN,
+  TELEGRAM_BOT_TOKEN
   // formattedRatios
 ) {
   const currentDate = new Date().toISOString().split("T")[0];
@@ -506,25 +524,40 @@ export async function sendTelegramAnnaDashboardReportMessage(
   const excludeList = ["anna247", "anna777", "matkafun"];
 
   // Get only the excluded payins and sum their amounts
-  const excludeListPayins = formattedPayIns
-    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+  const excludeListPayins = formattedPayIns.filter((item) =>
+    excludeList.some((excluded) => item.startsWith(excluded))
+  );
 
   const excludeListPayinsAmount = excludeListPayins.reduce((sum, item) => {
-    // If item is an object with an 'amount' key, use it directly
-    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
+    let amount = 0;
+    if (typeof item === "string") {
+      const match = item.match(/₹\s*([\d,]+\.\d{2})/);
+      if (match) {
+        amount = parseFloat(match[1].replace(/,/g, ""));
+      }
+    } else if (item.amount) {
+      amount = parseFloat(item.amount);
+    }
     return sum + amount;
   }, 0);
 
   // Get only the excluded payouts and sum their amounts
-  const excludeListPayouts = formattedPayOuts
-    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+  const excludeListPayouts = formattedPayOuts.filter((item) =>
+    excludeList.some((excluded) => item.startsWith(excluded))
+  );
 
   const excludeListPayoutsAmount = excludeListPayouts.reduce((sum, item) => {
-    // If item is an object with an 'amount' key, use it directly
-    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
+    let amount = 0;
+    if (typeof item === "string") {
+      const match = item.match(/₹\s*([\d,]+\.\d{2})/);
+      if (match) {
+        amount = parseFloat(match[1].replace(/,/g, ""));
+      }
+    } else if (item.amount) {
+      amount = parseFloat(item.amount);
+    }
     return sum + amount;
   }, 0);
-
 
   const message = `
 <b>${type} (${timeStamp}) IST</b>
@@ -576,7 +609,7 @@ export async function sendTelegramDashboardMerchantGroupingReportMessage(
   totalDepositAmount,
   totalWithdrawAmount,
   totalBankDepositAmount,
-  totalBankWithdrawAmount,
+  totalBankWithdrawAmount
   // formattedRatios
 ) {
   const currentDate = new Date().toISOString().split("T")[0];
@@ -605,12 +638,20 @@ export async function sendTelegramDashboardMerchantGroupingReportMessage(
   );
 
   // Get only the excluded payins and sum their amounts
-  const excludeListPayins = formattedPayIns
-    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+  const excludeListPayins = formattedPayIns.filter((item) =>
+    excludeList.some((excluded) => item.startsWith(excluded))
+  );
 
   const excludeListPayinsAmount = excludeListPayins.reduce((sum, item) => {
-    // If item is an object with an 'amount' key, use it directly
-    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
+    let amount = 0;
+    if (typeof item === "string") {
+      const match = item.match(/₹\s*([\d,]+\.\d{2})/);
+      if (match) {
+        amount = parseFloat(match[1].replace(/,/g, ""));
+      }
+    } else if (item.amount) {
+      amount = parseFloat(item.amount);
+    }
     return sum + amount;
   }, 0);
 
@@ -621,12 +662,20 @@ export async function sendTelegramDashboardMerchantGroupingReportMessage(
   );
 
   // Get only the excluded payouts and sum their amounts
-  const excludeListPayouts = formattedPayOuts
-    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+  const excludeListPayouts = formattedPayOuts.filter((item) =>
+    excludeList.some((excluded) => item.startsWith(excluded))
+  );
 
   const excludeListPayoutsAmount = excludeListPayouts.reduce((sum, item) => {
-    // If item is an object with an 'amount' key, use it directly
-    const amount = typeof item === 'object' && item.amount ? parseFloat(item.amount) : 0;
+    let amount = 0;
+    if (typeof item === "string") {
+      const match = item.match(/₹\s*([\d,]+\.\d{2})/);
+      if (match) {
+        amount = parseFloat(match[1].replace(/,/g, ""));
+      }
+    } else if (item.amount) {
+      amount = parseFloat(item.amount);
+    }
     return sum + amount;
   }, 0);
 
@@ -767,15 +816,19 @@ export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
   TELEGRAM_BOT_TOKEN,
   replyToMessageId
 ) {
-  let existingPayinData
+  let existingPayinData;
   existingPayinData = await payInRepo.getPayinDataByUtr(utr);
   if (existingPayinData.length == 0) {
     existingPayinData = await payInRepo.getPayinDataByUsrSubmittedUtr(utr);
   }
-  let payinData
-  const hasSuccess = existingPayinData.some((item) => item.status === 'SUCCESS');
+  let payinData;
+  const hasSuccess = existingPayinData.some(
+    (item) => item.status === "SUCCESS"
+  );
   if (hasSuccess) {
-    payinData = existingPayinData.filter((item) => item.status === 'SUCCESS')[0];
+    payinData = existingPayinData.filter(
+      (item) => item.status === "SUCCESS"
+    )[0];
   } else {
     payinData = existingPayinData[existingPayinData.length - 1];
   }
@@ -787,8 +840,7 @@ export async function sendMerchantOrderIDStatusDuplicateTelegramMessage(
     } else {
       message = `🚨 UTR ${utr} is already ${payinData?.status} with this orderId ${payinData?.merchant_order_id}`;
     }
-  }
-  else {
+  } else {
     if (getPayInData?.status === "SUCCESS") {
       message = `✅ Merchant Order ID: ${getPayInData.merchant_order_id}
                 is Already Confirmed with UTR: ${getPayInData.user_submitted_utr}`;
@@ -865,10 +917,14 @@ export async function sendResetEntryTelegramMessage(
       <b><u>🔔 Entry Reset Alert 🔔</u></b> 
           <b>Merchant Order ID:</b> ${data.merchant_order_id}
           <b>Old Status:</b> ${data.status}
-          <b>Old User Submitted UTR:</b> ${data?.user_submitted_utr ? data.user_submitted_utr : '--'}
-          <b>Old UTR:</b> ${data?.utr ? data.utr : '--'}
+          <b>Old User Submitted UTR:</b> ${
+            data?.user_submitted_utr ? data.user_submitted_utr : "--"
+          }
+          <b>Old UTR:</b> ${data?.utr ? data.utr : "--"}
           <b>Old Amount:</b> ${data?.amount}
-          <b>Old Confirmed Amount:</b> ${data?.confirmed ? data.confirmed : '--'}
+          <b>Old Confirmed Amount:</b> ${
+            data?.confirmed ? data.confirmed : "--"
+          }
   `;
   const sendMessageUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
   try {
