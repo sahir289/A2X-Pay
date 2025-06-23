@@ -391,9 +391,33 @@ export async function sendTelegramDashboardReportMessage(
     (item) => !excludeList.some((excluded) => item.startsWith(excluded))
   );
 
+  // Get only the excluded payins and sum their amounts
+  const excludeListPayins = formattedPayIns
+    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+
+  const excludeListPayinsAmount = excludeListPayins.reduce((sum, item) => {
+    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
+    const amount = match ? parseFloat(match[1]) : 0;
+    return sum + amount;
+  }, 0);
+
+  totalDepositAmount -= excludeListPayinsAmount;
+
   const filteredPayOuts = formattedPayOuts.filter(
     (item) => !excludeList.some((excluded) => item.startsWith(excluded))
   );
+
+  // Get only the excluded payouts and sum their amounts
+  const excludeListPayouts = formattedPayOuts
+    .filter((item) => excludeList.some((excluded) => item.startsWith(excluded)));
+
+  const excludeListPayoutsAmount = excludeListPayouts.reduce((sum, item) => {
+    const match = item.match(/(\d+(\.\d+)?)/); // finds the first number (integer or decimal)
+    const amount = match ? parseFloat(match[1]) : 0;
+    return sum + amount;
+  }, 0);
+
+  totalWithdrawAmount -= excludeListPayoutsAmount;
 
   const message = `
 <b>${type} (${timeStamp}) IST</b>
