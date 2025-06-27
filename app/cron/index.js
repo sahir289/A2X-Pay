@@ -600,52 +600,51 @@ const formattedSuccessRatiosByMerchant = async () => {
       utrSubmissionMsg = `🔔 No UTR Submission Ratio For This Hour`;
       payinSuccessMsgExcluded = `🔔 No Deposit For This Hour`;
       utrSubmissionMsgExcluded = `🔔 No UTR Submission Ratio For This Hour`;
-    }
-
-    for (const merchant of merchantsWithTransactions) {
+    } else {
+      for (const merchant of merchantsWithTransactions) {
       const merchantTransactions = transactionsByMerchant[merchant.id];
 
       const intervalDetails = intervals
         .map(({ label, duration }) => {
-          const startTime = new Date(now - duration);
-          const filteredTransactions = merchantTransactions.filter(
-            (tx) => tx.updatedAt >= startTime
-          );
+        const startTime = new Date(now - duration);
+        const filteredTransactions = merchantTransactions.filter(
+          (tx) => tx.updatedAt >= startTime
+        );
 
-          const total = filteredTransactions.length;
-          const success = filteredTransactions.filter(
-            (tx) => tx.status === "SUCCESS"
-          ).length;
+        const total = filteredTransactions.length;
+        const success = filteredTransactions.filter(
+          (tx) => tx.status === "SUCCESS"
+        ).length;
 
-          const successRatio =
-            total === 0
-              ? "0.00%"
-              : Math.min(((success / total) * 100).toFixed(2), 100) + "%";
-          const statusIcon = success === 0 ? "⚠️" : "✅";
+        const successRatio =
+          total === 0
+          ? "0.00%"
+          : Math.min(((success / total) * 100).toFixed(2), 100) + "%";
+        const statusIcon = success === 0 ? "⚠️" : "✅";
 
-          return `${statusIcon} ${label}: ${success}/${total} = ${successRatio}`;
+        return `${statusIcon} ${label}: ${success}/${total} = ${successRatio}`;
         })
         .join("\n");
 
       const intervalDetailsUtr = intervals
         .map(({ label, duration }) => {
-          const startTime = new Date(now - duration);
-          const filteredTransactions = merchantTransactions.filter(
-            (tx) => tx.updatedAt >= startTime
-          );
+        const startTime = new Date(now - duration);
+        const filteredTransactions = merchantTransactions.filter(
+          (tx) => tx.updatedAt >= startTime
+        );
 
-          const total = filteredTransactions.length;
-          const utrSubmission = filteredTransactions.filter(
-            (tx) => tx.user_submitted_utr && tx.user_submitted_utr.length > 0
-          ).length;
+        const total = filteredTransactions.length;
+        const utrSubmission = filteredTransactions.filter(
+          (tx) => tx.user_submitted_utr && tx.user_submitted_utr.length > 0
+        ).length;
 
-          const statusIcon = utrSubmission === 0 ? "⚠️" : "✅";
-          const utrSubmissionRatio =
-            total === 0
-              ? "0.00%"
-              : Math.min(((utrSubmission / total) * 100).toFixed(2), 100) + "%";
+        const statusIcon = utrSubmission === 0 ? "⚠️" : "✅";
+        const utrSubmissionRatio =
+          total === 0
+          ? "0.00%"
+          : Math.min(((utrSubmission / total) * 100).toFixed(2), 100) + "%";
 
-          return `${statusIcon} ${label}: ${utrSubmission}/${total} = ${utrSubmissionRatio}`;
+        return `${statusIcon} ${label}: ${utrSubmission}/${total} = ${utrSubmissionRatio}`;
         })
         .join("\n");
 
@@ -656,8 +655,26 @@ const formattedSuccessRatiosByMerchant = async () => {
         payinSuccessMsg += `🔔${merchant.code} - SR 🔔\n${intervalDetails}\n\n`;
         utrSubmissionMsg += `🔔${merchant.code} - SR 🔔\n${intervalDetailsUtr}\n\n`;
       }
+      }
     }
 
+    // Only send excluded messages if there are excluded merchants
+    if (payinSuccessMsgExcluded !== "Payin SR:\n" && payinSuccessMsgExcluded !== `🔔 No Deposit For This Hour`) {
+      await sendTelegramDashboardSuccessRatioMessage(
+      config?.telegramAnnaRatioAlertsChatId,
+      payinSuccessMsgExcluded,
+      config?.telegramBotToken
+      );
+    }
+    if (utrSubmissionMsgExcluded !== "UTR SR:\n" && utrSubmissionMsgExcluded !== `🔔 No UTR Submission Ratio For This Hour`) {
+      await sendTelegramDashboardSuccessRatioMessage(
+      config?.telegramAnnaRatioAlertsChatId,
+      utrSubmissionMsgExcluded,
+      config?.telegramBotToken
+      );
+    }
+
+    // Always send main messages
     await sendTelegramDashboardSuccessRatioMessage(
       config?.telegramRatioAlertsChatId,
       payinSuccessMsg,
@@ -667,18 +684,6 @@ const formattedSuccessRatiosByMerchant = async () => {
     await sendTelegramDashboardSuccessRatioMessage(
       config?.telegramRatioAlertsChatId,
       utrSubmissionMsg,
-      config?.telegramBotToken
-    );
-
-    await sendTelegramDashboardSuccessRatioMessage(
-      config?.telegramAnnaRatioAlertsChatId,
-      payinSuccessMsgExcluded,
-      config?.telegramBotToken
-    );
-
-    await sendTelegramDashboardSuccessRatioMessage(
-      config?.telegramAnnaRatioAlertsChatId,
-      utrSubmissionMsgExcluded,
       config?.telegramBotToken
     );
   } catch (error) {
