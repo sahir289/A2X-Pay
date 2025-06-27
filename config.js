@@ -22,6 +22,7 @@ function config(Env) {
         telegramBotToken:Env?.TELEGRAM_BOT_TOKEN,
         telegramAlertsBotToken:Env?.TELEGRAM_ALERTS_BOT_TOKEN, // currently not in use
         telegramRatioAlertsChatId:Env?.TELEGRAM_RATIO_ALERTS_CHAT_ID,
+        telegramAnnaRatioAlertsChatId:Env?.TELEGRAM_ANNA_RATIO_ALERTS_CHAT_ID,
         telegramDashboardChatId:Env?.TELEGRAM_DASHBOARD_CHAT_ID,
         telegramAnnaDashboardChatId:Env?.TELEGRAM_ANNA_DASHBOARD_CHAT_ID,
         telegramDashboardMerchantGroupingChatId: Env?.TELEGRAM_DASHBOARD_MERCHANT_GROUPING_CHAT_ID,
