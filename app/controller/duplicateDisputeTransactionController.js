@@ -191,13 +191,28 @@ class DuplicateDisputeTransactionController {
             }
             const duplicateDisputeTransactionRes = await duplicateDisputeTransactionService.handleDuplicateDisputeTransaction(payInId, apiData, oldPayInData.status);
             const entryType = oldPayInData.status === 'DUPLICATE' ? 'Duplicate Entry' : 'Dispute Entry';
-            await sendTelegramDisputeMessage(
-                config?.telegramDuplicateDisputeChatId,
-                oldPayInData,
-                duplicateDisputeTransactionRes,
-                config?.telegramBotToken,
-                entryType,
-              );
+            const excludeList = ["anna247", "anna777", "matkafun"];
+            const merchant = await merchantRepo.getMerchantById(duplicateDisputeTransactionRes?.merchant_id);
+            const merchantCode = merchant?.code;
+
+            if (!excludeList.includes(merchantCode)) {
+                await sendTelegramDisputeMessage(
+                    config?.telegramDuplicateDisputeChatId,
+                    oldPayInData,
+                    duplicateDisputeTransactionRes,
+                    config?.telegramBotToken,
+                    entryType,
+                );
+            }
+            else {
+                await sendTelegramDisputeMessage(
+                    config?.telegramAnnaDuplicateDisputeChatId,
+                    oldPayInData,
+                    duplicateDisputeTransactionRes,
+                    config?.telegramBotToken,
+                    entryType,
+                );
+            }
             return DefaultResponse(res, 200, "Transaction updated successfully", duplicateDisputeTransactionRes);
         } catch (error) {
             logger.info(error);

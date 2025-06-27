@@ -82,11 +82,21 @@ class PayInController {
       const availableBankAccounts = payInBankAccountLinkRes?.filter(bank => (bank?.bankAccount?.is_bank === true || bank?.bankAccount?.is_qr === true) && bank?.bankAccount?.is_enabled === true);
       if (!availableBankAccounts || availableBankAccounts.length === 0) {
         // Send alert if no bank account is linked
-        await sendBankNotAssignedAlertTelegram(
-          config?.telegramBankAlertChatId,
-          getMerchantApiKeyByCode,
-          config?.telegramBotToken,
-        );
+        const excludeList = ["anna247", "anna777", "matkafun"];
+        if (!excludeList.includes(code)) {
+          await sendBankNotAssignedAlertTelegram(
+            config?.telegramBankAlertChatId,
+            getMerchantApiKeyByCode,
+            config?.telegramBotToken,
+          );
+        }
+        else {
+          await sendBankNotAssignedAlertTelegram(
+            config?.telegramAnnaBankAlertChatId,
+            getMerchantApiKeyByCode,
+            config?.telegramBotToken,
+          );
+        }
         throw new CustomError(404, "Bank Account has not been linked with Merchant");
       }
 
@@ -5095,11 +5105,23 @@ class PayInController {
       const { merchant_order_id } = req.body;
 
       const payInData = await payInRepo.getPayInDataByMerchantOrderId(merchant_order_id);
-      await sendResetEntryTelegramMessage(
-        config?.telegramEntryResetChatId,
-        payInData,
-        config?.telegramBotToken,
-      );
+      const excludeList = ["anna247", "anna777", "matkafun"];
+      const merchant = await merchantRepo.getMerchantById(payInData?.merchant_id);
+      const merchantCode = merchant?.code;
+
+      if (!excludeList.includes(merchantCode)) {
+        await sendResetEntryTelegramMessage(
+          config?.telegramEntryResetChatId,
+          payInData,
+          config?.telegramBotToken,
+        );
+      } else {
+        await sendResetEntryTelegramMessage(
+          config?.telegramAnnaEntryResetChatId,
+          payInData,
+          config?.telegramBotToken,
+        );
+      }
       if (payInData?.status !== "SUCCESS" && payInData?.status !== "FAILED") {
         const utr = payInData?.utr ? payInData?.utr : payInData?.user_submitted_utr
         const botRes = await botResponseRepo.getBotResByUtr(utr);
