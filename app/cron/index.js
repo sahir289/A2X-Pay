@@ -273,125 +273,125 @@ const gatherAllData = async (type = "N", timezone = "Asia/Kolkata") => {
       })
       .filter(Boolean);
 
-    // const formattedSuccessRatiosByMerchant = async () => {
-    //   try {
-    //     const now = new Date();
-    //     const intervals = [
-    //       { label: "Last 5m", duration: 5 * 60 * 1000 },
-    //       { label: "Last 15m", duration: 15 * 60 * 1000 },
-    //       { label: "Last 30m", duration: 30 * 60 * 1000 },
-    //       { label: "Last 1h", duration: 60 * 60 * 1000 },
-    //       { label: "Last 3h", duration: 3 * 60 * 60 * 1000 },
-    //       { label: "Last 24h", duration: 24 * 60 * 60 * 1000 },
-    //     ];
+    const formattedSuccessRatiosByMerchant = async () => {
+      try {
+        const now = new Date();
+        const intervals = [
+          { label: "Last 5m", duration: 5 * 60 * 1000 },
+          { label: "Last 15m", duration: 15 * 60 * 1000 },
+          { label: "Last 30m", duration: 30 * 60 * 1000 },
+          { label: "Last 1h", duration: 60 * 60 * 1000 },
+          { label: "Last 3h", duration: 3 * 60 * 60 * 1000 },
+          { label: "Last 24h", duration: 24 * 60 * 60 * 1000 },
+        ];
 
-    //     const allPayins = await prisma.payin.findMany({
-    //       where: { updatedAt: { gte: startDate } },
-    //       select: {
-    //         merchant_id: true,
-    //         updatedAt: true,
-    //         status: true,
-    //         user_submitted_utr: true,
-    //       },
-    //     });
+        const allPayins = await prisma.payin.findMany({
+          where: { updatedAt: { gte: startDate } },
+          select: {
+            merchant_id: true,
+            updatedAt: true,
+            status: true,
+            user_submitted_utr: true,
+          },
+        });
 
-    //     const transactionsByMerchant = allPayins.reduce((map, payin) => {
-    //       if (!map[payin.merchant_id]) map[payin.merchant_id] = [];
-    //       map[payin.merchant_id].push({
-    //         updatedAt: new Date(payin.updatedAt),
-    //         status: payin.status,
-    //         user_submitted_utr: payin.user_submitted_utr,
-    //       });
-    //       return map;
-    //     }, {});
+        const transactionsByMerchant = allPayins.reduce((map, payin) => {
+          if (!map[payin.merchant_id]) map[payin.merchant_id] = [];
+          map[payin.merchant_id].push({
+            updatedAt: new Date(payin.updatedAt),
+            status: payin.status,
+            user_submitted_utr: payin.user_submitted_utr,
+          });
+          return map;
+        }, {});
 
-    //     const merchantsWithTransactions = merchants.filter(
-    //       (merchant) => transactionsByMerchant[merchant.id]
-    //     );
-    //     let payinSuccessMsg = "Payin SR:\n";
-    //     let utrSubmissionMsg = "UTR SR:\n";
+        const merchantsWithTransactions = merchants.filter(
+          (merchant) => transactionsByMerchant[merchant.id]
+        );
+        let payinSuccessMsg = "Payin SR:\n";
+        let utrSubmissionMsg = "UTR SR:\n";
 
-    //     const noTransactions = merchantsWithTransactions.every(
-    //       (m) => m.child_code.length === 0
-    //     );
+        const noTransactions = merchantsWithTransactions.every(
+          (m) => m.child_code.length === 0
+        );
 
-    //     if (merchantsWithTransactions.length === 0 && noTransactions) {
-    //       payinSuccessMsg = `🔔 No Deposit For This Hour`;
-    //       utrSubmissionMsg = `🔔 No UTR Submission Ratio For This Hour`;
-    //     }
-    //     for (const merchant of merchantsWithTransactions) {
-    //       const merchantTransactions = transactionsByMerchant[merchant.id];
+        if (merchantsWithTransactions.length === 0 && noTransactions) {
+          payinSuccessMsg = `🔔 No Deposit For This Hour`;
+          utrSubmissionMsg = `🔔 No UTR Submission Ratio For This Hour`;
+        }
+        for (const merchant of merchantsWithTransactions) {
+          const merchantTransactions = transactionsByMerchant[merchant.id];
 
-    //       const intervalDetails = intervals
-    //         .map(({ label, duration }) => {
-    //           const startTime = new Date(now - duration);
-    //           const filteredTransactions = merchantTransactions.filter(
-    //             (tx) => tx.updatedAt >= startTime
-    //           );
+          const intervalDetails = intervals
+            .map(({ label, duration }) => {
+              const startTime = new Date(now - duration);
+              const filteredTransactions = merchantTransactions.filter(
+                (tx) => tx.updatedAt >= startTime
+              );
 
-    //           const total = filteredTransactions.length;
-    //           const success = filteredTransactions.filter(
-    //             (tx) => tx.status === "SUCCESS"
-    //           ).length;
+              const total = filteredTransactions.length;
+              const success = filteredTransactions.filter(
+                (tx) => tx.status === "SUCCESS"
+              ).length;
 
-    //           const successRatio =
-    //             total === 0
-    //               ? "0.00%"
-    //               : Math.min(((success / total) * 100).toFixed(2), 100) + "%";
-    //           const statusIcon = success === 0 ? "⚠️" : "✅";
+              const successRatio =
+                total === 0
+                  ? "0.00%"
+                  : Math.min(((success / total) * 100).toFixed(2), 100) + "%";
+              const statusIcon = success === 0 ? "⚠️" : "✅";
 
-    //           return `${statusIcon} ${label}: ${success}/${total} = ${successRatio}`;
-    //         })
-    //         .join("\n");
+              return `${statusIcon} ${label}: ${success}/${total} = ${successRatio}`;
+            })
+            .join("\n");
 
-    //       const intervalDetailsUtr = intervals
-    //         .map(({ label, duration }) => {
-    //           const startTime = new Date(now - duration);
-    //           const filteredTransactions = merchantTransactions.filter(
-    //             (tx) => tx.updatedAt >= startTime
-    //           );
+          const intervalDetailsUtr = intervals
+            .map(({ label, duration }) => {
+              const startTime = new Date(now - duration);
+              const filteredTransactions = merchantTransactions.filter(
+                (tx) => tx.updatedAt >= startTime
+              );
 
-    //           const total = filteredTransactions.length;
-    //           const utrSubmission = filteredTransactions.filter(
-    //             (tx) =>
-    //               tx.user_submitted_utr && tx.user_submitted_utr.length > 0
-    //           ).length;
+              const total = filteredTransactions.length;
+              const utrSubmission = filteredTransactions.filter(
+                (tx) =>
+                  tx.user_submitted_utr && tx.user_submitted_utr.length > 0
+              ).length;
 
-    //           const statusIcon = utrSubmission === 0 ? "⚠️" : "✅";
-    //           const utrSubmissionRatio =
-    //             total === 0
-    //               ? "0.00%"
-    //               : Math.min(((utrSubmission / total) * 100).toFixed(2), 100) +
-    //                 "%";
+              const statusIcon = utrSubmission === 0 ? "⚠️" : "✅";
+              const utrSubmissionRatio =
+                total === 0
+                  ? "0.00%"
+                  : Math.min(((utrSubmission / total) * 100).toFixed(2), 100) +
+                    "%";
 
-    //           return `${statusIcon} ${label}: ${utrSubmission}/${total} = ${utrSubmissionRatio}`;
-    //         })
-    //         .join("\n");
+              return `${statusIcon} ${label}: ${utrSubmission}/${total} = ${utrSubmissionRatio}`;
+            })
+            .join("\n");
 
-    //       payinSuccessMsg += `🔔${merchant.code} - SR 🔔\n${intervalDetails}\n\n`;
-    //       utrSubmissionMsg += `🔔${merchant.code} - SR 🔔\n${intervalDetailsUtr}\n\n`;
-    //     }
+          payinSuccessMsg += `🔔${merchant.code} - SR 🔔\n${intervalDetails}\n\n`;
+          utrSubmissionMsg += `🔔${merchant.code} - SR 🔔\n${intervalDetailsUtr}\n\n`;
+        }
 
-    //     await sendTelegramDashboardSuccessRatioMessage(
-    //       config?.telegramRatioAlertsChatId,
-    //       payinSuccessMsg,
-    //       config?.telegramBotToken
-    //     );
+        await sendTelegramDashboardSuccessRatioMessage(
+          config?.telegramRatioAlertsChatId,
+          payinSuccessMsg,
+          config?.telegramBotToken
+        );
 
-    //     await sendTelegramDashboardSuccessRatioMessage(
-    //       config?.telegramRatioAlertsChatId,
-    //       utrSubmissionMsg,
-    //       config?.telegramBotToken
-    //     );
-    //   } catch (error) {
-    //     console.error(
-    //       "Error calculating interval success ratios:",
-    //       error.message
-    //     );
-    //   }
-    // };
+        await sendTelegramDashboardSuccessRatioMessage(
+          config?.telegramRatioAlertsChatId,
+          utrSubmissionMsg,
+          config?.telegramBotToken
+        );
+      } catch (error) {
+        console.error(
+          "Error calculating interval success ratios:",
+          error.message
+        );
+      }
+    };
 
-    // formattedSuccessRatiosByMerchant();
+    formattedSuccessRatiosByMerchant();
 
     // format payins of merchants independently
     const formattedPayOuts = payOuts
@@ -554,11 +554,11 @@ const formattedSuccessRatiosByMerchant = async () => {
     const now = new Date();
     const intervals = [
       { label: "Last 5m", duration: 5 * 60 * 1000 },
-      { label: "Last 15m", duration: 15 * 60 * 1000 },
-      { label: "Last 30m", duration: 30 * 60 * 1000 },
-      { label: "Last 1h", duration: 60 * 60 * 1000 },
-      { label: "Last 3h", duration: 3 * 60 * 60 * 1000 },
-      { label: "Last 24h", duration: 24 * 60 * 60 * 1000 },
+      // { label: "Last 15m", duration: 15 * 60 * 1000 },
+      // { label: "Last 30m", duration: 30 * 60 * 1000 },
+      // { label: "Last 1h", duration: 60 * 60 * 1000 },
+      // { label: "Last 3h", duration: 3 * 60 * 60 * 1000 },
+      // { label: "Last 24h", duration: 24 * 60 * 60 * 1000 },
     ];
 
     const allPayins = await prisma.payin.findMany({
